@@ -1,0 +1,139 @@
+{
+    "fire": {
+        "properties": {
+            "wfid": 68926923,
+            "incidentId": "2024-ORVAD-000141",
+            "fireState": "OR",
+            "fireName": "Durkee",
+            "type": "Wildfire",
+            "acres": "288690",
+            "resources": "",
+            "fuels": "GRASS\/BRUSH",
+            "notes": "",
+            "status": false,
+            "url": "wildfire\/68926923\/oregon\/durkee-fire",
+            "display": "1",
+            "containment": "20%"
+        },
+        "geometry": {
+            "lat": 44.54764399999999824331098352558910846710205078125,
+            "lon": -117.47714899999999715873855166137218475341796875,
+            "near": "23.8 miles SE of Baker City, OR",
+            "state": "Oregon"
+        },
+        "protection": {
+            "dispatch": "ORVAC",
+            "agency": "Bureau of Land Management",
+            "area": "Vale District",
+            "unit": "ORVAD",
+            "logo": "blm"
+        },
+        "time": {
+            "year": 2024,
+            "discovered": 1721235437,
+            "captured": 1722011251,
+            "updated": 1722011251,
+            "timezone": "America\/Los_Angeles"
+        },
+        "inciweb": {
+            "incident_info": "<p>The lightning caused Durkee Fire started at approximately 9:30am on July 17, 2024. &nbsp;Local resources as well as those working on the nearby Cow Valley Fire responded quickly to begin suppressing the fire. &nbsp;As initial attack transitioned into extended attack, NW Team 6 began managing the fire along with the Cow Valley and Bonita Fires.<\/p>",
+            "current": {
+                "data": {
+                    "Basic Information": [
+                        {
+                            "desc": "Last Updated",
+                            "info": "Fri, Jul 26, 2024 9:53 AM PDT"
+                        },
+                        {
+                            "desc": "Incident Type",
+                            "info": "Wildfire"
+                        },
+                        {
+                            "desc": "Cause",
+                            "info": "Lightning"
+                        },
+                        {
+                            "desc": "Fire Discovered",
+                            "info": "Wed, Jul 17, 2024 9:30 AM PDT"
+                        },
+                        {
+                            "desc": "Location",
+                            "info": "5 miles southwest of Durkee, Oregon"
+                        },
+                        {
+                            "desc": "Incident Commander",
+                            "info": "Tyson Albrecht, NW Team 6Lance Lighty, COSFM Green Team"
+                        },
+                        {
+                            "desc": "Coordinates",
+                            "info": "44.547777777778, -117.47722222222"
+                        }
+                    ],
+                    "Current Situation": [
+                        {
+                            "desc": "Total Personnel",
+                            "info": "565"
+                        },
+                        {
+                            "desc": "Size",
+                            "info": "288,690"
+                        },
+                        {
+                            "desc": "Containment",
+                            "info": "20%"
+                        },
+                        {
+                            "desc": "Estimated Containment Date",
+                            "info": "Thu, Aug 8, 2024"
+                        },
+                        {
+                            "desc": "Fuels Involved",
+                            "info": "<p>Brush (2 feet)<\/p><p>Tall Grass (2.5 feet)<\/p><p>Timber (Litter and Understory)A fuels and fire behavior advisory is in effect for SE Oregon below 5500 ft elevation. Fine fuel loading is above average. Live fuel moistures are below 100 percent making them seasonally ahead of norms. Hot and dry conditions continue. Extended burn periods are resulting in extreme fire behavior with winds greater than 5mph in the grass fuel models.<\/p>"
+                        },
+                        {
+                            "desc": "Significant Events",
+                            "info": "<p>ActiveWind Driven RunsFlankingShort-range Spotting <\/p><p>Narrative:Precipitation occurred over much of the fire yesterday and overnight. The northern divisions did not receive wetting rain precipitation and continue to experience active fire behavior today. Dry post frontal winds dried fine fuels quickly. Gusty winds will continue for the next week. The northwestern perimeter of the fire will continue to experience moderate to active fire behavior due to litter and duff not receiving a wetting rain nor being significantly affected by high overnight humidity recoveries.<\/p>"
+                        }
+                    ],
+                    "Outlook": [
+                        {
+                            "desc": "Planned Actions",
+                            "info": "Utilize direct and indirect line construction to flank and secure fires edge. Use aviation assets to check fire progression. Protect structures in the Burnt River, Rye Creek, Brogan, Willow Creek and Vale."
+                        },
+                        {
+                            "desc": "Projected Incident Activity",
+                            "info": "<p>12 hours: With the dry post frontal winds from thunderstorms, fuels will once again dry out quickly and <\/p><p>24 hours: Active fire behavior expected with environmental conditions and available fuel as the day <\/p><p>48 hours: Critical fire behavior thresholds will be met again today. Northern divisions could experience <\/p><p>72 hours: The southeast portion of the fire will be tested today with consistent northwest winds above <\/p><p>72 hours: Containment features due to suppression actions are expected to moderate <\/p>"
+                        },
+                        {
+                            "desc": "Remarks",
+                            "info": "Origin has been determined and ownership falls on private land in Baker County, Oregon.OSFM costs to date: $1,272,073On July 20th, 2024, at 11:13, Governor Tina Kotek invoked the Emergency Conflagration Act for the Durkee Fire.  Immediate Response Task Forces were utilized.  OSFM signed Delegations of Authority withVale,Unity,Huntington,Ontario,andthecountiesofBakerandMalheur. "
+                        }
+                    ],
+                    "Current Weather": [
+                        {
+                            "desc": "Weather Concerns",
+                            "info": "<p>Winds today are already gusting to 20 mph out of the northwest across the upper slopes and ridges this afternoon. Very strong Baker Valley winds from the northwest will continue into the late evening and overnight hours. Gusts through aligned valleys and along the ridgetops could blow in excess of 40 mph. This will include both Huntington and Vale. Another warm day today in the mid to upper 90s with abundant sunshine and relative humidity values dipping into the teens and mid 20 percent range.<\/p><p>Concerns over the next few days include breezy to locally windy conditions, namely out of the NW and through the Baker Valley region in addition to very low relative humidity values. As high pressure attempts to resume over the 4 Corners region, and a low pressure system stalls off the coast, the Durkee fire area will be in a region of persistent breeziness that favors an uptick in the Baker Valley winds each afternoon and evening in addition to above average temperatures<\/p>"
+                        }
+                    ]
+                }
+            },
+            "contacts": {
+                "contact": "Vale District<br>Vale, Oregon 97918",
+                "pio": "<b>Fire Information<\/b> <br><b>Email:<\/b> 2024.durkee@firenet.gov<br><b>Phone:<\/b> 541-208-4371<br><b>Hours:<\/b> 7:00am - 7:00pm PDT"
+            },
+            "updated": 1722006019,
+            "photo": {
+                "url": "s3fs-public\/styles\/max_2600x2600\/public\/2024-07\/Photos_20240717_DurkeeFire1_141.jpg",
+                "caption": "Photo of smoke column behind hills, trees and pasture."
+            }
+        }
+    },
+    "cached": 1,
+    "metadata": {
+        "cache": 1,
+        "apiVersion": "1",
+        "origin": null,
+        "time": "2024-07-26T16:43:24+00:00",
+        "response": "0.0003ms"
+    }
+}

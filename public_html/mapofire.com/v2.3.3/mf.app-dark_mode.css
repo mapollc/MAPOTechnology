@@ -1,0 +1,195 @@
+:root {
+    --dark-mode: #333;
+    --light: #f9f9f9;
+    --close-color: #d5d5d5;
+    --hover-close-color: #767676;
+}
+
+body {
+    background-color: #121212;
+}
+
+@scope (body.dark-mode) {
+
+    a,
+    a:visited {
+        color: var(--light-blue) !important;
+    }
+
+    .layers-list li {
+        border-top: 1px solid #3a3a3a;
+    }
+
+    @scope (.layers-list li) {
+        .desc label {
+            color: #b2c3cb !important;
+        }
+
+        .desc span {
+            color: #8f8f8f;
+        }
+    }
+
+    .switch input:focus+.slider {
+        box-shadow: 0 0 1px var(--gray);
+    }
+    
+    /*.switch input:checked+.slider {
+        background-color: var(--gray);
+    }*/
+
+    .incident .donate {
+        background-color: #3e3e3e;
+    }
+
+    nav,
+    .control,
+    .mapboxgl-ctrl-group button,
+    .popup .content,
+    #data-form {
+        background-color: var(--dark-mode);
+    }
+
+    #data-form {
+        color: var(--light);
+    }
+
+    .group h3.group-title {
+        background-color: #000;
+    }
+
+    .my-fires li {
+        background-color: var(--black);
+    }
+
+    .my-fires li h3 {
+        color: #9cbcbf !important;
+    }
+
+    .my-fires .state,
+    .popup .item .t {
+        color: #adadad;
+    }
+
+    nav ul li i,
+    nav ul li span,
+    #close-navbar,
+    .standby,
+    .filter-controls .search input,
+    #pSize,
+    .my-fires .inf p,
+    span.coords,
+    .popup .content,
+    .popup .item .v,
+    .loading {
+        color: #fff !important;
+    }
+
+    .filter-controls .search input::placeholder,
+    #data-form input[type=text]::placeholder,
+    #data-form textarea::placeholder {
+        color: #bbb;
+    }
+
+    nav ul li:hover i,
+    nav ul li:hover span {
+        transition: all .2s ease-in-out;
+        color: #c5c5c5!important;
+    }
+
+    ul#search-results li h3,
+    #impact header h3.title,
+    .incident .wx .elmt label {
+        color: var(--light)!important;
+    }
+
+    #close-navbar:hover {
+        background-color: inherit;
+    }
+
+    #impact {
+        color: #fff;
+        background-color: #202020;
+    }
+
+    #modal {
+        color: var(--light);
+        background-color: #202020;
+    }
+
+    .search span.far {
+        color: #e1e1e1 !important;
+    }
+
+    ul#search-results li h3 span {
+        color: #9d9d9d;
+    }
+
+    ul#search-results li:not(.standby):hover {
+        background-color: #404040;
+    }
+
+    .standby h6,
+    .popup .header h1,
+    #impact h2,
+    #settings .r .var,
+    .incident h2 {
+        color: #468bb7 !important;
+    }
+
+    #data-form input[type=text],
+    #data-form select,
+    #data-form textarea,
+    select {
+        background: var(--black);
+        border-color: #4e4e4e !important;
+        color: #fff;
+    }
+
+    #modal .close:before {
+        border-bottom: 2px solid var(--close-color);
+    }
+
+    .incident .stats .stat p {
+        color: #b3b3b3;
+    }
+
+    .bar {
+        background-color: #2c2c2c;
+    }
+
+    .incident .card {
+        border-color: #3c3c3c !important;
+        background-color: #2c2c2c;
+    }
+
+    #modal.wwa .times,
+    .incident .times {
+        color: #a5a5a5;
+    }
+
+    .mapboxgl-ctrl button:not(:disabled):hover {
+        background-color: #545454;
+    }
+
+    .mapboxgl-ctrl-group:not(:empty) {
+        box-shadow: 0 0 0 1px rgb(0 0 0 / 10%);
+    }
+
+    .mapboxgl-ctrl button.mapboxgl-ctrl-fullscreen .mapboxgl-ctrl-icon {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='M24 16v5.5c0 1.75-.75 2.5-2.5 2.5H16v-1l3-1.5-4-5.5 1-1 5.5 4 1.5-3h1zM6 16l1.5 3 5.5-4 1 1-4 5.5 3 1.5v1H7.5C5.75 24 5 23.25 5 21.5V16h1zm7-11v1l-3 1.5 4 5.5-1 1-5.5-4L6 13H5V7.5C5 5.75 5.75 5 7.5 5H13zm11 2.5c0-1.75-.75-2.5-2.5-2.5H16v1l3 1.5-4 5.5 1 1 5.5-4 1.5 3h1V7.5z'/%3E%3C/svg%3E") !important;
+    }
+
+    .mapboxgl-ctrl button.mapboxgl-ctrl-zoom-in .mapboxgl-ctrl-icon {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='M14.5 8.5c-.75 0-1.5.75-1.5 1.5v3h-3c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h3v3c0 .75.75 1.5 1.5 1.5S16 19.75 16 19v-3h3c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13h-3v-3c0-.75-.75-1.5-1.5-1.5z'/%3E%3C/svg%3E") !important;
+    }
+
+    .mapboxgl-ctrl button.mapboxgl-ctrl-zoom-out .mapboxgl-ctrl-icon {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='M10 13c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h9c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13h-9z'/%3E%3C/svg%3E") !important;
+    }
+
+    .mapboxgl-ctrl button.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
+        filter: invert(1) brightness(2);
+        /*background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' fill='%23333'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1zm0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7z'/%3E%3Ccircle id='dot' cx='10' cy='10' r='2'/%3E%3Cpath id='stroke' d='M14 5l1 1-9 9-1-1 9-9z' display='none'/%3E%3C/svg%3E")!important;*/
+    }
+}

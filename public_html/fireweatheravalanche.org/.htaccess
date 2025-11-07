@@ -1,0 +1,86 @@
+RewriteEngine On
+RewriteBase /
+Options -Indexes
+#Options +FollowSymlinks
+
+RewriteCond %{HTTP_HOST} ^(www\.)?fireweatheravalanche\.org$ [NC]
+RewriteRule ^(.*)$ https://www.mapofire.com/$1 [L,R=301]
+
+DirectoryIndex index.php index.html
+
+# Redirect /fire to /
+RewriteRule ^fire/state/([^/]+)/?$ /state/$1 [R=301,L]
+RewriteRule ^fire/?$ / [R=301,L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ /$1.php [L,QSA]
+
+# Redirect to WWW unless a subdomain
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} !^www\. [NC]
+RewriteCond %{HTTPS} off
+RewriteRule (.*) https://www.fireweatheravalanche.org%{REQUEST_URI} [R=301,L]
+
+ErrorDocument 500 /error.php?error=500
+ErrorDocument 404 /error.php?error=404
+ErrorDocument 403 /error.php?error=403
+ErrorDocument 401 /error.php?error=401
+RewriteRule ^error/([^/]*)$ /error.php?error_code=$1 [L,QSA]
+
+# favicon
+RewriteRule ^favicon.ico https://www.mapotechnology.com/assets/images/favicon.ico [L]
+
+# WILDFIRE MAP RULES
+RewriteRule ^list-of-wildfires$ /list.php [L,QSA]
+RewriteRule ^(f|i)/([^/]*)$ /short.php?type=$1&wfid=$2 [L,QSA]
+RewriteRule ^wildfire/([^/]*)/([^/]*)$ /incident.php?wfid=$1&name=$2 [L,QSA]
+RewriteRule ^wildfire/([^/]*)/([^/]*)/([^/]*)$ /incident.php?wfid=$1&firestate=$2&name=$3 [L,QSA]
+RewriteRule ^wfid/([^/]*)$ /index.php?wfid=$1 [L,QSA]
+RewriteRule ^fires/([^/]*)/([^/]*)/([^/]*)$ /index.php?wfid=$1&firestate=$2&name=$3 [L,QSA]
+RewriteRule ^weather/alert/([^/]*)$ /index.php?wxid=$1 [L,QSA]
+RewriteRule ^weather/outlook/([^/]*)/([^/]*)$ /index.php?type=$1&day=$2 [L,QSA]
+RewriteRule ^weather/fire/([^/]*)/([^/]*)$ /index.php?zone=$1&id=$2 [L,QSA]
+RewriteRule ^risk/([^/]*)$ /index.php?fips=$1 [L,QSA]
+RewriteRule ^archive/([^/]*)$ /index.php?archive=$1 [L,QSA]
+RewriteRule ^state/([^/]*)$ /index.php?state=$1 [L,QSA]
+RewriteRule ^county/([^/]*)/([^/]*)$ /index.php?state=$1&county=$2 [L,QSA]
+
+# APIs REWRITE
+RewriteRule ^api/v([^/]*)/([^/]*)$ /apis/index.php?version=$1&api=$2 [L,QSA]
+RewriteRule ^api/v([^/]*)/([^/]*)/([^/]*)$ /apis/index.php?version=$1&api=$2&method=$3 [L,QSA]
+RewriteRule ^api/v([^/]*)/([^/]*)/([^/]*)/([^/]*)$ /apis/index.php?version=$1&api=$2&method=$3&function=$4 [L,QSA]
+
+# ASSETS REWRITES
+RewriteRule ^src/images/incident$ /image.php?path=$1 [L,QSA]
+RewriteRule ^src/([^/]*)/([^/]*)-([^/]*)$ /assets.php?type=$1&file=$2&version=$3 [L,QSA]
+RewriteRule ^src/([^/]*)/([^/]*)$ /assets.php?type=$1&file=$2 [L,QSA]
+
+# SITEMAP
+RewriteRule ^sitemap.xml$ /sitemap.xml.php [L,QSA]
+
+
+# BEGIN Expire headers  
+<IfModule mod_expires.c>  
+  # Turn on the module.
+  ExpiresActive on
+
+    #Header set Access-Control-Allow-Origin *
+  
+  # Set the default expiry times.
+  ExpiresByType image/jpg "access plus 1 month"
+  ExpiresByType image/svg+xml "access 1 month"
+  ExpiresByType image/gif "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/ico "access plus 1 month"
+</IfModule>  
+# END Expire headers
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php84” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php84___lsphp .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit

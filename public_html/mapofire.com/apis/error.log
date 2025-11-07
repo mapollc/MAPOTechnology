@@ -1,0 +1,14 @@
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined array key "function" in /home/mapo/public_html/apis/index.php on line 48
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined array key "format" in /home/mapo/public_html/apis/index.php on line 49
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined variable $mapotrails in /home/mapo/public_html/apis/index.php on line 235
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined variable $mapotrails in /home/mapo/public_html/apis/index.php on line 235
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined array key "token" in /home/mapo/public_html/mapofire.com/apis/track.ini.php on line 5
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined array key "meta" in /home/mapo/public_html/mapofire.com/apis/track.ini.php on line 16
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined array key "wfid" in /home/mapo/public_html/mapofire.com/apis/track.ini.php on line 23
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined array key "wfid" in /home/mapo/public_html/mapofire.com/apis/track.ini.php on line 27
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined array key "meta" in /home/mapo/public_html/mapofire.com/apis/track.ini.php on line 33
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined array key "meta" in /home/mapo/public_html/mapofire.com/apis/track.ini.php on line 33
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined array key "meta" in /home/mapo/public_html/mapofire.com/apis/track.ini.php on line 33
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined array key "meta" in /home/mapo/public_html/mapofire.com/apis/track.ini.php on line 33
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined variable $con2 in /home/mapo/public_html/apis/index.php on line 259
+[26-Feb-2025 12:24:21 America/Los_Angeles] PHP Warning:  Undefined variable $memcache in /home/mapo/public_html/apis/index.php on line 264

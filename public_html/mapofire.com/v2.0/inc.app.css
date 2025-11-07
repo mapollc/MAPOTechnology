@@ -1,0 +1,697 @@
+@keyframes spin {
+    0% {
+        transform: rotate(0);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto';
+    font-size: 16px;
+}
+
+a,
+a:visited {
+    color: var(--light-blue);
+    text-decoration: none;
+    transition: all .15s ease-in-out;
+    user-select: none;
+}
+
+a:hover,
+a:visited:hover {
+    color: var(--orange);
+}
+
+img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.container {
+    display: block;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1em;
+    /*border: 1px solid blue;*/
+}
+
+header {
+    width: 100%;
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    box-shadow: 0 0 10px rgb(10 10 10 / 10%);
+}
+
+header .container {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    justify-content: space-between;
+}
+
+header .logo {
+    outline: none;
+}
+
+header .logo img {
+    width: auto;
+    max-height: 40px;
+    outline: none;
+}
+
+header nav ul {
+    display: inline-flex;
+    gap: 1em;
+    list-style: none;
+}
+
+header nav ul.open {
+    display: flex;
+}
+
+header nav ul li a,
+header nav ul li a:visited {
+    color: var(--blue);
+}
+
+.menuIcon {
+    display: none;
+    font-size: 22px;
+    cursor: pointer;
+    user-select: none;
+}
+
+main {
+    padding: 1em 0;
+}
+
+section {
+    display: block;
+    width: 100%;
+    margin-bottom: 2em;
+}
+
+section:last-child {
+    margin-bottom: 0;
+}
+
+h2 {
+    margin-bottom: 1em;
+    padding-bottom: 0.33em;
+    font-size: 18px;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: #0e4472;
+    border-bottom: 1px dotted var(--dark-gray);
+}
+
+b {
+    font-weight: 500;
+}
+
+p {
+    line-height: 1.3;
+}
+
+/*p.text {
+    padding-bottom: 1em;
+}
+
+p.text:only-child,
+p.text:last-child {
+    padding-bottom: 0;
+}*/
+
+.highcharts-subtitle {
+    line-height: 1.3 !important;
+}
+
+footer {
+    display: flex;
+    width: 100%;
+    margin-top: 2em;
+    min-height: 125px;
+    align-items: center;
+    background-color: var(--blue);
+    color: #fff;
+}
+
+footer .row {
+    margin-bottom: 0;
+}
+
+footer ul {
+    list-style: none;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 1em;
+}
+
+footer ul a,
+footer ul a:visited {
+    color: #bfe6f7;
+}
+
+footer ul a:hover,
+footer ul a:visited:hover {
+    color: #fff;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+    margin-bottom: 2em;
+    /*border: 1px solid red;*/
+}
+
+.inciweb .row {
+    margin-bottom: 0;
+}
+
+figure span {
+    display: block;
+    margin-top: 1em;
+    font-size: 14px;
+    color: #858585;
+    line-height: 1.2;
+}
+
+.row.align-center {
+    align-items: center;
+}
+
+.row.space-between {
+    justify-content: space-between;
+}
+
+.row .col {
+    flex: 1;
+}
+
+.row.space-between .col {
+    flex: 0 1 auto;
+}
+
+.col.w25 {
+    max-width: 25%;
+}
+
+.col.w33 {
+    max-width: 33.33%;
+}
+
+.col.w50 {
+    max-width: 50%;
+}
+
+.col.w75 {
+    max-width: 75%;
+}
+
+.title {
+    display: flex;
+    align-items: center;
+    gap: 0.75em;
+}
+
+.title h1 {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.15em;
+    font-weight: 500;
+    font-size: 36px;
+}
+
+.title i {
+    font-size: 13px;
+}
+
+.juris {
+    display: inline-flex;
+    align-items: center;
+    gap: 1em;
+}
+
+.times {
+    display: block;
+    margin-bottom: 2em;
+    font-weight: 100;
+    line-height: 1.5;
+    font-size: 15px;
+    color: #555;
+}
+
+.times span:after {
+    content: '\00B7';
+    padding: 0 0.5em;
+}
+
+.times span:last-child:after {
+    content: '';
+    padding: 0;
+}
+
+.times span b {
+    font-weight: 400;
+}
+
+.stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    margin-top: 2em;
+}
+
+.stat {
+    display: inline-flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat.size {
+    color: var(--red);
+}
+
+.stat p {
+    margin-right: 0.75rem;
+    padding: 6px 0.75rem 6px 0;
+    text-transform: uppercase;
+    font-weight: 500;
+    font-size: 14px;
+    color: #555;
+    height: inherit;
+    border-right: 1px solid #c3c3c3;
+}
+
+.stat .v {
+    font-size: 24px;
+    width: max-content;
+}
+
+.stat .v small {
+    font-size: 16px;
+}
+
+span.coords {
+    font-size: 14px;
+    font-weight: 400;
+}
+
+span.coords.blur {
+    filter: blur(3px);
+    user-select: none;
+}
+
+.full-contain {
+    position: relative;
+    display: inline-block;
+    margin-right: 0.5em;
+    color: var(--green);
+    font-size: 20px;
+}
+
+.full-contain.not {
+    color: var(--red);
+    opacity: 0.5;
+}
+
+.status {
+    color: #fff !important;
+    padding: 4px 12px;
+    border-radius: 3px;
+    font-weight: 700;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    user-select: none
+}
+
+.status.active {
+    background-color: #ca1010
+}
+
+.status.unknown {
+    background-color: #a91990
+}
+
+.status.contained {
+    background-color: #fd8c22
+}
+
+.status.controlled {
+    background-color: #61a720
+}
+
+.status.out {
+    background-color: #444
+}
+
+.loading {
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+    border: 3px solid rgb(241 143 1 / 80%);
+    border-top-color: rgb(241 143 1 / 20%);
+    animation: spin 1.1s infinite linear;
+    border-radius: 100%;
+    opacity: 1;
+}
+
+.loading.centered {
+    margin: 0 auto;
+}
+
+#map {
+    display: flex;
+    width: 100%;
+    height: 400px;
+    align-items: center;
+    justify-content: center;
+    background-color: #666;
+    box-shadow: 0 0 20px rgb(10 10 10 / 10%);
+    border-radius: 0.75em;
+}
+
+#acres_history {
+    display: flex;
+    width: 100%;
+    height: 400px;
+    align-items: center;
+    justify-content: center;
+    background-color: #eee;
+}
+
+.data-list {
+    display: flex;
+    gap: 0.75em;
+    flex-direction: column;
+}
+
+.data {
+    display: inline-flex;
+    width: 100%;
+    align-items: flex-start;
+    gap: 0.5em;
+}
+
+.data>* {
+    flex: 1;
+    text-align: left;
+}
+
+.data .icon {
+    font-size: 18px;
+    max-width: 25px;
+    text-align: center;
+    color: #bf3625;
+}
+
+.data .label {
+    text-transform: uppercase;
+    line-height: 1.4;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 165px;
+}
+
+.data .value {
+    line-height: 1.3;
+}
+
+.data .value.cco b {
+    color: var(--blue-gray);
+}
+
+.field {
+    display: inline-flex;
+    width: 100%;
+    align-items: flex-start;
+    gap: 0.5em;
+}
+
+.field>* {
+    flex: 1;
+    text-align: left;
+}
+
+.field .label {
+    text-transform: uppercase;
+    line-height: 1.4;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 165px;
+}
+
+.field .desc {
+    line-height: 1.3;
+}
+
+.field .desc p {
+    padding-bottom: 1em;
+}
+
+.field .desc p:last-child,
+.field .desc p:only-child {
+    padding-bottom: 0;
+}
+
+.card {
+    display: block;
+    width: 100%;
+    background-color: #fbfbfb;
+    border: 1px solid #e9e9e9;
+    padding: 1em;
+    border-radius: 8px;
+}
+
+.wx {
+    display: flex;
+    gap: 1em;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.wx .elmt {
+    display: flex;
+    flex: 1 1 calc(33.33% - 1em);
+    flex-direction: column;
+    gap: 0.5em;
+    align-items: center;
+}
+
+.wx.p4 .elmt {
+    flex: 1 1 calc(25% - 1em);
+}
+
+.wx .elmt label {
+    text-transform: uppercase;
+    font-size: 14px;
+    text-align: center;
+    color: #555;
+}
+
+.wx .elmt i {
+    color: #ef6c00;
+    font-size: 20px;
+}
+
+.wx .elmt h3 {
+    font-size: 20px;
+    text-align: center;
+    font-weight: 500;
+}
+
+p.updated {
+    margin-top: 1em;
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+}
+
+.social {
+    display: block;
+    text-align: center;
+}
+
+.social .icons {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 1em;
+}
+
+.social .icons i {
+    color: #454545;
+    font-size: 24px;
+    cursor: pointer;
+    user-select: none;
+    transition: all .15s ease-in-out;
+}
+
+.social .icons i:hover {
+    color: #222;
+}
+
+@media (min-width: 1200px) {
+    .data-list {
+        gap: 1.5em;
+    }
+}
+
+@media (max-width: 550px) or ((min-width: 768px) and (max-width: 900px)) {
+    .wx.p4 .elmt {
+        flex: 1 1 calc(50% - 1em);
+    }
+}
+
+@media (max-width: 768px) {
+    .row.space-between {
+        justify-content: center;
+    }
+
+    .title {
+        justify-content: center;
+        text-align: center;
+    }
+
+    figure {
+        max-width: 550px;
+        margin: 0 auto;
+    }
+
+    .col.w25,
+    .col.w50,
+    .col.w75 {
+        flex: 1 1 100% !important;
+        max-width: 100%;
+    }
+
+    .col.w50 {
+        text-align: center;
+    }
+
+    .no-gap75 {
+        gap: 0.75em;
+    }
+
+    .data .label,
+    .field .label {
+        max-width: 200px;
+    }
+
+    footer .container {
+        padding: 2em 1em;
+    }
+
+    footer .row {
+        gap: 3em;
+    }
+}
+
+@media (max-width: 600px) {
+    .menuIcon {
+        display: block;
+    }
+
+    header nav ul {
+        display: none;
+        position: absolute;
+        top: 76px;
+        right: 0;
+        width: 100%;
+        padding: 2em;
+        gap: 1.5em;
+        background-color: #333;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    header nav ul li a,
+    header nav ul li a:visited {
+        color: #fff;
+    }
+
+    .stats {
+        width: min-content;
+        margin: 0 auto;
+        gap: 1em;
+        flex-direction: column-reverse;
+    }
+
+    .stats .stat {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .stat p {
+        text-align: right;
+        width: 110px;
+    }
+
+    #acres_history {
+        height: 300px;
+    }
+}
+
+@media (max-width: 550px) {
+    figure span {
+        border-bottom: 1px solid #dbdbdb;
+        padding-bottom: 1em;
+    }
+
+    .data {
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.33em;
+    }
+
+    .data .label {
+        max-width: fit-content;
+    }
+
+    .data .value {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .times,
+    .data .value {
+        text-align: center;
+    }
+}
+
+@media (max-width: 430px) {
+    .field {
+        flex-wrap: wrap;
+    }
+
+    .data .label, .field .label {
+        flex: 1 1 100%;
+        max-width: unset;
+    }
+
+    .wx .elmt {
+        flex: 1 1 100%;
+    }
+
+    footer ul {
+        justify-content: center;
+    }
+}
