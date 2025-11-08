@@ -1,0 +1,93 @@
+RewriteEngine On
+RewriteBase /
+Options -Indexes
+Options +FollowSymlinks
+
+DirectoryIndex index.php index.html
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ /$1.php [L,QSA]
+
+ErrorDocument 500 /error.php?error=500
+ErrorDocument 404 /error.php?error=404
+ErrorDocument 403 /error.php?error=403
+ErrorDocument 401 /error.php?error=401
+RewriteRule ^error/([^/]*)$ /error.php?error_code=$1 [L,QSA]
+
+RewriteRule ^favicon.ico https://www.mapotechnology.com/assets/images/favicon.ico [L]
+
+# Redirect to WWW unless a subdomain
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} !^144\.208\.76\.132
+RewriteCond %{HTTP_HOST} !^www\. [NC]
+RewriteCond %{HTTP_HOST} !^(api|api-test|api.apps|apps|data|fiview|lagranderide|mapotrails|mapofire|wildfiremap|account|support|status)\.mapotechnology\.com$ [NC]
+RewriteRule (.*) https://www.mapotechnology.com%{REQUEST_URI} [R=301,L]
+
+# IMAGES, JS, and CSS
+RewriteRule ^assets/images/tiles/ofm/([^/]*)/([^/]*)/([^/]*).pbf$ /images/tiles/vect.php?z=$1&x=$2&y=$3 [L,QSA]
+RewriteRule ^assets/images/tiles/([^/]*)/([^/]*)/([^/]*)/([^/]*).png$ /images/tiles/tileServer.php?t=$1&z=$2&x=$3&y=$4 [L,QSA]
+RewriteRule ^assets/images/([^/]*)/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ /images/$1/$2/$3/$4/$5 [L,QSA]
+RewriteRule ^assets/images/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ /images/$1/$2/$3/$4 [L,QSA]
+RewriteRule ^assets/images/([^/]*)/([^/]*)/([^/]*)$ /images/$1/$2/$3 [L,QSA]
+RewriteRule ^assets/images/([^/]*)/([^/]*)$ /images/$1/$2 [L,QSA]
+RewriteRule ^assets/images/([^/]*)$ /images/$1 [L,QSA]
+RewriteRule ^assets/images/tiles/esri/([^/]*)/([^/]*)/([^/]*).png$ /images/tiles/esri.php?z=$1&x=$2&y=$3 [L,QSA]
+#RewriteRule ^assets/images/users/([^/]*)$ /images/users/$1 [L,QSA]
+RewriteRule ^assets/css/([^/]*)$ /css/$1 [L,QSA]
+RewriteRule ^assets/js/([^/]*)$ /js/$1 [L,QSA]
+RewriteRule ^src/([^/]*)/([^/]*)$ /asset.php?type=$1&file=$2 [L,QSA]
+RewriteRule ^src/([^/]*)/([^/]*)/([^/]*)$ /asset.php?type=$1&folder=$2&file=$3 [L,QSA]
+RewriteRule ^src/([^/]*)/([^/]*)-([^/]*)$ /asset.php?type=$1&file=$2&version=$3 [L,QSA]
+
+# OREROADS REWRITES
+#RewriteRule ^oregonroads/([^/]*)$ /oregonroads.php?t=$1 [L,QSA]
+#RewriteRule ^apps/([^/]*)/([^/]*)$ /apps/$1/$2 [L,QSA]
+RewriteRule ^app/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ /apps/oreroads/minify.php?app=$1&type=$2&version=$3&file=$4 [L,QSA]
+
+# USER ACCOUNT RULES
+RewriteRule ^secure/([^/]*)$ /user.php?method=$1 [L,QSA,UnsafeAllow3F]
+RewriteRule ^authenticate/([^/]*)$ /do.php?method=$1 [L,QSA]
+RewriteRule ^account/secure/apis/([^/]*)$ /users/admin/api.php?callback=$1 [L,QSA]
+RewriteRule ^account/secure/apis/([^/]*)/([^/]*)$ /users/admin/api.php?callback=$1&mode=$2 [L,QSA]
+RewriteRule ^account/([^/]*)$ /users/index.php?page=$1 [L,QSA]
+RewriteRule ^account/([^/]*)/([^/]*)$ /users/index.php?page=$1&method=$2 [L,QSA]
+RewriteRule ^account/([^/]*)/([^/]*)/([^/]*)$ /users/index.php?page=$1&method=$2&function=$3 [L,QSA]
+RewriteRule ^account/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ /users/index.php?page=$1&method=$2&function=$3&extra=$4 [L,QSA]
+
+# GENERAL REWRITES
+RewriteRule ^sitemap.xml$ /sitemap.xml.php [L,QSA]
+RewriteRule ^about$ /about-us.php [L,QSA]
+RewriteRule ^about/contact$ /contact.php [L,QSA]
+RewriteRule ^about/legal/([^/]*)$ /legal.php?doc=$1 [L,QSA]
+RewriteRule ^donate/([^/]*)$ /donations.php?mode=$1 [L,QSA]
+RewriteRule ^donate$ /donations.php [L,QSA]
+RewriteRule ^purchase/([^/]*)/([^/]*)$ /subscribe.php?product=$1&status=$2 [L,QSA]
+RewriteRule ^purchase/([^/]*)$ /subscribe.php?product=$1 [L,QSA]
+RewriteRule ^purchase$ /subscribe.php [L,QSA]
+#RewriteRule ^subscription$ /subscribe.php [L,QSA]
+#RewriteRule ^subscription/([^/]*)$ /subscribe.php?mode=$1 [L,QSA]
+
+RewriteCond %{HTTP_HOST} ^\(api\|api-test\|fiview\|mapotrails\|mapofire\|account\)\.mapotechnology\.com$
+RewriteRule ^(.*)$ "https\:\/\/www\.mapotechnology\.com$1" [R=301,L]
+
+# MAPOSNOW
+RewriteRule ^winter/dashboards/([^/]*)$ /winter/dashboard.php?dashboard=$1 [L,QSA]
+RewriteRule ^maposnow/map$ /maposnow/list.php [L,QSA]
+RewriteRule ^maposnow/dashboard/([^/]*)/([^/]*)$ /maposnow/index.php?state=$1&dashboard=$2 [L,QSA]
+
+<Files ~ "\.ini\.php$">
+    Require all denied
+</Files>
+
+<Files "user.php">
+    Header set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+</Files>
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php84” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php84___lsphp .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit

@@ -1,0 +1,30 @@
+RewriteEngine On
+RewriteBase /
+Options +Indexes
+Options +FollowSymlinks
+
+DirectoryIndex index.php index.html
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ /$1.php [L,QSA]
+
+ErrorDocument 500 /error.php?error=500
+ErrorDocument 404 /error.php?error=404
+ErrorDocument 403 /error.php?error=403
+ErrorDocument 401 /error.php?error=401
+RewriteRule ^error/([^/]*)$ /error.php?error_code=$1 [L,QSA]
+
+RewriteRule ^favicon.ico https://www.mapotechnology.com/assets/images/favicon.ico [L]
+
+<Files ~ "\.ini\.php$">
+    Require all denied
+</Files>
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php84” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php84___lsphp .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit

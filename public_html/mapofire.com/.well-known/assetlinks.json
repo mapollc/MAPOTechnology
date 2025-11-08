@@ -1,0 +1,16 @@
+[
+    {
+      "relation": [
+        "delegate_permission/common.handle_all_urls",
+        "delegate_permission/common.get_login_creds"
+      ],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.mapollc.mapofire",
+        "sha256_cert_fingerprints": [
+          "2C:3C:27:BE:EA:2C:F0:CE:06:C2:1C:9D:22:39:65:BE:DC:43:A3:41:9B:B6:63:52:47:16:54:86:1F:6C:20:06",
+          "26:DB:68:3A:19:1B:A4:F8:F6:09:9F:1C:7B:65:AC:8F:9E:BC:48:72:93:EC:0C:0B:D8:2D:D8:76:B6:04:3B:83"
+        ]
+      }
+    }
+  ]

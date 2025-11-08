@@ -1,0 +1,47 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.mapollc.oreroads",
+            "sha256_cert_fingerprints": [
+                "0A:AE:DA:51:61:81:D7:43:4A:B4:56:9C:30:99:6E:E6:46:DB:30:61:E7:8E:9D:B4:34:3D:4D:69:CD:10:02:00"
+            ]
+        }
+    },
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.mapollc.oreroads",
+            "sha256_cert_fingerprints": [
+                "2C:3C:27:BE:EA:2C:F0:CE:06:C2:1C:9D:22:39:65:BE:DC:43:A3:41:9B:B6:63:52:47:16:54:86:1F:6C:20:06"
+            ]
+        }
+    },
+    {
+        "relation": [
+            "delegate_permission/common.get_login_creds"
+        ],
+        "target": {
+            "namespace": "web",
+            "site": "https://www.mapotechnology.com"
+        }
+    },
+    {
+        "relation": [
+            "delegate_permission/common.get_login_creds"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.mapollc.oreroads",
+            "sha256_cert_fingerprints": [
+                "0A:AE:DA:51:61:81:D7:43:4A:B4:56:9C:30:99:6E:E6:46:DB:30:61:E7:8E:9D:B4:34:3D:4D:69:CD:10:02:00"
+            ]
+        }
+    }
+]

@@ -1,0 +1,1 @@
+<?$ga_id = 'G-X03WWLX3BJ';require_once '../donations.php';?>

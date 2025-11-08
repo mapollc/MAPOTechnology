@@ -1,0 +1,12 @@
+RewriteEngine on
+
+RewriteCond %{HTTP_HOST} ^mapotrail.com [NC,OR]
+RewriteCond %{HTTP_HOST} ^www.mapotrail.com [NC]
+RewriteRule ^(.*)$ https://www.mapotrails.com [L,R=301,NC]
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php84” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php84___lsphp .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit
