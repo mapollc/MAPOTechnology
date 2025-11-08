@@ -1,0 +1,7 @@
+Hello {fname},<br><br>
+
+You are receiving this email to notify you of new wildfire incidents reported near your location.<br><br>
+
+{fires}
+
+{notificationTimes}

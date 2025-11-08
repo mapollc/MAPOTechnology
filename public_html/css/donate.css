@@ -1,0 +1,295 @@
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: roboto;
+}
+
+main {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.wrapper {
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+    min-height: 100%;
+    margin: 0 auto;
+    background-color: #fff;
+    box-shadow: 0 0 25px rgb(10 10 10 / 5%);
+    border-radius: 6px;
+    padding: 2em;
+}
+
+.content {
+    display: block;
+    text-align: center;
+}
+
+.content h1 {
+    font-weight: 800;
+    font-size: 30px;
+    padding: 0;
+    margin: 1em 0 1.5em 0;
+}
+
+.content p {
+    margin: 0;
+    padding: 0;
+    color: hsla(0, 0%, 10%, 0.5);
+    line-height: 1.3;
+}
+
+.receipt {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    margin-top: 2em;
+}
+
+.fees {
+    display: block;
+    max-width: 350px;
+    margin-top: 1em;
+}
+
+.fees .checkbox {
+    display: inline-flex;
+}
+
+.fees label {
+    margin-top: -3px;
+    color: #555!important;
+    font-size: 14px!important;
+    text-align: left;
+}
+
+.stmt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 20px;
+    width: 100%;
+    max-width: 384px;
+    margin: 0 calc(calc(100% - 384px) / 2);
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-family: monospace;
+    font-size: 16px;
+}
+
+.stmt .text {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.4;
+}
+
+.stmt .divider {
+    display: flex;
+    width: auto;
+    flex: 1;
+    flex-wrap: nowrap;
+    border-bottom: 1.5px dashed rgb(0 0 0 / 8%);
+}
+
+img {
+    display: block;
+    width: 100%;
+    max-width: 200px;
+}
+
+footer {
+    display: inline-flex;
+    width: 100%;
+    flex-wrap: nowrap;
+    gap: 1em;
+    justify-content: center;
+    text-align: center;
+    margin-top: 4em;
+    font-size: 12px;
+    color: rgb(26 26 26 / 60%);
+}
+
+footer a {
+    text-decoration: none;
+    font-size: inherit;
+    color: inherit;
+    outline: none;
+}
+
+.message {
+    display: block;
+    margin: 1em!important;
+    padding: 0.5em 1em!important;
+    font-size: 14.5px;
+    text-align: center;
+    border-radius: 4px;
+}
+
+.message.success {
+    border: 1px solid #d7ffe1;
+    background-color: #ebfff0;
+    color: #538d64;
+}
+
+.message.error {
+    border: 1px solid #f7bfc9;
+    background-color: #f9d2d8;
+    color: var(--red);
+}
+
+#paypal-button-container {
+    width: 100%;
+}
+
+#dbox {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 1.5em;
+}
+
+#dbox .btn-group {
+    margin: 2em 0 0 0;
+    width: 100%;
+    max-width: 350px;
+    gap: 16px;
+}
+
+#dbox .btn {
+    min-width: 100%;
+    height: 53px;
+}
+
+.note {
+    display: none;
+    font-size: 14px;
+    margin: 1em 0 0 0;
+    color: var(--red);
+}
+
+.preset {
+    display: inline-flex;
+    overflow: hidden;
+    margin-top: 2em;
+    height: 50px;
+    gap: 1em;
+}
+
+.timing {
+    display: inline-flex;
+    width: fit-content;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 5px;
+    border: 1px solid #0a9ad7;
+}
+
+.switch {
+    position: relative;
+}
+
+.switch input[type="radio"] {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+}
+
+.switch span {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 20px;
+    height: 100%;
+    background-color: #eee;
+    /* Default background */
+    color: #333;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    min-width: 80px;
+    /* Adjust as needed */
+}
+
+.preset .switch span {
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    border: 1px solid #f1f1f1;
+}
+
+.switch input[type="radio"]:checked+span {
+    background-color: var(--light-blue);
+    /* Active background color */
+    color: white;
+    /* Active text color */
+}
+
+.preset .switch input[type="radio"]:checked+span {
+    border-color: #0a9ad7;
+}
+
+/* Optional: Style for adjacent labels to create a "connected" look */
+.switch:not(:first-child) span {
+    border-left: 1px solid #ccc;
+}
+
+.preset .switch:not(:first-child) span {
+    border-left-color: #f1f1f1;
+}
+
+.custom {
+    display: inline-flex;
+    width: 100%;
+    max-width: 272px;
+    align-items: center;
+    margin-top: 2em;
+    padding: 0.75em;
+    border-radius: 6px;
+    border: 1px solid #f1f1f1;
+}
+
+.custom span {
+    color: #6e6e6e;
+    font-weight: 600;
+    font-size: 14px;
+    user-select: none;
+}
+
+.custom input::-webkit-input-placeholder {
+    font-weight: 400;
+    color: #aaa;
+}
+
+.custom input {
+    margin-left: .5em;
+    font-family: roboto;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--light-blue);
+    border: 0;
+    outline: 0;
+}
+
+@media (max-width: 447px) {
+    .stmt {
+        margin: unset;
+        padding: 23px 20px;
+    }
+}

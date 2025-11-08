@@ -1,0 +1,16 @@
+# BEGIN Expire headers  
+<IfModule mod_expires.c>  
+  # Turn on the module.
+  ExpiresActive on
+
+    Header set Access-Control-Allow-Origin *
+  
+  # Set the default expiry times.
+  ExpiresByType image/jpg "access plus 1 month"
+  ExpiresByType image/svg+xml "access 1 month"
+  ExpiresByType image/gif "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/ico "access plus 1 month"
+</IfModule>  
+# END Expire headers  

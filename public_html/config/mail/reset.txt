@@ -1,0 +1,10 @@
+Hello {fname},<br><br>
+
+You have requested for us to reset your password. Please click the link below to verify you requested the password reset. Once verified, you will be able to change your password
+before being able to login again.<br><br>
+
+<a href="https://www.mapotechnology.com/secure/forgot?verify=1&email={email}&oauth_token={token}" style="background-color:#00a6ed;padding:12px 18px;color:#fff;line-height:2.5;border-radius:5px;user-select:none;outline:none">Reset your password</a><br><br>
+
+If the link above doesn't work, you can copy and paste the following URL into your web browser: https://www.mapotechnology.com/secure/forgot?verify=1&email={email}&oauth_token={token}<br><br>
+
+This link expires 10 minutes from when you requested the reset. If you did not request your password to be reset, please contact us.

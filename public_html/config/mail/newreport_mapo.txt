@@ -1,0 +1,4 @@
+A website user at Map-o-Fire sent a new wildland fire incident report to MAPO:<br>
+
+------------------------------------------------------<br>
+{report}

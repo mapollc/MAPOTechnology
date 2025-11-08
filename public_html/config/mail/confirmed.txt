@@ -1,0 +1,5 @@
+Hello {fname},<br><br>
+
+Thanks for confirming your email address for your MAPO LLC account. You can login anytime now, from any of our sites or apps, using the same email and password.<br><br>
+
+If you did not create this account, or you have any questions/concerns, please contact us to resolve the issue.

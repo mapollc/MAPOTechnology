@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>OregonRoads</title>
+    <link rel="preconnect" href="//fonts.gstatic.com/">
+    <link rel="preconnect" href="//cdn.jsdelivr.net">
+    <link rel="preconnect" href="//cdnjs.cloudflare.com">
+    <link rel="preconnect" href="//fontawesome.com">
+    <link rel="preconnect" href="//ka-p.fontawesome.com">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2, user-scalable=1" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
+    <script src="https://kit.fontawesome.com/aa68e0c9b6.js" crossorigin="anonymous"></script>
+    <link href="https://www.mapotechnology.com/app/oreroads/css/v1.1/style.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <div id="map" style="width:100%;height:100%"></div>
+    <div id="loading">
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="75" height="75" viewBox="0 0 200 200"><radialGradient id="a12" cx=".66" fx=".66" cy=".3125" fy=".3125" gradientTransform="scale(1.5)"><stop offset="0" stop-color="#FF156D"></stop><stop offset=".3" stop-color="#FF156D" stop-opacity=".9"></stop><stop offset=".6" stop-color="#FF156D" stop-opacity=".6"></stop><stop offset=".8" stop-color="#FF156D" stop-opacity=".3"></stop><stop offset="1" stop-color="#FF156D" stop-opacity="0"></stop></radialGradient><circle transform-origin="center" fill="none" stroke="url(#a12)" stroke-width="10" stroke-linecap="round" stroke-dasharray="200 1000" stroke-dashoffset="0" cx="100" cy="100" r="70"><animateTransform type="rotate" attributeName="transform" calcMode="spline" dur="2" values="360;0" keyTimes="0;1" keySplines="0 0 1 1" repeatCount="indefinite"></animateTransform></circle><circle transform-origin="center" fill="none" opacity=".2" stroke="#FF156D" stroke-width="10" stroke-linecap="round" cx="100" cy="100" r="70"></circle></svg><br>
+            <span>Loading...</span>
+        </div>
+    </div>
+    
+    <div class="zoom-controls">
+        <button class="zoom-in" type="button" aria-label="Zoom in" aria-disabled="false">
+            <span class="ctrl-icon" aria-hidden="true" title="Zoom in"></span>
+        </button>
+        <button class="zoom-out" type="button" aria-label="Zoom out" aria-disabled="false">
+            <span class="ctrl-icon" aria-hidden="true" title="Zoom out"></span>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.min.js"></script>
+    <script src="https://www.mapotechnology.com/app/oreroads/js/v1.1/pouchdb.js"></script>
+    <script>
+        const webApp = false;
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = (window.location.host == 'localhost' ? '' : 'https://www.mapotechnology.com/app/oreroads/js/v1.1/') + 'roads.js?' + new Date().getTime().toString();
+        document.body.appendChild(script);
+    </script>
+
+</body>
+
+</html>

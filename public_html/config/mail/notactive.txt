@@ -1,0 +1,7 @@
+Hello {name},<br><br>
+
+{msg}<br><br>
+
+With your account, you can log in to any of services including our wildfire map, <a href="https://mapofire.com?utm_campaign=mapofire&utm_medium=link&utm_source=email">Map of Fire</a>; our recreation hub, <a href="https://mapotrails.com?utm_campaign=mapofire&utm_medium=link&utm_source=email">Map of Trails</a>; and <a href="https://apps.mapotechnology.com/oregonroads?utm_campaign=mapofire&utm_medium=link&utm_source=email">OregonRoads</a>, our road condition platform for Oregon. Having an account lets you personalize settings for each. We're looking to providing more personalization as we continue to grow our offerings.<br><br>
+
+An account with this email address was created on {created}. If this wasn't you, please reach out to us to resolve the issue.

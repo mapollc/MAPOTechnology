@@ -1,0 +1,6 @@
+Hello {fname}!<br><br>
+
+We just wanted to reach out and thank you for your ${amt} donation to MAPO. Your contribution will help ensure our products like our wildfire map, Map of Fire, are available to everyone. Without
+help from people like you, we would be unable to continue operating valuable information services.<br><br>
+
+If you have any questions, please feel free to contact us anytime.

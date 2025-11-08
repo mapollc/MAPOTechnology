@@ -1,0 +1,219 @@
+* {
+    box-sizing: border-box
+}
+
+::-webkit-scrollbar {
+    width: 7px
+}
+
+::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 6px rgba(100, 100, 100, .3);
+    -webkit-box-shadow: inset 0 0 6px rgba(100, 100, 100, .3)
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(127, 127, 127, .8);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, .5);
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .5);
+    transition: all .15s ease-in-out;
+    cursor: pointer
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(107, 107, 107, .8)
+}
+
+::placeholder {
+    color: #ddd
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: source sans pro;
+    font-size: 16px
+}
+
+.wrapper {
+    display: flex;
+    flex: 1;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden
+}
+
+.wrapper .logo {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 35%;
+    background-color: #396085
+}
+
+.wrapper .logo .content {
+    text-align: center
+}
+
+.wrapper .logo .content h1 {
+    margin: 0.3em 0 0 0;
+    padding: 0;
+    font-family: poppins;
+    font-size: 4em;
+    color: #eee;
+    line-height: 110%;
+    letter-spacing: 0.03em
+}
+
+span.tm {
+    vertical-align: 30px;
+    font-weight: 100;
+    font-size: 0.5em
+}
+
+.wrapper .logo .content h2 {
+    margin: 2em 0 0 0;
+    padding: 0;
+    font-family: poppins;
+    font-size: 1.2em;
+    color: #fff
+}
+
+.wrapper .login-wrapper {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 25px;
+    height: 65%;
+    width: 60%;
+    background-color: #fff
+}
+
+.wrapper .login-wrapper form {
+    width: 100%;
+    max-width: 500px;
+    height: fit-content;
+    text-align: center
+}
+
+.wrapper .login-wrapper form input,
+.wrapper .login-wrapper form select,
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    display: inline-block;
+    width: 100%;
+    margin: 0.45em 0;
+    padding: 0.5em;
+    background-color: #5a5c5a !important;
+    border: 1px solid #454545;
+    border-radius: 5px;
+    font-family: source sans pro;
+    font-size: 1.3em;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+    outline: none;
+    /*transition:background-color 5000s ease-in-out 0s*/
+}
+
+#submit-btn {
+    display: inline-block;
+    width: 100%;
+    max-width: 50%;
+    margin-top: 2em;
+    padding: 0.8em 1em;
+    background-color: #5a8bb9!important;
+    color: #fff;
+    text-decoration: none;
+    font-family: source sans pro;
+    font-size: 1.2em;
+    border: 0px solid transparent;
+    border-radius: 5px;
+    transition: all .15s ease-in-out;
+    cursor: pointer
+}
+
+#submit-btn i {
+    padding-right: 0.4em
+}
+
+#submit-btn:hover {
+    background-color: #396085!important;
+}
+
+.wrapper .login-wrapper form .error {
+    display: none;
+    width: 100%;
+    padding: 7px;
+    margin-bottom: 1.1em;
+    font-family: poppins;
+    background-color: #ffcece;
+    border: 1px solid #fda5a5;
+    border-radius: 4px
+}
+
+.copyright {
+    position: absolute;
+    bottom: 0;
+    margin: 1em;
+    color: #555;
+    text-align: center
+}
+
+@media(max-height: 560px) {
+    .copyright {
+        position: unset;
+        bottom: unset
+    }
+}
+
+@media(max-width: 1000px) {
+    .wrapper {
+        flex-direction: column;
+        overflow: auto
+    }
+
+    .wrapper .logo {
+        width: 100%;
+        padding: 25px 0
+    }
+
+    .wrapper .logo .content img {
+        max-width: 125px !important
+    }
+
+    .wrapper .login-wrapper {
+        width: 100%;
+        padding: 25px;
+        justify-content: flex-start
+    }
+
+    .wrapper .logo .content h1 {
+        margin: 0;
+        font-size: 3em
+    }
+
+    .wrapper .logo .content h2 {
+        margin: 1em 0 0 0
+    }
+
+    span.tm {
+        vertical-align: 24px
+    }
+
+    .copyright {
+        position: unset;
+        bottom: unset;
+        margin: 2em 1em 1em 1em
+    }
+}

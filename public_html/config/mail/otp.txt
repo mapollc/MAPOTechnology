@@ -1,0 +1,7 @@
+Hello {fname},<br><br>
+
+Here is your one-time password to login. It expires 10 minutes from when you logged in:<br><br>
+
+{otp}
+
+If you did not attempt to login and request a OTP, please ignore this email and consider changing your password for security purposes.

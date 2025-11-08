@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>API Documentation - MAPO LLC</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preload"
+        href="//fonts.googleapis.com/css2?family=Dosis:wght@400;500;600&family=Noto+Sans:wght@200;400&display=swap"
+        as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet"
+            href="//fonts.googleapis.com/css2?family=Dosis:wght@400;500;600&family=Noto+Sans:wght@200;400&display=swap">
+    </noscript>
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: none;
+            scroll-behavior: smooth;
+            font-size: 16px;
+            font-family: noto sans;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        main {
+            position: relative;
+            /*display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;*/
+            width: 100%;
+            height: 100%;
+            overflow: none;
+        }
+
+        main .sidebar {
+            position: fixed;
+            display: block;
+            left: 0;
+            /*flex: 1 1 auto;
+            max-width: 300px;*/
+            width: 300px;
+            height: 100%;
+            background-color: #f4f5f8;
+            padding: 1em;
+            overflow-y: auto;
+        }
+
+        main .sidebar .header {
+            display: flex;
+            flex-wrap: no-wrap;
+            align-items: center;
+            justify-content: space-evenly;
+            margin-bottom: 2.5em
+        }
+
+        main .sidebar .header span {
+            font-size: 20px;
+            font-weight: bold;
+            color: #323F4C
+        }
+
+        main .sidebar .info {
+            display: block;
+            width: 100%;
+            padding: 0.1em 0
+        }
+
+        main .sidebar .info b {
+            color: #034c8f
+        }
+
+        main .sidebar ul.menu {
+            list-style: none;
+            margin: 2.5em -1em 0 -1em;
+            padding: 0;
+            line-height: 28px;
+        }
+
+        main .sidebar ul.menu li {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            line-height: 0;
+            cursor: pointer;
+            transition: all .2s ease-in-out;
+        }
+
+        main .sidebar ul.menu li.active,
+        main .sidebar ul.menu li:hover {
+            background-color: #DCDEE9;
+        }
+
+        main .sidebar ul.menu li a {
+            padding: 12px 13.25%;
+            color: #777A7A;
+            letter-spacing: 1px;
+            line-height: 1.1;
+            display: block;
+            text-transform: capitalize;
+        }
+
+        main .sidebar ul.menu li.active a,
+        main .sidebar ul.menu li:hover a {
+            color: #cd6a00;
+            font-weight: bold;
+        }
+
+        main .content {
+            position: absolute;
+            left: 300px;
+            padding: 2.5em;
+        }
+
+        .content section {
+            margin: 2em 0 0 0;
+        }
+
+        .content section:first-child {
+            margin: 0;
+        }
+
+        .content h1 {
+            display: block;
+            font-family: dosis;
+            font-size: 22px;
+            color: #034c8f;
+            margin: 0 0 1em 0;
+            text-transform: uppercase;
+            box-sizing: border-box;
+        }
+
+        .content h1:first-child {
+            margin: 0 0 1em 0
+        }
+
+        .content a,
+        .content a:visited {
+            color: #00a8e3;
+            text-decoration: none
+        }
+
+        .content a:hover {
+            text-decoration: underline
+        }
+
+        .content h4 {
+            color: #00a8e3;
+            text-transform: uppercase;
+            font-size: 16px;
+            letter-spacing: 1px;
+            margin: 1em 0;
+        }
+
+        .content h5 {
+            color: #e41616;
+            text-transform: uppercase;
+            font-size: 16px;
+            letter-spacing: 1px;
+            margin: 1em 0;
+        }
+
+        .content p {
+            font-size: 16px;
+            color: #777A7A;
+            margin-bottom: 16px;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        .highlighted {
+            display: inline-block;
+            margin-bottom: 1em;
+            padding: 0.3em 0.5em;
+            color: #f9f9f9;
+            background-color: rgba(0 0 0 / 75%);
+            font-size: 15px;
+            border-radius: 3px;
+        }
+
+        .highlighted span {
+            display: inline-block;
+            font-weight: bold;
+            padding-right: 0.5em;
+            color: #27d1d1;
+        }
+
+        .highlighted.response {
+            width: 75%;
+            max-width: 100%;
+            background-color: rgb(0 0 0 / 65%)
+        }
+
+        .highlighted.response span {
+            padding-right: 0;
+        }
+
+        table {
+            display: block;
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        table thead,
+        table tbody {
+            border-bottom: 1px solid #d5d5d5;
+        }
+
+        table th,
+        table td {
+            font-size: 14px;
+            padding: 5px 18px 5px 0;
+            text-align: left;
+            vertical-align: bottom
+        }
+
+        table td span.highlighted {
+            margin: 0;
+            padding: 0 0.3em;
+            font-family: monospace;
+        }
+
+        span.req {
+            display: inline-block;
+            padding-left: 0.3em;
+            color: red
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <div class="sidebar">
+            <div class="header">
+                <img src="https://floriannicolas.github.io/API-Documentation-HTML-Template/images/logo.png"
+                    style="height:32px">
+                <span>API Documentation</span>
+            </div>
+
+            <p style="font-size:14px">
+                <span class="info"><b>Version:</b> 1.0</span>
+                <span class="info"><b>Updated:</b> Jan 16, 2024</span>
+            </p>
+
+            <ul class="menu">
+                <li class="active" data-section="getting_started"><a>Getting Started</a></li>
+                <li data-section="roads"><a>Roads</a></li>
+                <li data-section="wildfires"><a>Wildfires</a></li>
+            </ul>
+        </div>
+        <div class="content">
+            <section id="getting_started">
+                <h1>Getting Started</h1>
+                <p>The MAPO API provides data throughout our services for end-users as well as generating data for later
+                    use. In
+                    order to use this API, you will need to <a href="#">get an API key</a> to use these services. All
+                    API
+                    requests follow the same format:</p>
+
+                <code
+                    class="highlighted"><span>GET/POST</span>https://api.mapotechnology.com/{version}/{api}/{method?}?key={api_key}&format={0|1}</code>
+
+                <p><span class="req">*</span> required field</p>
+
+                <h4>Query Parameters</h4>
+
+                <table class="qp">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>version<span class="req">*</span></td>
+                            <td>String</td>
+                            <td>v1.0</td>
+                        </tr>
+                        <tr>
+                            <td>api<span class="req">*</span></td>
+                            <td>String</td>
+                            <td>The API call to make</td>
+                        </tr>
+                        <tr>
+                            <td>method</td>
+                            <td>String</td>
+                            <td>Additional parameter to make API calls</td>
+                        </tr>
+                        <tr>
+                            <td>api_key<span class="req">*</span></td>
+                            <td>String</td>
+                            <td>Your API key</td>
+                        </tr>
+                        <tr>
+                            <td>format</td>
+                            <td>String</td>
+                            <td>Value <span class="highlighted">1</span> returns formatted JSON</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h5>All Responses</h5>
+                <code class="highlighted"><pre>"metadata": {
+    "apiVersion": <span>string (api version)</span>,
+    "origin": <span>string (originating URL)</span>,
+    "time": <span>string (ISO8601 response time)</span>,
+    "response": <span>string (response processing time in milliseconds)</span>
+}</pre></code>
+            </section>
+
+            <section id="wildfires">
+                <h1>Wildfires</h1>
+                <p>This API is used to return wildfire incident information across the United States.</p>
+
+                <code
+                    class="highlighted"><span>GET/POST</span>https://api.mapotechnology.com/v1/wildfires{method?}?key={api_key}</code>
+
+                <h4>Methods</h4>
+                <p>Returns wildfires in GEOJSON format</p>
+
+                <table class="qp">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>(blank)</td>
+                            <td>Returns all wildfires older than 12 hours ago</td>
+                        </tr>
+                        <tr>
+                            <td>incident</td>
+                            <td>Get specific wildfire incident data</td>
+                        </tr>
+                        <tr>
+                            <td>all</td>
+                            <td>Returns all wildfires older than 12 hours ago</td>
+                        </tr>
+                        <tr>
+                            <td>new</td>
+                            <td>Returns all wildfires reported in the last 12 hours ago</td>
+                        </tr>
+                        <tr>
+                            <td>smk</td>
+                            <td>Returns all smoke checks</td>
+                        </tr>
+                        <tr>
+                            <td>rx</td>
+                            <td>Returns all prescribed fires</td>
+                        </tr>
+                        <tr>
+                            <td>all,new</td>
+                            <td>Returns all wildfires, except prescribed fires & smoke checks</td>
+                        </tr>
+                        <tr>
+                            <td>all,new,smk</td>
+                            <td>Returns all, new wildfires & smoke checks</td>
+                        </tr>
+                        <tr>
+                            <td>all,new,rx</td>
+                            <td>Returns all, new, and prescribed fires</td>
+                        </tr>
+                        <tr>
+                            <td>all,new,rx,smk</td>
+                            <td>Returns all types of wildfires</td>
+                        </tr>
+                        <tr>
+                            <td>smk,rx</td>
+                            <td>Returns all smoke checks and prescribed fires</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Query Parameters</h4>
+
+                <table class="qp">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>archive</td>
+                            <td>int</td>
+                            <td>Specify a year to retreived archived wildfire data</td>
+                            <td><span class="highlighted">2023</span></td>
+                        </tr>
+                        <tr>
+                            <td>agency</td>
+                            <td>string</td>
+                            <td>Return wildfires from this dispatch center only</td>
+                            <td><span class="highlighted">ORBMC</span></td>
+                        </tr>
+                        <tr>
+                            <td>state</td>
+                            <td>string</td>
+                            <td>Return wildfires from a specific state (abbreviation)</td>
+                            <td><span class="highlighted">OR</span></td>
+                        </tr>
+                        <tr>
+                            <td>bbox</td>
+                            <td>json</td>
+                            <td>Return wildfires within a bounding box</td>
+                            <td><span class="highlighted">{ "xmin": 0, "xmax": 0, "ymin": 0, "ymax": 0}</span></td>
+                        </tr>
+                        <tr>
+                            <td>order</td>
+                            <td>string</td>
+                            <td>Return wildfires ordered by specified field</td>
+                            <td><span class="highlighted">updated</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h5>Example Response</h5>
+
+                <code class="highlighted response"><pre>{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    <span>double (longitude of incident)</span>,
+                    <span>double (latitude of incident)</span>
+                ]
+            },
+            "properties": {
+                "wfid": <span>int (internal incident ID)</span>,
+                "incidentId": <span>string (standardized incident ID)</span>,
+                "state": <span>string (incident state)</span>,
+                "dispatch": <span>string (reporting agency)</span>,
+                "name": <span>string (incident name)</span>,
+                "type": <span>string (incident type)</span>,
+                "acres": <span>float (fire size, in acres|Unknown)</span>,
+                "status": <span>string (active|inactive|contained|controlled|out)</span>,
+                "notes": <span>string (incident notes)</span>,
+                "resources": <span>string (resources assigned)</span>,
+                "fuels": <span>string (fuels involved)</span>,
+                "near": <span>string (relative location to a city)</span>,
+                "url": <span>string (MAPO incident URL)</span>,
+                "protection": {
+                    "agency": <span>string (jurisdiction agency)</span>,
+                    "area": <span>string (jurisdiction sub-unit)</span>
+                    "logo": <span>string (jurisdiction logo)</span>
+                },
+                "time": {
+                    "year": <span>int (incident year)</span>,
+                    "discovered": <span>int (unix discovered time)</span>,
+                    "captured": <span>int (unix captured time)</span>,
+                    "updated": <span>int (unix updated time)</span>,
+                    "timezone": <span>string (incident timezone)</span>
+                }
+            }
+        }
+    ],
+    "totalfires": <span>int (total number of fires in response)</span>
+}</pre></code>
+
+                <h4>Method: incident</h4>
+                <p>Get specific wildfire incident data</p>
+
+                <code
+                    class="highlighted"><span>GET/POST</span>https://api.mapotechnology.com/v1/wildfires/incident?key={api_key}&wfid={wfid}</code>
+
+                <h4>Query Parameters</h4>
+                <table class="qp">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Type</th>
+                            <th>Accepted Values</th>
+                            <th>Description</th>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>wfid</span></td>
+                            <td>int</td>
+                            <td>Ex: 1, 101, 6005, etc.</td>
+                            <td>Returns incident data for a specified incident #</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h5>Example Response</h5>
+
+                <code class="highlighted response"><pre>{
+    "fire": {
+        "properties": {
+            "wfid": <span>int (internal incident ID)</span>,
+            "incidentId": <span>string (standardized incident ID)</span>,
+            "fireState": <span>string (incident state)</span>,
+            "fireName": <span>string (incident name)</span>,
+            "type": <span>string (incident type)</span>,
+            "acres": <span>string (fire size, in acres|Unknown)</span>,
+            "resources": <span>string (resources assigned)</span>,
+            "fuels": <span>string (fuels involved)</span>,
+            "notes": <span>string (incident notes)</span>,
+            "status": {
+                "Contain": <span>float (unix fire contained time)</span>,
+                "Control": <span>float (unix fire controlled time)</span>,
+                "Out": <span>float (unix fire out time)</span>
+            },
+            "url": <span>string (MAPO incident URL)</span>,
+            "display": <span>int (0|1)</span>,
+            "containment": <span>string (percent contained)</span>
+        },
+        "geometry": {
+            "lat": <span>double (incident latitude)</span>,
+            "lat": <span>double (incident longitude)</span>,
+            "near": <span>string (relative location to city)</span>
+        },
+        "protection": {
+            "dispatch": <span>string (dispatch center ID)</span>,
+            "agency": <span>string (jurisdiction agency)</span>,
+            "area": <span>string (jurisdiction sub-unit)</span>
+            "unit": <span>string (jurisdiction ID)</span>
+            "logo": <span>string (jurisdiction logo)</span>
+        },
+        "time": {
+            "year": <span>int (incident year)</span>,
+            "discovered": <span>int (unix discovered time)</span>,
+            "captured": <span>int (unix captured time)</span>,
+            "updated": <span>int (unix updated time)</span>,
+            "timezone": <span>string (incident timezone)</span>
+        },
+        "inciweb": <span>array (incident information if available)</span>
+    }
+}</pre></code>
+
+                <h5>Inciweb Response</h5>
+
+                <code class="highlighted response"><pre>        "inciweb": {
+            "incident_info": <span>string (incident description)</span>,
+            "current": {
+                "data": {
+                    "Basic Information": [
+                        <span>array ({"desc": field, "info": value})</span>
+                    ],
+                    "Current Situation": [
+                        <span>array ({"desc": field, "info": value})</span>
+                    ],
+                    "Outlook": [
+                        <span>array ({"desc": field, "info": value})</span>
+                    ],
+                    "Weather Synopsis": [
+                        <span>array ({"desc": field, "info": value})</span>
+                    ]
+                }
+            },
+            "contacts": {
+                "contact": <span>html (incident contact information)</span>,
+                "pio": <span>html (incident PIO information)</span>
+            },
+            "updated": <string>int (unix incident updated time)</string>
+        }</pre></code>
+
+                <h5>Errors</h5>
+
+                <code class="highlighted response"><pre>{
+    "fire": {
+        "error": <span>int (error code)</span>,
+        "desc": <span>string (error message)</span>
+    }
+}</pre></code>
+
+            </section>
+
+            <section id="roads">
+                <h1>Roads</h1>
+                <p>This API is used to get road, RWIS, and other travel condition information as used in our OregonRoads
+                    app. This data originates from the Oregon Department of Transportation.</p>
+
+                <code
+                    class="highlighted"><span>GET/POST</span>https://api.mapotechnology.com/v1/roads{method?}?key={api_key}</code>
+
+                <h4>Methods</h4>
+
+                <table class="qp">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>(blank)</td>
+                            <td>Returns current road & weather reports on Oregon highways</td>
+                        </tr>
+                        <tr>
+                            <td>rwis</td>
+                            <td>Returns current road & weather station information</td>
+                        </tr>
+                        <tr>
+                            <td>incidents</td>
+                            <td>>Returns current incidents reported to ODOT's Transportation Operations Centers (TOCs)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>dms</td>
+                            <td>Returns dynamic/variable message signs (DMS/VMS) that are active</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Method: (blank)</h4>
+                <p>Returns current road & weather reports on Oregon highways.</p>
+
+                <code
+                    class="highlighted"><span>GET/POST</span>https://api.mapotechnology.com/v1/roads?key={api_key}</code>
+
+                <h5>Example Response</h5>
+
+                <code class="highlighted response"><pre>{
+    "rw": [
+        {
+            "id": <span>int (reporting station ID)</span>,
+            "hwyID": <span>string (ODOT highway #)</span>,
+            "name": <span>string (reporting station name)</span>,
+            "hwy": <span>string (highway name)</span>,
+            "owner": <span>string (ODOT highway maintenance section)</span>,
+            "mileposts": [
+                <span>float (snow zone starting milepost)</span>,
+                <span>float (snow zone ending milepost)</span>
+            ],
+            "temp": <span>int (air temperature in &deg;F)</span>,
+            "weather": <span>string (current weather condition)</span>,
+            "road": {
+                "id": <span>int (road condition ID)</span>,
+                "condition": <span>string (current report condition)</span>
+            },
+            "snow": {
+                "new": <span>int (new snow since last report)</span>,
+                "roadside": <span>int (roadside snow depth)</span>
+            },
+            "notes": <span>string (comments/notes)</span>,
+            "restrict": {
+                "chains": {
+                    "cond": <span>string (chain requirement type)</span>,
+                    "desc": <span>string (chain requirement description)</span>
+                },
+                "cmv": {
+                    "restrict": <span>string (commerical vehicle restrictions)</span>
+                }
+            },
+            "updated": <span>int (unix updated time)</span>
+        }
+}</pre></code>
+
+                <h4>Method: rwis</h4>
+                <p>Returns current road & weather station information in GEOJSON format.</p>
+
+                <code
+                    class="highlighted"><span>GET/POST</span>https://api.mapotechnology.com/v1/roads/rwis?key={api_key}</code>
+
+                <h5>Example Response</h5>
+
+                <code class="highlighted response"><pre>{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    <span>double (station longitude)</span>,
+                    <span>double (station latitude)</span>,
+                ]
+            },
+            "properties": {
+                "station": {
+                    "id": <span>string (station ID)</span>,
+                    "name": <span>string (station name)</span>,
+                    "hwy": <span>string (station highway)</span>,
+                    "mp": <span>int (station milepost)</span>,
+                    "lat": <span>double (station latitude)</span>,
+                    "lon": <span>double (station longitude)</span>
+                },
+                "weather": {
+                    "temp": <span>float (air temperature in &deg;F)</span>,
+                    "td": <span>float (dewpoint in &deg;F)</span>,
+                    "prcprate": "null",
+                    "ptype": "null",
+                    "visibility": <span>float (visibility in miles)</span>,
+                    "wind": {
+                        "dir": <span>string (wind direction)</span>,
+                        "rawdir": <span>string (wind direction in degrees)</span>,
+                        "speed": <span>float (wind speed in mph)</span>,
+                        "gust": <span>float (wind gust speed in mph)</span>
+                    }
+                },
+                "surface": {
+                    "grip": <span>float (surface friction as percentage)</span>,
+                    "sfcFrz": <span>null</span>,
+                    "salinity": <span>null</span>,
+                    "pavement": [
+                        <span>float (pavement temperature 1 in &deg;F)</span>
+                        <span>float (pavement temperature 2 in &deg;F)</span>
+                    ]
+                },
+                "updated": <span>int (unix updated time)</span>
+            }
+        }
+    ]
+}</pre></code>
+
+                <h4>Method: incidents</h4>
+                <p>Returns current incidents reported to ODOT's Transportation Operations Centers (TOCs) in GEOJSON
+                    format
+                    (excluding road work & highway maintenance events).</p>
+
+                <code
+                    class="highlighted"><span>GET/POST</span>https://api.mapotechnology.com/v1/roads/incidents?key={api_key}</code>
+
+                <h4>Query Parameters</h4>
+                <table class="qp">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Type</th>
+                            <th>Accepted Values</th>
+                            <th>Description</th>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>rw</span></td>
+                            <td>String</td>
+                            <td>1</td>
+                            <td>Returns road work & highway maintenance events</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h5>Example Response</h5>
+
+                <code class="highlighted response"><pre>{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": <span>string (Point|LineString|MultiLineString)</span>,
+                "coordinates": <span>array (coordinates of incident)</span>
+            },
+            "properties": {
+                "id": <span>string (incident ID)</span>,
+                "category": <span>string (incident category)</span>,
+                "type": <span>string (incident type)</span>,
+                "location": {
+                    "id": <span>string (ODOT highway #)</span>,
+                    "name": <span>string (ODOT highway name)</span>,
+                    "hwy": <span>string (highway name)</span>,
+                    "direction": <span>string (direction on highway)</span>,
+                    "milepost": {
+                        "start": <span>string (incident starting milepost)</span>
+                        "end": <span>string (incident ending milepost)</span>
+                    },
+                    "desc": <span>string (incident location description)</span>
+                },
+                "impact": <span>string (impacts to traffic)</span>,
+                "desc": <span>string (incident description)</span>,
+                "lanes": [
+                    {
+                        "lane": <span>string (affected lanes)</span>,
+                        "direction": <span>string (affected lanes direction)</span>
+                    }
+                ],
+                "created": <span>int (unix incident created time)</span>,
+                "updated": <span>int (unix incident updated time)</span>
+            }
+        }
+    ]
+}</pre></code>
+
+                <h4>Method: dms</h4>
+                <p>Returns dynamic/variable message signs (DMS/VMS) that are active in GEOJSON format.</p>
+
+                <code
+                    class="highlighted"><span>GET/POST</span>https://api.mapotechnology.com/v1/roads/dms?key={api_key}</code>
+
+                <h5>Example Response</h5>
+
+                <code class="highlighted response"><pre>{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    <span>double (sign longitude)</span>,
+                    <span>double (sign latitude)</span>
+                ]
+            },
+            "properties": {
+                "id": <span>int (sign ID)</span>,
+                "name": <span>string (sign name)</span>,
+                "hwy": <span>string (sign highway)</span>,
+                "mp": <span>float (sign milepost)</span>,
+                "attached": <span>string (if sign is attached to incident, the incident ID)</span>,
+                "messages": [
+                    [
+                        <span>string (sign message, panel 1, line 1)</span>
+                        <span>string (sign message, panel 1, line 2)</span>
+                        <span>string (sign message, panel 1, line 3)</span>
+                    ],
+                    [
+                        <span>string (sign message, panel 2, line 1)</span>
+                        <span>string (sign message, panel 2, line 2)</span>
+                        <span>string (sign message, panel 2, line 3)</span>
+                    ]
+                ]
+            }
+        }
+    ]
+}</pre></code>
+
+            </section>
+        </div>
+    </main>
+
+    <script>
+        window.onload = () => {
+            if (window.location.hash) {
+                document.querySelectorAll('.sidebar ul.menu li').forEach((e) => {
+                    if (e.getAttribute('data-section') == window.location.hash.replace('#', '')) {
+                        e.classList.add('active');
+                    } else {
+                        e.classList.remove('active');
+                    }
+                });
+            }
+        };
+
+        document.querySelectorAll('.sidebar ul.menu li').forEach((e) => {
+            e.addEventListener('click', () => {
+                document.querySelectorAll('.sidebar ul.menu li').forEach((t) => {
+                    t.classList.remove('active');
+                });
+
+                window.location.hash = e.getAttribute('data-section');
+                e.classList.add('active');
+
+                window.scrollBy({
+                    top: document.querySelector('section#' + e.getAttribute('data-section')).offsetTop,
+                    left: 0
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

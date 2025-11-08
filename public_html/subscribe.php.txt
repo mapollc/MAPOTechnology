@@ -1,0 +1,106 @@
+<?
+////ini_set('display_errors', 1);
+////error_reporting(E_ALL);
+session_start();
+
+require_once '/home/mapo/stripe/init.php';
+include_once '/home/mapo/public_html/subs.inc.php';
+include_once 'db.ini.php';
+
+\Stripe\Stripe::setApiKey($stripeSecretKey);
+
+if (!$_SESSION['uid']) {
+    http_response_code(403);
+} else {
+    // cancel subscription
+    if ($_GET['mode'] == 'cancel') {
+        try {
+            if ($_REQUEST['wh'] == 1) {
+                $subscription = \Stripe\Subscription::retrieve($_REQUEST['sub_id']);
+                $subscription->cancel();
+
+                mysqli_query($con, "UPDATE users SET role = 1 WHERE uid = '$_SESSION[uid]' AND role != 3");
+            } else {
+                $resp = \Stripe\Subscription::update($_REQUEST['sub_id'], [
+                    'cancel_at_period_end' => true
+                ]);
+            }
+
+            $_SESSION['sub_cancel'] = $_REQUEST['wh'];
+            header('Location: https://www.mapotechnology.com/account/billing');
+        } catch (Error $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    } else if ($_GET['mode'] == 'resume') {
+        try {
+            $subscription = \Stripe\Subscription::retrieve($_REQUEST['sub_id']);
+            $start = $subscription->current_period_start;
+            $end = $subscription->current_period_end;
+
+            $resp = \Stripe\Subscription::update($_REQUEST['sub_id'], [
+                'cancel_at_period_end' => false,
+                'proration_behavior' => 'create_prorations',
+                'items' => [
+                    [
+                        'id' => $subscription->items->data[0]->id,
+                        'price' => $subscription->items->data[0]->plan->id,
+                    ],
+                ]
+            ]);
+
+            mysqli_query($con, "UPDATE billing SET start = '$start', end = '$end', active = 1 WHERE subscription = '$_REQUEST[sub_id]'");
+            mysqli_query($con, "UPDATE users SET role = 2 WHERE uid = '$_SESSION[uid]' AND role != 3");
+
+            $_SESSION['sub_resume'] = 1;
+            header('Location: https://www.mapotechnology.com/account/billing');
+        } catch (Error $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+}
+
+/* else {
+    try {
+        $session = \Stripe\Checkout\Session::retrieve($_GET['session_id']);
+        $return_url = 'https://www.mapotechnology.com/account/home';
+
+        $email = $session->{'customer_details'}->email;
+        $id = $session->subscription;
+
+        $num = mysqli_num_rows(mysqli_query($con, "SELECT email FROM billing WHERE email = '$email'"));
+        if ($num == 0) {
+            mysqli_query($con, "INSERT INTO billing (email,subscription) VALUES('$email','$id')") or die(mysqli_error($con));
+        }
+        mysqli_close($con);
+
+    } catch (Error $e) {
+        http_response_code(500);
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+}
+
+
+/*\Stripe\Stripe::setApiKey('sk_test_51MTX5vIpCdpJm6cTDHkstTNFlWxtSqH5GSu08ImMI4sHItaV11KscGePLULYKAWyn5nrFWlxoQwHAQ8IIA9Xg7qo00AIeljMH4');
+
+try {
+    $session = \Stripe\Checkout\Session::retrieve($_GET['session_id']);
+    print_r($session);
+} catch (Error $e) {
+    echo $e->getMessage();
+}
+
+/*try {
+        $session = \Stripe\Checkout\Session::retrieve($_GET['session_id']);
+        $return_url = 'https://www.mapotechnology.com/subscription/process';
+    
+        // Authenticate your user.
+        $session = \Stripe\BillingPortal\Session::create([
+            'customer' => $session->customer,
+            'return_url' => $return_url,
+        ]);
+        header("HTTP/1.1 303 See Other");
+        header("Location: " . $session->url);
+    } catch (Error $e) {
+        http_response_code(500);
+        echo json_encode(['error' => $e->getMessage()]);
+    }*/

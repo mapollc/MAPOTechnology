@@ -1,0 +1,66 @@
+RewriteEngine On
+RewriteBase /
+Options +Indexes
+Options +FollowSymlinks
+
+# Use short URLs, remove PHP
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ /$1.php [L,QSA]
+
+DirectoryIndex index.php index.html
+
+#RewriteRule ^favicon.ico https://wildusa.wildfiremap.org/assets/images/favicon2.ico [L]
+
+# GENERAL URLS
+RewriteRule ^src/assets/resources/([^/]*)/([^/]*)$ /assets/resources.php?folder=$1&file=$2 [L,QSA]
+RewriteRule ^cad$ /cad/index.php [L,QSA]
+#RewriteRule ^agency/([^/]*)/dispatch/([^/]*)$ /dispatch.php?agency=$1&page=$2 [L,QSA]
+
+# ASSETS URLS
+RewriteRule ^assets/cad/([^/]*)/([^/]*)/([^/]*)$ /assets/scripts.php?type=$1&version=$2&file=$3 [L,QSA]
+RewriteRule ^assets/src/([^/]*)/([^/]*)/([^/]*)$ /assets/scripts.php?type=$1&version=$2&file=$3 [L,QSA]
+
+# ADMIN URLS
+ # RewriteRule ^agency/([^/]*)/admin$ /admin.php?agency=$1 [L,QSA]
+ # RewriteRule ^agency/([^/]*)/admin/([^/]*)$ /admin/index.php?agency=$1&page=$2 [L,QSA]
+ # RewriteRule ^agency/([^/]*)/admin/([^/]*)/([^/]*)$ /admin/index.php?agency=$1&page=$2&mode=$3 [L,QSA]
+ # RewriteRule ^agency/([^/]*)/admin/([^/]*)/([^/]*)/([^/]*)$ /admin/index.php?agency=$1&page=$2&mode=$3&function=$4 [L,QSA]
+ # RewriteRule ^admin$ /admin/index.php [L,QSA]
+ # RewriteRule ^cad/admin/([^/]*)/([^/]*)$ /admin/index.php?page=$1&function=$2 [L,QSA]
+ # RewriteRule ^cad/admin/([^/]*)/([^/]*)/([^/]*)$ /admin/index.php?page=$1&function=$2&method=$3 [L,QSA]
+ 
+RewriteRule ^admin/settings/([^/]*)/([^/]*)$ /config/settings.php?page=$1&mode=$2 [L,QSA]
+RewriteRule ^admin/settings/([^/]*)$ /config/settings.php?page=$1 [L,QSA]
+RewriteRule ^admin$ /config/index.php [L,QSA]
+
+# AJAX URLS
+#RewriteRule ^ajax/forms/([^/]*)/([^/]*)$ /forms/index.php?form=$1&mode=$2 [L,QSA]
+#RewriteRule ^ajax/forms/([^/]*)$ /forms/index.php?form=$1 [L,QSA]
+RewriteRule ^ajax/api/forms/([^/]*)$ /api/forms.php?function=$1 [L,QSA]
+RewriteRule ^ajax/api/forms/([^/]*)/([^/]*)$ /api/forms.php?function=$1&mode=$2 [L,QSA]
+RewriteRule ^ajax/api/forms/([^/]*)/([^/]*)/([^/]*)$ /api/forms.php?function=$1&mode=$2&id=$3 [L,QSA]
+RewriteRule ^ajax/api/([^/]*)/([^/]*)$ /api/index.php?function=$1&mode=$2 [L,QSA]
+RewriteRule ^ajax/api/([^/]*)/([^/]*)/([^/]*)$ /api/index.php?function=$1&mode=$2&method=$3 [L,QSA]
+
+# SCREENS
+RewriteRule ^screen/([^/]*)$ /api/form__$1.php [L,QSA]
+RewriteRule ^screen/([^/]*)/([^/]*)$ /api/form__$1.php?mode=$2 [L,QSA]
+
+# MAPPING URLS
+RewriteRule ^mapping$ /map/index.php [L,QSA]
+
+# DISABLE CACHING
+<IfModule mod_headers.c>
+ 	Header set Cache-Control "no-cache, no-store, must-revalidate"
+	Header set Pragma "no-cache"
+	Header set Expires 0
+</IfModule>
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php84” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php84___lsphp .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit

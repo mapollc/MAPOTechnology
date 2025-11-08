@@ -1,0 +1,557 @@
+@keyframes flash {
+
+    0%,
+    49% {
+        background-color: var(--red);
+    }
+
+    50%,
+    100% {
+        background-color: var(--dark);
+    }
+}
+
+#cad-container {
+    position: relative
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    color: #fff;
+    font-size: 0.9em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: bold;
+    padding: 0.3em 0.4em;
+    border-radius: 0.2em 0.2em 0 0;
+    background-color: var(--blue2)
+}
+
+.header-title .filter i {
+    padding-right: 0.4em
+}
+
+.header-title .filter select,
+.header-title .filter input {
+    font-family: source sans pro;
+    border: 0;
+    border-radius: 0.2em;
+    padding: 0.1em 0.2em;
+    outline: none;
+    user-select: none
+}
+
+.header-title .filter input {
+    padding: 0.17em 0.3em;
+    max-width: 100px
+}
+
+.header-title .filter #viewLog {
+    cursor: pointer;
+    transition: all .15s ease-in-out
+}
+
+.header-title .filter #viewLog:hover {
+    color: var(--orange)
+}
+
+.incidents,
+.resources,
+.log {
+    position: relative;
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    width: 100%;
+    max-height: 100%;
+    height: 0;
+    background-color: var(--gray);
+    border: 1px solid var(--lightgray);
+    border-top: 0;
+    transition: all .15s ease-in-out !important;
+    overflow-y: scroll
+}
+
+.log {
+    max-height: 35%
+}
+
+.incidents #incident.header,
+.incidents #incident.header:hover,
+.resources #unit.header,
+.resources #unit.header:hover {
+    background-color: var(--dark);
+    font-size: 13px;
+    font-weight: 200;
+    cursor: auto;
+    user-select: none;
+}
+
+.incidents #incident,
+.resources #unit,
+.log #entry {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+    height: auto;
+    padding: 0.25em;
+    background-color: var(--lightgray);
+    color: #fff;
+    border-bottom: 1px solid #656565;
+    cursor: pointer;
+    user-select: none
+}
+
+.incidents #incident:hover,
+.resources #unit:hover,
+.log #entry:hover {
+    background-color: var(--hovergray)
+}
+
+.incidents #incident:last-child,
+.resources #unit:last-child {
+    border-bottom: 0
+}
+
+.incidents #incident .it {
+    display: flex;
+    flex: 1 1 auto;
+    padding-right: 1em
+}
+
+.incidents #incident .it.context {
+    padding: 0.2em 0.1em 0 0;
+    flex: 0;
+    color: #999;
+    transition: all .15s ease-in-out
+}
+
+.incidents #incident .it.context:hover {
+    color: #111
+}
+
+/*.resources #unit.ui-draggable-dragging{position:absolute!important;max-width:400px!important}*/
+.resources #unit .un {
+    display: flex;
+    flex: 1 1 auto;
+    /*width:25%;*/
+    padding-right: 1em;
+    white-space: nowrap;
+    overflow: hidden
+}
+
+.resources #unit .un:first-child {
+    width: 17%
+}
+
+.resources #unit .un:nth-child(2) {
+    width: 18%
+}
+
+.resources #unit .un:nth-child(3) {
+    width: 23%
+}
+
+.resources #unit .un:nth-child(4) {
+    width: 18%
+}
+
+.resources #unit .un:last-child {
+    width: 15%;
+    justify-content: flex-end
+}
+
+.resources #unit .un:first-child span {
+    display: block;
+    width: 100%;
+    /*background-color:#252525;*/
+    font-weight: bold;
+    font-size: 1.0em
+}
+
+.incidents #incident .it:first-child {
+    width: 12%;
+    flex: 0 1 12%;
+    font-family: poppins;
+    font-size: 0.9em;
+    color: #d9d9d9;
+    padding-left: 0.2em
+}
+
+.incidents #incident .it:nth-child(2) {
+    width: 12%;
+    flex: 0 1 12%;
+}
+
+.incidents #incident .it:nth-child(3) {
+    width: 20%;
+    flex: 0 1 20%;
+}
+
+.incidents #incident .it:nth-child(4) {
+    width: 12%;
+    flex: 0 1 12%;
+}
+
+.incidents #incident .it:nth-child(6) {
+    width: 20%;
+    flex: 0 1 20%;
+}
+
+.incidents #incident .it:last-child,
+.resources #unit .un:last-child {
+    padding-right: 0
+}
+
+.incidents #incident span.open,
+.incidents #incident span.pending {
+    width: 74.25px;
+    padding: 0 0.5em;
+    border: 2px solid transparent;
+    filter: hue-rotate(42deg);
+    border-radius: 3px;
+    font-size: 0.9em;
+    text-align: center;
+    text-transform: uppercase
+}
+
+.incidents #incident span.open {
+    border-color: var(--green);
+    background-color: var(--green)
+}
+
+.incidents #incident span.pending {
+    border-color: var(--red);
+    background-color: var(--red)
+}
+
+.incidents #incident #assigned {
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+    padding-left: 0.2em;
+    padding-top: 7px;
+}
+
+.incidents #assigned span.status {
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.incidents #assigned span.status:last-child {
+    margin-right: 0;
+}
+
+.log #entry .c {
+    display: flex;
+    flex: 1 1 auto;
+    padding-right: 1em
+}
+
+.log #entry .c:first-child {
+    width: 10%
+}
+
+.log #entry .c:nth-child(2) {
+    width: 5%
+}
+
+.log #entry .c:nth-child(3) {
+    width: 70%
+}
+
+.log #entry .c:last-child {
+    width: 12%
+}
+
+a.dtlk {
+    color: var(--orange);
+    text-decoration: none;
+    font-size: 0.9em;
+    text-transform: uppercase
+}
+
+form .row:not(:first-child)>div {
+    display: block;
+    flex-direction: unset
+}
+
+form .row.form-title,
+#addNewIncident fieldset .row.form-title,
+#resourceStatus fieldset .row.form-title,
+#resourceStatus fieldset .row.form-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #ffbf4b
+        /*#ddd*/
+    ;
+    margin: 0.7em 0 0.5em 0
+}
+
+form .row.form-title.section {
+    font-size: 1em;
+    color: #aaa;
+    padding-top: 0.4em
+        /*;border-top:1px solid #aaa*/
+}
+
+form .row.form-title:first-child {
+    margin: 0 0 0.5em 0
+}
+
+form fieldset {
+    margin: 0.5em 0 0 0;
+    padding: 0 0.5em 0.5em 0;
+    width: 99%;
+    border: 1px solid #aaa;
+    /*border-bottom:0;*/
+    border-left: 0;
+    border-radius: 0.2em 0.2em 0.2em 0
+}
+
+form fieldset legend {
+    padding: 0 .5em 0 0;
+    color: #aaa;
+    font-size: 1em;
+    font-weight: bold;
+    text-transform: uppercase
+}
+
+form input[type=button],
+form input[type=submit],
+.btn {
+    display: inline-block;
+    min-width: 150px;
+    padding: 10px 32px !important;
+    background-color: var(--blue) !important;
+    font-weight: 300;
+    color: #fff;
+    border-radius: 0.3em !important;
+    transition: all .15s ease-in-out;
+    outline: none;
+    user-select: none;
+    cursor: pointer
+}
+
+form input[type=submit],
+input[type=button].green {
+    background-color: var(--green) !important
+}
+
+form input,
+form textarea,
+form select {
+    display: inline-block;
+    max-width: 95%;
+    background-color: #f3f3f3;
+    font-family: source sans pro;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0em;
+    color: #000;
+    border: 0;
+    border-radius: 0.15em;
+    padding: 0.25em 0.4em;
+    outline: none
+}
+
+form input:disabled,
+form select:disabled,
+form textarea:disabled {
+    background-color: #878787;
+    color: #2a2a2a
+}
+
+#resourceStatus select,
+#activityLog select {
+    padding: 0.4em;
+    font-size: 1.25em
+}
+
+#resourceStatus textarea,
+#resourceStatus input,
+#activityLog textarea,
+#activityLog input,
+#modal label.checkbox input[type=checkbox]:disabled {
+    padding: 0.4em 0.6em
+        /*;font-size:1.25em*/
+}
+
+form textarea {
+    width: 100%;
+    min-height: 85px;
+    resize: none
+}
+
+.flash {
+    animation: flash 1s infinite;
+    color: white;
+}
+
+#modal label.checkbox {
+    display: inline-grid;
+    grid-template-columns: 25px auto;
+    gap: 7px;
+    grid-auto-flow: column;
+    align-items: center;
+    margin: 0 5px 0 -5px;
+    padding: 0;
+    font-size: 17px;
+    line-height: 1.5;
+    color: #eee
+}
+
+#modal label.checkbox input[type=checkbox] {
+    position: relative;
+    padding: 0.5em;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--lightgray);
+    background-color: #f3f3f3;
+    border-radius: 0.3em;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+    user-select: none
+}
+
+#modal label.checkbox input[type=checkbox]:checked:before {
+    position: absolute;
+    content: '\f00c';
+    top: 1px;
+    left: 1px;
+    padding: 0;
+    font-family: "Font Awesome 6 Pro";
+    font-size: 16px;
+    font-weight: 900;
+    color: #000
+}
+
+.select-list {
+    position: absolute;
+    display: none;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    min-height: 0px;
+    max-height: 200px;
+    padding: 0em;
+    background-color: #5a5a5a;
+    box-shadow: 0 2px 3px #333;
+    border-radius: 0 0 3px 3px;
+    overflow-y: auto;
+    z-index: 999
+}
+
+.select-list .select-option {
+    padding: 0.3em 0.5em;
+    font-size: 1.1em;
+    color: var(--gray3);
+    cursor: pointer;
+    transition: all .15s ease-in-out
+}
+
+.select-list .select-option:hover {
+    font-weight: bold;
+    background-color: var(--hovergray)
+}
+
+.context-menu {
+    position: absolute;
+    display: none;
+    top: 0;
+    left: 0;
+    width: 175px;
+    height: auto;
+    min-height: 100px;
+    padding: 0.3em;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 3px 5px #282829;
+    z-index: 995;
+    overflow-y: auto
+}
+
+.truncate {
+    width: 121px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#incidentNotes {
+    font-size: 17px;
+    font-weight: 300;
+}
+
+#incidentNotes p {
+    margin: 0;
+    padding: 10px;
+    line-height: 1.2;
+}
+
+#incidentResponse table th,
+#incidentResponse table td {
+    text-align: left;
+}
+
+.allTimers {
+    padding: 5px 0
+}
+
+.allTimers .row {
+    user-select: none
+}
+
+.allTimers .row .col {
+    padding: 5px 10px
+}
+
+.allTimers .row:nth-child(even) {
+    background-color: #3c4244
+}
+
+ul.incContext {
+    position: absolute;
+    display: none;
+    list-style: none;
+    margin: 0;
+    width: 150px;
+    padding: 0;
+    font-size: 15px;
+    color: #f9f9f9;
+    background-color: #686868;
+    border-radius: 3px;
+    box-shadow: 0 0 25px rgb(10 10 10 / 60%);
+    z-index: 999;
+    user-select: none;
+    cursor: pointer;
+}
+
+ul.incContext li {
+    padding: 3px 5px;
+    background-color: #686868;
+    transition: all .15s ease-in-out;
+}
+
+ul.incContext li:first-child {
+    border-radius: 3px 3px 0 0;
+}
+
+ul.incContext li:last-child {
+    border-radius: 0 0 3px 3px;
+}
+
+ul.incContext li:hover {
+    background-color: #595959;
+}

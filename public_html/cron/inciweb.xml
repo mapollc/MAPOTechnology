@@ -1,0 +1,1860 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:schema="http://schema.org/" xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#" xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#" version="2.0" xml:base="http://inciweb.nwcg.gov/">
+  <channel>
+    <title>InciWeb</title>
+    <link>http://inciweb.nwcg.gov/</link>
+    <description>Inciweb Fire Incidents</description>
+    <language>en</language>
+    
+    <item>
+  <title>TXTXS Blum Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/txtxs-blum-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Texas A&amp;M Forest Service. 
+
+--- 
+
+Coordinates:
+
+Latitude: 32 5 36.012  Longitude: -97 22 11.158 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: At 3:15 pm on Wednesday July 26th, Texas A&amp;M Forest Service received a request for assistance for a fire approximately 3.5 miles south of Blum, Texas. The fire is burning actively in juniper and is presenting an immediate threat to approximately 25 homes in the area. There were voluntary evacuations in the town of Blum, Texas on the afternoon of the 26th, and they were lifted at 10 pm.
+
+There is a Temporary Flight Restriction (TFR) in place for the area over the Blum Fire [NOTAM: FDC 3/3524, https://tfr.faa.gov/save_pages/detail_3_3524.html]. Please avoid the area to provide a safe environment for firefighting aircraft.
+
+In coordination with local fire departments, local Texas A&amp;M Forest Service crews and staged aviation, initially responded. Multiple pieces of rotor and fixed-wing aircraft  Single Engine Air Tankers (SEATs) were able to apply retardant along the most active fronts of the fire while ground crews worked to find safe access. A prepositioned Texas Intrastate Fire Mutual Aid System Strike Team has been requested, along with additional Texas A&amp;M Forest Service crews. Local department first responders are currently focused on structure protection
+
+With continuing dry, hot and gusty weather conditions, the potential for fire growth is high.</description>
+  <pubDate>Wed, 26 Jul 2023 06:33:56 EDT</pubDate>
+    <dc:creator>khines</dc:creator>
+    <guid isPermaLink="false">313690</guid>
+    </item>
+<item>
+  <title>IDNCF Little Bear Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/idncf-little-bear-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Nez Perce - Clearwater National Forests. 
+
+--- 
+
+Coordinates:
+
+Latitude: 46 26 46.8  Longitude: -114 53 33.9 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Little Bear Fire was detected on July 3rd in steep and rugged terrain, with high density of snags from the Freezeout Fire that burned in 2012. As of July 27, the Little Bear fire is approximately 771 acres and burning downhill, cleaning up dead and down logs that have fallen since the 2012 fire. Increased acreage is due to pockets of vegetation inside the fire’s perimeter closing-up and not necessarily due to fire perimeter expanding outwards. Fuel reduction measures have been taken at Bear Mountain Lookout, and crews have set up structure protection around the area. Structure protection is in place around the Warm Springs pack-bridge.</description>
+  <pubDate>Thu, 13 Jul 2023 04:25:39 EDT</pubDate>
+    <dc:creator>jwimer</dc:creator>
+    <guid isPermaLink="false">313460</guid>
+    </item>
+<item>
+  <title>OR98S Golden Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/or98s-golden-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Klamath-Lake District - Oregon Department of Forestry. 
+
+--- 
+
+Coordinates:
+
+Latitude: 42 20.570   Longitude: -121 23.923  
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Golden Fire is located 11 miles north of Bonanza, OR. </description>
+  <pubDate>Sun, 23 Jul 2023 09:02:29 EDT</pubDate>
+    <dc:creator>blongoria</dc:creator>
+    <guid isPermaLink="false">313598</guid>
+    </item>
+<item>
+  <title>ORWIF Bedrock Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/orwif-bedrock-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Willamette National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 43 58 17  Longitude: -122 32 46 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Bedrock Fire started near Bedrock Campground on the Middle Fork Ranger District on July 22, 2023. It is burning actively on  rugged forested land. Resources from the US Forest Service, Oregon Department of Forestry, and private industry are working to fully suppress this fire. Unusually dry fuels, steep slopes, and gusty winds have contributed to rapid fire growth.
+
+Northwest Incident Management Team 13 assumed management of the fire the morning of July 25. Additional firefighting resources are arriving to assist with the fire.
+
+On July 26, the Willamette National Forest issued a Forest Closure Order for the area around the Bedrock Fire. All lands, roads, trails, and other recreation sites within the designated area are closed to the public.</description>
+  <pubDate>Mon, 24 Jul 2023 05:10:00 EDT</pubDate>
+    <dc:creator>mhuels</dc:creator>
+    <guid isPermaLink="false">313620</guid>
+    </item>
+<item>
+  <title>AZTNF Diamond Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/aztnf-diamond-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Tonto National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 33 50 55  Longitude: -111  30 28 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Diamond Fire was reported at 4 p.m., Saturday, July 22, 2023 by the Mount Ord lookout. 
+
+At approximately 4:00 PM on Friday, July 21, 2023, resources from Tonto National Forest responded to a smoke report by Mt. Ord Lookout southwest of the community of Sunflower on SR Hwy 87, on the Mesa Ranger District. Firefighters were unable to take action due to the location of the fire which was burning on the top 1/3 of Diamond Mtn. Downdrafts from monsoon activity in the area pushed this fire to 100 acres as reported by air attack at 5pm. Air support from VLATS and LATS was ordered but could not fly due to storms in the area. Firefighters monitored the fire throughout the evening.  The fire exhibited active fire behavior until 1am.  Values at risk or threatened infrastructures are Sunflower community, Hwy 87 (Beeline Hwy) and KV lines.
+
+ </description>
+  <pubDate>Mon, 24 Jul 2023 01:32:40 EDT</pubDate>
+    <dc:creator>aoliver</dc:creator>
+    <guid isPermaLink="false">313604</guid>
+    </item>
+<item>
+  <title>MTBDF Bowles Creek</title>
+  <link>http://inciweb.nwcg.gov/incident-information/mtbdf-bowles-creek</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Beaverhead-Deerlodge National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 46 11 25  Longitude: -113 48 45 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Forest received a smoke report in the Bowles Creek drainage area, following a lightning storm on the evening of July 20, 2023. Ground resources and a helicopter flight confirmed the location. Additional smoke reports, received by the Bitterroot Dispatch Center, were checked and confirmed by ground resources. 
+
+Ground resources and an early morning helicopter flight on July 21st estimated the Bowles Fire to be approximately 50 acres and the Daly Creek fire on the Bitterroot side of the divide to be approximately 1-2 acres. Initial attack resources lined and “plumbed” (with water and hoselays) the Daly Fire. Fire operations officials pulled those individuals off the active fireline for safety reasons. Due to this active fire behavior and resulting growth, these fires have merged and will be referred to as the Bowles Creek Fire. Active fire behavior due to receptive fuels and hot and dry weather conditions resulted in extensive fire growth throughout the day.
+
+The fire is located approximately three miles southwest of Skalkaho Pass in the Sapphire Wilderness Study Area (WSA) in steep terrain.  </description>
+  <pubDate>Fri, 21 Jul 2023 07:31:43 EDT</pubDate>
+    <dc:creator>terinahill</dc:creator>
+    <guid isPermaLink="false">313563</guid>
+    </item>
+<item>
+  <title>XX1002 Flat Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/xx1002-flat-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Rogue River - Siskiyou NF. 
+
+--- 
+
+Coordinates:
+
+Latitude: 42 30 57  Longitude: -124 02 14 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: On July 15, 2023, the Flat Fire, named for its proximity to the Oak Flat Campground near the Illinois River, south of Agness, Oregon, began on the Rogue River-Siskiyou Forest.  The fire was human-caused and the investigation is on-going.  Due to high winds and proximity to communities, a robust response of ground and air resources were dispatched to the incident from the Forest Service, Coos Forest Protective Association, Douglas Forest Protective Association and the Curry County Sheriff.  On July 23, 2023, Pacific Northwest Incident Management Team 3 took command of the fire, implementing fire suppression strategies, minimizing impacts to the values at risk, and ensuring firefighter and public safety are the top priority.</description>
+  <pubDate>Mon, 17 Jul 2023 11:05:09 EDT</pubDate>
+    <dc:creator>depperson</dc:creator>
+    <guid isPermaLink="false">313499</guid>
+    </item>
+<item>
+  <title>MTMTS Colt Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/mtmts-colt-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Montana Department of Natural Resources &amp; Conservation. 
+
+--- 
+
+Coordinates:
+
+Latitude: 47 21 11  Longitude: -113 39 56 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: Click on the following words to see related information.
+
+News          Maps          Closures          Photos          Videos          Announcements
+
+ 
+
+The Colt Fire is burning in dense timber with heavy dead and down fuels on the Lolo and Flathead National Forests, approximately 12 miles northwest of Seeley Lake. Fire activity has included torching, spotting, and active consumption of heavy fuels. The Colt Fire was started by lightning on Monday, July 17. Montana DNRC and USFS firefighters responded quickly upon detection on July 18. The fire is on land managed by the Lolo National Forest but under Montana Department of Natural Resources and Conservation fire protection.
+
+The fire continues to actively burn on all sides and remains active during the night. The fire is expected to continue to increase in size with the forecasted weather conditions. The Colt Fire is a full suppression fire and firefighters are creating fuel breaks and containment lines and performing structure protection assessments and preparations. Air resources will be used as needed to slow fire spread and cool down areas of heat.
+
+ Brent Olson’s Northern Rockies Complex Incident Management Team 1 assumed command of the fire at 6:00 am on Sunday, July 23. Additional fire personnel and equipment have been arriving and are being integrated into the fire operations. Firefighter and public safety are the number one priority as this fire response transitions into longer duration suppression work.
+
+Evacuations: Evacuations are issued by the Missoula County Sheriff. Evacuation information can be viewed on the Sheriff’s Facebook page 
+
+The Missoula County Sheriff’s Office has issued an Evacuation ORDER for residences along Highway 83, between mile marker 31 (Beaver Creek Road at the intersection of Highway 83) south towards Seeley Lake to MM 27. This also includes residences in Rovero Flats.
+
+An Evacuation WARNING has been issued for residences on Beaver Creek Road (near the summit).
+
+An Evacuation WARNING has been issued for residences along Highway 83 beginning at MM 27, (south end of Rovero Flats), to MM 25.5 (the intersection of the West Fork of the Clearwater Road and Hwy 83). 
+
+ An Evacuation WARNING has also been issued for the residences on the north and south ends of Lake Inez. The east side of Lake Inez, along Hwy 83, is not under any Warning or Order . 
+
+Please be aware that due to the possibility of rapidly changing conditions, an Evacuation Order may be issued with no prior notice or warning. Home and property owners in the surrounding area should remain vigilant and prepared. Have an evacuation plan for family, pets, and livestock; sign up for emergency alerts at Smart911.com; and be familiar with the Missoula County evacuation process and what an order and warning means.
+
+Citizens are encouraged to register for Smart 911 to receive emergency alerts on your cell phone via text message, email and/or phone call. This is a free service. Please click on the Smart911 link to register. 
+
+Highway 83 is open at this time. However, for the safety of Firefighters and First Responders, DO NOT STOP along Hwy 83! Due to fire activity and smoke across the roadway, visibility is impaired. There is an increase in traffic including emergency response vehicles, large equipment, and law enforcement.
+
+Emergency Shelters: Please call the Red Cross at (406) 215-1514 if you are evacuated due to the Colt Fire and need shelter. An Evacuation Shelter in Ovando is on standby if needed.
+
+Closures: 
+
+The Lolo and Flathead National Forests have closed several forest roads, areas, and campgrounds near the fire area for public safety. The list of current closures includes: 
+
+-Forest Road 906 (closed at Highway 83)
+
+-Rainy Lake Campground access road 4357 (closed at Highway 83)
+
+-Rainy Lake Campground
+
+-Alva Lake Campground access road (closed by gate at Highway 83)
+
+-Alva Lake Campground
+
+-Lakeside Campground access road (closed by gate at Highway 83)
+
+-Lakeside Campground
+
+-Forest Road 646 (closed at the junction of FSR 552; FSR 4354; Forest Road 552 (beyond the turn off to west side Lake Inez access
+
+-Forest Road 5507 and 463 closed beyond the West Side snowmobile trailhead (these roads access the Montana Fish, Wildlife, and Parks Marshall Wildlife Management Area and Lake Marshall)
+
+-Temporarily closing the Forest System Road loops of the Clearwater (FSR 4370 and 4353) and Richmond (FSR 667 and 720)
+
+Temporary Flight Restrictions: There is a TFR (FDC 03/0291) in place for air space around the Colt Fire to reduce impacts to fire aviation operators. Fire aviation response is halted or delayed if an unauthorized aircraft enters the TFR. Temporary flight restrictions also apply to unmanned aircraft system (UAS) or drones. If you fly, we can’t!
+
+For the safety of the pilots and public boaters on Seeley Lake and Lindbergh Lake need to stay clear of fire aircraft when they are scooping water from the lakes for firefighting efforts.
+
+A drone incursion occurred on Friday, July 21. Fire managers would like to remind the public that when you fly, we can’t. It is also now a criminal misdemeanor in Montana to fly drones that interfere with fire suppression efforts – with a fine up to $1,500 and the violator has the potential to be charged with firefighting costs.
+
+Smoke: Wildfires can produce a lot of smoke.  Affected communities should stay abreast of smoke advisories and conditions at https://www.airnow.gov/ 
+
+ 
+
+ </description>
+  <pubDate>Fri, 21 Jul 2023 11:48:15 EDT</pubDate>
+    <dc:creator>annalau</dc:creator>
+    <guid isPermaLink="false">313547</guid>
+    </item>
+<item>
+  <title>COGMF Lowline Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/cogmf-lowline-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Grand Mesa Uncompahgre and Gunnison National Forests. 
+
+--- 
+
+Coordinates:
+
+Latitude: 38 42 58  Longitude: -107 3 48 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: At approximately 8 a.m. Wednesday, July 26, the Lowline Fire was reported on a ridge between Squirrel and Mill Creeks in Gunnison County. The fire grew to over 680 acres in size and is a threat to structures in the area. Evacuations have been ordered on County Road 727 and other areas are on a pre-evacuation status.
+
+A map showing the approximate fire perimeter and the evacuation areas can be found here: https://arcg.is/1KKu8X
+
+For additional evacuation information, visit the Gunnison County Regional 911 Center on Facebook at https://www.facebook.com/Gunnison911/
+
+You can sign up to receive emergency alerts on your phones or other devices at: https://bit.ly/3QhZVZg
+
+Register para alertas de emergencia en Español: https://gunnison.genasys.com/portal/es/register
+
+Three engines and one hand crew are on scene working to suppress the fire with additional resources on the way. A Type 2 helicopter from the Colorado Division of Fire Prevention and Control, fixed-wing air tankers (to drop water and retardant), as well as many other aerial resources have been assisting. The fire is zero percent contained. A Complex Incident Management Team (CIMT) is mobilizing to take command of the firefighting efforts. This team will receive an initial briefing from local resources at 6 p.m. on July 27.
+
+Smoke will be visible in the area for at least the next several days. National Forest System Trail-Lowline Trail #438 is closed and other nearby roads and trails will be impacted with smoke and firefighter activity. Official forest closure information will be posted on this page when it is available.
+
+In the interest of public safety, fire officials ask visitors to be aware of fire traffic and avoid the area. Firefighter and public safety are the priorities for this incident.
+
+Exposure to wildfire smoke can be hazardous to your health. For more information and smoke conditions, visit airnow.gov</description>
+  <pubDate>Wed, 26 Jul 2023 08:57:48 EDT</pubDate>
+    <dc:creator>alyon</dc:creator>
+    <guid isPermaLink="false">313697</guid>
+    </item>
+<item>
+  <title>COARF Magic Feather Prescribed Burn</title>
+  <link>http://inciweb.nwcg.gov/incident-information/coarf-magic-feather-prescribed-burn</link>
+  <description>Last updated: 2023-07-24
+
+
+--- 
+
+The type of incident is Prescribed Fire and involves the following unit(s) Arapaho and Roosevelt National Forests and Pawnee National Grassland. 
+
+--- 
+
+Coordinates:
+
+Latitude: 40 46 46.5492  Longitude: -105 32 16.692 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: July 27 Update:
+
+No ignitions are planned for today on the Magic Feather Prescribed Burn. Firefighters continue to work in the area and monitor work done the last three days. The trails remain closed until firefighters have addressed hazard trees and areas of heat. Mount Margaret may open Saturday if they can mitigate those concerns. The southern trail system is expected to be closed over the weekend. Expect to continue to see smoke in the area as fuels smolder from previous days' burning. 
+
+July 20 Update: 
+
+Firefighters have been closely monitoring local conditions at the Magic Feather Prescribed Burn, located south and southeast of Red Feather Lakes. Burning could begin as soon as July 24, 2023. Until recently, conditions at this site have been too wet to carry fire and achieve the desired fuel reduction effects.
+
+Burning of the Magic Feather Prescribed Burn has been taking place over recent years as conditions have allowed. In May 2023, 200 acres were successfully burned, all north of County Road 74E (Red Feather Lakes Road).
+
+People in the area should expect to see smoke when operations are taking place, including around Dowdy Lake and West Lake campgrounds and day-use areas. The trail system in the Mount Margaret, Molly Lake, Elkhorn and Lady Moon area is open until burning resumes but will be closed during burning operations.
+
+___________________________________
+
+The burn is located east and southeast of Red Feather Lakes. Work has already taken place in the area to prepare for ignitions, including tree cutting around the perimeter and within the interior of the project.
+
+Appropriate, localized conditions must be met before ignition of prescribed burns can take place. Fire managers have been carefully monitoring these conditions, including favorable weather forecast (temperature, wind, precipitation, relative humidity), fuel moisture, smoke dispersal and staffing. Weather is monitored throughout the burn and burning is halted if conditions fall outside of the required conditions.
+
+People in the area should expect to see smoke when operations are taking place. Smoke may also impact those using the Dowdy Lake Campgrounds and Day-Use Area. Prescribed fire smoke may affect your health. More information about smoke impacts is available at https://www.colorado.gov/pacific/cdphe/wood-smoke-and-health.
+
+Even with the most thorough planning and preparation, the use of prescribed fire carries an innate level of risk that cannot be eliminated entirely. However, prescribed fire is one of the most efficient ways of reducing wildfire risk. Regularly conducting prescribed fires, which mimic nature, reduces the buildup of flammable vegetation and overgrowth.
+
+To receive updates, follow us on facebook and twitter and join our email list through Constant Contact and select list "Forest Health &amp; Fire: North of Hwy 14 to Wyoming Border (Red Feather Lakes)." </description>
+  <pubDate>Tue, 08 Nov 2022 12:02:21 EST</pubDate>
+    <dc:creator>rcloudman</dc:creator>
+    <guid isPermaLink="false">312554</guid>
+    </item>
+<item>
+  <title>WASES NEWELL ROAD</title>
+  <link>http://inciweb.nwcg.gov/incident-information/wases-newell-road</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Southeast Region-Department of Natural Resources. 
+
+--- 
+
+Coordinates:
+
+Latitude: 45 49 50.88  Longitude: -120 27 32.09 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Newell Road Fire started, July 21, 2023 near Newell Road. The cause of the fire is undetermined. Northwest Incident Management Team 8, led by Incident Commander Kevin Stock, assumed management of the fire from Southeast Washington (SEW) Incident Management Team 3 on July 24.  Team 8 appreciates all the hard work completed by local fire departments, landowners, and all personnel that have been involved.</description>
+  <pubDate>Sun, 23 Jul 2023 01:26:14 EDT</pubDate>
+    <dc:creator>heatherappelhof</dc:creator>
+    <guid isPermaLink="false">313586</guid>
+    </item>
+<item>
+  <title>CAINF COWTRACK LIGHTNING FIRE</title>
+  <link>http://inciweb.nwcg.gov/incident-information/cainf-cowtrack-lightning-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Inyo National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 37 52 56  Longitude: -118 54 7 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: Location: Mono Lake Ranger District of the Inyo National Forest, off Highway 120 East approximately 20 miles east of Highway 395 on Forest Service Road 1S19, 6 miles southeast of Mono Lake.
+
+Resources: 5 Engines, 3 Hand Crews, 1 Wildland Fuel Module, 3 Water Tenders, 1 Helicopter, 110 total personnel including overhead.
+
+Target Acreage to complete: 394
+
+Inyo National Forest is currently managing a lightning-caused wildfire that was discovered on Wednesday evening, July 19. Firefighters are conducting firing operations in order to guide the natural-ignited lightning fire in light to moderate fuels consisting of Jeffrey pine and sage brush in sandy pumice soils in order to accomplish the forest’s resource management objectives.
+
+There is no threat to any structures or property, and is located close to previous fire history footprints including the 2019 Springs Fire to the South, the 2001 Crater Fire to the Northwest, and the 2012 Indian Fire to the North.
+
+Smoke should be minimal, and is being minimized as much as possible in coordination with the Great Basin Unified Air Pollution Control District. Smoke is predicted to drift north from the site toward Mono Lake. In the evenings, smoke may settle down into the valley areas.
+
+There is a Temporary Flight Restriction in place. Do not fly any drones in the area.</description>
+  <pubDate>Sat, 22 Jul 2023 08:25:22 EDT</pubDate>
+    <dc:creator>cthompson</dc:creator>
+    <guid isPermaLink="false">313577</guid>
+    </item>
+<item>
+  <title>CAANF Agua Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/caanf-agua-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Angeles National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 34  26 18  Longitude: -118  19 35 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Agua Fire started around 2:17 P.M. near Soledad Canyon, west of Acton and is currently 421 acres with 50 percent containment. Firefighters remain working around the clock to reach further containment. The Angeles National Forest is in unified command with the Los Angeles County Fire Department.
+
+Closures: Soledad Canyon Road between Agua Dulce Road and Crown Valley Road.
+
+Evacuations: There are no current evacuations
+
+Please continue to check back for updates as they will be posted as soon as they are available.  </description>
+  <pubDate>Wed, 26 Jul 2023 11:27:46 EDT</pubDate>
+    <dc:creator>kvizcarra</dc:creator>
+    <guid isPermaLink="false">313669</guid>
+    </item>
+<item>
+  <title>AZPNF 2023 Grapevine Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/azpnf-2023-grapevine-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Prescott National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 34 37 11  Longitude: -112 09 16 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: At approximately 4:00 PM on Friday, July 21, 2023, resources from Prescott National Forest responded to a smoke report on the south side of Mingus Mountain, on the Verde Ranger District.   
+
+Evacuations – Please follow Yavapai County Sheriff’s Office Facebook page for current evacuation information at: https://www.facebook.com/YavapaiCountySheriff or call their non-emergency number at 928-771-3260.</description>
+  <pubDate>Sun, 23 Jul 2023 02:00:42 EDT</pubDate>
+    <dc:creator>ansgarmitchell</dc:creator>
+    <guid isPermaLink="false">313588</guid>
+    </item>
+<item>
+  <title>NMLNF Apple Tree Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/nmlnf-apple-tree-fire</link>
+  <description>Last updated: 2023-07-23
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Lincoln National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 32 44 41  Longitude: -105 44 53 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Apple Tree Fire is located on the Sacramento Ranger District of the Lincoln National Forest 6 miles north of Timberon, NM, near the Sacramento Lookout Tower. Fire managers are using a confine and contain management strategy using existing roads and trails in the area as well as constructed fireline. A confine-and-contain strategy under the current conditions, allows fire to move naturally across the landscape, providing ecological benefits to plants and wildlife.  </description>
+  <pubDate>Fri, 21 Jul 2023 03:22:42 EDT</pubDate>
+    <dc:creator>lwalsh</dc:creator>
+    <guid isPermaLink="false">313553</guid>
+    </item>
+<item>
+  <title>AZPNF 2023 Racetrack Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/azpnf-2023-racetrack-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Prescott National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 34 33 31  Longitude: -112 2 39 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: Firefighters responded to a smoke report at 1:00 pm today, Sunday, July 23, 2023, north of Highway 169 near the community of Cherry.  As of July 26, 2023 the Racetrack Fire is estimated to be 405 acres, 40% contained with low fire behavior. Monsoonal activity and winds are expected through Thursday.   
+
+Evacuations – Please follow Yavapai County Sheriff’s Office Facebook page for current evacuation information at: https://www.facebook.com/YavapaiCountySheriff</description>
+  <pubDate>Mon, 24 Jul 2023 05:25:26 EDT</pubDate>
+    <dc:creator>dmaneely</dc:creator>
+    <guid isPermaLink="false">313621</guid>
+    </item>
+<item>
+  <title>IDIPF Bee Top Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/idipf-bee-top-fire</link>
+  <description>Last updated: 2023-07-19
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Idaho Panhandle National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 48 13 25  Longitude: -116 8 22 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Bee Top Fire was reported on 7/1 and is currently estimated at 45 acres. The fire is located near Bee Top Mountain, approximately 5 miles up Lightning Creek, outside of Clark Fork, ID. Northern Rockies Incident Management Team 9 transferred command back to the Sandpoint Ranger District on 7/19 at 0600.  
+
+ </description>
+  <pubDate>Tue, 04 Jul 2023 03:40:11 EDT</pubDate>
+    <dc:creator>bnoble</dc:creator>
+    <guid isPermaLink="false">313324</guid>
+    </item>
+<item>
+  <title>IDIPF Beauty Creek Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/idipf-beauty-creek-fire</link>
+  <description>Last updated: 2023-07-25
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Idaho Panhandle National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 47 34 24.8  Longitude: -116 38 59.4 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Beauty Creek Fire was reported by the public on the evening of 7/21/23. It is approximately 13 acres and burning in heavy timber. The fire is located approximately 3 miles up Beauty Creek Rd, off the northeast tip of Coeur d’Alene Lake.
+
+ </description>
+  <pubDate>Sun, 23 Jul 2023 03:31:39 EDT</pubDate>
+    <dc:creator>jnikirk</dc:creator>
+    <guid isPermaLink="false">313593</guid>
+    </item>
+<item>
+  <title>IDIPF Sawtooth Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/idipf-sawtooth-fire</link>
+  <description>Last updated: 2023-07-24
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Idaho Panhandle National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 46 59 30.7  Longitude: -115 36 45.3 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Sawtooth Fire is burning in a remote location deep in a drainage, no trail or road access. There is a very low risk of impact to structures, private property, or recreation infrastructure. Officials continue to confine/contain and monitor the fire.
+
+ </description>
+  <pubDate>Mon, 24 Jul 2023 07:06:08 EDT</pubDate>
+    <dc:creator>jnikirk</dc:creator>
+    <guid isPermaLink="false">313628</guid>
+    </item>
+<item>
+  <title>AZKNF Ridge Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/azknf-ridge-fire</link>
+  <description>Last updated: 2023-07-20
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Kaibab National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 35 54 37  Longitude: -111 59 33 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Ridge Fire is a lightning-caused wildfire located approximately 7 miles southeast of the Town of Tusayan, Ariz., along Forest Road 302 near Skinner Tank. This lightning-caused wildfire is fulfilling its role in the ecosystem: burning naturally to reduce fuel loads and promote healthy landscapes. 
+
+The Ridge Fire moved at a slow-to-moderate pace across the forest floor at a lower intensity, removing hazardous fuels and promoting healthy vegetation.
+
+Occasional smoke and flames may be visible from various forest roads in the vicinity of the Ridge Fire. Individual and small group tree torching in the Pinyon-Juniper ecosystem may be possible in the interior as fuels become available due to high temperatures and low humidity.
+
+Fire personnel and vehicles will be visible to the public around the area of the Ridge Fire. Motorists and visitors are asked to avoid active hot areas and are reminded to use caution and drive with heightened awareness when passing through any fire vicinity.</description>
+  <pubDate>Thu, 15 Jun 2023 03:49:31 EDT</pubDate>
+    <dc:creator>bpettit</dc:creator>
+    <guid isPermaLink="false">313078</guid>
+    </item>
+<item>
+  <title>IDSCF Hayden Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/idscf-hayden-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Salmon-Challis National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 44 42 9  Longitude: -113 44 32 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Hayden Fire started on Wednesday, July 19th, 2023, at approximately 11:30 am. The fire is located in the Lemhi Range, 18 miles west of Leadore, Idaho.  The fire is burning in steep and difficult terrain with spruce/subalpine fir containing a heavy dead/down timber component.  Fire cause is undetermined. </description>
+  <pubDate>Thu, 20 Jul 2023 01:06:41 EDT</pubDate>
+    <dc:creator>abaumer</dc:creator>
+    <guid isPermaLink="false">313532</guid>
+    </item>
+<item>
+  <title>WAWFS Wawawai</title>
+  <link>http://inciweb.nwcg.gov/incident-information/wawfs-wawawai</link>
+  <description>Last updated: 2023-07-26
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Washington State Fire Marshal's Office. 
+
+--- 
+
+Coordinates:
+
+Latitude: 46 39 12  Longitude: -117 22 19 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Wawawai Fire is located 10 miles southwest of Pullman, WA. This fire was reported at about 9:02 pm on Monday July 24th, 2023 and has burned approximately 526 acres (acreage increase due to updated mapping) of range, grass and crop land. </description>
+  <pubDate>Wed, 26 Jul 2023 07:48:39 EDT</pubDate>
+    <dc:creator>ggifford</dc:creator>
+    <guid isPermaLink="false">313694</guid>
+    </item>
+<item>
+  <title>TXTXS Big Iron Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/txtxs-big-iron-fire</link>
+  <description>Last updated: 2023-07-27
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Texas A&amp;M Forest Service. 
+
+--- 
+
+Coordinates:
+
+Latitude: 30 1 47.73  Longitude: -100 9 2.72 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: At 5:10 pm on Monday July 24th, Texas A&amp;M Forest Service received a request for assistance for a fire approximately 3 miles east of Rocksprings. It is burning in a very remote location, making access difficult. The fire did not presenting any threats to structures, but it was showing heavy resistance to control during the initial hours of response.
+
+In coordination with local fire departments, Texas A&amp;M Forest Service crews and aviation from Fredericksburg, as well as a Texas Intrastate Fire Mutual Aid System Strike Team prepositioned in Kerrville, initially responded. The Single Engine Air Tankers (SEATs) were able to apply retardant along the most active fronts of the fire while ground crews worked to find safe access. Crews remained on the fire until approximately 11:30 pm on the 24th and returned early the next morning. Additional fireline leadership, heavy equipment, and a handcrew were requested to bolster original crews, along with the resources which responded initially. On the second day, July 25th, crews worked to create containment lines using bulldozers, engines and aviation resources. 
+
+The fire had a high growth potential on the 25th, with continuing dry and hot weather conditions. Afternoon conditions include highs near 98 degrees with minimum relative humidity levels down near 22%, along with gusty winds in the afternoon and early evening hours.
+
+Observed fire behavior remained low on the second day, with crews observing heavy down woody debris continuing to burn through out the fire perimeter. Bull dozers tied containment lines into a creek bed, which is naturally holding the fire on one side and are patrolling sections of containment line which are undrivable by wheeled vehicles. Engines focused mop up efforts along the northern edge of the perimeter. 
+
+ </description>
+  <pubDate>Tue, 25 Jul 2023 09:40:28 EDT</pubDate>
+    <dc:creator>khines</dc:creator>
+    <guid isPermaLink="false">313637</guid>
+    </item>
+<item>
+  <title>TXTXS Rock Pile Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/txtxs-rock-pile-fire</link>
+  <description>Last updated: 
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Texas A&amp;M Forest Service. 
+
+--- 
+
+Coordinates:
+
+Latitude: 30 43 23.147  Longitude: -104 10 25.451 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: At 2:15 pm on Wednesday July 26th, Texas A&amp;M Forest Service received a request for assistance for a fire 3 miles south of the Highway 166/118 junction north of Mount Livermore in Jeff Davis County, Texas. The fire is not currently presenting any threats to structures, but is burning in a very remote location.
+
+In coordination with local fire departments, local Texas A&amp;M Forest Service crews and an air attack plane, or "eyes in the sky", as well as a Texas Intrastate Fire Mutual Aid System Strike Team prepositioned in Fort Stockton, initially responded. Ground crews worked to find safe access and will building containment lines using heavy equipment and fire engines into the late hours of the night. 
+
+Today crews returned early to the fireline, and will be joined by a 10-person crew module and fireline qualified medical personnel.
+
+Continuing dry and hot weather conditions, with highs in the lower 90's and minimum relative humidity levels in the teens, present difficulties for fire crews safety and in the construction of containment lines.</description>
+  <pubDate>Wed, 26 Jul 2023 06:47:50 EDT</pubDate>
+    <dc:creator>khines</dc:creator>
+    <guid isPermaLink="false">313691</guid>
+    </item>
+<item>
+  <title>IDNCF Midnight Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/idncf-midnight-fire</link>
+  <description>Last updated: 2023-07-26
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Nez Perce - Clearwater National Forests. 
+
+--- 
+
+Coordinates:
+
+Latitude: 45 56 00  Longitude: -115 45 00 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Midnight Fire on the Salmon River Ranger District is approximately 179 acres and located about 10 miles southeast of Clearwater, Idaho. A local Type 3 Incident Command Team has been established and has assumed command of this fire as of July 13. Transition to a Type 3 Incident Command Team - Wyoming Team 2 will occur on July 27 at 0600.
+
+Significant firefighting traffic is expected to continue through the week on Forest Service Roads (FSR) #244, #284, and #1852 as resources continue to contribute to the suppression effort.
+
+Heavy equipment is being utilized to construct contingency line on FSR #1853 and #1855, and in Peasley Creek drainage area FSR #469 to #648.
+
+A fire camp is established near McComas Meadows (Camp 58) to support the ongoing suppression efforts.
+
+There are no road or area closures associated with this fire, but the public is urged to avoid these areas for the safety of all.
+
+There is a Temporary Flight Restriction (TFR) in place over the Midnight Fire area for the safety of the aviation resources on scene.
+
+ </description>
+  <pubDate>Thu, 13 Jul 2023 12:23:19 EDT</pubDate>
+    <dc:creator>jwimer</dc:creator>
+    <guid isPermaLink="false">313457</guid>
+    </item>
+<item>
+  <title>TXTXS Pipeline Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/txtxs-pipeline-fire</link>
+  <description>Last updated: 2023-07-26
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Texas A&amp;M Forest Service. 
+
+--- 
+
+Coordinates:
+
+Latitude: 32 47 3  Longitude: -97 55 8 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Pipeline fire started around 3:00 pm on July 25th about 2 miles south east of Garner, Texas. The fire began actively burning in grass fields and thick brush. Parker county fire departments quickly responded and began working to suppress the fire before requesting assistance from Texas A&amp;M Forest Service. Heavy equipment and aerial resources from Texas A&amp;M Forest Service and engines from Texas Intrastate Fire Mutual Aid System (TIFMAS) are now working in unified command with Parker County to contain the Pipeline fire.</description>
+  <pubDate>Tue, 25 Jul 2023 07:55:32 EDT</pubDate>
+    <dc:creator>adamturner</dc:creator>
+    <guid isPermaLink="false">313659</guid>
+    </item>
+<item>
+  <title>TXTXS Bondsfire Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/txtxs-bondsfire-fire</link>
+  <description>Last updated: 2023-07-19
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Texas A&amp;M Forest Service. 
+
+--- 
+
+Coordinates:
+
+Latitude: 32 55 33.708  Longitude: -97 26 39.054 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: At approximately 4:30 p.m. on July 19, Texas A&amp;M Forest Service received a request for assistance in Tarrant County on a wildfire burning near Azle and Saginaw, Texas. The Bondsfire Fire was actively burning in grass and brush. Agency personnel are working in unified command with Tarrant County.
+
+Texas A&amp;M Forest Service mobilized several crews with dozers and suppression aircraft to work alongside county and local fire departments.
+
+At 7:55 p.m. on July 19, the fire was declared fully contained. Crews will continue to patrol and monitor the fire area.</description>
+  <pubDate>Wed, 19 Jul 2023 07:11:46 EDT</pubDate>
+    <dc:creator>eoconnor</dc:creator>
+    <guid isPermaLink="false">313526</guid>
+    </item>
+<item>
+  <title>IDIPF Consalus Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/idipf-consalus-fire</link>
+  <description>Last updated: 2023-07-26
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Idaho Panhandle National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 48 27 31  Longitude: -117 4 57 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Consalus Fire was reported on 6/30 and was started by lightning. It is located above Consalus Creek, near the Pelke Divide, in Pend Oreille County, WA and burning in heavy dead and down timber. A Type 3 team assumed command of the fire at 6:00 AM on 7/9 and remains in charge of managing the fire.</description>
+  <pubDate>Tue, 04 Jul 2023 04:16:07 EDT</pubDate>
+    <dc:creator>bnoble</dc:creator>
+    <guid isPermaLink="false">313325</guid>
+    </item>
+<item>
+  <title>IDPAF Elkhorn Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/idpaf-elkhorn-fire</link>
+  <description>Last updated: 2023-07-26
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Payette National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 45 30 25  Longitude: -115 18 92 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: Firefighters are actively conducting structure protection in the Campbell’s Ferry and Whitewater Ranch area under a point protection strategy to address values at risk to the Elkhorn Fire.  The fire is actively burning to the west, to the east and upslope along the river with shifting winds, and hot and dry weather conditions.  It is located along the main Salmon River in central Idaho approximately 40 air miles east of Riggins, Idaho.
+
+The wildfire was detected in the evening of July 24, 2023, and was quickly responded to by McCall Smokejumpers and the McCall stationed Snow Slide Wildfire Module.  An additional 10-person crew will join the effort in the morning.  The fire was mapped at 1,250 acres via infrared imagery last night.  A local Type 3 Incident Management Team will assume command of the fire tonight.
+
+Smokejumpers and other fire personnel are at Campbell’s Ferry and Whitewater Ranch installing sprinklers and continuing with structure protection measures. Structure protection consists of taking actions ahead of the fire to steer it away from structures, and as needed place sprinklers and pumps adjacent to structures. 
+
+The Salmon River is still open, but boating groups are asked to not stop or camp within the fire area between Whitewater Ranch and Campbell’s Ferry as this could place them in danger and impede firefighting efforts.  A trail closure in expected to be implemented for trails in the vicinity of fire on the south side of the River on the Payette National Forest in the near future.  Logistical support is being provided by jet boats and by aerial assets assigned to the fire.
+
+While the fire is named the Elkhorn Fire, the fire is burning on the south side of the main Salmon River on the Payette National Forest.  We apologize for any confusion this may cause as Elkhorn Bar and Creek are on the north side of the river.
+
+The Payette National Forest has a public wildfire information hotline for fire information – 208-634-0820.  Visit Inciweb for information on large wildfires at https://inciweb.nwcg.gov , and follow the Payette National Forest on Twitter at @PayetteForest, and on Facebook at U.S. Forest Service – Payette National Forest.
+
+ </description>
+  <pubDate>Tue, 25 Jul 2023 07:00:23 EDT</pubDate>
+    <dc:creator>bharris</dc:creator>
+    <guid isPermaLink="false">313655</guid>
+    </item>
+<item>
+  <title>COARF Devils Thumb Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/coarf-devils-thumb-fire</link>
+  <description>Last updated: 2023-07-26
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Arapaho and Roosevelt National Forests and Pawnee National Grassland. 
+
+--- 
+
+Coordinates:
+
+Latitude: 39 58 56  Longitude: -105 42 31 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Arapaho and Roosevelt National Forests, Grand County, and other federal and local resources responded to reports of the Devil's Thumb Fire at approximately 2:30 p.m. on Tuesday, July 4, 2023. The fire is in the Indian Peaks Wilderness near Devil's Thumb Park Trailhead in Grand County, approximately seven miles northeast of Fraser, CO.
+
+The Devil's Thumb Fire is located in an area of heavy mountain pine beetle kill lodgepole pine and spruce blowdown.
+
+The Arapaho and Roosevelt Type 4 Incident Management Team has command of the fire.
+
+For more information on the Devil's Thumb Fire, follow us on Facebook and Twitter. To receive email updates on this fire, join our email list and select Forest Health &amp; Fire: Grand County (Winter Park, Fraser, Granby, Grand Lake, Hot Sulphur).</description>
+  <pubDate>Tue, 04 Jul 2023 06:44:58 EDT</pubDate>
+    <dc:creator>christophergreen</dc:creator>
+    <guid isPermaLink="false">313326</guid>
+    </item>
+<item>
+  <title>NMGNF Noonday Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/nmgnf-noonday-fire</link>
+  <description>Last updated: 2023-07-26
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Gila National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 32 56 6  Longitude: -107 52 5 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Noonday Fire was reported in the evening July 22 very near the boundary between the Silver City and Wilderness Ranger District. It was sparked by lightning. The fire is situated within the 2013 Silver Fire area, on difficult terrain. Due to the location and terrain, the strategy will be to confine the fire to a pre-determined area and provide protection around structures and range infrastructure. </description>
+  <pubDate>Wed, 26 Jul 2023 07:34:48 EDT</pubDate>
+    <dc:creator>pjmoore</dc:creator>
+    <guid isPermaLink="false">313693</guid>
+    </item>
+<item>
+  <title>NMGNF Pasture Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/nmgnf-pasture-fire</link>
+  <description>Last updated: 
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Gila National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 33 34 02  Longitude: -108 35 49 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Pasture Fire was reported July 23, 2023 at 9:00 a.m. within the area of Dark, Davis, and Divide fire operations. It was caused by lightning. 
+
+Incident Commander for the Dark, Davis, and Divide Fires, Pete Valenzuela, assumed command of the Pasture Fire under a confine and contain strategy due to the nature of the terrain, difficulty of access, fire behavior, and firefighter and public safety.</description>
+  <pubDate>Tue, 25 Jul 2023 10:20:40 EDT</pubDate>
+    <dc:creator>mpecotte</dc:creator>
+    <guid isPermaLink="false">313638</guid>
+    </item>
+<item>
+  <title>NMGNF Davis Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/nmgnf-davis-fire</link>
+  <description>Last updated: 2023-07-19
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Gila National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 33 42 35  Longitude: -108 27 33 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Davis Fire ignited by lighting near the Continental Divide Trail on the afternoon of July 15. It is being managed under a confine and contain strategy to protect values at risk.
+
+Incident Commander Pete Valenzuela assumed command on the evening of Monday, July 17.</description>
+  <pubDate>Tue, 18 Jul 2023 03:59:37 EDT</pubDate>
+    <dc:creator>mpecotte</dc:creator>
+    <guid isPermaLink="false">313507</guid>
+    </item>
+<item>
+  <title>NMGNF Divide Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/nmgnf-divide-fire</link>
+  <description>Last updated: 2023-07-19
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Gila National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 33 32 25  Longitude: -108 23 16 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: Divide Fire was ignited by lightning on the afternoon of July 13 near Elk Mountain in Catron County, New Mexico, approximately 1.5 miles away from the Hay Fire and numerous other wildfires across the forest. Hay Fire and Divide fire are being managed as one division due to their proximity. They are discussed as Divide Fire.
+
+On Monday, July 17, Type 3 Incident Commander Pete Valenzuela assumed command of the Divide, Davis, and Dark fires with three Divisions split by fire incident. It is being managed under a confine and contain strategy.</description>
+  <pubDate>Tue, 18 Jul 2023 03:20:02 EDT</pubDate>
+    <dc:creator>mpecotte</dc:creator>
+    <guid isPermaLink="false">313504</guid>
+    </item>
+<item>
+  <title>NMGNF Dark Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/nmgnf-dark-fire</link>
+  <description>Last updated: 2023-07-19
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Gila National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 33 30 02  Longitude: -108 38 25 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Dark Fire and Corner Fire were ignited by lightning on Corner Mountain in Catron County, NM, on the evening of July 12, 2023, along with numerous other fires across the forest. Dark Fire, located downslope of the Corner Fire, grew around and consumed the Corner Fire perimeter. 
+
+Incident Commander Pete Valenzuela assumed command of the Dark, Divide, and Davis fires on the evening of Monday, July 17.</description>
+  <pubDate>Tue, 18 Jul 2023 03:37:50 EDT</pubDate>
+    <dc:creator>mpecotte</dc:creator>
+    <guid isPermaLink="false">313506</guid>
+    </item>
+<item>
+  <title>COSJF Chris Mountain Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/cosjf-chris-mountain-fire</link>
+  <description>Last updated: 2023-07-26
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) San Juan National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 37 16 66  Longitude: -107 14 17 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: FIRE UPDATE: Wednesday - 7/26/2023 
+
+Due to yesterday's hot temperature and winds, there were some interior pockets within the fire lines that had burned. These interior pockets were primarily composed of dead and downed trees. The line was not threated and the fire is 100% contained, however, there will be smoke visible for the next several days. The public can expect to see fire traffic to monitor and patrol the area. 
+
+_ _ _ _ _ 
+
+The Chris Mountain Fire on the San Juan National Forest, Pagosa Ranger District was reported on June 28th, 2023 at 3:00 p.m. It's located 12 miles west of Pagosa Springs, north of Highway 160 on Chris Mountain. The fire has been burning in Ponderosa Pine forest on National Forest System Lands and has not crossed onto private property. As of mid-July, smoke may still be visible from time to time, inside the fire perimeter.
+
+Archuleta County issued evacuations for Forest Road 628, effective June 28th, 2023 but those have been lifted. No structures were lost, but some near the heel of the fire were considered threatened, prompting the evacuations. To sign up for emergency notifications, visit the Archuleta County Emergency Operations website.
+
+San Juan National Forest issued a closure order on June 29, 2023 but that has since been rescinded. Closure order information is located on closures tab or https://inciweb.wildfire.gov/incident-publication/cosjf-chris-mountain-fire/chris-mountain-fire-closure
+
+Rocky Mountain Area Complex Incident Management Team Three (RMA CIMT3) transitioned Chris Mountain Fire back to the San Juan National Forest on July 11, 2023 at 06:00 a.m.
+
+ </description>
+  <pubDate>Wed, 28 Jun 2023 08:05:08 EDT</pubDate>
+    <dc:creator>lorenawilliams</dc:creator>
+    <guid isPermaLink="false">313233</guid>
+    </item>
+<item>
+  <title>NVHTF HTF 2023 Initial Attack </title>
+  <link>http://inciweb.nwcg.gov/incident-information/nvhtf-htf-2023-initial-attack-</link>
+  <description>Last updated: 
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Humboldt-Toiyabe National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 39 31 25  Longitude: -119 43 10 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: HTNF Initial Attack Incidents less than 10 acres in size will be placed here. All others will have their own page. 
+
+        DATE/TIME          LOCATION                       NAME                  LAT/LONG                             SIZE             STATUS         
+
+1. 07/08/23 1512     NVHTF-CRD-RENO   Peavine Peak    9.593000, -119.988500            8.3 Acres       Controlled
+
+2. 07/19/23 1346     NVHTF-CRD-SOUTH      Scotts          38.767763, -119.941730           1/10 Acre       Controlled
+
+3. 07/20/23 0812     NVHTF-ELY, RD             Manzonie         38.793200, -115.367000         1/10 Acre      Controlled
+
+4. 07/20/23 0707     NVHTF-ELY, RD           Summit Spring    38.830067, -115.318500       1/10 Acre      Controlled
+
+5. 07/24/23 1402     NVHTF-ELY, RD            West Spring      38.825167, -115.319883         3.5 Acres      Contained
+
+ </description>
+  <pubDate>Mon, 17 Jul 2023 02:51:04 EDT</pubDate>
+    <dc:creator>richmartinez</dc:creator>
+    <guid isPermaLink="false">313492</guid>
+    </item>
+<item>
+  <title>NMCIF Magdalena RD Hutchinson Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/nmcif-magdalena-rd-hutchinson-fire</link>
+  <description>Last updated: 2023-07-26
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Cibola National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 33 41 55.8  Longitude: -107 33 22.2 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Hutchinson Fire started on July 23, 2023 from a lightning strike in the remote mountainous terrain of central west San Mateo Mts. on the Magdalena Ranger District – New Mexico on the Cibola National Forest &amp; National Grasslands. 
+
+On July 26: Fire managers are managing the Hutchinson Fire using a confine and contain strategy within a pre-determined perimeter as long as conditions allow crews to safely do so. We use predictive services tools and fire behavior models to guide our fire management decisions. The benefit of this strategy will be to reduce hazardous fuels, encourage the growth of native plants, increase species diversity in the understory, restore ecological balance and reduce the potential for future high-severity wildfires. 
+
+Crews will continue preparations along Forest Roads 94, 96 and 478 to be utilized as part of the containment line, keeping the fire within the identified planning area. Additional use of hand ignition operations may occur to reduce the potential for rapid fire spread toward containment features.
+
+Wildlife biologists, range specialist and archaeologists are helping to ensure that natural and cultural resources are protected.</description>
+  <pubDate>Wed, 26 Jul 2023 02:28:53 EDT</pubDate>
+    <dc:creator>pejohnson</dc:creator>
+    <guid isPermaLink="false">313680</guid>
+    </item>
+<item>
+  <title>NMGNF Tub Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/nmgnf-tub-fire</link>
+  <description>Last updated: 
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Gila National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 33 59 40  Longitude: - 108 18 15 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The fire is located on the south end of Mangas Mountain near Tub Peak. </description>
+  <pubDate>Wed, 26 Jul 2023 10:18:49 EDT</pubDate>
+    <dc:creator>pjmoore</dc:creator>
+    <guid isPermaLink="false">313667</guid>
+    </item>
+<item>
+  <title>AZA3S Adams Robles Complex Fire </title>
+  <link>http://inciweb.nwcg.gov/incident-information/aza3s-adams-robles-complex-fire-</link>
+  <description>Last updated: 2023-07-23
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Arizona Department of Forestry and Fire Management - Southeast District. 
+
+--- 
+
+Coordinates:
+
+Latitude: 32 00 49.4  Longitude: -110 05 23.3 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Adams Robles Complex is now 100% contained at 5,232 acres. 
+
+The the Adams Peak and Robles Fires started July, 19, east of Dragoon, and both as a result of lightning strikes. The Adams Peak is located north of Interstate 10 and the Robles Fire is on the south side of I-10. Due to the close proximity of the two fires, the Arizona Department of Forestry and Fire Management complexed the fires to manage as one incident. 
+
+ 
+
+DFFM Facebook: https://www.facebook.com/arizonaforestry
+
+DFFM Twitter: https://twitter.com/azstateforestry
+
+Cochise County Sheriff's Office: https://www.facebook.com/CochiseSO
+
+Arizona Department of Transportation Road Information: az511.gov</description>
+  <pubDate>Thu, 20 Jul 2023 12:51:26 EDT</pubDate>
+    <dc:creator>tdavila</dc:creator>
+    <guid isPermaLink="false">313529</guid>
+    </item>
+<item>
+  <title>CAINF INYO NATIONAL FORESTFLOOD RESPONSE</title>
+  <link>http://inciweb.nwcg.gov/incident-information/cainf-inyo-national-forestflood-response</link>
+  <description>Last updated: 2023-07-25
+
+
+--- 
+
+The type of incident is Flood and involves the following unit(s) Inyo National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 37 21 41  Longitude: -118 33 59 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: INCIDENT OVERVIEW
+
+This InciWeb page provides visitors and residents traveling to and recreating on the Inyo National Forest (Forest) following the recent historic winter precipitation over the Sierra Nevada.
+
+The Forest encourages visitors to use this information so they may be prepared for potential hazards they may encounter, such as flooding, rock falls, fallen trees and other debris brought down by avalanches, and overall road damage.
+
+CURRENT SITUATION
+
+Forest Service Staff continues to assess road and recreation area conditions across the Inyo National Forest as conditions allow.
+
+Forest Recreation Service staff continues to evaluate which facilities can be opened and accessed.  Many sites remain snow covered and are not accessible or need repairs before opening to the public.
+
+GENERAL AREA CONDITIONS
+
+The winter of 2022-2023 is the largest recorded winter snowfall for California mountains, at 300% of average snowpack. The spring had been cool, limiting the snowmelt. However, weather forecast for early July has very warm temperatures for the area. This means there's a lot of snow out there to melt and could cause potential flooding and swift, cold water flows.
+
+California’s historic snowpack is now starting to melt with warming springtime temperatures, causing the levels of creeks, streams, and rivers to rise significantly and flood some areas. According to the National Weather Service, the bulk of the flooding may happen in late May to early August, however it will continue to persist into fall because of the depth and density of the snowpack.
+
+INYO NATIONAL FOREST SNOWMELT FLOOD INFORMATION
+
+Inyo National Forest welcomes visitors to enjoy this unusually lush and beautiful spring and summer, but please proceed with caution. Not every trail or road has been surveyed and deemed “safe” to recreate on, so it is up to you to look out for your own safety and plan for any unexpected changes to your trip.
+
+There is a heightened risk of flooding, landslides, debris flows, road/trail washouts and avalanches. And with the combination of extended hot weather and abundant snow means certain areas may remain above flood stage for some time.
+
+Creeks and streams will be at higher flows for longer into the year, making them challenging or impossible to cross. Steep snowbanks on either side of streams and creeks may add additional challenges to crossing.
+
+Campgrounds:
+
+In addition to the prolonged presence of snow, downed trees, log jams, and rock falls are delaying the openings of many of the Forest’s campground facilities. Forest recreation staff are working with the concessionaires to clear these obstacles and get the campgrounds open as soon as possible.
+
+Want to know the status of a campground? Please visit the Inyo National Forest’s RECREATION page.
+
+Trails:
+
+The trails may also be heavily eroded, have mudslides, rockfalls, and/or downed trees and the work to repair them will be delayed as the Forest works hard with its partner organizations to triage and repair the most dangerous areas of trail that need it.
+
+Keep in mind, Forest hiking trails are still covered in snow, and accessing some trailheads will be delayed or impossible as the snow continues to melt. 
+
+Additionally, there are still dangers of avalanches happening. Be sure to check on the Eastern Sierra Avalanche Center website on conditions before you go: www.esavalanche.org
+
+While hiking, it will be wet and muddy and may have sections of flowing or standing water on them. With that, the Forest does expect the mosquitoes to be out this year with force.
+
+Current Forest Road Conditions: July 13:
+
+Mammoth Ranger District
+
+Lake Mary Road and roads within the Lakes Basin: opening Friday, July 14 at 8:00 a.m.
+
+	Hazard tree abatement will continue and there will be temporary traffic stops.
+		The only campground open will be Twin Lakes.
+		Coldwater Creek is overflowing. Drive slowly, and do not park in flooded shoulders.
+		Parking is extremely limited. Please check the ESTA website for trolley information.
+	
+	Reds Meadow Road will remain closed up to the Mammoth Mountain Inn/Main Lodge. Admin access is only allowed past this point as staff continue clearing the road, assessing for damage and conducting trainings before ESTA can begin providing shuttle service.
+	More information will be forthcoming jointly from the Inyo National Forest and Devils Postpile National Monument regarding the reopening of Reds Meadow Road to the public.
+	
+Mammoth Ranger District staff would like to thank the Town of Mammoth Lakes and Mammoth Mountain Ski Area for their continual assistance in clearing these roads!
+
+White Mountain Ranger District
+
+Buttermilk Loop Road is now open.
+	Silver Canyon Road is now open.
+	Coyote Flat, Sugarloaf Road, Sand Canyon, Wyman Canyon, and White Mountain Road (past Patriarch Grove) remain closed. Of these roads, Coyote Flat and Sand Canyon are the top priority.
+The Coyote Flats area has been and continues to be one of the worst-affected roads on the forest from snowmelt runoff and thunderstorm damage this year. After a recent attempt to work on the road forest service engineering staff had to retreat because the road surface was unstable and unsafe for them to operate their equipment. Staff then headed four miles further up the road and found a new, larger gully washout. It was then determined that the road closure would need to be kept in place while further planning for repairs is conducted, as the type of work needed will not be supported by the current heavy equipment on-hand.
+
+Forest Service staff are working on agreements with individuals in the community who have the proper and right-sized heavy equipment and also with volunteer groups such as Valley Outdoors to organize additional public work-day events, as have happened in the recent past.
+
+“With the now dwindling budget available to utilize in ordering equipment, the forest is grateful for a community that is so enthusiastic about getting involved in their public lands,” said Mike Wiese, Incident Commander for the team managing the storm damage. “The Forest continues working with locals to facilitate a faster reopening, while also ensuring safety to those involved.”
+
+Mono Lake Ranger District
+
+Big Springs Road and Sawmill Cutoff Road are currently being repaired for fire access.
+
+	Big Springs Road has been repaired as of July 7 and is being prepared for opening shortly.
+	
+	Walker Lake Road (Forest Road 1S23), Bohler Canyon Road (Forest Road 1N106), Horse Meadow Road (Forest Road 1N16), Forest Roads 1S131, 1S131A, 1S131B remain closed due to storm damage.
+	Walker Lake and Horse Meadow Roads are the priority for repairs.
+	
+Three new roads have been partially closed this week due to excessive storm damage as well:
+
+Sagehen Meadow Road (Forest Road 1N02 junction of 1N02G and 1N02H)
+	Wild Horse Meadow Road (Forest Road 1S56 junction of 1S17 and 1S56B)
+	Pilot Springs Road (Forest Road 1S04 junction of 1S167 and 1S04J)
+All roads listed in Closure Orders are open to foot traffic or bicycles. Motorized vehicles are not.
+
+If you would like to get involved with efforts to help repair these roads, please contact our partner organization at Valley Outdoors: Volunteer@valleyoutdoors.org
+
+For current road conditions for the Inyo NF: www.fs.usda.gov/goto/inyo/alerts-notices/roadconditions
+
+Maps for these roads are available on the Inyo National Forest’s Motor Vehicle Use Maps (www.fs.usda.gov/goto/inyo/maps-pubs/mvum), however separate detailed and specific maps for Coyote Flats and Silver/Wyman Canyons are available on the website: “Alerts and Notices.”
+
+The Inyo National Forest will continue to assess flood and storm damage, survey and evaluate roads, recreation sites, and provide status updates for potential flood response and conditions.
+
+HOW YOU CAN PREPARE
+
+As temperatures continue to rise, and the snow continues to melt, the National Weather Service (NWS) could issue flood advisories for the local forest area. Certain areas could come under flood warnings or watches, and the Forest will not be closing those areas because of that. 
+
+It is up to you to keep up on the flood advisories and make your plans accordingly. It might be a good idea to sign up for notifications from the NWS’s social media pages:
+
+NWS Weather Forecast-Reno Office
+
+	NWS-Reno Facebook
+	
+	NWS Weather Forecast-Las Vegas Office
+	NWS-Las Vegas Facebook
+	
+	NWS Current Conditions-Bishop 
+Forest visitors should be prepared for the possibility of road closures and tire chain requirements. Please check these online websites for current road conditions: 
+
+California Current Road Conditions
+	Nevada Current Road Conditions
+	Inyo NF Winter Road Closures
+	Inyo County-Road Open/Closed Status Webpage
+	Mono County Public Works-Roads
+Lastly, if you are a resident of the Eastern Sierra or Owens Valley, the Counties of Inyo and Mono have developed extremely helpful websites to assist residents in emergency response:
+
+Ready.InyoCounty.us
+
+	Inyo County "Spring runoff" List of Resources
+	
+	Ready.Mono.ca.gov
+FLOOD SAFETY TIPS
+
+If you are under a flood warning:
+
+Find safe shelter right away.
+	Do not walk, swim, or drive through flood waters.
+	Turn Around, Don’t Drown!
+	Remember, just six inches of moving water can knock you down, and one foot of moving water can sweep your vehicle away.
+	Stay off bridges over fast-moving water.
+	Depending on the type of flooding:
+	Evacuate if told to do so.
+	Move to higher ground or a higher floor.
+	Stay where you are.
+</description>
+  <pubDate>Thu, 25 May 2023 12:13:50 EDT</pubDate>
+    <dc:creator>cthompson</dc:creator>
+    <guid isPermaLink="false">312946</guid>
+    </item>
+<item>
+  <title>TXGUP Cutoff Ridge Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/txgup-cutoff-ridge-fire</link>
+  <description>Last updated: 2023-07-24
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Guadalupe Mountains National Park. 
+
+--- 
+
+Coordinates:
+
+Latitude: 31 58 0  Longitude: -104 54 13 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Cutoff Ridge fire started on Friday, July 14, 2023, and is located in the northwest corner of the Guadalupe Mountains Wilderness near Dog Canyon. </description>
+  <pubDate>Mon, 17 Jul 2023 07:04:18 EDT</pubDate>
+    <dc:creator>bporter</dc:creator>
+    <guid isPermaLink="false">313493</guid>
+    </item>
+<item>
+  <title>AZASF Guzzler Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/azasf-guzzler-fire</link>
+  <description>Last updated: 2023-07-24
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Apache-Sitgreaves National Forests. 
+
+--- 
+
+Coordinates:
+
+Latitude: 34 36 1  Longitude: -110 49 54 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Guzzler fire decreased in complexity and transitioned on July 25th at 0700 from the White Mountain Zone Type 3 Team to a Type 4 Team with Incident Commander Wyatt Ellis and trainee Aaron Ballesteros. This will be the final update from the White Mountain Zone Type 3 Team unless conditions change. </description>
+  <pubDate>Thu, 20 Jul 2023 05:53:30 EDT</pubDate>
+    <dc:creator>mbaca</dc:creator>
+    <guid isPermaLink="false">313541</guid>
+    </item>
+<item>
+  <title>CAENF 2023 Eldorado National Forest Projects</title>
+  <link>http://inciweb.nwcg.gov/incident-information/caenf-2023-eldorado-national-forest-projects</link>
+  <description>Last updated: 2023-07-24
+
+
+--- 
+
+The type of incident is Prescribed Fire and involves the following unit(s) Eldorado National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 38 56 7.764  Longitude: -120 19 10.102 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: Updates |Photo |Maps
+
+ 
+
+The Eldorado National Forest fire crews have been preparing to conduct fuel treatment projects throughout 2023. These fuel treatment operations will include prescribed fire, vegetation cutting, removal and burning of piles, and low-intensity understory burning, all are an important tool for the Forest Service’s mission to reduce unnatural vegetation loading and restore natural fire regimes, which in the long-term help communities live more safely with fire.
+
+Fire managers follow a risk-management approach when conducting these projects and mitigate impacts to local communities, residences, and infrastructure. Fire managers will conduct prescribed fire activities during the safest possible “burn windows” in the coming months. Numerous factors including wind, humidity, air quality, fuel moisture and availability of fire crew personnel must be met before crews are authorized to move forward with burning.
+
+Residents and visitors are asked to avoid areas where prescribed fires are being conducted. Some smoke may be visible. People should not be alarmed as the fires are carefully monitored. Local fire and government authorities are notified prior to burn days and kept informed throughout prescribed fire operations.
+
+Along with fuel treatment projects continued work is going on over on the Mosquito Fire footprint and restoration work is occurring on the Caldor fire footprint.
+Updates on all Fuel Treatment Projects, Mosquito Recovery Projects, and Caldor Restoration Projects will be shared on this page and the forest’s social media page on Twitter at https://twitter.com/EldoradoNF and Facebook at https://www.facebook.com/eldoradonf</description>
+  <pubDate>Mon, 10 Apr 2023 12:42:29 EDT</pubDate>
+    <dc:creator>sbishop</dc:creator>
+    <guid isPermaLink="false">312716</guid>
+    </item>
+<item>
+  <title>CAKNF Klamath National Forest Late June Lightning Fires</title>
+  <link>http://inciweb.nwcg.gov/incident-information/caknf-klamath-national-forest-late-june-lightning-fires</link>
+  <description>Last updated: 2023-07-02
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Klamath National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 41 45 26  Longitude: --123 12 39 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: All fires from the late June lightning event have been called out. There will be no further updates to this incident.
+
+Following is a list of the fires by discovery date:
+
+6/23/23
+
+Alder Fire, Happy Camp/Oak Knoll District, .1 acre, called out
+ 
+
+6/24/23
+
+Buck Fire, Happy Camp/Oak Knoll District north of Buck Lake in the Siskiyou Wilderness, .1 acre, called out
+	Kuntz Fire, Happy Camp/Oak Knoll District 2 miles northeast of Lake Mountain, .1 acre – out
+ 
+
+6/25/23
+
+Swanson Fire, Salmon/Scott River District 2 miles southwest of Scott Bar, .1 acre, out
+	Stones Fire, Salmon/Scott River District north end of the Marble Mountain Wilderness, 2.5 miles southeast of Huckleberry Mountain, 0.1 acre, out
+	Franklin Fire, Salmon/Scott River District, 3.5 miles east of Hamburg, .25 acre, out
+	Frying Fire, Happy Camp/Oak Knoll District east of Gordons Ferry, .1 acre, out
+	Saints Fire, Happy Camp/Oak Knoll District 2.5 miles west of Happy Camp, .1 acre, out
+ 
+
+6/26/23
+
+Faulkstein Fire, Happy Camp/Oak Knoll District 2 miles north of Tyler Meadows Trailhead, .1 acre-- out
+	Tyler Fire, Happy Camp/Oak Knoll District near Tyler Meadows Trailhead, .1 acre—out
+	Pan Fire, Happy Camp/Oak Knoll District 2 miles southeast of Gordons Ferry, 1.0 acre – out
+	Lime Fire, Happy Camp/Oak Knoll District 2 miles east of Elk Creek southeast of Cougar Creek, .1 acre - out.
+	Middle Fire, Happy Camp/Oak Knoll District near the Cold Spring Trailhead just north of the Marble Mountain Wilderness, .1 acre – out
+	Macks Fire, Happy Camp/Oak near Macks Creek just south of Hamburg – false
+	Claire Fire, Salmon/Scott District, southeast of Mary Claire Mountain in the Trinity Alps Wilderness, .1 acre, out (this fire was erroneously omitted from this report previously)
+ 
+
+6/27/23
+
+Cow Fire, Salmon/Scott District, near Crapo Mountain, .1 acres, smokejumpers on scene - out
+	Horn Fire, Happy Camp/Oak Knoll – unable to locate
+	Blakes Fire, Salmon/Scott District, just south of the South Russian Trailhead west of the Russian Wilderness, .1 acre – out
+	Belle Fire, Salmon/Scott District, one mile west of the Blakes Fire, .1 acre – out
+ 
+
+6/28/23
+
+Valley Fire, Happy Camp/Oak Knoll District, one mile north of the Tyler Meadows Trailhead, out
+ 
+
+6/29/23
+
+Marble Fire, Happy Camp/Oak Knoll District, near Elk Peak on the aspect above Toms Creek, 2 acres, out
+ 
+
+7/2/23
+
+Hoags Fires, Happy Camp/Oak Knoll District - 0.23 acre, out
+ 
+
+Very hot weather will make it easier for wildfires to start. Folks in and around the woods should be extra careful with anything that can start a fire. If you have a campfire, make sure to clear fuels from around the ring, keep your fire small, and make sure never leave it unattended. Put it out each evening and when you leave your camp. All the way out! Use the drown, stir, feel, repeat method.
+
+ 
+
+ 
+
+ 
+
+ 
+
+ </description>
+  <pubDate>Mon, 26 Jun 2023 04:03:56 EDT</pubDate>
+    <dc:creator>jennifererickson</dc:creator>
+    <guid isPermaLink="false">313211</guid>
+    </item>
+<item>
+  <title>CAYNP Pika Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/caynp-pika-fire</link>
+  <description>Last updated: 2023-07-16
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Yosemite National Park. 
+
+--- 
+
+Coordinates:
+
+Latitude: 37 45 47  Longitude: -119 33 35 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: Lightning fire started on 6/29/2023. 
+
+Crews are actively engaged in holding and monitoring, smoke and some fire activity will continue to be seen from Yosemite Valley and other areas in the park.</description>
+  <pubDate>Thu, 29 Jun 2023 05:35:05 EDT</pubDate>
+    <dc:creator>slyon</dc:creator>
+    <guid isPermaLink="false">313247</guid>
+    </item>
+<item>
+  <title>CAINF INYO NATIONAL FOREST 2023 PRESCRIBED FIRE PROJECTS</title>
+  <link>http://inciweb.nwcg.gov/incident-information/cainf-inyo-national-forest-2023-prescribed-fire-projects</link>
+  <description>Last updated: 2023-07-24
+
+
+--- 
+
+The type of incident is Prescribed Fire and involves the following unit(s) Inyo National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 37 31 41  Longitude: -118 33 59 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: Incident Overview
+
+Inyo National Forest (INF) fire crews have been planning for, preparing and conducting fuel treatment projects that are expected to occur through 2023. These fuel treatment operations include prescribed burning of vegetation thinning (slash) piles, with low-intensity understory burning.
+
+Prescribed fire an important tool for the Forest Service mission to reduce unnatural vegetation fuel loading and restore natural fire regimes, which helps communities live more safely with fire.
+
+Fire managers follow a risk-management approach when conducting these projects and mitigate impacts to local communities, residences, and other infrastructure. They will conduct prescribed fire activities during the safest possible “burn windows” in the coming months. Numerous factors including wind, humidity, air quality, fuel moisture and availability of fire crew personnel must be met before crews are authorized to move forward with burning.
+
+Residents and visitors are asked to avoid areas where prescribed fires are being conducted. Some smoke may be visible. People should not be alarmed as the fires are carefully monitored. Local fire and government authorities are notified prior to burn days and kept informed throughout prescribed fire operations.
+
+Updates on these 2023 planned INF fuel treatment projects, Casa Diablo Burn, Antelope Burn, and Lakes Basin-Reds Meadow Burn will also be shared on this InciWeb page, the Inyo National Forest Alerts webpage at Inyo National Forest - Alerts &amp; Notices (usda.gov), and its Facebook social media page at https://www.facebook.com/inyonf.
+
+Link to News Release: Prescribed burning to start June 6 on Inyo National Forest:
+
+Inyo National Forest - News &amp; Events (usda.gov)</description>
+  <pubDate>Tue, 13 Jun 2023 02:48:53 EDT</pubDate>
+    <dc:creator>cthompson</dc:creator>
+    <guid isPermaLink="false">313067</guid>
+    </item>
+<item>
+  <title>TXTXS Beaver Creek Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/txtxs-beaver-creek-fire</link>
+  <description>Last updated: 2023-07-23
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Texas A&amp;M Forest Service. 
+
+--- 
+
+Coordinates:
+
+Latitude: 33 55 52  Longitude: -98 57 41 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: Around 5:30 PM on July 19, Texas A&amp;M Forest Service received a request for assistance for a fire 6 miles South of Electra on HWY 25 in Wilbarger County. Texas A&amp;M Forest Service crews are working in unified command with local responders.
+
+The Beaver Creek Fire is burning in Mesquite brush mixed with grass and is exhibiting extreme fire behavior with multiple spot fires and is resistant to control.
+
+The Beaver Creek Fire had a containment line all the way around it with 80% containment by the evening of July 19th. On the afternoon of July 20th, a slop over occurred and additional resources along with Air Attack were requested to assist with containing the fire.</description>
+  <pubDate>Thu, 20 Jul 2023 06:53:51 EDT</pubDate>
+    <dc:creator>stuartmorris</dc:creator>
+    <guid isPermaLink="false">313542</guid>
+    </item>
+<item>
+  <title>ORMHF Boulder Fire</title>
+  <link>http://inciweb.nwcg.gov/incident-information/ormhf-boulder-fire</link>
+  <description>Last updated: 2023-07-22
+
+
+--- 
+
+The type of incident is Wildfire and involves the following unit(s) Mt. Hood National Forest. 
+
+--- 
+
+Coordinates:
+
+Latitude: 45 15 13  Longitude: -121 33 45 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: (Dufur, OR) The Boulder Fire started on July 8 near Boulder Lake Trailhead 26 miles southwest of Dufur in the Mt. Hood National Forest Barlow Ranger District. An estimated 233 acres have burned, and the fire is 100% contained. Objectives will be met by the end of the weekend and, on Sunday at 6 p.m., the Type 2 Northwest Incident Management Team 10 (NW Team 10) will transfer command of the incident to a local incident management team from the Barlow Ranger District. 
+
+As of 6 p.m. on July 23, please direct all calls to the Barlow Ranger District Office at (541)467-2291.
+
+For updated information about road, campground and trail closures, see the Forest webpage at www.fs.usda.gov/alerts/mthood/alerts-notices
+
+For updated information about evacuation, see the Wasco County Sheriff’s Office Facebook page at www.facebook.com/WascoCountySheriff</description>
+  <pubDate>Tue, 11 Jul 2023 12:34:03 EDT</pubDate>
+    <dc:creator>domdal</dc:creator>
+    <guid isPermaLink="false">313428</guid>
+    </item>
+<item>
+  <title>COARF Forsythe II Prescribed Burn</title>
+  <link>http://inciweb.nwcg.gov/incident-information/coarf-forsythe-ii-prescribed-burn</link>
+  <description>Last updated: 2023-04-27
+
+
+--- 
+
+The type of incident is Prescribed Fire and involves the following unit(s) Arapaho and Roosevelt National Forests and Pawnee National Grassland. 
+
+--- 
+
+Coordinates:
+
+Latitude: 39 57 0  Longitude: -105 22 5 
+
+--- 
+
+NOTE: All fire perimeters and points are approximations. 
+
+--- 
+
+Incident Overview: The Forsythe II Project is part of the Forest Service’s on-going effort to improve forest health conditions on the Boulder Ranger District. The project area is located near Gross Reservoir and Winiger Ridge in Boulder County, Colo. The entire project area encompasses 18,954 acres; 9,940 of those acres are National Forest System lands, 1,892 acres are Boulder County Parks and Open Space lands, and 7,122 acres are private lands. Elevation ranges from 6,082 to 8,945 feet. The project is generally located east of Nederland, CO and west of Gross Reservoir.  
+
+The broadcast burn units from the Forsythe II Decision are located 7 miles southwest of Boulder and 5.5 miles east of Nederland and total 931 acres. Forest thinning and pile burning treatments for areas near the planned prescribed burn area are mostly complete. The area has two main burn units that are subdivided into multiple sub-units that vary in size from 18 acres to 130 acres to provide a variety of options for control using existing roads, water, natural features and control lines, up to 340 acres per year. The prescribed burning treatments will be implemented over several years, with the amount treated per year dependent on weather, ground conditions, and available resources.  
+
+All burning will be implemented in close coordination and with assistance from local cooperating agencies and partners, including Boulder Watershed Collective, Boulder County Fireshed, state and county public health agencies, and multiple local agency fire cooperators.
+
+Smoke will be in the air, but fire managers work closely with experts to minimize the impacts to the extent possible. Air quality is carefully monitored before and during a prescribed fire and all prescribed burns comply with state air quality regulations to minimize impacts to communities. To learn more about the potential health impacts of smoke visit www.colorado.gov/pacific/cdphe/wood-smoke-and-health.
+
+To receive updates, join our email list and select list "Forest Health &amp; Fire: North of Hwy 72 (Coal Creek Canyon) to Hwy 119 Boulder Canyon (Nederland and Magnolia areas)". Have questions? Email ARPFireInfo@usda.gov.</description>
+  <pubDate>Thu, 16 Mar 2023 10:02:56 EDT</pubDate>
+    <dc:creator>christophergreen</dc:creator>
+    <guid isPermaLink="false">312664</guid>
+    </item>
+
+  </channel>
+</rss>

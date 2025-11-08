@@ -1,0 +1,18 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.mapollc.main",
+    "sha256_cert_fingerprints":
+    ["2C:3C:27:BE:EA:2C:F0:CE:06:C2:1C:9D:22:39:65:BE:DC:43:A3:41:9B:B6:63:52:47:16:54:86:1F:6C:20:06"]
+  }
+},
+{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.mapollc.main",
+    "sha256_cert_fingerprints":
+    ["C0:3E:9E:FE:18:B3:3B:5F:3C:47:6F:5A:45:92:42:76:B7:0C:2E:35:CD:9C:DC:02:0D:B6:91:E8:5E:A7:43:BE"]
+  }
+}]

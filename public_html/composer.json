@@ -1,0 +1,7 @@
+{
+    "name": "root/public_html",
+    "require": {
+        "firebase/php-jwt": "^6.11",
+        "ua-parser/uap-php": "^3.9"
+    }
+}

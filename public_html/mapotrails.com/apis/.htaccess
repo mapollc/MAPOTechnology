@@ -1,0 +1,16 @@
+#RewriteEngine On
+#RewriteBase /
+#Options +Indexes
+#Options +FollowSymlinks
+
+#DirectoryIndex index.php index.html
+
+#RewriteCond %{REQUEST_FILENAME} !-f
+#RewriteCond %{REQUEST_FILENAME} !-d
+#RewriteCond %{REQUEST_FILENAME}.php -f
+#RewriteRule ^(.+)$ /$1.php [L,QSA]
+
+# APIs REWRITE
+#RewriteRule ^v([^/]*)/([^/]*)$ /index.php?version=$1&api=$2 [L,QSA]
+#RewriteRule ^v([^/]*)/([^/]*)/([^/]*)$ /index.php?version=$1&api=$2&method=$3 [L,QSA]
+#RewriteRule ^v([^/]*)/([^/]*)/([^/]*)/([^/]*)$ /index.php?version=$1&api=$2&method=$3&function=$4 [L,QSA]

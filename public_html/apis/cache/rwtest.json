@@ -1,0 +1,98 @@
+[
+    {
+        "id": 210,
+        "hwyID": "173",
+        "name": "Timberline Lodge",
+        "hwy": "OR173",
+        "owner": "",
+        "mileposts": [
+            0.11999999999999999555910790149937383830547332763671875,
+            5.4900000000000002131628207280300557613372802734375
+        ],
+        "temp": 30,
+        "weather": "Snow Flurries",
+        "road": {
+            "id": 5,
+            "condition": "Snow Pack (Breaking Up)"
+        },
+        "snow": {
+            "new": 3,
+            "roadside": 3
+        },
+        "notes": "",
+        "restrict": {
+            "chains": {
+                "cond": "C",
+                "desc": "CHAINS REQUIRED: Traction tires allowed in place of chains on vehicles under 10,000 GVW and not towing. Vehicles towing must use chains"
+            },
+            "cmv": {
+                "restrict": "No restrictions"
+            }
+        },
+        "updated": 1729177902
+    },
+    {
+        "id": 110,
+        "hwyID": "006",
+        "name": "Ladd Canyon EB",
+        "hwy": "I84",
+        "owner": "",
+        "mileposts": [
+            280,
+            266
+        ],
+        "temp": 30,
+        "weather": "Snow Flurries",
+        "road": {
+            "id": 6,
+            "condition": "Snowing Hard & Continuously"
+        },
+        "snow": {
+            "new": 2,
+            "roadside": 10
+        },
+        "notes": "",
+        "restrict": {
+            "chains": {
+                "cond": "B",
+                "desc": "Chains required on vehicles towing or over 10,000 GVW."
+            },
+            "cmv": {
+                "restrict": "No restrictions"
+            }
+        },
+        "updated": 1729177902
+    },
+    {
+        "id": 111,
+        "hwyID": "006",
+        "name": "Ladd Canyon WB",
+        "hwy": "I84",
+        "owner": "",
+        "mileposts": [
+            266,
+            280
+        ],
+        "temp": 30,
+        "weather": "Snow Flurries",
+        "road": {
+            "id": 5,
+            "condition": "Snow Pack (Breaking Up)"
+        },
+        "snow": {
+            "new": 6,
+            "roadside": 12
+        },
+        "notes": "",
+        "restrict": {
+            "chains": {
+                "cond": "C",
+                "desc": "CHAINS REQUIRED: Traction tires allowed in place of chains on vehicles under 10,000 GVW and not towing. Vehicles towing must use chains"
+            },
+            "cmv": {
+                "restrict": "No restrictions"
+            }
+        },
+        "updated": 1729177902
+    }
+]

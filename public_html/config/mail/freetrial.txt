@@ -1,0 +1,9 @@
+Hello {name},<br><br>
+
+Just a quick heads-up &mdash; your free trial of <b>{plan}</b> will end on <b>{ends}</b>.<br><br>
+
+To keep access to premium wildfire tools like satellite heat detection, smoke models, and other professional data, no action is needed. Your default payment method will be charged starting on {ends}.<br><br>
+
+If you don't wish to continue, you can cancel anytime from your <a href="https://www.mapotechnology.com/account/billing">billing account</a>.<br><br>
+
+Thanks for giving us a try — and thank you for helping support faster, smarter wildfire awareness

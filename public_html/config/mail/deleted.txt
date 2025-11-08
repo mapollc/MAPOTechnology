@@ -1,0 +1,7 @@
+Hello {fname},<br><br>
+
+Your account with MAPO has been permanently deleted and removed from our servers. We're sorry to see you ago! Thanks for having an account with us since {since}.<br><br>
+
+Please note, we are unable to restore your account if this was accidental or you changed your mind. If this was an accident, please create a new account.<br><br>
+
+If you have any questions/concerns, feel free to reach out to us.

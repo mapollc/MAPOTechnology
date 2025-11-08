@@ -1,0 +1,6210 @@
+{
+    "organization-information": {
+        "organization-id": "us.or..dot",
+        "organization-name": "ODOT",
+        "last-update-time": "2023-10-07T16:09:19"
+    },
+    "dmsItems": [
+        {
+            "device-id": 178,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 21,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T082181",
+            "dmsCurrentMessage": {
+                "phase1Line1": "I-84 EB ",
+                "phase1Line2": "CLOSED",
+                "phase1Line3": "AT I-205 SB",
+                "phase2Line1": "I-84 EB",
+                "phase2Line2": "CLOSED",
+                "phase2Line3": "2 MI AHEAD"
+            }
+        },
+        {
+            "device-id": 58,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 31,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 46,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "10TH ST  6 MIN",
+                "phase1Line3": "I-5  11 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 35,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 47,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 2,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 3,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 8,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 9,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 10,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T033221",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ROADWORK AHEAD ",
+                "phase1Line2": "LANE CLOSURES ",
+                "phase1Line3": "FRI-SAT 8P-6A ",
+                "phase2Line1": "SLOW FOR WORKERS ",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 12,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 13,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T051565",
+            "dmsCurrentMessage": {
+                "phase1Line1": "I-5 WORK MP",
+                "phase1Line2": "254-250 SUN-THURS",
+                "phase1Line3": "8PM-5AM",
+                "phase2Line1": "NB EXIT 252",
+                "phase2Line2": "CLOSURE USE DETOUR",
+                "phase2Line3": "9PM-5AM"
+            }
+        },
+        {
+            "device-id": 16,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 17,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-205        2 MIN",
+                "phase1Line3": "WILSONVILLE  6 MIN ",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 18,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T082181",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ROADWORK I-84 EB",
+                "phase1Line2": "CLOSED ",
+                "phase1Line3": "AT I-205 SB",
+                "phase2Line1": "ROADWORK I-84 EB",
+                "phase2Line2": "CLOSED",
+                "phase2Line3": "USE ALT ROUTE"
+            }
+        },
+        {
+            "device-id": 19,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "SR 500      15 MIN",
+                "phase1Line3": "I-205       20 MIN ",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 6,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T082340",
+            "dmsCurrentMessage": {
+                "phase1Line1": "CRASH",
+                "phase1Line2": "9 MI AHEAD",
+                "phase1Line3": "USE CAUTION",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 7,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 4,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 14,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 15,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 20,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 24,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 25,
+            "dms-device-status": "Unavailable",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 26,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 27,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 28,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 29,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 30,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 32,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 33,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 34,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 36,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 37,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 38,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 39,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 40,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 41,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "CAUTION",
+                "phase1Line2": "SHARP",
+                "phase1Line3": "CURVES",
+                "phase2Line1": "NEXT",
+                "phase2Line2": "5",
+                "phase2Line3": "MILES"
+            }
+        },
+        {
+            "device-id": 42,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "DOWN",
+                "phase1Line3": "",
+                "phase2Line1": "YOUR",
+                "phase2Line2": "SPEED IS",
+                "phase2Line3": " MPH"
+            }
+        },
+        {
+            "device-id": 43,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "CAUTION",
+                "phase1Line2": "SHARP",
+                "phase1Line3": "CURVES",
+                "phase2Line1": "NEXT",
+                "phase2Line2": "10",
+                "phase2Line3": "MILES"
+            }
+        },
+        {
+            "device-id": 44,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 49,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 51,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 52,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 53,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 54,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 55,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-205   6MIN",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 56,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 57,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 59,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 60,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 61,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "DELTA HWY  3 MIN",
+                "phase1Line3": "I-5  6 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 177,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 179,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "GOVT CAMP    39MIN",
+                "phase1Line3": "FROG LAKE    45MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 180,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "GOVT CAMP    11MIN",
+                "phase1Line3": "FROG LAKE    19MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 181,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "GOVT CAMP  7MIN",
+                "phase1Line3": "MEADOWS  17MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 182,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 183,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T082331",
+            "dmsCurrentMessage": {
+                "phase1Line1": "CRASH",
+                "phase1Line2": "10 MI AHEAD",
+                "phase1Line3": "USE CAUTION ",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 185,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "GOVT CAMP    8MIN",
+                "phase1Line3": "ZIG ZAG      21MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 186,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-405        13MIN",
+                "phase1Line3": "I5 VIA OR217 17MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 187,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "185TH  7 MIN",
+                "phase1Line3": "VIA  15 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 188,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 190,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 189,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 191,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 192,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 193,
+            "dms-device-status": "Unavailable",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 195,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 196,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 197,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 198,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 199,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 200,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 201,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 203,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 208,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 209,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "SR14 VIA I-5  23 MIN",
+                "phase1Line3": "OR217 VIA I-5  11 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 223,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T082181",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ROADWORK I-84 EB",
+                "phase1Line2": "CLOSED ",
+                "phase1Line3": "AT I-205 SB",
+                "phase2Line1": "ROADWORK I-84 EB",
+                "phase2Line2": "CLOSED",
+                "phase2Line3": "USE ALT ROUTE"
+            }
+        },
+        {
+            "device-id": 224,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T082181",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ROADWORK I-84 EB",
+                "phase1Line2": "CLOSED ",
+                "phase1Line3": "AT I-205 SB",
+                "phase2Line1": "ROADWORK I-84 EB",
+                "phase2Line2": "CLOSED",
+                "phase2Line3": "USE ALT ROUTE"
+            }
+        },
+        {
+            "device-id": 225,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 226,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "POWELL BLVD  10 MIN",
+                "phase1Line3": "I-84  11 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 227,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T082183",
+            "dmsCurrentMessage": {
+                "phase1Line1": "I-84 WB CLOSED",
+                "phase1Line2": "AT I-205",
+                "phase1Line3": "EXPECT DELAYS",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 228,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T082181",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ROADWORK I-84 EB",
+                "phase1Line2": "CLOSED ",
+                "phase1Line3": "AT I-205 SB",
+                "phase2Line1": "ROADWORK I-84 EB",
+                "phase2Line2": "CLOSED",
+                "phase2Line3": "USE ALT ROUTE"
+            }
+        },
+        {
+            "device-id": 229,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "OR217  5 MIN",
+                "phase1Line3": "I-205  8 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 204,
+            "dms-device-status": "Unavailable",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 205,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 206,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 213,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 214,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 212,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 215,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 217,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 218,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 219,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 220,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 221,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 222,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 230,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 231,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED45",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 232,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED45",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 233,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 234,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 235,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 236,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 237,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 239,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 240,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 241,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 242,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 243,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 244,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 245,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 246,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 247,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 248,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 249,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 250,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 251,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 252,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-405 VIA US26  15 MIN",
+                "phase1Line3": "185TH VIA US26  10 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 253,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-5  9 MIN",
+                "phase1Line3": "I-205 VIA I-5  11 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 254,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 255,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 256,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "US26  7 MIN",
+                "phase1Line3": "185TH VIA US26  13 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 257,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-5  15 MIN",
+                "phase1Line3": "I-205 VIA I-5  17 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 258,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-405    16MIN",
+                "phase1Line3": "I-5/217   17MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 259,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "185TH     6MIN",
+                "phase1Line3": "I-5/217   17MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 260,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-205    6MIN",
+                "phase1Line3": "US26    9MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 261,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-5  14 MIN",
+                "phase1Line3": "I-205  16 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 262,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-205    7MIN",
+                "phase1Line3": "US26    9MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 263,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-405   14MIN",
+                "phase1Line3": "185TH    8MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 264,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 184,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "FROG LAKE     6MIN",
+                "phase1Line3": "HOOD RIVER    45MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 900,
+            "dms-device-status": "Unavailable",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 901,
+            "dms-device-status": "Unavailable",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 216,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 265,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 267,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 269,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 270,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 272,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 273,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 238,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "OR217  6 MIN",
+                "phase1Line3": "I-405  17 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 276,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "BROOKWOOD PKWY  5MIN",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 210,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 277,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 278,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 280,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 281,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 282,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 283,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 284,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 287,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": ",",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 288,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 291,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 292,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 293,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 73,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 80,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 297,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T051565",
+            "dmsCurrentMessage": {
+                "phase1Line1": "I-5 WORK MP",
+                "phase1Line2": "254-250 SUN-THURS",
+                "phase1Line3": "8PM-5AM",
+                "phase2Line1": "NB EXIT 252",
+                "phase2Line2": "CLOSURE USE DETOUR",
+                "phase2Line3": "9PM-5AM"
+            }
+        },
+        {
+            "device-id": 298,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "BLANK (Face 1)",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 299,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": ",",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 300,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": ",",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 301,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "Blank(Face 1)",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 302,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": ",",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 303,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": ",",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 304,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "BLANK (Face 1)",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 305,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "BLANK (Face 1)",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 306,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "BLANK (Face 1)",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 307,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "44",
+                "phase1Line2": "41",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 308,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 309,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 194,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 290,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 11,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 115,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 148,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T022040",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ROADWORK",
+                "phase1Line2": "7 MI",
+                "phase1Line3": "AHEAD",
+                "phase2Line1": "USE ",
+                "phase2Line2": "CAUTION",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 211,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 902,
+            "dms-device-status": "Unavailable",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 313,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 314,
+            "dms-device-status": "Unavailable",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 315,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 316,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 317,
+            "dms-device-status": "Unavailable",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 318,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 319,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 320,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 107,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "50",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 296,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "50",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 324,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 325,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT70",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 326,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS65",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 327,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT70",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 328,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS65",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 329,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT70",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 330,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS65",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 331,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT70",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 332,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS65",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 333,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMITTRUCKS7065",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 334,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT70",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 335,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS65",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 336,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMITTRUCKS7065",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 337,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMITTRUCKS7065",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 338,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT70",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 339,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS65",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 340,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT55",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 341,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMITTRUCKS7065",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 342,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT70",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 343,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS65",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 344,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT55",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 345,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 346,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMITTRUCKS7065",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 347,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT70",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 348,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS65",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 5,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 202,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 22,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 23,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 379,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 45,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 381,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 286,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "99W  13MIN",
+                "phase1Line3": "BYPASS  12MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 294,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "99W  14MIN",
+                "phase1Line3": "BYPASS  15MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 1,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 350,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "MEADOWS     20",
+                "phase1Line3": "GOVT CAMP    31",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 390,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 391,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-205      8MIN",
+                "phase1Line3": "212/224 14MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 397,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 151,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 321,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "RIVER RD  4 MIN",
+                "phase1Line3": "W 11TH/OR126  10 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 322,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 323,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 372,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 373,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 399,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 275,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 401,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "CONGESTION",
+                "phase1Line2": "AHEAD",
+                "phase1Line3": "1 MILE",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 403,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "4 MIN",
+                "phase1Line3": "185TH  9 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 404,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "OR217  5 MIN",
+                "phase1Line3": "185TH  10 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 405,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 406,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 407,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 408,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED35",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 409,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED35",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 410,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED35",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 411,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED30",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 412,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED30",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 413,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED30",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 414,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 415,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 416,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 417,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 418,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 419,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 420,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 311,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-5          4MIN",
+                "phase1Line3": "217/I-5 13MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 312,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED30",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 421,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED30",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 422,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 423,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 424,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 425,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 426,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 427,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 428,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 429,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 430,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 431,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 432,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 433,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 434,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 435,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 436,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED40",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 437,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED40",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 438,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED40",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 439,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 440,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 441,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 442,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED50",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 443,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED50",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 444,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED50",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 445,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T082181",
+            "dmsCurrentMessage": {
+                "phase1Line1": "I-84 EB",
+                "phase1Line2": "CLOSED",
+                "phase1Line3": "AT I-205 SB",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 446,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 447,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 448,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 449,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 450,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 451,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 452,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "BLANK",
+                "phase1Line2": "NO MESSAGE",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 453,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 454,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "BLANK",
+                "phase1Line2": "NO MESSAGE",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 455,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "HOOD RVR    48",
+                "phase1Line3": "SANDY           32",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 456,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 457,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "ZIG ZAG  10MIN",
+                "phase1Line3": "SANDY  28MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 458,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "BLANK",
+                "phase1Line2": "NO MESSAGE",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 459,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 106,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 48,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 380,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 400,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "US 26    6MIN",
+                "phase1Line3": "I-5/217  15MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 285,
+            "dms-device-status": "in service",
+            "tocsEventId": "23T082183",
+            "dmsCurrentMessage": {
+                "phase1Line1": "I-84 WB",
+                "phase1Line2": "CLOSED",
+                "phase1Line3": "AT I-205",
+                "phase2Line1": "I-84 WB",
+                "phase2Line2": "CLOSED",
+                "phase2Line3": "6 MILES AHEAD"
+            }
+        },
+        {
+            "device-id": 465,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 466,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 467,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 468,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 469,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 470,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 471,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 472,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 473,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 474,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 475,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 476,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 477,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 478,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 479,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "AIRPORTWAY  3MIN",
+                "phase1Line3": "SR14  5MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 480,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 481,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 482,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 483,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 484,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 485,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 486,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 487,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 488,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 489,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 490,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 491,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 492,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 493,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 494,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 495,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 496,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 497,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 498,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 499,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 500,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 501,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "8 MIN",
+                "phase1Line3": "I-5  15 MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 502,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 503,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 121,
+            "dms-device-status": "out of service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 150,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 279,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 518,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 519,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 520,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 521,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED35",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 522,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED35",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 523,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED35",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 524,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 525,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 526,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 527,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 528,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 529,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 530,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 531,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 532,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 533,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 534,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 535,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 536,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED35",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 537,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED35",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 538,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED35",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 539,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 540,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 541,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 542,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED45",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 543,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED45",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 544,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 545,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 546,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 70,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "CONGESTION",
+                "phase1Line2": "AHEAD",
+                "phase1Line3": "1.5 MILES",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 547,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 68,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 71,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 548,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 549,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 550,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 551,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 552,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 553,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 554,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 555,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 556,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 557,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 558,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 559,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 560,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 561,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 562,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 563,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 564,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 565,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 566,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 567,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 568,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 569,
+            "dms-device-status": "Unavailable",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 570,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 571,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 572,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 573,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 574,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 575,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "CAUTION",
+                "phase1Line2": "SHARP CURVES",
+                "phase1Line3": "NEXT 8 MILES",
+                "phase2Line1": "SLOW DOWN",
+                "phase2Line2": "SHARP CURVES",
+                "phase2Line3": "AHEAD"
+            }
+        },
+        {
+            "device-id": 576,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "CAUTION",
+                "phase1Line2": "SHARP CURVES",
+                "phase1Line3": "NEXT 8 MILES",
+                "phase2Line1": "SLOW DOWN",
+                "phase2Line2": "SHARP CURVES",
+                "phase2Line3": "AHEAD"
+            }
+        },
+        {
+            "device-id": 578,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 141,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 579,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 580,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 581,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 582,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "US26  14MIN",
+                "phase1Line3": "I-84  16MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 583,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED45",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 584,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED30",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 585,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED30",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 586,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 587,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 588,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 589,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "212  15MIN",
+                "phase1Line3": "I-84  24MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 590,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "212  15MIN",
+                "phase1Line3": "I-84  24MIN",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 591,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED50",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 592,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 593,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 594,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "ADVISORY",
+                "phase1Line2": "SPEED50",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 368,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 577,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 595,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 596,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 89,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 605,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 85,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 131,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "CAUTION",
+                "phase1Line2": "SHARP CURVES",
+                "phase1Line3": "AHEAD",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 133,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SLOW",
+                "phase1Line2": "DOWN",
+                "phase1Line3": "",
+                "phase2Line1": "YOUR SPEED",
+                "phase2Line2": "IS",
+                "phase2Line3": " MPH"
+            }
+        },
+        {
+            "device-id": 134,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 136,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRAVEL TIME TO:",
+                "phase1Line2": "I-5  6 MIN",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 122,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 173,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 606,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 608,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 609,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 610,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 611,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 612,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 613,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 614,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 615,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 120,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "84VIA HOGANVIA 181ST16MIN18MINTIME TO:  /181ST",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 616,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 617,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 618,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 619,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 620,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT65",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 621,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS60",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 622,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT65",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 623,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS60",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 624,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT65",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 625,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS60",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 626,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT65",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 627,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS60",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 628,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT65",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 629,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS60",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 630,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 631,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT65",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 632,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS60",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 633,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 352,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 505,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT55",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 634,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT55",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 635,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 636,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "CAUTION",
+                "phase1Line2": "SHARP CURVES",
+                "phase1Line3": "AHEAD",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 637,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 638,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT55",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 639,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT55",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 640,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "CAUTION",
+                "phase1Line2": "SHARP CURVES",
+                "phase1Line3": "AHEAD",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 641,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 642,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "SPEED",
+                "phase1Line2": "LIMIT65",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        },
+        {
+            "device-id": 643,
+            "dms-device-status": "in service",
+            "tocsEventId": "",
+            "dmsCurrentMessage": {
+                "phase1Line1": "TRUCKS60",
+                "phase1Line2": "",
+                "phase1Line3": "",
+                "phase2Line1": "",
+                "phase2Line2": "",
+                "phase2Line3": ""
+            }
+        }
+    ]
+}

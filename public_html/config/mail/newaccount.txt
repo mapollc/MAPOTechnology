@@ -1,0 +1,9 @@
+Hello {fname},<br><br>
+
+Thanks for creating a new account with MAPO LLC. Your account allows you to login and access varies services and products from us, including our national wildfire map, Map of Fire, our road conditions & travel app, OregonRoads, and our recreation & trails mapping, Map of Trails.<br><br>
+
+Before logging in, you need to confirm your email address using the link below:<br><br>
+
+<a href="https://www.mapotechnology.com/secure/confirmation?email={email}&oauth_token={token}{subscribe}">Confirm your email</a><br><br>
+
+If you did not create this account, please contact us to resolve the issue.

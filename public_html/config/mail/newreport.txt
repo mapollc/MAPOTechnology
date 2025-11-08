@@ -1,0 +1,6 @@
+Hello {fname},<br><br>
+
+Thanks for sending us a report about a new {type} incident. Here's a copy of what you sent to us. We'll look over your report and decide if it should be added to our map.<br><br>
+
+------------------------------------------------------<br>
+{report}
