@@ -1,7 +1,6 @@
 <?
 $frontPage = true;
 include_once 'header.inc.php';
-echo 'test';
 ?>
 
 <div class="promo">

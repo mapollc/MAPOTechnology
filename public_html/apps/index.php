@@ -23,10 +23,10 @@ class Apps {
             'index' => 'index.php',
             'requiresAuth' => false
         ),
-        array('name' => 'WxDashboards',
-            'url' => 'wxdashboards',
-            'path' => './wxdash',
-            'index' => 'index.php',
+        array('name' => 'TornadoIQ',
+            'url' => 'tornadoiq',
+            'path' => './toriq',
+            'index' => 'app.php',
             'requiresAuth' => false
         ),
         array('name' => 'OregonRoads',

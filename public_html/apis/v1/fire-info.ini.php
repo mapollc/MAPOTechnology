@@ -45,7 +45,7 @@ if (!$cache || filemtime(root() . 'fire-info.ini.php') > $memcache->get($cachefi
         $contain = time() - $row['date'] < 86400 ? '0%' : 'N/A';
         $name = incidentName($row['name'], $row['incidentID'], $row['type']);
         $notes = rtrim($row['notes']);
-        $status = $row['status'] != '' ? json_decode($row['status']) : false;
+        $status = $row['status'] != '' ? unserialize($row['status']) : false;
         $state = convertState(explode(', ', $row['geo'])[1], 1);
         $fuelGroups = json_decode($row['fuelGroups']);
         $causes = json_decode($row['causes']);

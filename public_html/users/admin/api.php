@@ -225,87 +225,98 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
         $con2 = mysqli_connect('localhost', 'mapo_main', 'smQeP]-xjj+Uw$s_', 'mapo_trails');
         $user_agent = Parser::create();
 
-        $account = prepareQuery('i', [$_SESSION['uid']], "SELECT uid, first_name, last_name, email, ip_address, last_active, created, role, phone, location, provider FROM users WHERE uid = ?");
-        $mf = prepareQuery('i', [$_SESSION['uid']], "SELECT settings, method, CAST(time AS FLOAT) AS last_synced FROM settings WHERE uid = ?");
-        $mt = prepareQuery('i', [$_SESSION['uid']], "SELECT settings, method, CAST(time AS FLOAT) AS last_synced FROM trail_settings WHERE uid = ?");
-        $ore = prepareQuery('i', [$_SESSION['uid']], "SELECT settings, CAST(time AS FLOAT) AS last_synced FROM oreroads_settings WHERE uid = ?");
-        $sess = prepareQuery('i', [$_SESSION['uid']], "SELECT sid, ip, host, source AS login_source, location, CAST(created AS FLOAT) AS logged_in FROM sessions WHERE uid = ? ORDER BY created DESC");
-
-        $mtUp = prepareQuery('i', [$_SESSION['uid']], "SELECT fid, fileName, file AS filePath, CAST(size AS INT) AS size, type, CAST(created AS FLOAT) AS created, CAST(modified AS FLOAT) AS modified FROM userMapUploads WHERE uid = ?", true);
-        $fold = prepareQuery('i', [$_SESSION['uid']], "SELECT id AS object_id, fid AS folder_id, name, items, CAST(created AS float) AS created, cast(modified as float) AS modified FROM user_data_folders WHERE uid = ?", true);
-        $mtUd = prepareQuery('i', [$_SESSION['uid']], "SELECT oid AS object_id, gis_id, type, name, color, notes, CAST(created AS float) AS created, CAST(modified AS float) AS modified FROM user_data WHERE uid = ?", true);
-
-        if ($mtUp && !isset($mtUp[0])) {
-            $mtUp = [$mtUp];
+        if (isset($_REQUEST['token']) && $_REQUEST['token'] != '') {
+            $resp = prepareQuery('s', [$_REQUEST['token']], "SELECT u.uid FROM sessions AS s LEFT JOIN users AS u ON u.uid = s.uid WHERE s.token = ? AND s.expires > 0 LIMIT 1");
+            $uid = $resp['uid'];
+        } else {
+            $uid = $_SESSION['uid'];
         }
 
-        if ($mtUd && !isset($mtUd[0])) {
-            $mtUd = [$mtUd];
+        if (!$uid) {
+            $out = array('error' => 'No token was provided or your session ID doesn\'t exist');
+        } else {
+            $account = prepareQuery('i', [$uid], "SELECT uid, first_name, last_name, email, ip_address, last_active, created, role, phone, location, provider FROM users WHERE uid = ?");
+            $mf = prepareQuery('i', [$uid], "SELECT settings, method, CAST(time AS FLOAT) AS last_synced FROM settings WHERE uid = ?");
+            $mt = prepareQuery('i', [$uid], "SELECT settings, method, CAST(time AS FLOAT) AS last_synced FROM trail_settings WHERE uid = ?");
+            $ore = prepareQuery('i', [$uid], "SELECT settings, CAST(time AS FLOAT) AS last_synced FROM oreroads_settings WHERE uid = ?");
+            $sess = prepareQuery('i', [$uid], "SELECT sid, ip, host, source AS login_source, location, CAST(created AS FLOAT) AS logged_in FROM sessions WHERE uid = ? ORDER BY created DESC");
+
+            $mtUp = prepareQuery('i', [$uid], "SELECT fid, fileName, file AS filePath, CAST(size AS INT) AS size, type, CAST(created AS FLOAT) AS created, CAST(modified AS FLOAT) AS modified FROM userMapUploads WHERE uid = ?", true);
+            $fold = prepareQuery('i', [$uid], "SELECT id AS object_id, fid AS folder_id, name, items, CAST(created AS float) AS created, cast(modified as float) AS modified FROM user_data_folders WHERE uid = ?", true);
+            $mtUd = prepareQuery('i', [$uid], "SELECT oid AS object_id, gis_id, type, name, color, notes, CAST(created AS float) AS created, CAST(modified AS float) AS modified FROM user_data WHERE uid = ?", true);
+
+            if ($mtUp && !isset($mtUp[0])) {
+                $mtUp = [$mtUp];
+            }
+
+            if ($mtUd && !isset($mtUd[0])) {
+                $mtUd = [$mtUd];
+            }
+
+            if ($fold && !isset($fold[0])) {
+                $fold = [$fold];
+            }
+
+            for ($i = 0; $i < count($sess); $i++) {
+                if ($mtUd[$i]['stats']) {
+                    $mtUd[$i]['stats'] = json_decode($mtUd[$i]['stats']);
+                }
+            }
+
+            for ($i = 0; $i < count($sess); $i++) {
+                if (str_contains($sess[$i]['host'], '}')) {
+                    $sess[$i]['host'] = json_decode($sess[$i]['host']);
+                } else {
+                    $agent = $user_agent->parse($sess[$i]['host']);
+                    $sess[$i]['host'] = $agent;
+                }
+
+                $sess[$i]['ip_location'] = $sess[$i]['location'] == '' ? 'Unknown' : unserialize($sess[$i]['location']);
+                unset($sess[$i]['location']);
+            }
+
+            foreach ($account as $k => $v) {
+                if ($k == 'last_active' || $k == 'created') {
+                    $v = floatval($v);
+                }
+
+                if ($k == 'provider') {
+                    $v = $v == 1 ? 'google' : 'mapo';
+                }
+
+                if ($k == 'location') {
+                    $v = unserialize($v);
+                }
+
+                if ($k == 'role') {
+                    $v = getUserRole($v);
+                }
+
+                $account[$k] = $v;
+            }
+
+            $account['sessions'] = $sess;
+            $mf['settings'] = unserialize($mf['settings']);
+            $mt['settings'] = json_decode($mt['settings']);
+            $ore['settings'] = json_decode($ore['settings']);
+            $mf['method'] = $mf['method'] == 1 ? 'automatic' : 'manual';
+            $mt['method'] = $mt['method'] == 1 ? 'automatic' : 'manual';
+
+            $mt['userContent'] = [
+                'userUploads' => $mtUp,
+                'mapCreated' => [
+                    'folders' => $fold,
+                    'objects' => $mtUd
+                ]
+            ];
+
+            $out = [
+                'account' => $account,
+                'mapofire' => $mf,
+                'mapotrails' => $mt,
+                'oregonroads' => $ore
+            ];
         }
-
-        if ($fold && !isset($fold[0])) {
-            $fold = [$fold];
-        }
-
-        for ($i = 0; $i < count($sess); $i++) {
-            if ($mtUd[$i]['stats']) {
-                $mtUd[$i]['stats'] = json_decode($mtUd[$i]['stats']);
-            }
-        }
-
-        for ($i = 0; $i < count($sess); $i++) {
-            if (str_contains($sess[$i]['host'], '}')) {
-                $sess[$i]['host'] = json_decode($sess[$i]['host']);
-            } else {
-                $agent = $user_agent->parse($sess[$i]['host']);
-                $sess[$i]['host'] = $agent;
-            }
-
-            $sess[$i]['ip_location'] = $sess[$i]['location'] == '' ? 'Unknown' : unserialize($sess[$i]['location']);
-            unset($sess[$i]['location']);
-        }
-
-        foreach ($account as $k => $v) {
-            if ($k == 'last_active' || $k == 'created') {
-                $v = floatval($v);
-            }
-
-            if ($k == 'provider') {
-                $v = $v == 1 ? 'google' : 'mapo';
-            }
-
-            if ($k == 'location') {
-                $v = unserialize($v);
-            }
-
-            if ($k == 'role') {
-                $v = getUserRole($v);
-            }
-
-            $account[$k] = $v;
-        }
-
-        $account['sessions'] = $sess;
-        $mf['settings'] = unserialize($mf['settings']);
-        $mt['settings'] = json_decode($mt['settings']);
-        $ore['settings'] = json_decode($ore['settings']);
-        $mf['method'] = $mf['method'] == 1 ? 'automatic' : 'manual';
-        $mt['method'] = $mt['method'] == 1 ? 'automatic' : 'manual';
-
-        $mt['userContent'] = [
-            'userUploads' => $mtUp,
-            'mapCreated' => [
-                'folders' => $fold,
-                'objects' => $mtUd
-            ]
-        ];
-
-        $out = [
-            'account' => $account,
-            'mapofire' => $mf,
-            'mapotrails' => $mt,
-            'oregonroads' => $ore
-        ];
     }
 } else {
     $out = array('error' => 'You cannot access this from a browser');

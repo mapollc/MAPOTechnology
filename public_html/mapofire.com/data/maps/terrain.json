@@ -3955,7 +3955,7 @@
             "type": "line",
             "source": "openmaptiles",
             "source-layer": "boundary",
-            "minzoom": 5,
+            "minzoom": 1,
             "filter": [
                 "all",
                 [

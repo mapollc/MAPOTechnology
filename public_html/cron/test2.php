@@ -19,7 +19,7 @@ function isValidCoordinate($lat, $lon) {
     return true;
 }
 
-$result = mysqli_query($con, "SELECT * FROM wildfires WHERE near LIKE '%county\":null%' AND year = 2024");
+$result = mysqli_query($con, "SELECT * FROM wildfires WHERE near LIKE '%county\":null%' AND year = 2021");
 
 while ($row = mysqli_fetch_assoc($result)) {
     if (isValidCoordinate($row['lat'], $row['lon'])) {
