@@ -1070,29 +1070,6 @@ function unsetHeaders() {
     }
 }
 
-function notify(t, m, time = null) {
-    const timing = (time == null ? (((m.split(' ').length / 5) + 0.5) * 1000) + 500 : time * 1000),
-        el = document.createElement('div');
-
-    if (document.querySelector('div.alert')) {
-        document.querySelector('div.alert').remove();
-    }
-
-    el.classList.add('alert', t);
-
-    if (modal.classList.contains('open')) {
-        el.classList.add('mo');
-    }
-
-    el.style.display = 'flex';
-    el.innerHTML = '<i class="fas ' + (t == 'success' ? 'fa-check' : (t == 'info' ? 'fa-circle-info' : 'fa-circle-exclamation')) + '"></i><p>' + m + '</p>';
-    document.body.append(el);
-
-    setTimeout(() => {
-        el.remove();
-    }, timing);
-}
-
 async function saveSession(method = true, msg) {
     if (navigator.onLine) {
         let c = map.getCenter(),

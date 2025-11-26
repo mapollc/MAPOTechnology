@@ -187,16 +187,46 @@ foreach($newDispatchCenters as $center) {
                                 $status = count($fireStatus) > 0 ? serialize($fireStatus) : '';
                             
                                 // prepare mysql statements
-                                $sqlQueries .= "INSERT INTO wildfires (incidentID,incidentNumOnly,state,agency,unit,`year`,`date`,name,type,lat,lon,geo,near,acres,`status`,notes,resources,fuels,captured,updated,timezone,display,owner)
-VALUES('$incidentNum','$incNumOnly','$state','$center','$incidentUnit','$year','$date','$name','$incidentType','$coords[0]','$coords[1]','$geo','$near','$acres','$status','$notes','$resources','$fuels','$time','$time','$timezone','1','system')
-ON DUPLICATE KEY UPDATE state = IF('$state' = '', state, '$state'), agency = VALUES(agency), unit = VALUES(unit), `year` = VALUES(`year`), `date` = VALUES(`date`), name = '$name', type = '$incidentType', 
-lat = '$coords[0]', lon = '$coords[1]', geo = '$geo', near = '$near', acres = '$acres', `status` = '$status', notes = '$notes', resources = '$resources', fuels = '$fuels', captured = VALUES(captured),
-updated = '$time', timezone = '$timezone', display = CASE WHEN display = 0 THEN 0 ELSE VALUES(display) END, owner = VALUES(owner);";
+                                $sqlQueries .= "INSERT INTO wildfires (
+                                    incidentID,incidentNumOnly,state,agency,unit,`year`,`date`,name,type,
+                                    lat,lon,geo,near,acres,`status`,notes,resources,fuels,captured,updated,
+                                    timezone,display,owner
+                                )
+                                VALUES(
+                                    '$incidentNum','$incNumOnly','$state','$center','$incidentUnit','$year','$date',
+                                    '$name','$incidentType','$coords[0]','$coords[1]','$geo','$near','$acres',
+                                    '$status','$notes','$resources','$fuels','$time','$time','$timezone','1','system'
+                                )
+                                ON DUPLICATE KEY UPDATE
+                                    state = IF('$state' = '', state, '$state'),
+                                    agency = VALUES(agency),
+                                    unit = VALUES(unit),
+                                    `year` = VALUES(`year`),
+                                    `date` = VALUES(`date`),
+                                    name = VALUES(name),
+                                    type = VALUES(type),
+                                    lat = VALUES(lat),
+                                    lon = VALUES(lon),
+                                    geo = VALUES(geo),
+                                    near = VALUES(near),
+                                    acres = VALUES(acres),
+                                    `status` = VALUES(`status`),
+                                    notes = CASE WHEN (notes IS NULL OR notes = '') AND VALUES(notes) <> '' THEN VALUES(notes) ELSE notes END,
+                                    resources = CASE WHEN (resources IS NULL OR resources = '') AND VALUES(resources) <> '' THEN VALUES(resources) ELSE resources END,
+                                    fuels = CASE WHEN (fuels IS NULL OR fuels = '') AND VALUES(fuels) <> '' THEN VALUES(fuels) ELSE fuels END,
+                                    captured = VALUES(captured),
+                                    updated = '$time',
+                                    timezone = VALUES(timezone),
+                                    display = CASE WHEN display = 0 THEN 0 ELSE VALUES(display) END,
+                                    owner = VALUES(owner);
+                                ";
 
                                 if ($acres != '') {
-                                    $sqlQueries .= "INSERT INTO acres_history (incidentID,acres,updated) SELECT incidentID, acres, updated FROM wildfires WHERE incidentID = '$incidentNum' AND NOT EXISTS
-(SELECT 1 FROM acres_history WHERE acres_history.acres = '$acres' AND acres_history.incidentID = '$incidentNum');";
+                                    $sqlQueries .= "INSERT INTO acres_history (incidentID,acres,updated)
+                                        SELECT incidentID, acres, updated FROM wildfires WHERE incidentID = '$incidentNum' AND NOT EXISTS
+                                        (SELECT 1 FROM acres_history WHERE acres_history.acres = '$acres' AND acres_history.incidentID = '$incidentNum');";
                                 }
+                                
                                 $count++;
                             }
 

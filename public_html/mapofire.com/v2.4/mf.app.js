@@ -947,7 +947,28 @@ config.tiles = {
     //dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
 };
 
-function gtag() { }
+function notify(t, m, time = null) {
+    const timing = (time == null ? (((m.split(' ').length / 5) + 0.5) * 1000) + 500 : time * 1000),
+        el = document.createElement('div');
+
+    if (document.querySelector('div.alert')) {
+        document.querySelector('div.alert').remove();
+    }
+
+    el.classList.add('alert', t);
+
+    if (modal.classList.contains('open')) {
+        el.classList.add('mo');
+    }
+
+    el.style.display = 'flex';
+    el.innerHTML = '<i class="fas ' + (t == 'success' ? 'fa-check' : (t == 'info' ? 'fa-circle-info' : 'fa-circle-exclamation')) + '"></i><p>' + m + '</p>';
+    document.body.append(el);
+
+    setTimeout(() => {
+        el.remove();
+    }, timing);
+}
 
 function debounce(func, wait) {
     let timeout;
@@ -1070,7 +1091,7 @@ class Settings {
         this.user = u;
         this.role = u != null ? u.role : 'GUEST';
         this.settings = u != null && u.settings.allsettings ? u.settings.allsettings : this.defaultSettings;
-        this.archive = typeof historical !== 'undefined' ? historical : null;
+        this.archive = typeof historical !== 'undefined' && this.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? historical : null;
 
         if (!this.settings.checkboxes) {
             Object.keys(layers.layers).forEach((e) => {
@@ -6062,6 +6083,11 @@ async function preload() {
 }
 
 function popstate() {
+    // if user is trying to view historical fires without a subscription
+    if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && window.location.href.match(/archive=([0-9]+)/g) != null) {
+        notify('info', 'You must upgrade to view historical fires. <a href="' + config.purchaseLink('archive_snackbar') + '">Get access</a>', 6);
+    }
+
     if (/loggedOut=1/.test(window.location.href)) {
         notify('success', 'You were successfully logged out.');
     }
@@ -6161,14 +6187,19 @@ function marketing() {
         shouldShow = false;
     }
 
-    // don’t show if dismissed too many times
+    // don't show if dismissed too many times
     if (dismissedCount >= maxDismissals) {
         shouldShow = false;
     }
 
-    // don’t show if cooldown not expired
+    // don't show if cooldown not expired
     if (now - lastShown < cooldownDays * 24 * 60 * 60 * 1000) {
         shouldShow = false;
+    }
+
+    // don't show to admin users
+    if (settings.getRole() == config.PERMISSION_LEVELS.ADMIN) {
+        shouldShow = false
     }
 
     if (shouldShow) {
@@ -6475,7 +6506,7 @@ function init() {
         /* add banner for archived maps to let the user know */
         if (settings.archive) {
             const b = document.createElement('div');
-            b.classList.add('message', 'error', 'banner');
+            b.classList.add('message', 'success', 'banner');
             b.innerHTML = 'You are viewing a historical wildfire map for <b><u>' + settings.archive + '</u></b>';
             document.body.appendChild(b);
         }

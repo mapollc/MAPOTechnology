@@ -1,5 +1,6 @@
 <?
-function getODOT($url) {
+function getODOT($url)
+{
     $curl = curl_init();
 
     curl_setopt($curl, CURLOPT_URL, $url);
@@ -13,11 +14,13 @@ function getODOT($url) {
     return $resp;
 }
 
-function getRW() {
+function getRW()
+{
     return getODOT('https://api.odot.state.or.us/tripcheck/RW/Reports');
 }
 
-function getIncidents() {
+function getIncidents()
+{
     global $_REQUEST;
 
     if ($_REQUEST['test'] == 1) {
@@ -27,18 +30,21 @@ function getIncidents() {
     }
 }
 
-function getLocalIncidents() {
+function getLocalIncidents()
+{
     return file_get_contents('./cache/local_incs.json');
     //return getODOT('https://api.odot.state.or.us/tripcheck/Tle/Events');
 }
 
-function getDMS() {
+function getDMS()
+{
     return getODOT('https://api.odot.state.or.us/tripcheck/Dms/Status');
 }
 
-function tt($s) {
+function tt($s)
+{
     preg_match('/\[(.*?)\|(.*?)\]\s([A-Z]+);?\s(.*)/', $s, $p);
-    
+
     if ($p) {
         return array('road' => $p[1], 'icon' => $p[2], 'direction' => $p[3], 'to' => $p[4]);
     } else {
@@ -54,55 +60,94 @@ function tt($s) {
     }
 }
 
-function weather($n) {
+function weather($n)
+{
     switch ($n) {
-        case 0: return 'No Report';
-        case 1: return 'Clear/No Precipitation';
-        case 2: return 'Partly Cloudy';
-        case 3: return 'Overcast';
-        case 4: return 'Ground Fog';
-        case 5: return 'Intermittent Showers';
-        case 6: return 'Rain';
-        case 7: return 'Snow Flurries';
-        case 8: return 'Snowing Hard & Continuously';
-        case 9: return 'Severe Weather Alert';
-        case 91: return 'Severe Weather Alert - Freezing Rain';
-        case 92: return 'Severe Weather Alert - High Winds';
-        case 93: return 'Severe Weather Alert - Blizzard Conditions';
-        case 94: return 'Severe Weather Alert - Dust Storm';
-        case 95: return 'Severe Weather Alert - Falling Trees';
+        case 0:
+            return 'No Report';
+        case 1:
+            return 'Clear/No Precipitation';
+        case 2:
+            return 'Partly Cloudy';
+        case 3:
+            return 'Overcast';
+        case 4:
+            return 'Ground Fog';
+        case 5:
+            return 'Intermittent Showers';
+        case 6:
+            return 'Rain';
+        case 7:
+            return 'Snow Flurries';
+        case 8:
+            return 'Snowing Hard & Continuously';
+        case 9:
+            return 'Severe Weather Alert';
+        case 91:
+            return 'Severe Weather Alert - Freezing Rain';
+        case 92:
+            return 'Severe Weather Alert - High Winds';
+        case 93:
+            return 'Severe Weather Alert - Blizzard Conditions';
+        case 94:
+            return 'Severe Weather Alert - Dust Storm';
+        case 95:
+            return 'Severe Weather Alert - Falling Trees';
     }
 }
 
-function cond($n) { 
+function cond($n)
+{
     switch ($n) {
-        case 0: return 'No Report';
-        case 1: return 'Bare Pavement';
-        case 2: return 'Spots of Ice';
-        case 3: return 'Black Ice';
-        case 4: return 'Standing Water/Flooding';
-        case 5: return 'Snow Pack (Breaking Up)';
-        case 6: return 'Packed Snow';
+        case 0:
+            return 'No Report';
+        case 1:
+            return 'Bare Pavement';
+        case 2:
+            return 'Spots of Ice';
+        case 3:
+            return 'Black Ice';
+        case 4:
+            return 'Standing Water/Flooding';
+        case 5:
+            return 'Snow Pack (Breaking Up)';
+        case 6:
+            return 'Packed Snow';
     }
 }
 
-function format($s) {
-    return str_replace(['Lk Of The Woods', ' Of ', ' The '], ['Lake of the Woods', ' of ', ' the '], preg_replace('/\s([N|S|W|E])b/', ' $1B', implode('/', array_map('ucwords',explode('/', implode('-', array_map('ucwords', explode('-', ucwords(strtolower($s))))))))));
+function format($s)
+{
+    return str_replace(['Lk Of The Woods', ' Of ', ' The '], ['Lake of the Woods', ' of ', ' the '], preg_replace('/\s([N|S|W|E])b/', ' $1B', implode('/', array_map('ucwords', explode('/', implode('-', array_map('ucwords', explode('-', ucwords(strtolower($s))))))))));
 }
 
-function chainReq($n) {
+function chainReq($n)
+{
     switch ($n) {
-        case '0': $d = 'No restrictions'; break;
-        case 'A': $d = 'Carry chains or traction tires'; break;
-        case 'B': $d = 'Chains required on vehicles towing or over 10,000 GVW'; break;
-        case 'B1': $d = 'Chains required on vehicles towing or single drive axle over 10,000 GVW'; break;
-        case 'C': $d = 'CHAINS REQUIRED: Traction tires allowed in place of chains on vehicles under 10,000 GVW and not towing. Vehicles towing must use chains'; break;
-        case 'D': $d = 'CHAINS REQUIRED: Traction tires alone are not sufficient'; break;
+        case '0':
+            $d = 'No restrictions';
+            break;
+        case 'A':
+            $d = 'Carry chains or traction tires';
+            break;
+        case 'B':
+            $d = 'Chains required on vehicles towing or over 10,000 GVW';
+            break;
+        case 'B1':
+            $d = 'Chains required on vehicles towing or single drive axle over 10,000 GVW';
+            break;
+        case 'C':
+            $d = 'CHAINS REQUIRED: Traction tires allowed in place of chains on vehicles under 10,000 GVW and not towing. Vehicles towing must use chains';
+            break;
+        case 'D':
+            $d = 'CHAINS REQUIRED: Traction tires alone are not sufficient';
+            break;
     }
     return $d;
 }
 
-function restrict($d, $c) {
+function restrict($d, $c)
+{
     $desc = chainReq($c->{'restriction-id'});
     $cmv = ($d->{'restriction-id'} == 1 ? 'Visibility of less than 500 feet. Oversized loads drive by your permit.' : 'No restrictions');
     $o['chains'] = array('cond' => $c->{'restriction-id'}, 'desc' => $desc);
@@ -115,28 +160,56 @@ function restrict($d, $c) {
     return $o;
 }
 
-function hwy($n) {
+function hwy($n)
+{
     return preg_replace('/OR([0-9]+)/', 'ORE$1', preg_replace('/I([0-9]+)/', 'I-$1', $n));
 }
 
-function incidentType($n) {
+function incidentType($n)
+{
     switch ($n) {
-        case 'AL': $t = 'Alarms and Security'; break;
-        case 'CN': $t = 'Congestion'; break;
-        case 'DV': $t = 'Devices'; break;
-        case 'DS': $t = 'Disaster'; break;
-        case 'DR': $t = 'Drill'; break;
-        case 'MS': $t = 'Miscellaneous'; break;
-        case 'OB': $t = 'Obstruction'; break;
-        case 'LE': $t = 'Other Agency'; break;
-        case 'RW': $t = 'Road Work'; break;
-        case 'SP': $t = 'Special and Sporting Events'; break;
-        case 'VH': $t = 'Vehicle Incident'; break;
-        case 'WT': $t = 'Weather Event'; break;    }
+        case 'AL':
+            $t = 'Alarms and Security';
+            break;
+        case 'CN':
+            $t = 'Congestion';
+            break;
+        case 'DV':
+            $t = 'Devices';
+            break;
+        case 'DS':
+            $t = 'Disaster';
+            break;
+        case 'DR':
+            $t = 'Drill';
+            break;
+        case 'MS':
+            $t = 'Miscellaneous';
+            break;
+        case 'OB':
+            $t = 'Obstruction';
+            break;
+        case 'LE':
+            $t = 'Other Agency';
+            break;
+        case 'RW':
+            $t = 'Road Work';
+            break;
+        case 'SP':
+            $t = 'Special and Sporting Events';
+            break;
+        case 'VH':
+            $t = 'Vehicle Incident';
+            break;
+        case 'WT':
+            $t = 'Weather Event';
+            break;
+    }
     return $t;
 }
 
-function getIncidentDetails($n) {
+function getIncidentDetails($n)
+{
     // The key is the incident code, and the value is an array: [Description, Priority]
     $incidents = [
         // PRIORITY 1: Life Threat/Immediate Danger
@@ -223,78 +296,219 @@ function getIncidentDetails($n) {
     ];
 }
 
-function maintSec($rpt) {
+function maintSec($rpt)
+{
     switch ($rpt) {
-        case 'Pendleton - Milton Freewater': $w = 'Pendleton'; break;
-        case 'Cabbage Hill WB': $w = 'Pendleton'; break;
-        case 'Cabbage Hill EB': $w = 'Pendleton'; break;
-        case 'Pendleton': $w = 'Pendleton'; break;
-        case 'Pendleton South': $w = 'Pendleton'; break;
-        case 'Weston Mountain': $w = 'Pendleton'; break;
-        case 'Hermiston': $w = 'Hermiston'; break;
-        case 'Ladd Canyon WB': $w = 'La Grande'; break;
-        case 'Ladd Canyon EB': $w = 'La Grande'; break;
-        case 'Perry WB': $w = 'La Grande'; break;
-        case 'Perry EB': $w = 'La Grande'; break;
-        case 'Meacham WB': $w = 'Meacham'; break;
-        case 'Meacham EB': $w = 'Meacham'; break;
-        case 'Battle Mt Summit': $w = 'Ukiah'; break;
-        case 'Ukiah/Hilgard': $w = 'Ukiah'; break;
-        case 'Meadowbrook Summit': $w = 'Ukiah'; break;
-        case 'Long Creek Mt': $w = 'John Day'; break;
-        case 'Tollgate WB': $w = 'Elgin'; break;
-        case 'Tollgate EB': $w = 'Elgin'; break;
-        case 'Minam Summit': $w = 'Elgin'; break;
-        case 'Enterprise': $w = 'Enterprise'; break;
-        case 'Flora': $w = 'Enterprise'; break;
-        case 'Baker Valley': $w = 'Baker'; break;
-        case 'Pleseant Valley WB': $w = 'Baker'; break;
-        case 'Pleseant Valley EB': $w = 'Baker'; break;
-        case 'Burnt River Canyon': $w = 'Baker'; break;
-        case 'Sumpter': $w = 'Baker'; break;
-        case 'Three Mile Hill': $w = 'Ontario'; break;
-        case 'Halfway Hill': $w = 'Richland'; break;
-        case 'Siskiyou Summit NB': $w = 'Ashland'; break;
-        case 'Siskiyou Summit SB': $w = 'Ashland'; break;
-        case 'Cascade Locks - Hood River': $w = 'Cascade Locks'; break;
-        case 'Troutdale - Cascade Locks': $w = 'Cascade Locks'; break;
-        case 'Hood River - The Dalles': $w = 'The Dalles'; break;
-        case 'The Dalles - Rufus': $w = 'The Dalles'; break;
-        case 'The Dalles': $w = 'The Dalles'; break;
-        case 'Arlington': $w = 'Arlington'; break;
-        case 'Maupin': $w = 'Maupin'; break;
-        case 'Tombstone': $w = 'Sweet Home'; break;
-        case 'Santiam Pass Smt': $w = 'Santiam Junction'; break;
-        case 'Santiam Jct': $w = 'Santiam Junction'; break;
-        case 'Sisters': $w = 'Sisters'; break;
-        case 'Burns': $w = 'Burns'; break;
-        case 'Stinkingwater Summit': $w = 'Juntura'; break;
-        case 'Juntura': $w = 'Juntura'; break;
-        case 'Government Camp': $w = 'Government Camp'; break;
-        case 'Ochoco Summit': $w = 'Austin'; break;
-        case 'Blue Box Pass': $w = 'Government Camp/Warm Springs'; break;
-        case 'Warm Springs Grade': $w = 'Warm Springs'; break;
-        case 'Warm Springs Jct': $w = 'Warm Springs'; break;
-        case 'Austin': $w = 'Austin'; break;
-        case 'Eldorado Pass': $w = 'Austin'; break;
-        case 'Brogan Hill': $w = 'Vale'; break;
-        case 'Clatskanie': $w = 'Clatskanie'; break;
-        case 'Canyon Mountain': $w = 'John Day'; break;
-        case 'Devine Summit': $w = 'John Day'; break;
-        case 'Lakeview': $w = 'Lakeview'; break;
-        case 'Jordan Valley': $w = 'Jordan Valley'; break;
-        case 'Basque': $w = 'Basque'; break;
-        case 'Moro': $w = 'Moro'; break;
-        case 'Shaniko': $w = 'Moro'; break;
-        case 'Cow Canyon': $w = 'Madras'; break;
-        case 'Bend': $w = 'Bend'; break;
-        case 'South Of Bend': $w = 'Bend'; break;
-        case 'Lapine': $w = 'Lapine'; break;
-        case 'Chemult': $w = 'Chemult'; break;
-        case 'Chiloquin': $w = 'Chiloquin'; break;
-        case 'Klamath Falls': $w = 'Klamath Falls'; break;
-        case 'Lk Of The Woods': $w = 'Lake of the Woods'; break;
-        default: $w = ''; break;
+        case 'Pendleton - Milton Freewater':
+            $w = 'Pendleton';
+            break;
+        case 'Cabbage Hill WB':
+            $w = 'Pendleton';
+            break;
+        case 'Cabbage Hill EB':
+            $w = 'Pendleton';
+            break;
+        case 'Pendleton':
+            $w = 'Pendleton';
+            break;
+        case 'Pendleton South':
+            $w = 'Pendleton';
+            break;
+        case 'Weston Mountain':
+            $w = 'Pendleton';
+            break;
+        case 'Hermiston':
+            $w = 'Hermiston';
+            break;
+        case 'Ladd Canyon WB':
+            $w = 'La Grande';
+            break;
+        case 'Ladd Canyon EB':
+            $w = 'La Grande';
+            break;
+        case 'Perry WB':
+            $w = 'La Grande';
+            break;
+        case 'Perry EB':
+            $w = 'La Grande';
+            break;
+        case 'Meacham WB':
+            $w = 'Meacham';
+            break;
+        case 'Meacham EB':
+            $w = 'Meacham';
+            break;
+        case 'Battle Mt Summit':
+            $w = 'Ukiah';
+            break;
+        case 'Ukiah/Hilgard':
+            $w = 'Ukiah';
+            break;
+        case 'Meadowbrook Summit':
+            $w = 'Ukiah';
+            break;
+        case 'Long Creek Mt':
+            $w = 'John Day';
+            break;
+        case 'Tollgate WB':
+            $w = 'Elgin';
+            break;
+        case 'Tollgate EB':
+            $w = 'Elgin';
+            break;
+        case 'Minam Summit':
+            $w = 'Elgin';
+            break;
+        case 'Enterprise':
+            $w = 'Enterprise';
+            break;
+        case 'Flora':
+            $w = 'Enterprise';
+            break;
+        case 'Baker Valley':
+            $w = 'Baker';
+            break;
+        case 'Pleseant Valley WB':
+            $w = 'Baker';
+            break;
+        case 'Pleseant Valley EB':
+            $w = 'Baker';
+            break;
+        case 'Burnt River Canyon':
+            $w = 'Baker';
+            break;
+        case 'Sumpter':
+            $w = 'Baker';
+            break;
+        case 'Three Mile Hill':
+            $w = 'Ontario';
+            break;
+        case 'Halfway Hill':
+            $w = 'Richland';
+            break;
+        case 'Siskiyou Summit NB':
+            $w = 'Ashland';
+            break;
+        case 'Siskiyou Summit SB':
+            $w = 'Ashland';
+            break;
+        case 'Cascade Locks - Hood River':
+            $w = 'Cascade Locks';
+            break;
+        case 'Troutdale - Cascade Locks':
+            $w = 'Cascade Locks';
+            break;
+        case 'Hood River - The Dalles':
+            $w = 'The Dalles';
+            break;
+        case 'The Dalles - Rufus':
+            $w = 'The Dalles';
+            break;
+        case 'The Dalles':
+            $w = 'The Dalles';
+            break;
+        case 'Arlington':
+            $w = 'Arlington';
+            break;
+        case 'Maupin':
+            $w = 'Maupin';
+            break;
+        case 'Tombstone':
+            $w = 'Sweet Home';
+            break;
+        case 'Santiam Pass Smt':
+            $w = 'Santiam Junction';
+            break;
+        case 'Santiam Jct':
+            $w = 'Santiam Junction';
+            break;
+        case 'Sisters':
+            $w = 'Sisters';
+            break;
+        case 'Burns':
+            $w = 'Burns';
+            break;
+        case 'Stinkingwater Summit':
+            $w = 'Juntura';
+            break;
+        case 'Juntura':
+            $w = 'Juntura';
+            break;
+        case 'Government Camp':
+            $w = 'Government Camp';
+            break;
+        case 'Ochoco Summit':
+            $w = 'Austin';
+            break;
+        case 'Blue Box Pass':
+            $w = 'Government Camp/Warm Springs';
+            break;
+        case 'Warm Springs Grade':
+            $w = 'Warm Springs';
+            break;
+        case 'Warm Springs Jct':
+            $w = 'Warm Springs';
+            break;
+        case 'Austin':
+            $w = 'Austin';
+            break;
+        case 'Eldorado Pass':
+            $w = 'Austin';
+            break;
+        case 'Brogan Hill':
+            $w = 'Vale';
+            break;
+        case 'Clatskanie':
+            $w = 'Clatskanie';
+            break;
+        case 'Canyon Mountain':
+            $w = 'John Day';
+            break;
+        case 'Devine Summit':
+            $w = 'John Day';
+            break;
+        case 'Lakeview':
+            $w = 'Lakeview';
+            break;
+        case 'Jordan Valley':
+            $w = 'Jordan Valley';
+            break;
+        case 'Basque':
+            $w = 'Basque';
+            break;
+        case 'Moro':
+            $w = 'Moro';
+            break;
+        case 'Shaniko':
+            $w = 'Moro';
+            break;
+        case 'Cow Canyon':
+            $w = 'Madras';
+            break;
+        case 'Bend':
+            $w = 'Bend';
+            break;
+        case 'South Of Bend':
+            $w = 'Bend';
+            break;
+        case 'Lapine':
+            $w = 'Lapine';
+            break;
+        case 'Chemult':
+            $w = 'Chemult';
+            break;
+        case 'Chiloquin':
+            $w = 'Chiloquin';
+            break;
+        case 'Klamath Falls':
+            $w = 'Klamath Falls';
+            break;
+        case 'Lk Of The Woods':
+            $w = 'Lake of the Woods';
+            break;
+        default:
+            $w = '';
+            break;
     }
     return $w;
 }
@@ -305,11 +519,12 @@ function maintSec($rpt) {
     return array_reverse(Polyline::pair(Polyline::decode($json->routes[0]->legs[0]->steps[0]->geometry)));
 }*/
 
-function decodeWkt($linestring) {
+function decodeWkt($linestring)
+{
     $strippedString = substr($linestring, 11, -1);
     $coordinatePairs = explode(",", $strippedString);
     $coordinates = [];
-    
+
     for ($i = 0; $i < count($coordinatePairs); $i++) {
         $coord = explode(" ", $coordinatePairs[$i]);
         $coordinates[] = [floatval($coord[0]), floatval($coord[1])];
@@ -318,7 +533,8 @@ function decodeWkt($linestring) {
     return $coordinates;
 }
 
-function decodePolyline($geotype, $string, $convert = true) {
+function decodePolyline($geotype, $string, $convert = true)
+{
     $coords = [];
 
     preg_match_all('/\(([0-9\-.,\s]+)\)/', $string, $a);
@@ -351,7 +567,8 @@ function decodePolyline($geotype, $string, $convert = true) {
     return $coords;
 }
 
-function vmsFormat($t) {
+function vmsFormat($t)
+{
     $o = preg_replace('/\,FACE([0-9]+)/', '', $t);
     $o = preg_replace('/(([A-Z]+)([0-9]{2}))/', '$2 $3', $o);
     $o = preg_replace('/(LIMIT)(TRUCKS)\s([0-9]{2})([0-9]{2})/', '$1 $3 $2 $4', $o);
@@ -371,13 +588,13 @@ if ($method == 'dms') {
     $cache = $memcache->get($cachefilename);
 
     $devices = array();
-    $json = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].'/v'.$_GET['version'].'/dms.json'))->{'dms-inventory-items'};
+    $json = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/v' . $_GET['version'] . '/dms.json'))->{'dms-inventory-items'};
 
-    if (!$cache || time() - $memcache->get($cachefilename.'-time') > 1200 || filemtime('roads.ini.php') > $memcache->get($cachefilename.'-time')) {
+    if (!$cache || time() - $memcache->get($cachefilename . '-time') > 1200 || filemtime('roads.ini.php') > $memcache->get($cachefilename . '-time')) {
         foreach ($json as $j) {
             $devices[$j->{'device-id'}] = $j;
         }
-        
+
         $dms = json_decode(getDMS());
 
         foreach ($dms->dmsItems as $s) {
@@ -419,7 +636,7 @@ if ($method == 'dms') {
         $returnJson = array('type' => 'FeatureCollection', 'features' => $features);
 
         $memcache->set($cachefilename, json_encode($returnJson), 1200);
-        $memcache->set($cachefilename.'-time', time(), 1200);
+        $memcache->set($cachefilename . '-time', time(), 1200);
     } else {
         $isCached = true;
         $returnJson = json_decode($cache);
@@ -432,11 +649,11 @@ if ($method == 'dms') {
     }
 
     if ($loc != null) {
-        uasort($loc, function($a, $b) {
+        uasort($loc, function ($a, $b) {
             return [$a['hwy'], $a['mp']] <=> [$b['hwy'], $b['mp']];
         });
     }
-    
+
     foreach ($loc as $k => $v) {
         if (($_REQUEST['grip'] == 1 && $json[$k]['properties']['surface']['grip'] != 'null') || !isset($_REQUEST['grip'])) {
             $features[] = $json[$k];
@@ -491,10 +708,10 @@ if ($method == 'dms') {
             print_r($feat);
         }
     } else {
-        $cachefilename = 'odot_incidents'.($function == 'construction' ? '_rw' : '').($_REQUEST['test'] == 1 ? '_test' : '');
+        $cachefilename = 'odot_incidents' . ($function == 'construction' ? '_rw' : '') . ($_REQUEST['test'] == 1 ? '_test' : '');
         $cache = $memcache->get($cachefilename);
 
-        if (!$cache || filemtime(root() . 'roads.ini.php') > $memcache->get($cachefilename.'-time')) {
+        if (!$cache || filemtime(root() . 'roads.ini.php') > $memcache->get($cachefilename . '-time')) {
             $json = json_decode(getIncidents());
 
             foreach ($json->incidents as $incident) {
@@ -509,13 +726,13 @@ if ($method == 'dms') {
                     $created = strtotime(substr($incident->{'create-time'}, 0, -6));
                     $updated = strtotime(substr($incident->{'update-time'}, 0, -6));
                     $impact = $incident->{'impact-desc'};
-                    $type = ($impact == 'Seasonal Closure' ? 'Closure': $type);
+                    $type = ($impact == 'Seasonal Closure' ? 'Closure' : $type);
                     $desc = $incident->headline;
                     $comments = $incident->comments;
                     $hwy = hwy($incident->location->{'route-id'});
                     $name = $incident->location->{'location-name'};
                     $hid = $incident->location->{'hwy-id'};
-                    $hwy = ($hwy == '' ? 'ORE'.$hid : $hwy);
+                    $hwy = ($hwy == '' ? 'ORE' . $hid : $hwy);
                     $dir = $incident->location->direction;
                     #$geoType = ($incident->location->{'end-location'}->{'end-milepost'} ? ($incident->location->{'geometry-wkt-line'} != '' ? 'LineString' : 'MultiPoint') : 'Point');
                     preg_match('/([A-Z]+)\s/', $incident->location->{'geometry-wkt-line'}, $mtchs);
@@ -552,7 +769,7 @@ if ($method == 'dms') {
                     }
 
                     $prop = array('id' => $id, 'category' => $category, 'type' => $type, 'priority' => $priority, 'location' => array('id' => $hid, 'name' => $name, 'hwy' => $hwy, 'direction' => $dir, 'milepost' => $mps, 'desc' => $where), 'impact' => $impact, 'desc' => $desc);
-                    
+
                     if ($comments) {
                         $link = false;
                         if (strpos($comments, 'Link to Additional Information') !== false) {
@@ -567,7 +784,7 @@ if ($method == 'dms') {
                     if ($incident->files) {
                         $prop['files'] = $incident->files;
                     }
-                    
+
                     $prop['lanes'] = $affected;
                     $prop['created'] = $created;
                     $prop['updated'] = $updated;
@@ -582,15 +799,15 @@ if ($method == 'dms') {
             }
 
             if ($feat != null) {
-                usort($feat, function($a, $b) {
+                usort($feat, function ($a, $b) {
                     $aHwy = $a['properties']['location']['hwy'] ?? '';
                     $aMilepostStart = (int)($a['properties']['location']['milepost']['start'] ?? 0);
                     $aUpdated = $a['properties']['updated'] ?? 0;
-                
+
                     $bHwy = $b['properties']['location']['hwy'] ?? '';
                     $bMilepostStart = (int)($b['properties']['location']['milepost']['start'] ?? 0);
                     $bUpdated = $b['properties']['updated'] ?? 0;
-                
+
                     return [$aHwy, $aMilepostStart, $aUpdated] <=> [$bHwy, $bMilepostStart, $bUpdated];
                 });
             }
@@ -598,7 +815,7 @@ if ($method == 'dms') {
             //$noMetadata = true;
             $returnJson = array('type' => 'FeatureCollection', 'features' => $feat);
             $memcache->set($cachefilename, json_encode($returnJson), 300);
-            $memcache->set($cachefilename.'-time', time(), 300);
+            $memcache->set($cachefilename . '-time', time(), 300);
         } else {
             $isCached = true;
             $returnJson = json_decode($cache);
@@ -608,8 +825,8 @@ if ($method == 'dms') {
     $cachefilename = 'travel_times';
     $cache = $memcache->get($cachefilename);
 
-    if (!$cache || filemtime('roads.ini.php') > $memcache->get($cachefilename.'-time')) {
-        $json = json_decode(file_get_contents('https://www.tripcheck.com/Scripts/map/data/traveltime.js?'.time()));
+    if (!$cache || filemtime('roads.ini.php') > $memcache->get($cachefilename . '-time')) {
+        $json = json_decode(file_get_contents('https://www.tripcheck.com/Scripts/map/data/traveltime.js?' . time()));
 
         foreach ($json->features as $a) {
             $tt = $a->attributes;
@@ -628,19 +845,19 @@ if ($method == 'dms') {
 
                 $feat[] = array('type' => 'Feature', 'geometry' => array('type' => 'Point', 'coordinates' => [$lon, $lat]), 'properties' => array('id' => $id, 'start' => $starting, 'end' => $ending, 'minTime' => $minTime, 'travelTime' => $time, 'delay' => $delay, 'variable' => $pct, 'updated' => $updated));
             } else {*/
-                $ending = [];
+            $ending = [];
 
-                for ($i = 0; $i < count($tt->routes); $i++) {
-                    $minTime = $tt->routes[$i]->minRouteTime;
-                    $totalMinTimes[] = $minTime;
-                    $time = $tt->routes[$i]->travelTime;
-                    $delay = $tt->routes[$i]->delay;
-                    $totalDelays[] = ($time != -1 ? $time : 0);
-                    $pct = ($time != -1 && $minTime ? ($time - $minTime) / $minTime : null);
-                    $ending[] = array('to' => (strpos($tt->routes[$i]->routeDest, '[') !== false ? tt($tt->routes[$i]->routeDest) : $tt->routes[$i]->routeDest));
-                }
+            for ($i = 0; $i < count($tt->routes); $i++) {
+                $minTime = $tt->routes[$i]->minRouteTime;
+                $totalMinTimes[] = $minTime;
+                $time = $tt->routes[$i]->travelTime;
+                $delay = $tt->routes[$i]->delay;
+                $totalDelays[] = ($time != -1 ? $time : 0);
+                $pct = ($time != -1 && $minTime ? ($time - $minTime) / $minTime : null);
+                $ending[] = array('to' => (strpos($tt->routes[$i]->routeDest, '[') !== false ? tt($tt->routes[$i]->routeDest) : $tt->routes[$i]->routeDest));
+            }
 
-                $feat[] = array('type' => 'Feature', 'geometry' => array('type' => 'Point', 'coordinates' => [$lon, $lat]), 'properties' => array('id' => $id, 'start' => $starting, 'end' => $ending, 'updated' => $updated));
+            $feat[] = array('type' => 'Feature', 'geometry' => array('type' => 'Point', 'coordinates' => [$lon, $lat]), 'properties' => array('id' => $id, 'start' => $starting, 'end' => $ending, 'updated' => $updated));
             //}
         }
 
@@ -648,7 +865,54 @@ if ($method == 'dms') {
 
         $returnJson = array('type' => 'FeatureCollection', 'features' => $feat, 'overall' => $overall);
         $memcache->set($cachefilename, json_encode($returnJson), 600);
-        $memcache->set($cachefilename.'-time', time(), 600);
+        $memcache->set($cachefilename . '-time', time(), 600);
+    } else {
+        $isCached = true;
+        $returnJson = json_decode($cache);
+    }
+} else if ($method == 'plows') {
+    $cachefilename = 'odot_plows';
+    $cache = $memcache->get($cachefilename);
+
+    if (!$cache || filemtime('roads.ini.php') > $memcache->get($cachefilename . '-time')) {
+        $json = json_decode(file_get_contents('https://emdss.pikalert.org/latest_vehicles?path=/latest_vehicles/&state=oregon&client_ip=unknown&_dc='.time().'&page=1&start=0&limit=50'));
+
+        if ($json->districts && count($json->districts) > 0) {
+            for ($x = 0; $x < count($json->districts); $x++) {
+
+                if ($json->districts[$x] && count($json->districts[$x]->vehicles) > 0) {
+                    for ($i = 0; $i < count($json->districts[$x]->vehicles); $i++) {
+                        $plow = $json->districts[$x]->vehicles[$i];
+
+                        $vehicles[] = [
+                            'type' => 'Feature',
+                            'geometry' => [
+                                'type' => 'Point',
+                                'coordinates' => [
+                                    floatval($plow->lon),
+                                    floatval($plow->lat)
+                                ]
+                            ],
+                            'properties' => [
+                                'id' => $i + 1,
+                                'plowID' => $plow->id,
+                                'temp' => [
+                                    'air' => floatval($plow->temp_f),
+                                    'road' => floatval($plow->road_temp_f)
+                                ],
+                                'speed' => intval($plow->speed_mph),
+                                'heading' => $plow->heading_deg == -9999 ? null : getCompassDirection(floatval($plow->heading_deg)),
+                                'updated' => intval($plow->obs_time)
+                            ]
+                        ];
+                    }
+                }
+            }
+        }
+
+        $returnJson = array('type' => 'FeatureCollection', 'features' => $vehicles);
+        $memcache->set($cachefilename, json_encode($returnJson), 300);
+        $memcache->set($cachefilename . '-time', time(), 300);
     } else {
         $isCached = true;
         $returnJson = json_decode($cache);
@@ -663,48 +927,61 @@ if ($method == 'dms') {
         $returnJson = array('rw' => json_decode(file_get_contents('./cache/rwtest.json')));
     } else {
         //if (!$cache || filemtime('roads.ini.php') > $memcache->get($cachefilename.'-time')) {
-            $getrw = json_decode(getRW())->{'road-weather-reports'};
+        $getrw = json_decode(getRW())->{'road-weather-reports'};
 
-            /* if no 12-37s are returned from OODT */
-            if ($getrw != null && count($getrw) == 0) {
-                $json = json_decode(file_get_contents($backup));
+        /* if no 12-37s are returned from OODT */
+        if ($getrw != null && count($getrw) == 0) {
+            $json = json_decode(file_get_contents($backup));
 
-                foreach ($json->rw as $rpt) {
-                    unset($rpt->temp);
-                    unset($rpt->weather);
-                    unset($rpt->road);
-                    unset($rpt->snow);
-                    unset($rpt->notes);
-                    unset($rpt->restrict);
-                    $rw[] = $rpt;
-                }
-
-                $returnJson = array('rw' => $rw);
-            } else {
-                /* get reprots*/
-                foreach ($getrw as $road) {
-                    $id = $road->{'station-id'};
-                    $hwyid = str_pad($road->location->{'hwy-id'}, 3, '0', STR_PAD_LEFT);
-                    $name = format($road->location->{'location-name'});
-                    $owner = maintSec($name);
-                    $hwy = $road->location->{'route-id'};
-                    $mps = [$road->location->{'start-location'}->{'start-milepost'}, $road->location->{'end-location'}->{'end-milepost'}];
-                    $temp = round(($road->{'air-temperature'} * (9 / 5)) + 32, 0);
-                    $wx = weather($road->{'weather-conditions'}->{'weather-id'});
-                    $cond = cond($road->{'road-conditions'}->{'road-cond-id'});
-                    $newsn = $road->{'snowfall-accum-rate'};
-                    $roadsn = $road->{'adjacent-snow-depth'};
-                    $notes = ucfirst($road->{'comments'});
-                    $updated = strtotime($road->{'entry-time'});
-                    $chains = restrict($road->{'commercial-vehicle-restriction'}, $road->{'driving-restriction'});
-
-                    $rw[] = array('id' => $id, 'hwyID' => $hwyid, 'name' => $name, 'hwy' => $hwy, 'owner' => $owner, 'mileposts' => $mps, 'temp' => $temp, 'weather' => $wx, 'road' => ['id' => $road->{'road-conditions'}->{'road-cond-id'}, 'condition' => $cond],
-                    'snow' => ['new' => ($newsn < 0 ? 'Trace' : $newsn), 'roadside' => ($roadsn < 0 ? 'Trace' : $roadsn)], 'notes' => $notes, 'restrict' => $chains, 'updated' => $updated);
-                }
+            foreach ($json->rw as $rpt) {
+                unset($rpt->temp);
+                unset($rpt->weather);
+                unset($rpt->road);
+                unset($rpt->snow);
+                unset($rpt->notes);
+                unset($rpt->restrict);
+                $rw[] = $rpt;
             }
 
             $returnJson = array('rw' => $rw);
-            /*$memcache->set($cachefilename, json_encode($returnJson), 600);
+        } else {
+            /* get reprots*/
+            foreach ($getrw as $road) {
+                $id = $road->{'station-id'};
+                $hwyid = str_pad($road->location->{'hwy-id'}, 3, '0', STR_PAD_LEFT);
+                $name = format($road->location->{'location-name'});
+                $owner = maintSec($name);
+                $hwy = $road->location->{'route-id'};
+                $mps = [$road->location->{'start-location'}->{'start-milepost'}, $road->location->{'end-location'}->{'end-milepost'}];
+                $temp = round(($road->{'air-temperature'} * (9 / 5)) + 32, 0);
+                $wx = weather($road->{'weather-conditions'}->{'weather-id'});
+                $cond = cond($road->{'road-conditions'}->{'road-cond-id'});
+                $newsn = $road->{'snowfall-accum-rate'};
+                $roadsn = $road->{'adjacent-snow-depth'};
+                $notes = ucfirst($road->{'comments'});
+                $updated = strtotime($road->{'entry-time'});
+                $chains = restrict($road->{'commercial-vehicle-restriction'}, $road->{'driving-restriction'});
+
+                $rw[] = array(
+                    'id' => $id,
+                    'hwyID' => $hwyid,
+                    'name' => $name,
+                    'hwy' => $hwy,
+                    'owner' => $owner,
+                    'mileposts' => $mps,
+                    'temp' => $temp,
+                    'weather' => $wx,
+                    'road' => ['id' => $road->{'road-conditions'}->{'road-cond-id'}, 'condition' => $cond],
+                    'snow' => ['new' => ($newsn < 0 ? 'Trace' : $newsn), 'roadside' => ($roadsn < 0 ? 'Trace' : $roadsn)],
+                    'notes' => $notes,
+                    'restrict' => $chains,
+                    'updated' => $updated
+                );
+            }
+        }
+
+        $returnJson = array('rw' => $rw);
+        /*$memcache->set($cachefilename, json_encode($returnJson), 600);
             $memcache->set($cachefilename.'-time', time(), 600);            
         } else {
             $isCached = true;
