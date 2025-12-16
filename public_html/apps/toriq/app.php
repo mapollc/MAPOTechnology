@@ -41,7 +41,6 @@ $versions = [
     <main>
         <div id="map"></div>
 
-        <span id="menuIcon" data-action="dropdown-nav" class="fas fa-bars"></span>
         <div class="filter-controls">
             <div class="search control">
                 <span class="far fa-magnifying-glass"></span>

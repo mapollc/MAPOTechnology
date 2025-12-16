@@ -708,6 +708,9 @@ if ($method == 'dms') {
             print_r($feat);
         }
     } else {
+        if ($_GET['test'] == 1) {
+            $returnJson = json_decode(file_get_contents('./cache/testincs2.json'));
+        } else {
         $cachefilename = 'odot_incidents' . ($function == 'construction' ? '_rw' : '') . ($_REQUEST['test'] == 1 ? '_test' : '');
         $cache = $memcache->get($cachefilename);
 
@@ -820,6 +823,7 @@ if ($method == 'dms') {
             $isCached = true;
             $returnJson = json_decode($cache);
         }
+    }
     }
 } else if ($method == 'travel') {
     $cachefilename = 'travel_times';

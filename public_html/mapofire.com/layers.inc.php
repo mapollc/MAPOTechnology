@@ -47,7 +47,8 @@ $lay = array(
             'perms' => false,
             'perms2' => ['PREMIUM', 'PRO'],
             'default' => false,
-            'app' => true
+            'app' => true,
+            'minZoom' => 7
         ],
         [
             'id' => 'modis48',
@@ -55,7 +56,8 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PRO'],
             'default' => false,
-            'app' => true
+            'app' => true,
+            'minZoom' => 7
         ],
         [
             'id' => 'modis72',
@@ -63,7 +65,8 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PRO'],
             'default' => false,
-            'app' => true
+            'app' => true,
+            'minZoom' => 7
         ]
     ],
     'evac' => [
@@ -267,7 +270,8 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PRO'],
             'default' => false,
-            'app' => true
+            'app' => true,
+            'minZoom' => 11
         ],
         [
             'id' => 'lands',

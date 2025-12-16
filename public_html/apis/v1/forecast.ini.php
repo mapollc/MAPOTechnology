@@ -2,7 +2,8 @@
 $accums = array('min' => [], 'max' => [], 'time' => []);
 $snowAccumulation = array('min' => 0, 'max' => 0);
 
-function nwsTime($t) {
+function nwsTime($t)
+{
     return strtotime(explode('/', $t)[0]);
 }
 
@@ -23,7 +24,8 @@ function nwsTime($t) {
     return sqrt($std_dev / $n);
 }*/
 
-function snowAccum($time, $text) {
+function snowAccum($time, $text)
+{
     global $snowAccumulation;
     global $accums;
 
@@ -63,12 +65,12 @@ function snowAccum($time, $text) {
 }
 
 if ($method == 'incident') {
-    $a = get_data('https://api.weather.gov/points/'.$_REQUEST['lat'].','.$_REQUEST['lon'])['properties']['forecastGridData'];
+    $a = get_data('https://api.weather.gov/points/' . $_REQUEST['lat'] . ',' . $_REQUEST['lon'])['properties']['forecastGridData'];
     $json = get_data($a)['properties'];
 
     for ($i = 0; $i < count($json['temperature']['values']); $i++) {
         $time = strtotime(explode('/', $json['temperature']['values'][$i]['validTime'])[0]);
-        
+
         if ($time >= time() && $time <= strtotime('+24 hours')) {
             $temp[] = round(($json['temperature']['values'][$i]['value'] * 1.8) + 32, 0);
             $rh[] = $json['relativeHumidity']['values'][$i]['value'];
@@ -81,23 +83,130 @@ if ($method == 'incident') {
         }*/
     }
 
-    $returnJson = array('forecast' => array('temp' => array('min' => min($temp), 'max' => max($temp)),
-                                            'rh' => array('min' => min($rh), 'max' => max($rh)),
-                                            'wind' => array('speed' => array('min' => min($windSpd), 'max' => max($windSpd)),
-                                                            'gusts' => array('min' => min($windGust), 'max' => max($windGust)))),
-                        'updated' => strtotime(explode('/', $json['updateTime'])[0]));
+    $returnJson = array(
+        'forecast' => array(
+            'temp' => array('min' => min($temp), 'max' => max($temp)),
+            'rh' => array('min' => min($rh), 'max' => max($rh)),
+            'wind' => array(
+                'speed' => array('min' => min($windSpd), 'max' => max($windSpd)),
+                'gusts' => array('min' => min($windGust), 'max' => max($windGust))
+            )
+        ),
+        'updated' => strtotime(explode('/', $json['updateTime'])[0])
+    );
     //print_r($json);
+} else if ($method == 'gridpoint') {
+    if ($function == 'hourly' || $function == 'daily') {
+        $cachefilename = $function . '_' . $_REQUEST['wfo'] . '_' . $_REQUEST['x'] . '_' . $_REQUEST['y'];
+        $memcache = new Memcached();
+        $memcache->addServer('127.0.0.1', 11211);
+        $cache = $memcache->get($cachefilename);
+
+        if (!$cache || filemtime('forecast.ini.php') > $memcache->get($cachefilename . '-time')) {
+            if ($function == 'hourly') {
+                $b = json_decode(json_encode(get_data("https://api.weather.gov/gridpoints/$_REQUEST[wfo]/$_REQUEST[x],$_REQUEST[y]/forecast/hourly")), true);
+
+                for ($i = 0; $i < 24; $i++) {
+                    $b['properties']['periods'][$i]['startTime'] = nwsTime($b['properties']['periods'][$i]['startTime']);
+                    $b['properties']['periods'][$i]['endTime'] = nwsTime($b['properties']['periods'][$i]['endTime']);
+
+                    preg_match('/(rain|snow),[0-9]+/', $b['properties']['periods'][$i]['icon'], $match);
+
+                    if (count($match) == 0) {
+                        $b['properties']['periods'][$i]['icon'] = preg_replace('/,[0-9]+/', '', $b['properties']['periods'][$i]['icon']);
+                    }
+
+                    $b['properties']['periods'][$i]['probabilityOfPrecipitation'] = $b['properties']['periods'][$i]['probabilityOfPrecipitation']['value'];
+                    $b['properties']['periods'][$i]['relativeHumidity'] = $b['properties']['periods'][$i]['relativeHumidity']['value'];
+                    $b['properties']['periods'][$i]['dewpoint'] = ((9 / 5) * $b['properties']['periods'][$i]['dewpoint']['value']) + 32;
+
+                    $periods[] = $b['properties']['periods'][$i];
+                }
+
+                $fcst = array('forecast' => array('wfo' => $_REQUEST['wfo'], 'updated' => nwsTime($b['properties']['updateTime']), 'periods' => $periods));
+            } else if ($function == 'daily') {
+                $c = json_decode(json_encode(get_data("https://api.weather.gov/gridpoints/$_REQUEST[wfo]/$_REQUEST[x],$_REQUEST[y]/forecast")), true);
+
+                for ($i = 0; $i < 14; $i++) {
+                    $c['properties']['periods'][$i]['startTime'] = nwsTime($c['properties']['periods'][$i]['startTime']);
+                    $c['properties']['periods'][$i]['endTime'] = nwsTime($c['properties']['periods'][$i]['endTime']);
+
+                    preg_match('/(rain|snow),[0-9]+/', $c['properties']['periods'][$i]['icon'], $match);
+
+                    if (count($match) == 0) {
+                        $c['properties']['periods'][$i]['icon'] = preg_replace('/,[0-9]+/', '', $c['properties']['periods'][$i]['icon']);
+                    }
+
+                    $c['properties']['periods'][$i]['probabilityOfPrecipitation'] = $c['properties']['periods'][$i]['probabilityOfPrecipitation']['value'];
+
+                    if ($_REQUEST['winter'] == 1) {
+                        $c['properties']['periods'][$i]['snow'] = snowAccum($c['properties']['periods'][$i]['startTime'], $c['properties']['periods'][$i]['detailedForecast']);
+                    }
+
+                    $days[] = $c['properties']['periods'][$i];
+                }
+
+                $fcst = array('forecast' => array('wfo' => $_REQUEST['wfo'], 'updated' => nwsTime($c['properties']['updateTime']), 'periods' => $days));
+
+                if ($_REQUEST['winter'] == 1) {
+                    $allAccum = 0;
+                    $allAccum2 = 0;
+
+                    for ($i = 0; $i < count($accums['time']); $i++) {
+                        $allAccum += $accums['min'][$i];
+                        $allAccum2 += $accums['max'][$i];
+                        $period['min'][] = $allAccum;
+                        $period['max'][] = $allAccum2;
+                    }
+
+                    if ($accums['time'][0] == false) {
+                        $snowAccumulation = null;
+                    } else {
+                        $snowAccumulation['chart'] = array('min' => $accums['min'], 'max' => $accums['max'], 'period' => $period, 'times' => $accums['time']);
+                        //$snowAccumulation['stdDev'] = ['min' => stdev($accums['min']), 'max' => stdev($accums['max'])];
+                        $snowAccumulation['unit'] = 'in';
+                    }
+
+                    /*if ($snowAccumulation['min'] > 12 && $snowAccumulation['max'] > 12) {
+                $snowAccumulation['min'] = round($snowAccumulation['min'] / 12, 1);
+                $snowAccumulation['max'] = round($snowAccumulation['max'] / 12, 1);
+                $snowAccumulation['unit'] = "ft";
+            }*/
+
+                    $fcst['winter'] = $snowAccumulation;
+                }
+            }
+
+            $returnJson = $fcst;
+            $memcache->set($cachefilename, json_encode($returnJson), 3600);
+            $memcache->set($cachefilename . '-time', time(), 3600);
+        } else {
+            $isCached = true;
+            $cache = json_decode($cache);
+            $returnJson = $cache;
+        }
+    }
+
+    if (!$function) {
+        if (!isset($_REQUEST['lat']) || !isset($_REQUEST['lon'])) {
+            $returnJson = array('response' => 'error', 'code' => 1, 'msg' => 'A latitude and longitude were not provided');
+        } else {
+            $a = get_data('https://api.weather.gov/points/' . round($_REQUEST['lat'], 4) . ',' . round($_REQUEST['lon'], 4));
+
+            $returnJson = ['gridpoint' => $a['properties'] ? ['wfo' => $a['properties']['gridId'], 'x' => $a['properties']['gridX'], 'y' => $a['properties']['gridY']] : null];
+        }
+    }
 } else {
     if (!isset($_REQUEST['lat']) || !isset($_REQUEST['lon'])) {
         $returnJson = array('response' => 'error', 'code' => 1, 'msg' => 'A latitude and longitude were not provided');
     } else {
-        $cachefilename = round($_REQUEST['lat'], 4).'|'.round($_REQUEST['lon'], 4);
+        $cachefilename = round($_REQUEST['lat'], 4) . '|' . round($_REQUEST['lon'], 4);
         $memcache = new Memcached();
-        $memcache->addServer('127.0.0.1', 11211); 
+        $memcache->addServer('127.0.0.1', 11211);
         $cache = $memcache->get($cachefilename);
 
-        if (!$cache || filemtime('forecast.ini.php') > $memcache->get($cachefilename.'-time')) {
-            $a = get_data('https://api.weather.gov/points/'.round($_REQUEST['lat'], 4).','.round($_REQUEST['lon'], 4));
+        if (!$cache || filemtime('forecast.ini.php') > $memcache->get($cachefilename . '-time')) {
+            $a = get_data('https://api.weather.gov/points/' . round($_REQUEST['lat'], 4) . ',' . round($_REQUEST['lon'], 4));
             $cwa = $a['properties']['cwa'];
             /*$x = $a['properties']['gridX'];
             $y = $a['properties']['gridY'];*/
@@ -123,7 +232,7 @@ if ($method == 'incident') {
 
                 $b['properties']['periods'][$i]['probabilityOfPrecipitation'] = $b['properties']['periods'][$i]['probabilityOfPrecipitation']['value'];
                 $b['properties']['periods'][$i]['relativeHumidity'] = $b['properties']['periods'][$i]['relativeHumidity']['value'];
-                $b['properties']['periods'][$i]['dewpoint'] = ((9/5) * $b['properties']['periods'][$i]['dewpoint']['value']) + 32;
+                $b['properties']['periods'][$i]['dewpoint'] = ((9 / 5) * $b['properties']['periods'][$i]['dewpoint']['value']) + 32;
 
                 $periods[] = $b['properties']['periods'][$i];
             }
@@ -184,11 +293,11 @@ if ($method == 'incident') {
             $returnJson = $fcst;
 
             $memcache->set($cachefilename, json_encode($returnJson), 3600);
-            $memcache->set($cachefilename.'-time', time(), 3600);        
+            $memcache->set($cachefilename . '-time', time(), 3600);
         } else {
             $isCached = true;
             $cache = json_decode($cache);
-            $returnJson = $cache;        
+            $returnJson = $cache;
         }
     }
 }

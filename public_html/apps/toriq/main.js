@@ -70,60 +70,60 @@ const ArcGISFeatureSource = window[""]["arcgis-featureserver"],
         4: '166-200',
         5: '>200'
     },
-states = {
-    "AL": { name: "Alabama", coords: [-86.8295337, 33.2588817] },
-    "AK": { name: "Alaska", coords: [-149.680909, 64.4459613] },
-    "AZ": { name: "Arizona", coords: [-111.7632755, 34.395342] },
-    "AR": { name: "Arkansas", coords: [-92.4479108, 35.2048883] },
-    "CA": { name: "California", coords: [-118.7559974, 36.7014631] },
-    "CO": { name: "Colorado", coords: [-105.6077167, 38.7251776] },
-    "CT": { name: "Connecticut", coords: [-72.7342163, 41.6500201] },
-    "DE": { name: "Delaware", coords: [-75.4013315, 38.6920451] },
-    "DC": { name: "District of Columbia", coords: [-77.0365529, 38.8948932] },
-    "FL": { name: "Florida", coords: [-81.4639835, 27.7567667] },
-    "GA": { name: "Georgia", coords: [-83.1137366, 32.3293809] },
-    "HI": { name: "Hawaii", coords: [-157.975203, 21.2160437] },
-    "ID": { name: "Idaho", coords: [-114.74121, 45.61788] },
-    "IL": { name: "Illinois", coords: [-89.4337288, 40.0796606] },
-    "IN": { name: "Indiana", coords: [-86.1746933, 40.3270127] },
-    "IA": { name: "Iowa", coords: [-93.3122705, 41.9216734] },
-    "KS": { name: "Kansas", coords: [-98.5821872, 38.27312] },
-    "KY": { name: "Kentucky", coords: [-85.1551411, 37.5726028] },
-    "LA": { name: "Louisiana", coords: [-92.007126, 30.8703881] },
-    "MB": { name: "Manitoba", coords: [-97.8, 55.0] },
-    "ME": { name: "Maine", coords: [-68.8590201, 45.709097] },
-    "MD": { name: "Maryland", coords: [-76.9382069, 39.5162234] },
-    "MA": { name: "Massachusetts", coords: [-72.032366, 42.3788774] },
-    "MI": { name: "Michigan", coords: [-84.6824346, 43.6211955] },
-    "MN": { name: "Minnesota", coords: [-94.6113288, 45.9896587] },
-    "MS": { name: "Mississippi", coords: [-89.7348497, 32.9715645] },
-    "MO": { name: "Missouri", coords: [-92.5617875, 38.7604815] },
-    "MT": { name: "Montana", coords: [-109.6387579, 47.3752671] },
-    "NE": { name: "Nebraska", coords: [-99.5873816, 41.7370229] },
-    "NV": { name: "Nevada", coords: [-116.8537227, 39.5158825] },
-    "NH": { name: "New Hampshire", coords: [-71.6553992, 43.4849133] },
-    "NJ": { name: "New Jersey", coords: [-74.4041622, 40.0757384] },
-    "NM": { name: "New Mexico", coords: [-105.993007, 34.5708167] },
-    "NY": { name: "New York", coords: [-74.0060152, 40.7127281] },
-    "NC": { name: "North Carolina", coords: [-79.0392919, 35.6729639] },
-    "ND": { name: "North Dakota", coords: [-100.540737, 47.6201461] },
-    "OH": { name: "Ohio", coords: [-82.6881395, 40.2253569] },
-    "OK": { name: "Oklahoma", coords: [-97.2684063, 34.9550817] },
-    "OR": { name: "Oregon", coords: [-120.737257, 43.9792797] },
-    "PA": { name: "Pennsylvania", coords: [-77.7278831, 40.9699889] },
-    "RI": { name: "Rhode Island", coords: [-71.5992372, 41.7962409] },
-    "SC": { name: "South Carolina", coords: [-80.4363743, 33.6874388] },
-    "SD": { name: "South Dakota", coords: [-100.348761, 44.6471761] },
-    "TN": { name: "Tennessee", coords: [-86.2820081, 35.7730076] },
-    "TX": { name: "Texas", coords: [-99.5120986, 31.8160381] },
-    "UT": { name: "Utah", coords: [-111.7143584, 39.4225192] },
-    "VT": { name: "Vermont", coords: [-72.5002608, 44.5990718] },
-    "VA": { name: "Virginia", coords: [-78.4927721, 37.1232245] },
-    "WA": { name: "Washington", coords: [-120.74014, 47.75107] },
-    "WV": { name: "West Virginia", coords: [-80.8408415, 38.4758406] },
-    "WI": { name: "Wisconsin", coords: [-89.6884637, 44.4308975] },
-    "WY": { name: "Wyoming", coords: [-107.5685348, 43.1700264] }
-};
+    states = {
+        "AL": { name: "Alabama", coords: [-86.8295337, 33.2588817] },
+        "AK": { name: "Alaska", coords: [-149.680909, 64.4459613] },
+        "AZ": { name: "Arizona", coords: [-111.7632755, 34.395342] },
+        "AR": { name: "Arkansas", coords: [-92.4479108, 35.2048883] },
+        "CA": { name: "California", coords: [-118.7559974, 36.7014631] },
+        "CO": { name: "Colorado", coords: [-105.6077167, 38.7251776] },
+        "CT": { name: "Connecticut", coords: [-72.7342163, 41.6500201] },
+        "DE": { name: "Delaware", coords: [-75.4013315, 38.6920451] },
+        "DC": { name: "District of Columbia", coords: [-77.0365529, 38.8948932] },
+        "FL": { name: "Florida", coords: [-81.4639835, 27.7567667] },
+        "GA": { name: "Georgia", coords: [-83.1137366, 32.3293809] },
+        "HI": { name: "Hawaii", coords: [-157.975203, 21.2160437] },
+        "ID": { name: "Idaho", coords: [-114.74121, 45.61788] },
+        "IL": { name: "Illinois", coords: [-89.4337288, 40.0796606] },
+        "IN": { name: "Indiana", coords: [-86.1746933, 40.3270127] },
+        "IA": { name: "Iowa", coords: [-93.3122705, 41.9216734] },
+        "KS": { name: "Kansas", coords: [-98.5821872, 38.27312] },
+        "KY": { name: "Kentucky", coords: [-85.1551411, 37.5726028] },
+        "LA": { name: "Louisiana", coords: [-92.007126, 30.8703881] },
+        "MB": { name: "Manitoba", coords: [-97.8, 55.0] },
+        "ME": { name: "Maine", coords: [-68.8590201, 45.709097] },
+        "MD": { name: "Maryland", coords: [-76.9382069, 39.5162234] },
+        "MA": { name: "Massachusetts", coords: [-72.032366, 42.3788774] },
+        "MI": { name: "Michigan", coords: [-84.6824346, 43.6211955] },
+        "MN": { name: "Minnesota", coords: [-94.6113288, 45.9896587] },
+        "MS": { name: "Mississippi", coords: [-89.7348497, 32.9715645] },
+        "MO": { name: "Missouri", coords: [-92.5617875, 38.7604815] },
+        "MT": { name: "Montana", coords: [-109.6387579, 47.3752671] },
+        "NE": { name: "Nebraska", coords: [-99.5873816, 41.7370229] },
+        "NV": { name: "Nevada", coords: [-116.8537227, 39.5158825] },
+        "NH": { name: "New Hampshire", coords: [-71.6553992, 43.4849133] },
+        "NJ": { name: "New Jersey", coords: [-74.4041622, 40.0757384] },
+        "NM": { name: "New Mexico", coords: [-105.993007, 34.5708167] },
+        "NY": { name: "New York", coords: [-74.0060152, 40.7127281] },
+        "NC": { name: "North Carolina", coords: [-79.0392919, 35.6729639] },
+        "ND": { name: "North Dakota", coords: [-100.540737, 47.6201461] },
+        "OH": { name: "Ohio", coords: [-82.6881395, 40.2253569] },
+        "OK": { name: "Oklahoma", coords: [-97.2684063, 34.9550817] },
+        "OR": { name: "Oregon", coords: [-120.737257, 43.9792797] },
+        "PA": { name: "Pennsylvania", coords: [-77.7278831, 40.9699889] },
+        "RI": { name: "Rhode Island", coords: [-71.5992372, 41.7962409] },
+        "SC": { name: "South Carolina", coords: [-80.4363743, 33.6874388] },
+        "SD": { name: "South Dakota", coords: [-100.348761, 44.6471761] },
+        "TN": { name: "Tennessee", coords: [-86.2820081, 35.7730076] },
+        "TX": { name: "Texas", coords: [-99.5120986, 31.8160381] },
+        "UT": { name: "Utah", coords: [-111.7143584, 39.4225192] },
+        "VT": { name: "Vermont", coords: [-72.5002608, 44.5990718] },
+        "VA": { name: "Virginia", coords: [-78.4927721, 37.1232245] },
+        "WA": { name: "Washington", coords: [-120.74014, 47.75107] },
+        "WV": { name: "West Virginia", coords: [-80.8408415, 38.4758406] },
+        "WI": { name: "Wisconsin", coords: [-89.6884637, 44.4308975] },
+        "WY": { name: "Wyoming", coords: [-107.5685348, 43.1700264] }
+    };
 
 Number.prototype.prettyRound = function (decimals = 1) {
     if (isNaN(this)) return '';
@@ -1726,6 +1726,7 @@ class Modal {
         // show the modal on screen
         this.modal.classList.remove('close');
         this.modal.classList.add('open');
+
         this.makeDraggable();
     }
 
@@ -1777,7 +1778,12 @@ class Modal {
             OPEN_VH = 30,
             MIN_DOWN_VH = 100,
             vhToPx = (vh) => window.innerHeight * (vh / 100),
-            pxToVh = (px) => (px / window.innerHeight) * 100;
+            pxToVh = (px) => (px / window.innerHeight) * 100,
+            getClientY = e => {
+                if (e.touches) return e.touches[0].clientY;       // touchstart/touchmove
+                if (e.changedTouches) return e.changedTouches[0].clientY; // touchend
+                return e.clientY;                                 // mouse
+            };
 
         let currentTopVh = OPEN_VH,
             startY = 0,
@@ -1795,30 +1801,32 @@ class Modal {
         };
 
         this.dragStart = (e) => {
+            e.preventDefault();
             dragging = true;
 
             handle.style.cursor = 'grabbing';
             this.modal.style.animation = 'none';
             this.modal.style.transition = 'none';
 
-            startY = e.clientY;
+            startY = getClientY(e);
 
             // You can keep this if you want:
             const modalTopPx = parseFloat(getComputedStyle(this.modal).top);
             startTopVh = pxToVh(modalTopPx);
 
             // --- ADDED: reset velocity tracking ---
-            lastY = e.clientY;
+            lastY = getClientY(e);
             lastTime = performance.now();
             velocity = 0;
         };
 
         this.drag = (e) => {
+            e.preventDefault();
             if (!dragging) return;
 
             const now = performance.now();
 
-            const deltaY = e.clientY - startY;
+            const deltaY = getClientY(e) - startY;
             const deltaVh = pxToVh(deltaY);
 
             let newTop = startTopVh + deltaVh;
@@ -1830,15 +1838,16 @@ class Modal {
             currentTopVh = newTop;
 
             // --- ADDED: compute drag velocity ---
-            const dy = e.clientY - lastY;
+            const dy = getClientY(e) - lastY;
             const dt = now - lastTime;
             if (dt > 0) velocity = dy / dt;
 
-            lastY = e.clientY;
+            lastY = getClientY(e);
             lastTime = now;
         };
 
-        this.dragEnd = () => {
+        this.dragEnd = (e) => {
+            e.preventDefault();
             if (!dragging) return;
             dragging = false;
 
@@ -1877,9 +1886,17 @@ class Modal {
         };
 
         this.modal.addEventListener('animationend', this.animationEnd);
+
+        this.dragStart = this.dragStart.bind(this);
+        this.drag = this.drag.bind(this);
+        this.dragEnd = this.dragEnd.bind(this);
+
         handle.addEventListener('mousedown', this.dragStart);
+        handle.addEventListener('touchstart', this.dragStart, { passive: false });
         document.addEventListener('mousemove', this.drag);
+        document.addEventListener('touchmove', this.drag, { passive: false });
         document.addEventListener('mouseup', this.dragEnd);
+        document.addEventListener('touchend', this.dragEnd, { passive: false });
     }
 }
 
@@ -2636,5 +2653,9 @@ class CustomAttributionControl extends maplibregl.AttributionControl {
     _updateAttributions() {
         ////super._updateAttributions();
         this._innerContainer.innerHTML = '<a href="https://maplibre.org/">MapLibre</a> | © <a href="https://www.esri.com">Esri</a>, © <a href="https://carto.com/about-carto/" target="_blank" rel="noopener">CARTO</a>, © <a href="http://www.openstreetmap.org/about/" target="_blank">OpenStreetMap</a> contributors';
+        if (this._map.getCanvasContainer().offsetWidth <= 640) {
+            this._container.setAttribute('open', '');
+            this._container.classList.remove('maplibregl-compact-show');
+        }
     }
 }

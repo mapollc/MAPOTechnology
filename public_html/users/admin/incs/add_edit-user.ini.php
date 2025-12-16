@@ -145,7 +145,7 @@ if ($function == 'edit' && !$row) {
 
         if ($customerID) {
             try {
-                $subs = $stripe->subscriptions->all(['customer' => $customerID, 'limit' => 10]);
+                $subs = $stripe->subscriptions->all(['customer' => $customerID, 'status' => 'all', 'limit' => 10]);
 
                 if (!$subs || count($subs->data) == 0) {
                     echo '<p>This user does not have any subscriptions.</p>';
@@ -165,14 +165,15 @@ if ($function == 'edit' && !$row) {
                             <tbody>
                                 <? for ($i = 0; $i < count($subs->data); $i++) {
                                     $plan->setPlan(null, $subs->data[$i]->plan->id);
+                                    $isTrial = $subs->data[$i]->trial_end == $subs->data[$i]->current_period_end;
                                     //$billInt = 60 * 60 * 24 * (30 * $plan->getTerm());
                                 ?>
                                     <tr>
                                         <td><?= $plan->getName() ?></td>
-                                        <td><?= ($subs->data[$i]->cancel_at_period_end ? 'Canceled' : ucfirst($subs->data[$i]->status)) ?></td>
+                                        <td><?= $subs->data[$i]->cancel_at_period_end ? 'Canceled' : ucfirst($subs->data[$i]->status) ?></td>
                                         <td><?= date('n/j/Y', $subs->data[$i]->current_period_start) ?></td>
                                         <td><?= date('n/j/Y', $subs->data[$i]->current_period_end) ?></td>
-                                        <td><?= ucfirst($subs->data[$i]->plan->interval)?>ly</td>
+                                        <td><?= ucfirst($subs->data[$i]->plan->interval)?>ly<?= $isTrial ? ' (Trial)' : '' ?></td>
                                         <td><a target="blank" href="https://dashboard.stripe.com/subscriptions/<?= $subs->data[$i]->id ?>">Manage</a></td>
                                     </tr>
                                 <? } ?>
@@ -184,8 +185,6 @@ if ($function == 'edit' && !$row) {
             } catch (Exception $e) {
                 print_r($e->getMessage());
             }
-        } else {
-            echo '<p>This user does not have any subscriptions.</p>';
         }
     }
 } ?>

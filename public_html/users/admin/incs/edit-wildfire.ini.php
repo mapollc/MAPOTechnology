@@ -18,7 +18,7 @@ if (!$permission->fire()->edit()) {
                     <?
                     $count = 0;
                     foreach ($row as $k => $v) {
-                        if ($k != 'jurisdiction_unit' && $k != 'center_name' && $k != 'display' && $k != 'lon' && $k != 'incidentNumOnly') {
+                        if ($k != 'jurisdiction_unit' && $k != 'jursidiction' && $k != 'geo' && $k != 'center_name' && $k != 'display' && $k != 'lon' && $k != 'incidentNumOnly') {
                             $label = ucfirst($k);
                             $value = $v;
 
@@ -32,12 +32,18 @@ if (!$permission->fire()->edit()) {
 
                             if ($k == 'date' || $k == 'captured' || $k == 'updated') {
                                 $value = date('l, F j, Y g:i A T', $v);
+                            } else if ($k == 'unit') {
+                                $label = 'Responsible Agency';
+                                $juris = $row['jurisdiction'] ? $row['jurisdiction'] . ($row['jurisdiction_unit'] ? ' &mdash; ' . $row['jurisdiction_unit'] : '') : 'N/A';
+                                $value = $juris . " ($v)";
+                            } else if ($k == 'near') {
+                                $label = 'Geocode';
+                                $near = json_decode($v);
+                                $value = '<b>County:</b> ' . $near->county.'<br><b>Near:</b> ' . $near->near . '<br><b>FIPS:</b> '.str_pad($near->fips, 5, '0', STR_PAD_LEFT);
                             } else if ($k == 'state') {
                                 $value = convertState($v, 1);
                             } else if ($k === 'agency') {
                                 $value = '<a href="../dispatch/edit?agency=' . $row['agency'] . '">' . $row['agency'] . '</a>' . ($row['center_name'] ? ' &mdash; ' . $row['center_name'] : '');
-                            } else if ($k == 'jurisdiction') {
-                                $value = $row['jurisdiction'] ? $row['jurisdiction'] . ($row['jurisdiction_unit'] ? ' &mdash; ' . $row['jurisdiction_unit'] : '') : 'N/A';
                             } else if ($k == 'status') {
                                 $status = '';
 

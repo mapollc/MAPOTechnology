@@ -253,6 +253,9 @@ if ($_SERVER['REQUEST_URI'] == '/') {
                         case 'upload':
                             $file = 'upload';
                             break;
+                        case 'userContent':
+                            $file = 'user-content';
+                            break;
                         case 'versioning':
                             $file = 'version';
                             break;

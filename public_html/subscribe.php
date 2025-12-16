@@ -298,7 +298,7 @@ if ($trialExhausted) {
             </div>
         </div>
 
-        <? if (!isset($_GET['ref']) && $_GET['ref'] != 'com.mapollc.mapofire') { ?>
+        <? if (isset($_GET['ref']) && $_GET['ref'] != 'com.mapollc.mapofire') { ?>
             <footer>
                 &copy; <?= date('Y') ?> MAPO LLC &nbsp; &middot; &nbsp;
                 <a href="https://www.mapotechnology.com/about/legal/terms">Terms</a> &nbsp; &middot; &nbsp;

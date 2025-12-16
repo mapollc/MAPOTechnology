@@ -103,7 +103,7 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
             $offset = ($currentPage - 1) * $rowsPerPage;
             $pagination = new Pagination($currentPage, $totalPages, 50);
 
-            $sql = mysqli_query($con, "SELECT uid, first_name, last_name, email, role, created, last_active FROM users $where ORDER BY $order LIMIT $offset, $rowsPerPage");
+            $sql = mysqli_query($con, "SELECT uid, first_name, last_name, u.email, role, u.created, last_active, cid FROM users AS u LEFT JOIN billing AS b ON b.email = u.email $where ORDER BY $order, b.start DESC LIMIT $offset, $rowsPerPage");
             $totalUsers = mysqli_num_rows(mysqli_query($con, "SELECT uid FROM users")) - 2;
         ?>
             <h1>Manage Users</h1>
@@ -128,6 +128,7 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
                             <th onclick="window.location.href='?sort=first_name&order=<?=(!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? '&'.$queryParams : '')?>'">First Name</th>
                             <th onclick="window.location.href='?sort=last_name&order=<?=(!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? '&'.$queryParams : '')?>'">Last Name</th>
                             <th onclick="window.location.href='?sort=email&order=<?=(!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? '&'.$queryParams : '')?>'">Email Address</th>
+                            <th>Subscriber</th>
                             <th>Permissions</th>
                             <th onclick="window.location.href='?sort=last_active&order=<?=(!isset($_GET['order']) || $_GET['order'] != 'DESC' ? 'DESC' : 'ASC') . ($queryParams ? '&'.$queryParams : '')?>'">Last Active</th>
                             <th onclick="window.location.href='?sort=created&order=<?=(!isset($_GET['order']) || $_GET['order'] != 'DESC' ? 'DESC' : 'ASC') . ($queryParams ? '&'.$queryParams : '')?>'">User Since</th>
@@ -140,6 +141,7 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
                                 <td><?= $row['first_name'] ?></td>
                                 <td><?= $row['last_name'] ?></td>
                                 <td><?= $row['email'] ?></td>
+                                <td><?= $row['cid'] != null ? "<a target=\"blank\" href=\"https://dashboard.stripe.com/customers/$row[cid]\">$row[cid]</a>" : 'No' ?></td>
                                 <td><?= $row['role'] == 1 ? '<i class="fa-solid fa-user" title="General User"></i>' : '' ?>
                                     <?= $row['role'] == 2 ? '<i class="fa-solid fa-badge-check" title="Premium Access"></i>' : '' ?>
                                     <?= $row['role'] == 4 ? '<i class="fa-solid fa-person-hiking" title="Trail Moderator"></i>' : '' ?>

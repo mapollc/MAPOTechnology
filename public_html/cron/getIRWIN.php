@@ -207,7 +207,7 @@ foreach ($newDispatchCenters as $center) {
             VALUES (
                 '$incidentNum','$incNumOnly','$state','$center','$incidentUnit','$year','$date',
                 '$name','$incidentType','$lat','$lon','$geo','$near','$acres','$status',
-                '$notes','$resources','$fuels','$time','$time','$timezone','1','system'
+                '$notes','$resources','$fuels','$time','$time','$timezone','1','irwin'
             )
             ON DUPLICATE KEY UPDATE
                 state = IF('$state' = '', state, '$state'),

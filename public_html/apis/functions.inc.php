@@ -808,9 +808,9 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
     $show_fire = false;
     $time = time();
     $timeDiff = time() - $row['date'];
-    #$week2 = strtotime('-5 days');
+    ////$week2 = strtotime('-5 days');
     $last2 = 60 * 60 * 2;
-    $last12 = 60 * 60 * 12;
+    ////$last12 = 60 * 60 * 12;
     $day1 = 60 * 60 * 24;
     $days3 = $day1 * 3;
     $day5 = strtotime('-5 days');
@@ -820,7 +820,7 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
     $status = $status != false && !empty($status) && $status != '' ? (is_array($status) ? $status : unserialize($status)) : [];
     $isUTL = utlPresent($row);
 
-    if (($row['updated'] > $day5) && !$isUTL) {
+    if ($row['updated'] > $day5 && !$isUTL) {
         $show_fire = true;
         $parts[] = [1, true];
     }
@@ -836,37 +836,37 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
         $parts[] = [3, false];
     }
 
-    if ($inc_type == 'Smoke Check' && (($timeDiff > $last2 && $noAcres) || $isUTL)) {
+    if ($inc_type == 'Smoke Check' && ($timeDiff > $last2 && $noAcres || $isUTL)) {
         $show_fire = false;
         $parts[] = [4, false];
     }
 
-    if (($time - intval($row['updated'])) > $days3 || empty(intval($row['updated']))) {
+    if ($time - intval($row['updated']) > $days3 || empty(intval($row['updated']))) {
         $show_fire = false;
         $parts[] = [6, false];
     }
 
-    if (is_array($status) && $status['Out'] && ($timeDiff > $days3)) {
+    if (is_array($status) && $status['Out'] && $timeDiff > $days3) {
         $show_fire = false;
         $parts[] = [7, false];
     }
 
-    if (is_array($status) && ($status['Contain'] || $status['Control']) && ($timeDiff > $day5) && $acres <= 1) {
+    if (is_array($status) && ($status['Contain'] || $status['Control']) && $timeDiff > $day5 && $acres <= 1) {
         $show_fire = false;
         $parts[] = [8, false];
     }
 
-    if ($acres < 50 && ($timeDiff > $onemonth)) {
+    if ($acres < 50 && $timeDiff > $onemonth) {
         $show_fire = false;
         $parts[] = [9, false];
     }
 
-    if ($acres > 1000) {
+    if ($acres > 1000 && $timeDiff < 60 * 60 * 24 * (365.25 / 12)) {
         $show_fire = true;
         $parts[] = [5, true];
     }
 
-    if (($archive != '' && $archive != 0) || $request == 'new') {
+    if ($archive != '' && $archive != 0 || $request == 'new') {
         $show_fire = true;
         $parts[] = [10, true];
     }

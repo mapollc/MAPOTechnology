@@ -82,7 +82,7 @@ $metaDesc = $metaDesc ? $metaDesc : 'Track wildfires with Map of Fire. Explore t
     <?if($frontPage){?>
     <style>.stat{padding:1rem;background-color:rgb(15 15 15 / 65%);border-radius:4px;text-align:center;color:#fff}.stat h2{font-size:2.5rem;font-weight:600;letter-spacing:1px;text-overflow:ellipsis;overflow-wrap:normal;overflow:hidden}.stat span{font-size:18px;font-weight:400}</style>
     <?} if ($_SERVER['PHP_SELF'] == '/legal.php') {?>
-    <style>.legal ol li{margin:10px 0 5px 25px;font-size:18px;font-weight:600;letter-spacing:1px;padding:0}.legal ol li span{padding-left:10px}.legal ul{margin-left:90px!important;}.legal p{margin-left:55px!important;}.legal ul li{font-size:18px;line-height:1.5;padding:5px 0 5px 10px}.legal p:first-child,.legal p:nth-child(2),.legal p:nth-child(3),.legal p:nth-child(4){margin-left:0!important}.legal p.ind{margin-left:110px!important}</style>
+    <style>.legal ol li{margin:10px 0 5px 25px;font-size:18px;font-weight:600;letter-spacing:1px;padding:0}.legal ol li span{padding-left:10px}.legal ul{margin-left:90px!important;}.legal p{margin-left:55px!important;}.legal ul li{font-size:18px;line-height:1.5;padding:5px 0 5px 10px}.legal p:nth-child(-n + 6){margin-left:0!important}.legal p.ind{margin-left:110px!important}</style>
     <?}?>
 </head>
 <body<?=!$frontPage && $_SERVER['PHP_SELF'] != '/legal.php' ? ' class="page"' : ''?>>

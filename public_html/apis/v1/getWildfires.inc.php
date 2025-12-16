@@ -9,7 +9,7 @@ if ($_REQUEST['archive']) {
 } else {
     // filter by date/time range
     if ($_REQUEST['start'] && $_REQUEST['end']) {
-        $sql .= "date >= ".$_REQUEST['start']." AND date <= ".$_REQUEST['end']." AND ";
+        $sql .= "date >= $_REQUEST[start] AND date <= $_REQUEST[end] AND ";
     } else {
         $sql .= "year = '$year' AND ";
 
@@ -58,11 +58,11 @@ if ($_REQUEST['state']) {
 }*/
 
 if (isset($_REQUEST['bbox'])) {
-    $sql .= " AND (lat >= ".$ymin." AND lat <= ".$ymax.") AND (lon >= ".$xmax." AND lon <= ".$xmin.")";
+    $sql .= " AND (lat >= $ymin AND lat <= $ymax) AND (lon >= $xmax AND lon <= $xmin)";
 }
 
 // finish sql statement
-$sql .= " AND display = 1 ORDER BY ".($_REQUEST['order'] ? /*($_REQUEST['order'] == 'acres' ? 'CAST(acres AS float)' : */$_REQUEST['order']/*)*/ : 'date')." DESC";
+$sql .= " AND display = 1 ORDER BY ".($_REQUEST['order'] ?: 'date')." DESC";
 $sql = str_replace(' AND  AND ', ' AND ', $sql);
 
 /*if ($category == 'test') {
@@ -91,32 +91,38 @@ while ($row = mysqli_fetch_assoc($result)) {
             }
             
             // if a fire hasn't been updated in a month and is >1k acres, set the status to Out
-            if (floatval($row['acres']) > 1000 && (time() - $row['updated'] > (60 * 60 * 24 * 30))) {
+            if (floatval($row['acres']) > 1000 && time() - $row['updated'] > 60 * 60 * 24 * 30) {
                 $status = ['Out' => intval($row['updated'])];
             }
 
             $zone = dispatchZones($row['incidentID']);
-            $fire = array('wfid' => $row['wfid'],
-                            'incidentId' => $row['incidentID'],
-                            'state' => $row['state'],
-                            'dispatch' => ($row['agency'] ? $row['agency'] : 'NWCG'),
-                            'name' => $name,
-                            'type' => $row['type'],
-                            'acres' => floatval($row['acres']),
-                            'status' => ($status ? $status : ''),
-                            'notes' => $row['notes'],
-                            'resources' => $row['resources'],
-                            'fuels' => $row['fuels'],
-                            'near' => $row['geo'],
-                            'url' => $url,
-                            'protection' => array('agency' => $zone->agency,
-                                                'area' => $zone->area,
-                                                'logo' => $zone->logo),
-                            'time' => array('year' => intval($row['year']),
-                                            'discovered' => floatval($row['date']),
-                                            'captured' => floatval($row['captured']),
-                                            'updated' => floatval($row['updated']),
-                                            'timezone' => $row['timezone']));
+            $fire = [
+                'wfid' => $row['wfid'],
+                'incidentId' => $row['incidentID'],
+                'state' => $row['state'],
+                'dispatch' => ($row['agency'] ? $row['agency'] : 'NWCG'),
+                'name' => $name,
+                'type' => $row['type'],
+                'acres' => floatval($row['acres']),
+                'status' => ($status ? $status : ''),
+                'notes' => $row['notes'],
+                'resources' => $row['resources'],
+                'fuels' => $row['fuels'],
+                'near' => $row['geo'],
+                'url' => $url,
+                'protection' => [
+                    'agency' => $zone->agency,
+                    'area' => $zone->area,
+                    'logo' => $zone->logo
+                ],
+                'time' => [
+                    'year' => intval($row['year']),
+                    'discovered' => floatval($row['date']),
+                    'captured' => floatval($row['captured']),
+                    'updated' => floatval($row['updated']),
+                    'timezone' => $row['timezone']
+                ]
+            ];
 
             /*if ($row['data']) {
                 $aa = unserialize($row['data']);
@@ -133,7 +139,17 @@ while ($row = mysqli_fetch_assoc($result)) {
                 }
             }*/
 
-            $features[] = array('type' => 'Feature', 'geometry' => array('type' => 'Point', 'coordinates' => array(floatval($row['lon']), floatval($row['lat']))), 'properties' => $fire);
+            $features[] = [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'Point',
+                    'coordinates' => [
+                        floatval($row['lon']),
+                        floatval($row['lat'])
+                    ]
+                ],
+                'properties' => $fire
+            ];
             $total++;
         }
     }

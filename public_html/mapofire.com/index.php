@@ -169,10 +169,11 @@ if (file_exists($root . 'v' . $version . '/app.php')) {
     $county = ucwords(str_replace('-', ' ', $_GET['county']));
 
     ob_start();
-    if (!isset($_GET['version'])) {
-?>
+    if (!isset($_GET['version'])) {?>
         window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X03WWLX3BJ',{'user_id':'<?= $_COOKIE['uuid'] ?>'});
-    <? } ?>
+    <? } else {
+        echo 'function gtag(){}';  
+    } ?>
     let version='<?= $version ?>',
     mbVersion='<?= $mapboxVersion ?>',
     buildDate='<?= $buildDate ?>',

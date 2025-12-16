@@ -160,6 +160,7 @@ $addtl = ($_GET['q'] != '' ? 'q=' . $_GET['q'] . '&' : '') . ($_GET['unit'] != '
                 <th onclick="window.location.href='?sort=acres&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'DESC' ? 'DESC' : 'ASC') . ($queryParams ? '&' . $queryParams : '') ?>'">Acres</th>
                 <th onclick="window.location.href='?sort=updated&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'DESC' ? 'DESC' : 'ASC') . ($queryParams ? '&' . $queryParams : '') ?>'">Last Update</th>
                 <th>Displayed</th>
+                <th>Origin</th>
                 <th>&nbsp;</th>
             </tr>
         </thead>
@@ -180,6 +181,7 @@ $addtl = ($_GET['q'] != '' ? 'q=' . $_GET['q'] . '&' : '') . ($_GET['unit'] != '
                         <td><?= size($row['acres']) ?></td>
                         <td><?= ago($row['updated']) ?></td>
                         <td><?= $row['display'] == '1' ? 'Yes' : 'No' ?></td>
+                        <td><?= $row['owner'] ?></td>
                         <td><? if ($permission->fire()->edit()) { ?>
                                 <a style="font-weight:400!important" href="<?= $linkURL ?>admin/wildfires/<?= $row['owner'] == 'mapo' ? 'modify' : 'edit' ?>?wfid=<?= $row['wfid'] ?>">edit</a>
                             <? if ($function == 'duplicates') {

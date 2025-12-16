@@ -17,24 +17,28 @@ if ($_GET['test'] == 1) {
         }
     }
 
-    usort($top, function($a, $b) {
-        return $b['count'] <=> $a['count'];
-    });
+    if ($top) {
+        usort($top, function ($a, $b) {
+            return $b['count'] <=> $a['count'];
+        });
 
-    for ($i = 0; $i < 10; $i++) {
-        if ($top[$i] != null) {
-            unset($top[$i]['score']);
-            $topFires[] = $top[$i];
+        for ($i = 0; $i < 10; $i++) {
+            if ($top[$i] != null) {
+                unset($top[$i]['score']);
+                $topFires[] = $top[$i];
 
-            $total++;
-            $clicks += $top[$i]['count'];
+                $total++;
+                $clicks += $top[$i]['count'];
+            }
         }
-    }
 
-    for ($i = 0; $i < count($topFires); $i++) {
-        $trend = $topFires[$i]['count'] >= $clicks / $total ? true : false;
+        for ($i = 0; $i < count($topFires); $i++) {
+            $trend = $topFires[$i]['count'] >= $clicks / $total ? true : false;
 
-        $topFires[$i]['trending'] = $trend;
+            $topFires[$i]['trending'] = $trend;
+        }
+    } else {
+        $topFires = null;
     }
 
     $returnJson = array('top' => $topFires, 'total' => $total);
@@ -86,41 +90,41 @@ if ($_GET['test'] == 1) {
     $returnJson = array('top' => $topFires, 'total' => $total);*/
 } else {
 
-$useCache = false;
-$cachefilename = 'events';
-$memcache = new Memcached();
-$memcache->addServer('127.0.0.1', 11211);
-$cache = $memcache->get($cachefilename);
-$limit = $_REQUEST['limit'] ? $_REQUEST['limit'] : 10;
+    $useCache = false;
+    $cachefilename = 'events';
+    $memcache = new Memcached();
+    $memcache->addServer('127.0.0.1', 11211);
+    $cache = $memcache->get($cachefilename);
+    $limit = $_REQUEST['limit'] ? $_REQUEST['limit'] : 10;
 
-if ($useCache == false || (!$cache || filemtime(root() . 'topfires.ini.php') > $memcache->get($cachefilename . '-time'))) {
-    $result = mysqli_query($con, "SELECT * FROM topFires ORDER BY count DESC LIMIT $limit");
-    $total = $clicks = 0;
+    if ($useCache == false || (!$cache || filemtime(root() . 'topfires.ini.php') > $memcache->get($cachefilename . '-time'))) {
+        $result = mysqli_query($con, "SELECT * FROM topFires ORDER BY count DESC LIMIT $limit");
+        $total = $clicks = 0;
 
-    while ($row = mysqli_fetch_assoc($result)) {
-        $data = json_decode($row['data']);
-        $count = intval($row['count']);
-        $data->wfid = intval($data->wfid);
-        $top[] = ['wfid' => intval($row['wfid']), 'count' => $count, 'data' => $data];
-        $total++;
-        $clicks += $count;
+        while ($row = mysqli_fetch_assoc($result)) {
+            $data = json_decode($row['data']);
+            $count = intval($row['count']);
+            $data->wfid = intval($data->wfid);
+            $top[] = ['wfid' => intval($row['wfid']), 'count' => $count, 'data' => $data];
+            $total++;
+            $clicks += $count;
+        }
+
+        $avg = $clicks / $total;
+
+        foreach ($top as $ea) {
+            $ea['trending'] = $ea['count'] > $avg ? true : false;
+            $topFires[] = $ea;
+        }
+
+        $returnJson = array('top' => $topFires, 'total' => $total);
+        $memcache->set($cachefilename, json_encode($returnJson), 600);
+        $memcache->set($cachefilename . '-time', time(), 600);
+    } else {
+        $isCached = true;
+        $cache = json_decode($cache);
+        $returnJson = $cache;
     }
-
-    $avg = $clicks / $total;
-
-    foreach ($top as $ea) {
-        $ea['trending'] = $ea['count'] > $avg ? true : false;
-        $topFires[] = $ea;
-    }
-
-    $returnJson = array('top' => $topFires, 'total' => $total);
-    $memcache->set($cachefilename, json_encode($returnJson), 600);
-    $memcache->set($cachefilename.'-time', time(), 600);
-} else {
-    $isCached = true;
-    $cache = json_decode($cache);
-    $returnJson = $cache;
-}
 }
 /*if ($method == 'updated') {
     $returnJson = ['cacheFile' => filemtime('/home/mapo/public_html/apis/cache/event.json'), 'memcached' => $memcache->get($cachefilename . '-time')];
