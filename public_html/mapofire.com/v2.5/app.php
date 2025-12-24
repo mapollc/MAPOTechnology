@@ -83,17 +83,17 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
                 </div>
                 <span id="dd-close" data-action="dropdown-nav" class="far fa-xmark"></span>
                 <ul>
-                    <li class="ttip" id="account" data-action="account"><i class="fas fa-user-circle"></i><span>Login</span></li>
-                    <? //<li class="ttip" data-action="donate" data-tooltip="Donate"><i class="fas fa-heart"></i><span>Donate</span></li>
+                    <li id="account" data-action="account"><i class="fas fa-user-circle"></i><span>Login</span></li>
+                    <? //<li data-action="donate"><i class="fas fa-heart"></i><span>Donate</span></li>
                     ?>
-                    <li class="ttip" data-action="basemap" data-tooltip="Basemaps"><i class="far fa-grid"></i><span>Maps</span></li>
-                    <li class="ttip" data-action="layers" data-tooltip="Map Layers"><i class="far fa-layer-group"></i><span>Layers</span></li>
-                    <li class="ttip" id="legend" data-action="legend" data-tooltip="Legend"><i class="far fa-list"></i><span>Legend</span></li>
-                    <li class="ttip" data-action="myfires" data-tooltip="My Fires"><i class="fas fa-fire-extinguisher"></i><span>My Fires</span></li>
-                    <li class="ttip" id="refresh" data-action="refresh" data-tooltip="Refresh the map"><i class="far fa-sync"></i><span>Refresh</span></li>
-                    <li class="ttip" id="report" data-action="report" data-active="0" data-tooltip="Report a new fire"><i class="far fa-location-plus"></i><span>Report</span></li>
-                    <li class="ttip" id="save" data-action="save" data-tooltip="Sync map settings"><i class="far fa-cloud-arrow-up"></i><span>Sync</span></li>
-                    <?/*<li class="ttip" id="logout" data-action="logout" data-tooltip="Logout"><i class="far fa-right-from-bracket"></i><span>Logout</span></li>
+                    <li data-action="basemap"><i class="far fa-grid"></i><span>Maps</span></li>
+                    <li data-action="layers"><i class="far fa-layer-group"></i><span>Layers</span></li>
+                    <li id="legend" data-action="legend"><i class="far fa-list"></i><span>Legend</span></li>
+                    <li data-action="myfires"><i class="fas fa-fire-extinguisher"></i><span>My Fires</span></li>
+                    <li id="refresh" data-action="refresh"><i class="far fa-sync"></i><span>Refresh</span></li>
+                    <li id="report" data-action="report" data-active="0"><i class="far fa-location-plus"></i><span>Report</span></li>
+                    <li id="save" data-action="save"><i class="far fa-cloud-arrow-up"></i><span>Sync</span></li>
+                    <?/*<li id="logout" data-action="logout"><i class="far fa-right-from-bracket"></i><span>Logout</span></li>
                     <li><label class="switch"><input id="dark_mode" type="checkbox"<?=$dark_mode ? ' checked' : ''?>><div class="slider"></div></label><span>Dark Mode</span></li>*/ ?>
                 </ul>
                 <i class="fas fa-chevron-left" title="Toggle navigation" id="close-navbar" data-action="close-navbar" data-open="1"></i>

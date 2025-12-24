@@ -3,7 +3,8 @@
 ////error_reporting(E_ALL);
 ini_set('session.cookie_domain', '.mapotechnology.com');
 session_start();
-$validPages = ['login', 'register', 'forgot', 'confirmation'];
+$method = $_GET['method'];
+$validPages = ['login', 'register', 'forgot', 'confirmation', 'invitation'];
 $gtoken = isset($_GET['gtoken']) ? $_GET['gtoken'] : null;
 
 // receive login data from google
@@ -12,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['credential'])) {
     exit();
 }
 
-if (!in_array($_GET['method'], $validPages)) {
+if (!in_array($method, $validPages)) {
     header("Location: ../secure/login");
     exit();
 }
@@ -64,49 +65,32 @@ if ($service == 'mapotrails') {
 }
 
 // verify if the user is already logged in
-////if ($_GET['method'] == 'login') {
-    if (isset($_SESSION) && $_SESSION['uid']/* && !isset($_GET['price_id'])*/) {
-        $exp = prepareQuery('s', [$_SESSION['token']], "SELECT expires FROM sessions WHERE token = ?")['expires'];
+if (isset($_SESSION) && $_SESSION['uid']/* && !isset($_GET['price_id'])*/) {
+    $exp = prepareQuery('s', [$_SESSION['token']], "SELECT expires FROM sessions WHERE token = ?")['expires'];
 
-        if ($_SESSION['expires'] < time() || ($exp == 0 || $exp <= time())) {
-            $goto = '../logout?expired=1'.($_SERVER['QUERY_STRING'] ? '&'.preg_replace('/(%26|%3F)loggedOut%3D1/m', '', $_SERVER['QUERY_STRING']) : '');
+    if ($_SESSION['expires'] < time() || ($exp == 0 || $exp <= time())) {
+        $goto = '../logout?expired=1' . ($_SERVER['QUERY_STRING'] ? '&' . preg_replace('/(%26|%3F)loggedOut%3D1/m', '', $_SERVER['QUERY_STRING']) : '');
+    } else {
+        if (isset($service)) {
+            $goto = $sourceURL . '/authenticate?' . ($service ? 'service=' . $service . '&' : '') . 'token=' . $_SESSION['token'] . ($nextURL ? '&next=' . urlencode($nextURL) : '');
         } else {
-            if (isset($service)) {
-                $goto = $sourceURL.'/authenticate?'.($service ? 'service='.$service.'&' : '').'token='.$_SESSION['token'].($nextURL ? '&next='.urlencode($nextURL) : '');
+            if ($nextURL) {
+                $goto = $nextURL;
             } else {
-                if ($nextURL) {
-                    $goto = $nextURL;
-                } else {
-                    $goto = '../account/home?existing=1';
-                }
-            }
-        }
-
-        #echo $goto;
-        header("Location: $goto");
-        exit();
-    }
-
-    /*if (isset($_SESSION) && $_SESSION['uid'] && !isset($_GET['price_id'])) {
-        # if session and cookie token values are the same
-        //if ($_SESSION['token'] == $_COOKIE['token']) {
-        $exp = mysqli_fetch_assoc(mysqli_query($con, "SELECT expires FROM sessions WHERE token = '$_SESSION[token]'"))['expires'];
-
-        // token is expired
-        if ($_SESSION['expires'] <= time() || ($exp == 0 || $exp <= time())) {
-            header('Location: ../logout?expired=1'.($_SERVER['QUERY_STRING'] ? '&'.$_SERVER['QUERY_STRING'] : ''));
-        } else {
-            $goto = $sourceURL.'/authenticate?token='.$_SESSION['token'].($_REQUEST['next'] ? '&next='.urlencode($_REQUEST['next']) : '');
-
-            if (!$service) {
                 $goto = '../account/home?existing=1';
             }
-
-            header('Location: '.$goto);
-            exit();
         }
-    }*/
-////}
+    }
+
+    #echo $goto;
+    header("Location: $goto");
+    exit();
+}
+
+if ($method == 'invitation') {
+    $org = prepareQuery('s', [$_GET['org_key']], "SELECT name AS orgName FROM groups WHERE org_key = ?");
+    $orgName = $org['orgName'] ?? '';
+}
 
 if ($_GET['fail']) {
     switch ($_GET['fail']) {
@@ -122,13 +106,23 @@ if ($_GET['fail']) {
     }
 }
 
-$title = $_GET['method'] == 'login' ? 'Account Login' : ($_GET['method'] == 'forgot' ? ($_GET['verify'] == 1 ? 'Reset your Password' : 'Forgot Password') : ($_GET['method'] == 'confirmation' ? 'Confirm Your Account' : 'Create an Account'));
+if ($method == 'login') {
+    $title = 'Account Login';
+} else if ($method == 'forgot') {
+    $title = $_GET['verify'] == 1 ? 'Reset your Password' : 'Forgot Password';
+} else if ($method == 'confirmation') {
+    $title = 'Confirm Your Account';
+} else if ($method == 'invitation') {
+    $title = 'Accept Invitation';
+} else {
+    $title = 'Create an Account';
+}
 ?>
 <!DOCTYPE html>
 <html>
 
 <head>
-    <title><?=($service ? "$serviceName - " : '').$title?> | MAPO LLC</title>
+    <title><?= ($service ? "$serviceName - " : '') . $title ?> | MAPO LLC</title>
     <meta charset="utf-8">
     <meta name="description" content="" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -147,10 +141,10 @@ $title = $_GET['method'] == 'login' ? 'Account Login' : ($_GET['method'] == 'for
 <body>
     <main>
         <div class="wrapper">
-            <a href="https://www.mapotechnology.com" class="logo"><img src="../../assets/images/<?= $logo ?>" alt="<?=$serviceName ? $serviceName : 'MAPO'?> logo" title="<?=$serviceName ? $serviceName : 'MAPO'?> logo"></a>
+            <a href="https://www.mapotechnology.com" class="logo"><img src="../../assets/images/<?= $logo ?>" alt="<?= $serviceName ? $serviceName : 'MAPO' ?> logo" title="<?= $serviceName ? $serviceName : 'MAPO' ?> logo"></a>
             <h1><?= $title ?></h1>
 
-            <?if (isset($_GET['price_id'])) {
+            <? if (isset($_GET['price_id'])) {
                 $plan->setPlan(null, $_GET['price_id']);
                 echo '<div class="message subscribe">Start your <b>' . $plan->getName() . '</b> subscription by creating a new account, or logging into your existing account.</div>';
             }
@@ -173,42 +167,72 @@ $title = $_GET['method'] == 'login' ? 'Account Login' : ($_GET['method'] == 'for
                 echo '<div class="message success">Your password was reset. You can login again.</div>';
             }
             if ($_GET['subscribed'] == 1 || isset($_GET['checkout_id'])) {
-                echo '<div class="message subscribe">You have subscribed to <b>'.$productName.'</b>'.($customer ? ', '.$customer : '').'.</div>';
-                
+                echo '<div class="message subscribe">You have subscribed to <b>' . $productName . '</b>' . ($customer ? ', ' . $customer : '') . '.</div>';
+
                 if (!isset($_GET['checkout_id'])) {
                     echo '<div class="message success">Your account was successfully created. Please check your email for a confirmation link to verify your account.</div>';
                 }
             }
+
+            // show a message if the user has tried to login too many times and has been locked out for several minutes
             if ($locked) {
                 $total = $_SESSION['last_login_attempt'] + 900 - time();
-                $when = $total < 60 ? $total.' seconds.' : round($total / 60, 0).' minutes';
-                echo '<div class="message error" id="loginerrors">Your account has been locked due to multiple failed login attempts. Try again in '.$when.'.</div>';   
-            }?>
+                $when = $total < 60 ? $total . ' seconds.' : round($total / 60, 0) . ' minutes';
+                echo '<div class="message error" id="loginerrors">Your account has been locked due to multiple failed login attempts. Try again in ' . $when . '.</div>';
+            } ?>
 
-            <form action="" id="<?= $_GET['method'] ?>" method="post">
-                <input type="hidden" name="ip" value="<?=$_SERVER['REMOTE_ADDR']?>">
+            <form action="" id="<?= $method ?>" method="post">
+                <input type="hidden" name="ip" value="<?= $_SERVER['REMOTE_ADDR'] ?>">
                 <? if (isset($_GET['price_id'])) { ?>
                     <input type="hidden" name="subscribe" value="1">
                     <input type="hidden" name="price_id" value="<?= $_GET['price_id'] ?>">
                     <input type="hidden" name="product_key" value="<?= $_GET['product_key'] ?>">
-                    <?if ($_REQUEST['trial']) {
-                    echo '<input type="hidden" name="trial" value="1">';
-                    } 
+                    <? if ($_REQUEST['trial']) {
+                        echo '<input type="hidden" name="trial" value="1">';
+                    }
                 }
                 if (isset($_GET['session_id'])) { ?>
                     <input type="hidden" name="subscribed" value="1">
                     <input type="hidden" name="sid" value="<?= $id ?>">
                 <? }
-                if ($_GET['method'] == 'confirmation') {?>
-                    <input type="hidden" name="email" value="<?=$_GET['email']?>">
-                    <input type="hidden" name="oauth_token" value="<?=$_GET['oauth_token']?>">
-                    <?if($_GET['subscriber'] == 1){?>
-                    <input type="hidden" name="subscriber" value="1">
-                    <?}?>
-                    <p style="text-align:center">Confirm your email address, <b><?=$_GET['email']?></b>?</p>
+                if ($method == 'confirmation') { ?>
+                    <input type="hidden" name="email" value="<?= $_GET['email'] ?>">
+                    <input type="hidden" name="oauth_token" value="<?= $_GET['oauth_token'] ?>">
+                    <? if ($_GET['subscriber'] == 1) { ?>
+                        <input type="hidden" name="subscriber" value="1">
+                    <? } ?>
+                    <p style="font-size:18px;text-align:center">Confirm your email address, <b><?= $_GET['email'] ?></b>?</p>
+                    <input type="submit" class="btn btn-lg btn-blue" data-o="Accept Invite" value="Accept Invite">
+                <? }
+                if ($method == 'invitation') { ?>
+                    <input type="hidden" name="email" value="<?= $_GET['email'] ?>">
+                    <input type="hidden" name="org_key" value="<?= $_GET['org_key'] ?>">
+                    <input type="hidden" name="invite_code" value="<?= $_GET['invite_code'] ?>">
+                    <p style="font-size:18px;text-align:center">Do you want to accept <?= $orgName ?>'s account invite, <b><?= $_GET['email'] ?></b>?</p>
+
+                    <input type="text" name="first_name" value="<?= $fname ?>" required placeholder="First Name">
+                    <input type="text" name="last_name" value="<?= $lname ?>" required placeholder="Last Name">
+                    <input type="email" name="email" value="<?= $_GET['email'] ?>" readonly placeholder="Email Address">
+
+                    <div class="password">
+                        <input type="password" name="pass" value="" required placeholder="Password">
+                        <a href="#" onclick="return false" data-d="true">show</a>
+                    </div>
+
+                    <div class="req container" style="display:none">
+                        <span id="p1">Your password must be at least 8 characters</span>
+                        <span id="p2">Your password must have at least 1 number</span>
+                        <span id="p3">Your password must have at least 1 lowercase letter</span>
+                        <span id="p4">Your password must have at least 1 uppercase letter</span>
+                        <span id="p5">Your password must be at least 1 symbol</span>
+                    </div>
+
+                    <input type="password" name="confirm_pass" value="" required placeholder="Confirm Password">
+                    <div id="meets" class="container" style="display:none;font-size:14px;color:var(--red)">Your passwords don't match</div>
+
                     <input type="submit" class="btn btn-lg btn-blue" data-o="Verify Email" value="Verify Email">
-                <?}
-                if ($_GET['method'] == 'login') { ?>
+                <? }
+                if ($method == 'login') { ?>
                     <? if ($service) { ?>
                         <input type="hidden" name="service" value="<?= $service ?>">
                     <? }
@@ -217,8 +241,8 @@ $title = $_GET['method'] == 'login' ? 'Account Login' : ($_GET['method'] == 'for
                     <? } ?>
                     <input type="hidden" name="next" value="<?= $nextURL ?>">
 
-                    <p style="margin-bottom:30px;text-align:center">Need an account? <a class="fl" href="register<?=isset($_GET['price_id']) ? '?service='.$service.'&next='.$nextURL.'&price_id=' . $_GET['price_id'] : ($service ? '?service=' . $service . ($prod ? '&prod='.$prod : '') : '')?>">Sign Up</a></p>
-                    
+                    <p style="margin-bottom:30px;text-align:center">Need an account? <a class="fl" href="register<?= isset($_GET['price_id']) ? '?service=' . $service . '&next=' . $nextURL . '&price_id=' . $_GET['price_id'] : ($service ? '?service=' . $service . ($prod ? '&prod=' . $prod : '') : '') ?>">Sign Up</a></p>
+
                     <div class="field"><label>Email</label>
                         <input type="email" autocomplete="email" required name="email" value="" placeholder="Email Address">
                     </div>
@@ -228,7 +252,7 @@ $title = $_GET['method'] == 'login' ? 'Account Login' : ($_GET['method'] == 'for
                         <a href="#" id="showpwd" onclick="return false" data-d="true">show</a>
                     </div>
 
-                    <input type="submit" class="btn btn-lg btn-blue" <?=$locked ? 'disabled ' : ''?>data-o="Login" value="Login">
+                    <input type="submit" class="btn btn-lg btn-blue" <?= $locked ? 'disabled ' : '' ?>data-o="Login" value="Login">
                     <? if ($source) { ?>
                         <input type="button" class="btn btn-lg btn-gray" style="width:100%" onclick="window.location.href='<?= $nextURL ?>'" value="Go Back">
                     <? } ?>
@@ -237,7 +261,7 @@ $title = $_GET['method'] == 'login' ? 'Account Login' : ($_GET['method'] == 'for
 
                     <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="signin_with" data-shape="pill" data-logo_alignment="left" style="display:block;margin:0 auto;max-width:183px"></div>
                     <p style="margin-top:15px;text-align:center"><a class="fl" href="forgot">Forgot Password?</a></p>
-                <? } else if ($_GET['method'] == 'forgot') { ?>
+                <? } else if ($method == 'forgot') { ?>
                     <? if ($_GET['verify'] == 1) { ?>
                         <input type="hidden" name="verify" value="1">
                         <input type="hidden" name="email" value="<?= $_GET['email'] ?>">
@@ -270,18 +294,18 @@ $title = $_GET['method'] == 'login' ? 'Account Login' : ($_GET['method'] == 'for
 
                         <p style="margin:30px 0 5px 0;text-align:center"><a class="fl" href="login">Login Instead</a></p>
                     <? } ?>
-                <? } else if ($_GET['method'] == 'register') { ?>
-                    <p style="margin-bottom:30px;text-align:center">Already have an account? <a class="fl" href="login?<?=explode('?', $_SERVER['REQUEST_URI'])[1]?>">Login</a></p>
+                <? } else if ($method == 'register') { ?>
+                    <p style="margin-bottom:30px;text-align:center">Already have an account? <a class="fl" href="login?<?= explode('?', $_SERVER['REQUEST_URI'])[1] ?>">Login</a></p>
 
                     <input type="hidden" name="location" value="">
-                    
+
                     <input type="text" name="first_name" value="<?= $fname ?>" required placeholder="First Name">
                     <input type="text" name="last_name" value="<?= $lname ?>" required placeholder="Last Name">
                     <input type="email" name="email" value="<?= $email ?>" required placeholder="Email Address">
                     <input type="tel" name="phone" value="" placeholder="Phone Number" maxlength="12" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}">
                     <div class="password">
                         <input type="password" name="pass" value="" required placeholder="Password">
-                        <a href="#" onclick="return false"data-d="true">show</a>
+                        <a href="#" onclick="return false" data-d="true">show</a>
                     </div>
 
                     <div class="req container" style="display:none">
@@ -319,22 +343,25 @@ $title = $_GET['method'] == 'login' ? 'Account Login' : ($_GET['method'] == 'for
         </div>
     </main>
 
-    <?if($_GET['method'] == 'login') {
+    <? if ($method == 'login') {
         $redirectURI = preg_replace('/method=([A-Za-z0-9]+)&?/', '', $_SERVER['REDIRECT_QUERY_STRING']);
     ?>
-    <div id="g_id_onload"
-        data-client_id="27619385576-o8elfb66trj3e5v2acahnjm0jiqacg5n.apps.googleusercontent.com"
-        data-login_uri="https://www.mapotechnology.com/secure/login"
-        data-context="signin"
-        data-ux_mode="redirect"
-        <?=$redirectURI ? 'data-state="' . $redirectURI . '"' : ''?>
-        data-callback="loginWithGoogle"
-        data-auto_prompt="false">
-    </div>
+        <div id="g_id_onload"
+            data-client_id="27619385576-o8elfb66trj3e5v2acahnjm0jiqacg5n.apps.googleusercontent.com"
+            data-login_uri="https://www.mapotechnology.com/secure/login"
+            data-context="signin"
+            data-ux_mode="redirect"
+            <?= $redirectURI ? 'data-state="' . $redirectURI . '"' : '' ?>
+            data-callback="loginWithGoogle"
+            data-auto_prompt="false">
+        </div>
 
-    <script defer async src="https://accounts.google.com/gsi/client"></script>
-    <?}?>
-    <script>const ipaddr = '<?=$_SERVER['REMOTE_ADDR']?>'<?=$gtoken != null ? ", gtoken = '$gtoken'" : ''?>;</script>
+        <script defer async src="https://accounts.google.com/gsi/client"></script>
+    <? } ?>
+    <script>
+        const ipaddr = '<?= $_SERVER['REMOTE_ADDR'] ?>'
+        <?= $gtoken != null ? ", gtoken = '$gtoken'" : '' ?>;
+    </script>
     <script src="https://www.mapotechnology.com/src/js/auth.js"></script>
 </body>
 

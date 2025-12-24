@@ -1198,39 +1198,17 @@ newMarker.setLatLng(L.latLng(lat, lon));
 }
 });
 
-/* on popup save button *//*
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    pu.querySelector('#saveWaypoint').addEventListener('click', () => {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        const id = pu.querySelector('input[name=thisid]').value,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            wrap = document.querySelector('form #waypoint-' + id),
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            lat = pu.querySelector('input[name=coords1]').value,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            lon = pu.querySelector('input[name=coords2]').value,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            name = pu.querySelector('input[name=waypoint_name]').value,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            notes = pu.querySelector('input[name=waypoint_notes]').value,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            wyicon = pu.querySelector('select[name=waypoint_icon]'),
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            icon = wyicon.options[wyicon.selectedIndex].value;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        /* get values from popup and store them in hidden input fields *//*
-wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
-wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
-wrap.querySelector('input[name="waypoint[name][]"]').value = name;
-wrap.querySelector('input[name="waypoint[note][]"]').value = notes;
-wrap.querySelector('input[name="waypoint[icon][]"]').value = icon;
-
-map.closePopup();
-});
-
-/* on popup delete button *//*
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    pu.querySelector('#deleteWaypoint').addEventListener('click', () => {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        map.removeLayer(e.target);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        document.querySelector('form #waypoint-' + pu.querySelector('input[name=thisid]').value).remove();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            }).bindPopup(pc(markerCounter, e.latlng.lat, e.latlng.lng), {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                minWidth: 250,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                openedBefore: false
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            }).addTo(map).openPopup();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            /* create waypoint wrapper and add fields to it *//*
+/* on popup save button *//*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       /* get values from popup and store them in hidden input fields *//*
+                                    wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
+                                    wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
+                                    wrap.querySelector('input[name="waypoint[name][]"]').value = name;
+                                    wrap.querySelector('input[name="waypoint[note][]"]').value = notes;
+                                    wrap.querySelector('input[name="waypoint[icon][]"]').value = icon;
+                                    
+                                    map.closePopup();
+                                    });
+                                    
+                                    /* on popup delete button *//*
 const markerDataContainer = document.createElement('div');
 markerDataContainer.id = 'waypoint-' + markerCounter;
  
@@ -1244,6 +1222,32 @@ markerDataContainer.appendChild(createInput('icon'));
  
 document.querySelector('#waypoints').appendChild(markerDataContainer);
 });*/
+        }
+
+        if (pageName.includes('admin/organizations')) {
+            const start = document.querySelector('input[name="start_period"]'),
+                end = document.querySelector('input[name="end_period"]');
+
+            if (start) {
+                const now = new Date();
+                now.setMinutes(0, 0, 0);
+
+                start.addEventListener('input', () => {
+                    if (!start.value) return;
+
+                    const date = new Date(start.value),
+                        selected = new Date(start.value);
+
+                    date.setMonth(date.getMonth() + 1);
+
+                    const offset = date.getTimezoneOffset() * 60000;
+                    end.value = new Date(date - offset).toISOString().slice(0, 13) + ':00';
+
+                    selected.setMinutes(0, 0, 0);
+                    document.querySelector('input#yes').checked = selected > now ? false : true;
+                    document.querySelector('input#no').checked = selected > now ? true : false;
+                });
+            }
         }
 
         if (pageName == 'admin/wildfires') {

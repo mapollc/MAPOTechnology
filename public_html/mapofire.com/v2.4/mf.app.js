@@ -1654,7 +1654,7 @@ class ClickListener {
             content += `<div class="group"><h3 class="group-title">${categoryTitle}</h3><ul class="layers-list">`;
 
             // Loop through layers in each category
-            layers.layers[categoryId].forEach(layer => {
+            layers.layers[categoryId].filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
                 content += `<li class="layer" data-p="${layer.perms}" data-id="${layer.id}" title="${layer.name}">` +
                     `<div class="checkbox"><input type="checkbox" id="${layer.id}" class="layChkBx" data-action="toggle-layer">` +
                     `</div><div class="desc"><label for="${layer.id}">${layer.name}</label><span>${layer.desc}</span>${this.layerExtras(layer)}</div></li>`;
@@ -1677,7 +1677,7 @@ class ClickListener {
         impact.innerHTML = impactHeader + config.layersMenu;
         impact.querySelector('#a').innerHTML = 'Layers';
 
-        config.listOfLayers.forEach(layer => {
+        config.listOfLayers.filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
             const hasPermissions = settings.hasPermissions(layer.perms2),
                 isChecked = (layer.default && !settings.get('checkboxes')) || (settings.get('checkboxes') && settings.includes(layer.id)),
                 item = impact.querySelector('li.layer[data-id="' + layer.id + '"]'),

@@ -719,7 +719,7 @@ form {
 
 form .btn-group,
 form .btn {
-    margin-bottom: 0 !important;
+    margin: 1.5em 0 0 0 !important;
 }
 
 .req {
@@ -799,6 +799,12 @@ label {
 
 .search-results .result:hover {
     background-color: #e5e5e5;
+}
+
+.radio-group,
+.checkbox-group {
+    display: block;
+    width: 100%;
 }
 
 .radio,

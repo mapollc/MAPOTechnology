@@ -2,10 +2,15 @@ class Tools {
     constructor() {
         this.target = null;
         this.activeTool = null;
+
         this.filterControls = document.querySelector('.filter-controls .tools');
+        this.navLegend = document.querySelector('nav ul li#legend');
+
         this.defaultMyContent = impactHeader + '<div class="content"><div id="spinner" class="centered"></div></div>';
         this.markerIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="{{color}}" d="M128 252.6C128 148.4 214 64 320 64C426 64 512 148.4 512 252.6C512 371.9 391.8 514.9 341.6 569.4C329.8 582.2 310.1 582.2 298.3 569.4C248.1 514.9 127.9 371.9 127.9 252.6zM320 320C355.3 320 384 291.3 384 256C384 220.7 355.3 192 320 192C284.7 192 256 220.7 256 256C256 291.3 284.7 320 320 320z"/><ellipse style="fill:#ffffff;stroke:#ffffff" cx="320.212" cy="256.449" rx="64.157" ry="64.157"/></svg>';
+        this.defaultColor = '#FF5733';
         this.selectedColor = null;
+        this.storeName = 'mapofire.userContent';
 
         this.tools = [
             { name: 'measure', icon: { weight: 300, content: 'f545' } },
@@ -15,302 +20,30 @@ class Tools {
 
         this.measureGeojson = { type: 'FeatureCollection', features: [] };
         this.markerGeojson = { type: 'FeatureCollection', features: [] };
+        this.drawGeojson = { type: 'FeatureCollection', features: [] };
+        this.allFeatures = { type: 'FeatureCollection', features: [] }
 
+        this.drawCoords = [];
         this.overallDistance = 0;
         this.isMeasuring = false;
 
         this.measureClickListener = (e) => this.handleMeasureClick(e);
         this.markerClickListener = (e) => this.handleMarkerClick(e);
+        this.drawClickListener = (e) => this.handleDrawClick(e);
+        this.drawDoubleClickListener = (e) => this.handleDrawDone(e);
+        this.drawMouseMoveListener = (e) => this.handleDrawMove(e);
 
         this.measureSource = 'measure-geojson';
         this.markerSource = 'marker-geojson';
-
-        this.allFeatures = {
-            type: 'FeatureCollection',
-            features: []
-        }
+        this.drawSource = 'draw-source';
     }
 
-    use() {
-        // add tool options to a controls bar
-        this.tools.forEach(tool => {
-            const div = document.createElement('div');
-            div.classList.add('tool', `w${tool.icon.weight}`, tool.icon.content);
-            div.style.display = 'inline-flex';
-            div.setAttribute('title', ucwords(tool.name));
-            div.setAttribute('data-action', 'tools');
-            div.setAttribute('data-tool', tool.name);
-            this.filterControls.appendChild(div);
-        });
-
-        // add a 'my content' menu item to the nav menu
-        const myc = document.createElement('li');
-        myc.classList.add('ttip');
-        myc.id = 'my-content';
-        myc.setAttribute('data-action', 'back-my-content');
-        myc.setAttribute('data-tooltip', 'My Content');
-        myc.innerHTML = '<i class="fal fa-folder-open"></i><span>Content</span>';
-
-        document.querySelector('nav ul li#legend').after(myc);
-    }
-
-    clickListener(target) {
-        if (!target) return;
-
-        this.target = target;
-        const tool = target.dataset.tool;
-
-        if (this.activeTool === tool) {
-            this.end();
-            this.target.classList.remove('active');
+    ensureSource(id, data) {
+        if (!map.getSource(id)) {
+            map.addSource(id, { type: 'geojson', data });
         } else {
-            if (this.activeTool) this.end();
-            this.activeTool = tool;
-            this.target.classList.add('active');
-            this.start();
+            map.getSource(id).setData(data);
         }
-    }
-
-    start() {
-        if (this.activeTool === 'measure') this.startMeasure();
-        else if (this.activeTool === 'polygon') this.createPolygon();
-        else if (this.activeTool === 'marker') this.createMarker();
-    }
-
-    end() {
-        // Clean up measure tool
-        if (this.activeTool === 'measure' && this.isMeasuring) {
-            ['measure-points', 'measure-lines', 'measure-distance'].forEach(id => {
-                if (map.getLayer(id)) map.removeLayer(id);
-            });
-
-            if (map.getSource(this.measureSource)) map.removeSource(this.measureSource);
-
-            map.off('click', this.measureClickListener);
-
-            const d = document.querySelector('#distance');
-            if (d) d.remove();
-
-            this.measureGeojson.features = [];
-            this.overallDistance = 0;
-            this.isMeasuring = false;
-        }
-
-        // Clean up marker tool (listener only, layer stays)
-        if (this.activeTool === 'marker') {
-            map.off('click', this.markerClickListener);
-        }
-
-        this.activeTool = null;
-        map.getCanvas().style.cursor = 'auto';
-        if (this.target) this.target.classList.remove('active');
-    }
-
-    getDistance(segment) {
-        if (!segment.geometry || !segment.geometry.coordinates || segment.geometry.coordinates.length < 2) return 0;
-        const [coord1, coord2] = segment.geometry.coordinates;
-        return parseFloat(distance(coord1[1], coord1[0], coord2[1], coord2[0]));
-    }
-
-    // ---------------------- MEASURE ----------------------
-    startMeasure() {
-        this.isMeasuring = true;
-        this.measureGeojson.features = [];
-        this.overallDistance = 0;
-
-        if (!map.getSource(this.measureSource)) {
-            map.addSource(this.measureSource, { type: 'geojson', data: this.measureGeojson });
-        } else {
-            map.getSource(this.measureSource).setData(this.measureGeojson);
-        }
-
-        // Add measure layers
-        map.addLayer({
-            id: 'measure-points',
-            type: 'circle',
-            source: this.measureSource,
-            paint: {
-                'circle-radius': 5,
-                'circle-color': '#fff',
-                'circle-stroke-width': 2,
-                'circle-stroke-color': '#f97316'
-            },
-            filter: ['in', '$type', 'Point']
-        });
-
-        map.addLayer({
-            id: 'measure-lines',
-            type: 'line',
-            source: this.measureSource,
-            layout: { 'line-cap': 'round', 'line-join': 'round' },
-            paint: { 'line-color': '#444', 'line-width': 2, 'line-dasharray': [2, 2] },
-            filter: ['in', '$type', 'LineString']
-        }, 'measure-points');
-
-        map.addLayer({
-            id: 'measure-distance',
-            type: 'symbol',
-            source: this.measureSource,
-            paint: { 'text-color': '#eee', 'text-halo-color': '#111', 'text-halo-blur': 1, 'text-halo-width': 1 },
-            layout: {
-                'symbol-placement': 'line-center',
-                'symbol-spacing': 3000,
-                'text-font': config.fonts.roboto(),
-                'text-field': ['to-string', ['get', 'distance']],
-                'text-justify': 'auto',
-                'text-size': 14,
-                'text-max-width': 12,
-                'text-max-angle': 30,
-                'text-anchor': 'center',
-                'text-offset': [0, 0],
-                'text-letter-spacing': 0,
-                'text-rotation-alignment': 'map',
-                'text-keep-upright': true
-            },
-            filter: ['in', '$type', 'LineString']
-        });
-
-        map.on('click', this.measureClickListener);
-        map.getCanvas().style.cursor = 'crosshair';
-    }
-
-    handleMeasureClick(e) {
-        if (!this.measureGeojson) return;
-
-        const features = map.queryRenderedFeatures(e.point, { layers: ['measure-points'] });
-
-        // Keep only points
-        this.measureGeojson.features = this.measureGeojson.features.filter(f => f.geometry.type === 'Point');
-        this.overallDistance = 0;
-
-        if (features.length) {
-            const id = features[0].properties.id;
-            this.measureGeojson.features = this.measureGeojson.features.filter(p => p.properties.id !== id);
-        } else {
-            const point = {
-                type: 'Feature',
-                geometry: { type: 'Point', coordinates: [e.lngLat.lng, e.lngLat.lat] },
-                properties: { id: String(Date.now()) }
-            };
-            this.measureGeojson.features.push(point);
-        }
-
-        // Create segments & distances
-        const points = this.measureGeojson.features.filter(f => f.geometry.type === 'Point');
-        if (points.length > 1) {
-            for (let i = 1; i < points.length; i++) {
-                const segment = {
-                    type: 'Feature',
-                    geometry: { type: 'LineString', coordinates: [points[i - 1].geometry.coordinates, points[i].geometry.coordinates] },
-                    properties: {}
-                };
-                const dist = this.getDistance(segment);
-                segment.properties.distance = numberFormat(dist, 1) + ' mi.';
-                this.overallDistance += dist;
-                this.measureGeojson.features.push(segment);
-            }
-        }
-
-        // Update distance container
-        let d = document.querySelector('#distance');
-        if (!d) {
-            d = document.createElement('div');
-            d.id = 'distance';
-            document.body.appendChild(d);
-        }
-        d.innerHTML = `Distance: ${numberFormat(this.overallDistance, 1)} mi.`;
-
-        // Update map
-        map.getSource(this.measureSource).setData(this.measureGeojson);
-    }
-
-    async makeMarkerImage(color = null) {
-        const finalColor = color ?? this.selectedColor,
-            iconId = 'marker-icon-' + finalColor.replace('#', '');
-
-        async function loadSvgDataUri(uri) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = reject;
-                img.src = uri;
-            });
-        }
-
-        const iconSvg = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
-            this.markerIcon.replace('{{color}}', finalColor)
-        );
-        const image = await loadSvgDataUri(iconSvg);
-
-        if (map.hasImage(iconId)) {
-            map.updateImage(iconId, image);
-        } else {
-            map.addImage(iconId, image);
-        }
-    }
-
-    // ---------------------- MARKER ----------------------
-    async createMarker() {
-        this.doImpact().create('Create Waypoint');
-        this.createItemForm('marker');
-        this.doImpact().back();
-        this.markerGeojson.features = [];
-
-        localStorage.removeItem('mapofire.userContent');
-        await this.makeMarkerImage();
-
-        /*const image = await map.loadImage('https://maplibre.org/maplibre-gl-js/docs/assets/custom_marker.png');
-            if (!map.hasImage('custom-marker')) map.addImage('custom-marker', image.data);*/
-
-        if (!map.getSource(this.markerSource)) {
-            map.addSource(this.markerSource, { type: 'geojson', data: this.markerGeojson });
-        } else {
-            map.getSource(this.markerSource).setData(this.markerGeojson);
-        }
-
-        if (!map.getLayer('draw-marker')) {
-            map.addLayer({
-                id: 'draw-marker',
-                type: 'symbol',
-                source: this.markerSource,
-                layout: {
-                    'icon-image': 'marker-icon-FF5733',
-                    'icon-size': 0.25,
-                    'icon-allow-overlap': true
-                }
-            });
-        }
-
-        map.getCanvas().style.cursor = 'crosshair';
-        map.on('click', this.markerClickListener);
-    }
-
-    handleMarkerClick(e) {
-        if (!this.markerGeojson) return;
-
-        const point = {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [e.lngLat.lng, e.lngLat.lat] },
-            properties: { id: String(Date.now()) }
-        };
-        this.markerGeojson.features.push(point);
-
-        map.getSource(this.markerSource).setData(this.markerGeojson);
-
-        const form = impact.querySelector('#user-content-form');
-        form.querySelector('input[name="lat"]').value = e.lngLat.lat;
-        form.querySelector('input[name="lon"]').value = e.lngLat.lng;
-
-        // Deactivate marker tool but leave layer
-        this.activeTool = null;
-        if (this.target) this.target.classList.remove('active');
-        map.getCanvas().style.cursor = 'auto';
-        map.off('click', this.markerClickListener);
-    }
-
-    // ---------------------- POLYGON ----------------------
-    createPolygon() {
-        console.log('create polygon');
     }
 
     formatDate(time = new Date().getTime(), showTime = true) {
@@ -323,74 +56,607 @@ class Tools {
         return `${prettyDate}${showTime ? ` ${hr}:${min} ${afternoon ? 'PM' : 'AM'}` : ''}`;
     }
 
+    removeLayers(ids) {
+        ids.forEach(id => {
+            map.getLayer(id) && map.removeLayer(id);
+        });
+    }
+
+    use() {
+        const frag = document.createDocumentFragment();
+
+        // add tool options to a controls bar
+        this.tools.forEach(tool => {
+            const div = document.createElement('div');
+            div.className = `tool w${tool.icon.weight} ${tool.icon.content}`;
+            div.style.display = 'inline-flex';
+            div.title = ucwords(tool.name);
+            div.dataset.action = 'tools';
+            div.dataset.tool = tool.name;
+            frag.appendChild(div);
+        });
+
+        this.filterControls.appendChild(frag);
+
+        // add a 'my content' menu item to the nav menu
+        const myc = document.createElement('li');
+        myc.className = 'ttip';
+        myc.id = 'my-content';
+        myc.dataset.action = 'back-my-content';
+        myc.dataset.tooltip = 'My Content';
+        myc.innerHTML = '<i class="fal fa-folder-open"></i><span>Content</span>';
+
+        this.navLegend.after(myc);
+    }
+
+    clickListener(target) {
+        if (!target) return;
+
+        this.target = target;
+        const tool = target.dataset.tool;
+
+        if (this.activeTool === tool) {
+            this.end();
+            return;
+        }
+
+        if (this.activeTool) this.end();
+
+        this.activeTool = tool;
+        this.target.classList.add('active');
+        this.start();
+    }
+
+    start() {
+        if (this.activeTool === 'measure') return this.startMeasure();
+        if (this.activeTool === 'polygon') return this.createPolygon();
+        if (this.activeTool === 'marker') return this.createMarker();
+    }
+
+    end() {
+        if (this.activeTool === 'measure' && this.isMeasuring) {
+            this.removeLayers(['measure-points', 'measure-lines', 'measure-distance']);
+            map.getSource(this.measureSource) && map.removeSource(this.measureSource);
+            map.off('click', this.measureClickListener);
+
+            document.querySelector('#distance')?.remove();
+
+            this.measureGeojson.features.length = 0;
+            this.overallDistance = 0;
+            this.isMeasuring = false;
+        }
+
+        if (this.activeTool === 'marker') {
+            map.off('click', this.markerClickListener);
+        }
+
+        this.activeTool = null;
+        map.getCanvas().style.cursor = 'auto';
+        this.target?.classList.remove('active');
+    }
+
+    getDistance(segment) {
+        const c = segment.geometry?.coordinates;
+        if (!c || c.length < 2) return 0;
+        return +distance(c[0][1], c[0][0], c[1][1], c[1][0]);
+    }
+
+    getMeasurements(geojson) {
+        const type = geojson.geometry.type,
+            coords = geojson.geometry.coordinates,
+            data = {};
+
+        if (type == 'Point') {
+            data['elevation'] = map.queryTerrainElevation(coords) * 3.28084;
+        }
+
+        if (type == 'LineString') {
+            data['length'] = this.calculatePathLength(coords);
+            data['elevation'] = this.calculateElevations(coords);
+        }
+
+        if (type == 'Polygon') {
+            data['perimeter'] = this.calculatePathLength(coords[0]);
+            data['area'] = this.calculateArea(coords[0]);
+            data['elevation'] = {
+                perimeter: this.calculateElevations(coords[0])
+            };
+        }
+
+        return data;
+    }
+
+    calculateElevations(coords) {
+        const elevs = [];
+
+        for (let i = 0; i < coords.length; i++) {
+            elevs.push(map.queryTerrainElevation(coords[i]));
+        }
+
+        return {
+            min: Math.min.apply(null, elevs) * 3.28084,
+            mean: (elevs.reduce((a, b) => a + b, 0) / elevs.length) * 3.28084,
+            max: Math.max.apply(null, elevs) * 3.28084
+        }
+    }
+
+    calculatePathLength(coords) {
+        let dist = 0;
+        for (let i = 0; i < coords.length - 1; i++) {
+            dist += distance(coords[i][1], coords[i][0], coords[i + 1][1], coords[i + 1][0]);
+        }
+        return dist;
+    }
+
+    calculateArea(coords) {
+        let area = 0;
+        const R = 3958.8; 
+        if (coords.length > 2) {
+            for (let i = 0; i < coords.length - 1; i++) {
+                const p1 = coords[i], p2 = coords[i + 1];
+                area += (p2[0] - p1[0]) * (2 + Math.sin(p1[1] * Math.PI / 180) + Math.sin(p2[1] * Math.PI / 180));
+            }
+            area = Math.abs(area * R * R * Math.PI / 360);
+        }
+        return area
+    }
+
+    /* ---------------------- MEASURE ---------------------- */
+    startMeasure() {
+        this.isMeasuring = true;
+        this.measureGeojson.features.length = 0;
+        this.overallDistance = 0;
+
+        /* CHANGED: use helper */
+        this.ensureSource(this.measureSource, this.measureGeojson);
+
+        if (!map.getLayer('measure-points')) {
+            map.addLayer({
+                id: 'measure-points',
+                type: 'circle',
+                source: this.measureSource,
+                paint: {
+                    'circle-radius': 5,
+                    'circle-color': '#fff',
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#f97316'
+                },
+                filter: ['==', '$type', 'Point']
+            });
+        }
+
+        if (!map.getLayer('measure-lines')) {
+            map.addLayer({
+                id: 'measure-lines',
+                type: 'line',
+                source: this.measureSource,
+                layout: { 'line-cap': 'round', 'line-join': 'round' },
+                paint: { 'line-color': '#444', 'line-width': 2, 'line-dasharray': [2, 2] },
+                filter: ['==', '$type', 'LineString']
+            });
+        }
+
+        if (!map.getLayer('measure-distance')) {
+            map.addLayer({
+                id: 'measure-distance',
+                type: 'symbol',
+                source: this.measureSource,
+                layout: {
+                    'symbol-placement': 'line-center',
+                    'text-field': ['to-string', ['get', 'distance']],
+                    'text-size': 14,
+                    'text-font': config.fonts.roboto()
+                },
+                paint: {
+                    'text-color': '#eee',
+                    'text-halo-color': '#111',
+                    'text-halo-width': 1
+                },
+                filter: ['==', '$type', 'LineString']
+            });
+        }
+
+        map.on('click', this.measureClickListener);
+        map.getCanvas().style.cursor = 'crosshair';
+    }
+
+    handleMeasureClick(e) {
+        const src = this.measureGeojson;
+        src.features = src.features.filter(f => f.geometry.type === 'Point');
+        this.overallDistance = 0;
+
+        const hits = map.queryRenderedFeatures(e.point, { layers: ['measure-points'] });
+
+        if (hits.length) {
+            const id = hits[0].properties.id;
+            src.features = src.features.filter(p => p.properties.id !== id);
+        } else {
+            src.features.push({
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [e.lngLat.lng, e.lngLat.lat] },
+                properties: { id: String(Date.now()) }
+            });
+        }
+
+        const points = src.features.slice();
+
+        for (let i = 1; i < points.length; i++) {
+            const seg = {
+                type: 'Feature',
+                geometry: {
+                    type: 'LineString',
+                    coordinates: [
+                        points[i - 1].geometry.coordinates,
+                        points[i].geometry.coordinates
+                    ]
+                },
+                properties: {}
+            };
+
+            const d = this.getDistance(seg);
+            seg.properties.distance = numberFormat(d, 1) + ' mi.';
+            this.overallDistance += d;
+
+            src.features.push(seg);
+        }
+
+        let d = document.querySelector('#distance');
+
+        if (!d) {
+            d = document.createElement('div');
+            d.id = 'distance';
+            document.body.appendChild(d);
+        }
+
+        d.textContent = `Distance: ${numberFormat(this.overallDistance, 1)} mi.`;
+
+        map.getSource(this.measureSource).setData(src);
+    }
+
+    async makeMarkerImage(color = this.selectedColor) {
+        const iconId = 'marker-icon-' + color.replace('#', '');
+
+        const svg = 'data:image/svg+xml;charset=utf-8,' +
+            encodeURIComponent(this.markerIcon.replace('{{color}}', color));
+
+        const img = await new Promise((res, rej) => {
+            const i = new Image();
+            i.onload = () => res(i);
+            i.onerror = rej;
+            i.src = svg;
+        });
+
+        map.hasImage(iconId) ? map.updateImage(iconId, img) : map.addImage(iconId, img);
+    }
+
+    /* ---------------------- MARKER ---------------------- */
+    async createMarker() {
+        this.doImpact().create('Create Waypoint');
+        this.createItemForm('marker');
+        this.doImpact().back();
+
+        this.markerGeojson.features.length = 0;
+        //localStorage.removeItem(this.storeName);
+
+        this.selectedColor = this.defaultColor;
+        await this.makeMarkerImage();
+
+        this.ensureSource(this.markerSource, this.markerGeojson);
+
+        if (!map.getLayer('draw-marker')) {
+            map.addLayer({
+                id: 'draw-marker',
+                type: 'symbol',
+                source: this.markerSource,
+                layout: {
+                    'icon-image': ['concat', 'marker-icon-', ['slice', ['get', 'color'], 1, 7]],
+                    'icon-size': 0.25,
+                    'icon-anchor': 'bottom',
+                    'icon-allow-overlap': true
+                }
+            });
+        }
+
+        map.getCanvas().style.cursor = 'crosshair';
+        map.on('click', this.markerClickListener);
+    }
+
+    handleMarkerClick(e) {
+        this.markerGeojson.features.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [e.lngLat.lng, e.lngLat.lat] },
+            properties: { id: String(Date.now()), color: this.selectedColor ?? this.defaultColor }
+        });
+
+        map.getSource(this.markerSource).setData(this.markerGeojson);
+
+        const form = impact.querySelector('#user-content-form');
+        form.lat.value = e.lngLat.lat;
+        form.lon.value = e.lngLat.lng;
+
+        this.end();
+    }
+
+    createPolygon() {
+        this.doImpact().create('Create Track');
+        this.createItemForm('polygon');
+        this.doImpact().back();
+
+        this.drawCoords = [];
+        this.drawGeojson.features = [];
+        this.ensureSource(this.drawSource, this.drawGeojson);
+
+        const color = this.selectedColor ?? this.defaultColor;
+
+        // Line Layer (Outer boundary/path)
+        if (!map.getLayer('draw-line')) {
+            map.addLayer({
+                id: 'draw-line',
+                type: 'line',
+                source: this.drawSource,
+                layout: { 'line-cap': 'round', 'line-join': 'round' },
+                paint: {
+                    'line-color': ['coalesce', ['get', 'color'], color],
+                    'line-width': 2,
+                    'line-dasharray': [2, 2]
+                },
+                filter: ['in', '$type', 'LineString', 'Polygon']
+            });
+        }
+
+        // Fill Layer (Only visible if it's a Polygon)
+        if (!map.getLayer('draw-fill')) {
+            map.addLayer({
+                id: 'draw-fill',
+                type: 'fill',
+                source: this.drawSource,
+                paint: {
+                    'fill-color': ['coalesce', ['get', 'color'], color],
+                    'fill-opacity': 0.3
+                },
+                filter: ['==', ['geometry-type'], 'Polygon']
+            });
+        }
+
+        // Vertex Points
+        if (!map.getLayer('draw-pts')) {
+            map.addLayer({
+                id: 'draw-pts',
+                type: 'circle',
+                source: this.drawSource,
+                paint: {
+                    'circle-radius': 4,
+                    'circle-color': '#fff',
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': ['coalesce', ['get', 'color'], color]
+                },
+                filter: ['==', '$type', 'Point']
+            });
+        }
+
+        map.getCanvas().style.cursor = 'crosshair';
+        map.on('click', this.drawClickListener);
+        map.on('mousemove', this.drawMouseMoveListener);
+        map.on('dblclick', this.drawDoubleClickListener);
+        map.doubleClickZoom.disable();
+    }
+
+    handleDrawClick(e) {
+        const coord = [e.lngLat.lng, e.lngLat.lat];
+
+        if (this.drawCoords.length > 2) {
+            const startPos = map.project(this.drawCoords[0]);
+            const clickPos = e.point;
+            const dx = startPos.x - clickPos.x;
+            const dy = startPos.y - clickPos.y;
+
+            // If within 15px of start, finish immediately
+            if (Math.sqrt(dx * dx + dy * dy) < 15) {
+                return this.handleDrawDone(null, true); // Added 'true' flag
+            }
+        }
+
+        const last = this.drawCoords[this.drawCoords.length - 1];
+        if (last && last[0] === coord[0] && last[1] === coord[1]) return;
+
+        this.drawCoords.push(coord);
+        this.updateDrawSource();
+
+        // UI Title logic
+        const titleEl = impact.querySelector('#a');
+        const newTitle = `Create ${this.drawCoords.length > 2 ? 'Area' : 'Track'}`;
+        if (titleEl && titleEl.innerText !== newTitle) titleEl.innerHTML = newTitle;
+    }
+
+    handleDrawMove(e) {
+        if (this.drawCoords.length === 0) return;
+
+        let tempCoord = [e.lngLat.lng, e.lngLat.lat];
+
+        if (this.drawCoords.length > 2) {
+            const startPos = map.project(this.drawCoords[0]);
+            const dist = Math.sqrt(Math.pow(startPos.x - e.point.x, 2) + Math.pow(startPos.y - e.point.y, 2));
+
+            if (dist < 15) {
+                tempCoord = this.drawCoords[0]; // Snap the dashed line to start
+                map.getCanvas().style.cursor = 'pointer';
+            } else {
+                map.getCanvas().style.cursor = 'crosshair';
+            }
+        }
+
+        this.updateDrawSource(tempCoord);
+    }
+
+    handleDrawDone(e, isSnap = false) {
+        if (!isSnap) {
+            this.drawCoords = this.drawCoords.slice(0, -2);
+        }
+
+        if (this.drawCoords.length < 2) return this.cleanupDraw();
+
+        const isPolygon = this.drawCoords.length > 2,
+            type = isPolygon ? 'Polygon' : 'LineString',
+            finalCoords = isPolygon ? [[...this.drawCoords, this.drawCoords[0]]] : this.drawCoords;
+
+        const feature = {
+            type: 'Feature',
+            geometry: {
+                type,
+                coordinates: finalCoords
+            },
+            properties: {
+                id: String(Date.now()),
+                color: this.selectedColor,
+            }
+        };
+
+        // Switch view to Polygon mode and clear temp listeners
+        this.drawGeojson.features = [feature];
+        map.getSource(this.drawSource).setData(this.drawGeojson);
+        this.cleanupDraw();
+
+        const form = impact.querySelector('#user-content-form');
+
+        form.querySelector('input[name="type"]').value = type.toLowerCase();
+        form.querySelector('input[name="coords"]').value = JSON.stringify(this.drawGeojson.features[0].geometry.coordinates);
+    }
+
+    updateDrawSource(tempCoord = null) {
+        const currentColor = this.selectedColor ?? this.defaultColor;
+        const feats = [];
+
+        // Permanent vertices
+        this.drawCoords.forEach(c => {
+            feats.push({
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: c },
+                properties: { color: currentColor }
+            });
+        });
+
+        // Line preview (includes the moving mouse coordinate)
+        if (this.drawCoords.length > 0) {
+            const lineCoords = tempCoord ? [...this.drawCoords, tempCoord] : this.drawCoords;
+
+            if (lineCoords.length > 1) {
+                feats.push({
+                    type: 'Feature',
+                    geometry: { type: 'LineString', coordinates: lineCoords },
+                    properties: { color: currentColor }
+                });
+            }
+        }
+
+        this.drawGeojson.features = feats;
+        map.getSource(this.drawSource).setData(this.drawGeojson);
+    }
+
+    cleanupDraw() {
+        map.off('click', this.drawClickListener);
+        map.off('dblclick', this.drawDoubleClickListener);
+        map.off('mousemove', this.drawMouseMoveListener);
+
+        map.doubleClickZoom.enable();
+        map.getCanvas().style.cursor = 'auto';
+    }
+
     createItemForm(type, edit = false) {
-        let colors = '';
-        const date = new Date(),
-            prettyDT = this.formatDate(),
-            colorOptions = [
-                "#FF5733", // orange-red
-                "#33B5FF", // sky blue
-                "#28A745", // green
-                "#FFC107", // amber
-                "#9B59B6", // purple
-                "#E91E63", // pink
-                "#795548", // cyan
-                "#2C3E50"  // dark blue-gray
-            ];
+        const date = new Date();
+        const prettyDT = this.formatDate();
+        const container = impact.querySelector('.content');
+
+        const colorOptions = [
+            this.defaultColor, // orange-red
+            "#33B5FF", // sky blue
+            "#28A745", // green
+            "#FFC107", // amber
+            "#9B59B6", // purple
+            "#E91E63", // pink
+            "#795548", // brown
+            "#2C3E50"  // dark blue-gray
+        ];
 
         this.selectedColor = colorOptions[0];
 
-        for (let i = 0; i < colorOptions.length; i++) {
-            colors += `<div class="cmarker${i == 0 ? ' select' : ''}" data-color="${colorOptions[i]}" style="background-color:${colorOptions[i]}"></div>`;
-        }
+        const colorsHtml = colorOptions.map((color, i) => `
+            <div class="cmarker${i === 0 ? ' select' : ''}"
+                 data-color="${color}"
+                 style="background-color:${color}">
+            </div>
+        `).join('');
 
-        const form = `<form action="" id="user-content-form" method="post">
+        const formHtml = `<form id="user-content-form" method="post" autocomplete="off">
             <input type="hidden" name="type" value="${type}">
             <input type="hidden" name="id" value="${date.getTime()}">
             <input type="hidden" name="created" value="${Math.round(date.getTime() / 1000)}">
-            <input type="hidden" name="lat" value="">
-            <input type="hidden" name="lon" value="">
+            ${type == 'marker' ? '<input type="hidden" name="lat"><input type="hidden" name="lon">' : '<input type="hidden" name="coords" value="">'}
             <input type="hidden" name="color" value="${this.selectedColor}">
 
             <div class="field">
-                <label for="waypoint_name">${type == 'marker' ? 'Waypoint' : ucfirst(type)} Name</label>
-                <div><input type="text" id="name" name="name" value="${prettyDT}"><span class="fat fa-xmark"></span></div>
+                <label for="item-name">${type === 'marker' ? 'Waypoint' : (type === 'polygon' ? 'Area' : 'Track')} Name</label>
+                <div>
+                    <input type="text" id="item-name" name="name" value="${prettyDT}" autocomplete="off">
+                    <span class="fat fa-xmark"></span>
+                </div>
             </div>
 
             <div class="field">
-                <label for="notes">${type == 'marker' ? 'Waypoint' : ucfirst(type)} Notes</label>
-                <div><textarea id="notes" name="notes" style="min-height:125px" placeholder="Waypoint notes..."></textarea></div>
+                <label for="notes">${type === 'marker' ? 'Waypoint' : (type === 'polygon' ? 'Area' : 'Track')} Notes</label>
+                <div>
+                    <textarea id="notes" name="notes" style="min-height:125px" placeholder="Waypoint notes..."></textarea>
+                </div>
             </div>
 
-            <div id="colors">${colors}</div>
+            <div id="colors">${colorsHtml}</div>
 
             <div class="btn-group centered" style="width:100%">
                 <input type="submit" class="btn btn-green btn-large" style="width:100%" value="Save">
+                <input type="button" data-method="${edit ? 'edit' : 'create'}" id="delete-item" class="btn btn-gray btn-large" style="width:100%" value="Delete">
                 <div id="spinner" style="display:none"></div>
             </div>
         </form>`;
 
-        impact.querySelector('.content').innerHTML = form;
+        container.innerHTML = formHtml;
 
-        const ucf = impact.querySelector('#user-content-form'),
-            colorPicker = impact.querySelectorAll('#colors .cmarker');
+        const form = container.querySelector('#user-content-form');
+        const colorMarkers = form.querySelectorAll('#colors .cmarker');
+        const colorInput = form.querySelector('input[name="color"]');
 
-        // change GIS item color
-        colorPicker.forEach(c => {
-            c.addEventListener('click', async (e) => {
-                colorPicker.forEach(i => {
-                    i.classList.remove('select');
-                });
+        const updateColorSelection = async (marker) => {
+            colorMarkers.forEach(m => m.classList.remove('select'));
+            marker.classList.add('select');
 
-                this.selectedColor = e.target.dataset.color;
-                ucf.querySelector('input[name="color"]').value = this.selectedColor;
-                e.target.classList.add('select');
-                await this.makeMarkerImage();
-            });
+            this.selectedColor = marker.dataset.color;
+            colorInput.value = this.selectedColor;
+
+            await this.makeMarkerImage();
+        };
+
+        colorMarkers.forEach(marker => {
+            marker.addEventListener('click', () => updateColorSelection(marker));
         });
 
-        // save item to server
-        this.saveFeature(ucf, type, edit);
+        // save the feature
+        this.saveFeature(form, type, edit);
+
+        // delete the feature
+        form.querySelector('#delete-item').addEventListener('click', async (e) => {
+            const method = e.target.dataset.method;
+
+            if (method == 'edit') {
+                const objectID = form.querySelector('input[name="objectID"]').value,
+                    id = form.querySelector('input[name="id"]').value;
+
+                this.deleteUserFeature(objectID, id);
+            } else {
+                this.markerGeojson.features = [];
+                this.ensureSource(this.markerSource, this.markerGeojson);
+                this.selectedColor = null;
+            }
+
+            this.myContent();
+        });
     }
 
     saveFeature(ucf, type, edit) {
@@ -411,12 +677,16 @@ class Tools {
             const fields = JSON.stringify(Object.fromEntries(data.entries()));
 
             try {
-                const save = await api(config.apiURL + 'userContent/' + (edit ? 'update' : 'create'), [['token', settings.getUser().token()], ['data', encodeURIComponent(fields)]]);
+                const save = await api(config.apiURL + 'userContent/' + (edit ? 'update' : 'create'), [
+                    ['token', settings.getUser().token()],
+                    ['data', encodeURIComponent(fields)]
+                ]);
 
                 if (save && save.response == 'success') {
                     notify('success', `Your ${type == 'marker' ? 'waypoint' : type} was successfully saved.`);
 
-                    if (edit) this.myContent();
+                    //if (edit) localStorage.removeItem(this.storeName);
+                    this.myContent();
                 } else {
                     if (!edit) reset();
                     notify('error', `Your ${type == 'marker' ? 'waypoint' : type} was unable to be saved.`);
@@ -470,21 +740,24 @@ class Tools {
             features: []
         };
 
-        const store = localStorage.getItem('mapofire.userContent');
+        //const store = localStorage.getItem(this.storeName);
         const addedColors = {};
 
-        if (store == null) {
+        //if (store == null) {
             gis = await api(config.apiURL + 'userContent/list', [['token', settings.getUser().token()]]);
 
             // user has no saved GIS features
-            if (!gis || !gis.features || gis.features.length == 0) {
-                console.info('No saved GIS features');
-                // TODO: add a message to the my content impact modal
-            } else {
-                localStorage.setItem('mapofire.userContent', JSON.stringify(gis));
+            if (gis.features && gis.features.length > 0) {
+                //localStorage.setItem(this.storeName, JSON.stringify(gis));
             }
-        } else {
-            gis = JSON.parse(store); console.log(gis);
+        /*} else {
+            gis = JSON.parse(store);
+        }*/
+
+        // user has no saved GIS features
+        if (!gis || !gis.features || gis.features.length == 0) {
+            impact.querySelector('.content').innerHTML = '<p>You currently don\'t have any saved items right now.</p>'
+            return;
         }
 
         impact.querySelector('.content').innerHTML = '<ul class="user-content"></ul>';
@@ -500,10 +773,13 @@ class Tools {
                 color = geojson.properties.color,
                 created = feat.created,
                 modified = feat.modified ?? 0,
-                mod = new Date().getTime() / 1000 - modified > 43200 ? this.formatDate(modified * 1000, false) : timeAgo(modified).replace('Just', 'just');
+                mod = new Date().getTime() / 1000 - modified > 43200 ? this.formatDate(modified * 1000, false) : timeAgo(modified).replace('Just', 'just'),
+                measurements = this.getMeasurements(geojson);
 
             // add all features to global json array
             this.allFeatures.features.push(geojson);
+
+            console.log(measurements);
 
             if (feat.type === 'marker' && !addedColors[color]) {
                 await this.makeMarkerImage(color);
@@ -511,14 +787,14 @@ class Tools {
             }
 
             const item = document.createElement('li'),
-                ic = feat.type == 'marker' ? 'location-dot' : 'xmark';
+                ic = feat.type == 'marker' ? 'location-dot' : 'draw-polygon';
 
             // set attributes and html for each li element
-            item.setAttribute('data-id', objectID);
+            item.dataset.id = objectID;
             item.setAttribute('data-local-id', geojson.properties.id);
-            item.setAttribute('data-type', feat.type);
-            item.setAttribute('data-color', color);
-            item.setAttribute('title', `${name} (${type})`);
+            item.dataset.type = feat.type;
+            item.dataset.color = color;
+            item.title = `${name} (${type})`;
             item.innerHTML = `<div class="meta"><div class="icon fas fa-${ic}" style="background-color:${color}"></div>
                 <div class="text">
                     <h2>${name}</h2>
@@ -540,17 +816,16 @@ class Tools {
 
                 if (geom.type === 'Point') {
                     const [lng, lat] = geom.coordinates,
-                        point = map.project([lng, lat]),
+                        mapEl = map.getContainer(),
+                        mapWidth = mapEl.offsetWidth,
                         impactWidth = impact.offsetWidth,
-                        offsetPoint = {
-                            x: point.x - impactWidth / 2,
-                            y: point.y
-                        },
-                        offsetLngLat = map.unproject([offsetPoint.x, offsetPoint.y]);
+                        visibleWidth = mapWidth - impactWidth,
+                        offsetX = (visibleWidth / 2) - (mapWidth / 2);
 
                     map.flyTo({
-                        center: offsetLngLat,
+                        center: [lng, lat],
                         zoom: 12,
+                        offset: [-offsetX, 0],
                         duration: 1200
                     });
                 } else if (geom.type === 'LineString') {
@@ -596,14 +871,7 @@ class Tools {
             impact.querySelector('.user-content').appendChild(item);
         }
 
-        if (!map.getSource('user-features')) {
-            map.addSource('user-features', {
-                type: 'geojson',
-                data: this.allFeatures
-            });
-        } else {
-            map.getSource('user-features').setData(this.allFeatures);
-        }
+        this.ensureSource('user-features', this.allFeatures);
 
         if (!map.getLayer('user-features-markers')) {
             map.addLayer({
@@ -613,6 +881,7 @@ class Tools {
                 layout: {
                     'icon-image': ['concat', 'marker-icon-', ['slice', ['get', 'color'], 1, 7]],
                     'icon-size': 0.25,
+                    'icon-anchor': 'bottom',
                     'icon-allow-overlap': true
                 },
                 filter: ['==', ['geometry-type'], 'Point']
@@ -626,6 +895,52 @@ class Tools {
                 map.getCanvas().style.cursor = 'auto';
             });
         }
+
+        if (!map.getLayer('user-features-lines')) {
+            map.addLayer({
+                id: 'user-features-lines',
+                type: 'line',
+                source: 'user-features',
+                layout: { 'line-cap': 'round', 'line-join': 'round' },
+                paint: {
+                    'line-color': ['coalesce', ['get', 'color'], this.defaultColor],
+                    'line-width': 3
+                },
+                filter: ['any', 
+                    ['==', '$type', 'LineString'], 
+                    ['==', '$type', 'Polygon']
+                ]
+            });
+
+            map.on('mouseenter', 'user-features-lines', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'user-features-lines', () => {
+                map.getCanvas().style.cursor = 'auto';
+            });
+        }
+
+        if (!map.getLayer('user-features-polygon-fill')) {
+            map.addLayer({
+                id: 'user-features-polygon-fill',
+                type: 'fill',
+                source: 'user-features',
+                paint: {
+                    'fill-color': ['coalesce', ['get', 'color'], this.defaultColor],
+                    'fill-opacity': 0.25
+                },
+                filter: ['==', ['geometry-type'], 'Polygon']
+            });
+
+            map.on('mouseenter', 'user-features-polygon-fill', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'user-features-polygon-fill', () => {
+                map.getCanvas().style.cursor = 'auto';
+            });
+        }
     }
 
     editUserFeature(attrs) {
@@ -635,7 +950,7 @@ class Tools {
             attributes[attr.name] = attr.value;
         }
 
-        this.doImpact().setTitle('Edit ' + (attributes['data-type'] == 'marker' ? 'Waypoint' : ucfirst(attributes['data-type'])));
+        this.doImpact().setTitle('Edit ' + (attributes['data-type'] == 'marker' ? 'Waypoint' : (attributes['data-type'] == 'polygon' ? 'Area' : 'Track')));
         this.doImpact().back();
         this.createItemForm(attributes['data-type'], true);
 
@@ -656,8 +971,13 @@ class Tools {
         ucf.querySelector('input[name="type"]').value = attributes['data-type'];
         ucf.querySelector('input[name="id"]').value = attributes['data-local-id'];
         ucf.querySelector('input[name="color"]').value = attributes['data-color'];
-        ucf.querySelector('input[name="lat"]').value = thisFeature[0].geometry.coordinates[1];
-        ucf.querySelector('input[name="lon"]').value = thisFeature[0].geometry.coordinates[0];
+
+        if (attributes['data-type'] == 'marker') {
+            ucf.querySelector('input[name="lat"]').value = thisFeature[0].geometry.coordinates[1];
+            ucf.querySelector('input[name="lon"]').value = thisFeature[0].geometry.coordinates[0];
+        } else {
+            ucf.querySelector('input[name="coords"]').value = JSON.stringify(thisFeature[0].geometry.coordinates);
+        }
 
         ucf.querySelectorAll('#colors .cmarker').forEach(async (c) => {
             if (c.dataset.color == attributes['data-color']) {
@@ -695,7 +1015,20 @@ class Tools {
                         map.getSource('user-features').setData(this.allFeatures);
                     }
 
-                    item.remove();
+                    if (item) item.remove();
+
+                    /*if (localStorage.getItem(this.storeName)) {
+                        const ls = JSON.parse(localStorage.getItem(this.storeName));
+
+                        if (ls.features && ls.features.length > 0) {
+                            const newF = ls.features.filter(f => String(f.localID) !== String(id));
+
+                            localStorage.setItem(this.storeName, JSON.stringify({ features: newF }));
+                        } else {
+                            localStorage.removeItem(this.storeName);
+                        }
+                    }*/
+
                     notify('success', 'Your item was successfully deleted.');
                 } else {
                     notify('error', 'We were unable to delete this item. Try again later.');

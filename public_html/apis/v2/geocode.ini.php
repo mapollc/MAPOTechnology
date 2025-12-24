@@ -109,7 +109,7 @@ if ($method == 'bbox') {
         $a2 = round($c[0] + 0.5, 1);
         $b1 = round($c[1] + 0.5, 1);
         $b2 = round($c[1] - 0.5, 1);
-    
+
         $sql = "SELECT city, state_prefix AS state, state_name, zip_code, population, lat, lon, county FROM cities WHERE (CAST(lat AS float) >= '$a1' AND CAST(lat AS float) <= '$a2') AND (CAST(lon as float) <= '$b1' AND CAST(lon as float) >= '$b2')";
         $result = mysqli_query($con, $sql);
         while ($row = mysqli_fetch_assoc($result)) {
@@ -121,7 +121,7 @@ if ($method == 'bbox') {
             $location[] = $row;
             $dist[] = distance($c[0], $c[1], $row['lat'], $row['lon']);
         }
-    
+
         if ($dist) {
             asort($dist);
         }
@@ -135,6 +135,16 @@ if ($method == 'bbox') {
     } else {
         // return the nearest city to the lat/lon
         $g = json_decode(file_get_contents('../cron/timezones.json'))->features;
-        $returnJson = array('geocode' => array('near' => getLocation2($con, $coords, $_REQUEST['full'] ? true : false), 'state' => getState($coords), 'timezone' => getTimezone($coords, $con)));
+        
+        $arr = [
+            'geocode' => [
+                'near' => getLocation2($con, $coords, $_REQUEST['full'] ? true : false),
+                'county' => getCounty($con, $coords),
+                'state' => getState($coords),
+                'timezone' => getTimezone($coords, $con)
+            ]
+        ];
+
+        $returnJson = $arr;
     }
 }

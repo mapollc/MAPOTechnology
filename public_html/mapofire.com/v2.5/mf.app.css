@@ -173,11 +173,11 @@ nav .nav-wrapper {
     display: flex;
     flex-direction: column;
     height: inherit;
+    padding: var(--spacing) 0;
 }
 
 nav .nav-wrapper .logo {
     display: flex;
-    min-height: 77px;
     align-items: center;
     justify-content: center;
 }
@@ -199,8 +199,8 @@ nav ul {
     flex-direction: column;
     gap: var(--spacing);
     list-style: none;
-    margin: 0;
-    padding: var(--spacing);
+    margin: calc(var(--spacing) * 1.5) 0;
+    padding: 0 var(--spacing);
 }
 
 nav ul li {
@@ -267,7 +267,7 @@ nav.hide .nav-wrapper .logo img {
     display: none;
     flex: 0;
     width: 100%;
-    padding: 1.5em 0;
+    padding: var(--spacing) 0 var(--half-spacing);
     justify-content: center;
     color: #fff;
     cursor: pointer;
@@ -288,15 +288,15 @@ nav.hide #close-navbar {
 
 .notify {
     position: absolute;
-    top: -9px;
-    right: 3px;
-    width: 20px;
-    height: 20px;
-    padding: 3px;
     display: inline-flex;
+    top: -8px;
+    right: 5px;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    width: 18px;
+    height: 18px;
+    padding: 2px;
+    font-size: 11px;
     color: #fff;
     line-height: 0;
     text-align: center;

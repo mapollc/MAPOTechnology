@@ -97,6 +97,28 @@ if ($method == 'create' || $method == 'update') {
                 'created' => intval($created)
             ]
         ];
+    } else {
+        $coords = $data['coords'];
+
+        if (empty($coords)) {
+            $returnJson = errorCodes(3, 'An invalid geometry was provided or none at all');
+        }
+
+        $feature = [
+            'id' => intval($id),
+            'type' => 'Feature',
+            'geometry' => [
+                'type' => $type == 'linestring' ? 'LineString' : 'Polygon',
+                'coordinates' => json_decode($coords)
+            ],
+            'properties' => [
+                'id' => intval($id),
+                'name' => $name,
+                'notes' => $notes,
+                'color' => $color,
+                'created' => intval($created)
+            ]
+        ];
     }
 
     if ($method == 'update') {

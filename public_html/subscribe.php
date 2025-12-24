@@ -1,6 +1,6 @@
 <?
 ini_set('display_errors', 0);
-error_reporting(E_PARSE && E_ERROR);
+error_reporting(E_PARSE & E_ERROR);
 ini_set('session.cookie_domain', '.mapotechnology.com');
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);

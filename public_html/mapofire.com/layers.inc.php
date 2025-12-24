@@ -77,6 +77,15 @@ $lay = array(
             'perms2' => [],
             'default' => false,
             'app' => true
+        ],
+        [
+            'id' => 'firemed',
+            'name' => 'Fire/EMS/Medical',
+            'perms' => true,
+            'perms2' => ['PREMIUM'],
+            'default' => false,
+            'app' => false,
+            'testing' => true
         ]
     ],
     'wx' => [
@@ -169,13 +178,6 @@ $lay = array(
         ]
     ],
     'plan' => [
-        /*[
-            'id' => 'nfdrs',
-            'name' => 'Fire Danger',
-            'perms' => false, 'perms2' => [],
-            'default' => false,
-            'app' => true
-        ],*/
         [
             'id' => 'erc',
             'name' => 'Energy Release Component',
@@ -233,12 +235,30 @@ $lay = array(
             'app' => true
         ],
         [
+            'id' => 'wet',
+            'name' => 'Wildfire Exposure Type',
+            'perms' => true,
+            'perms2' => ['PRO'],
+            'default' => false,
+            'app' => false,
+            'testing' => true
+        ],
+        [
             'id' => 'drought',
             'name' => 'Drought Monitor',
             'perms' => true,
             'perms2' => ['PREMIUM', 'PRO'],
             'default' => false,
             'app' => true
+        ],
+        [
+            'id' => 'power',
+            'name' => 'Major Powerlines',
+            'perms' => true,
+            'perms2' => ['PRO'],
+            'default' => false,
+            'app' => false,
+            'testing' => true
         ],
         [
             'id' => 'fuels',
@@ -250,12 +270,6 @@ $lay = array(
         ]
     ],
     'gis' => [
-        /*[
-            'id' => 'countyBounds',
-            'name' => 'County Boundaries',
-            'perms' => false, 'perms2' => [],
-            'default' => false,
-        ],*/
         [
             'id' => 'nwsCWAs',
             'name' => 'NWS County Warning Areas',
@@ -388,7 +402,8 @@ $layerDesc = array(
         'See hotspots over the last 48-72 hours'
     ],
     'evac' => [
-        'See detailed mapping of evacuation areas in Oregon & California'
+        'See detailed mapping of evacuation areas in Oregon & California',
+        'Show fire departments, hospitals, and medical locations'
     ],
     'wx' => [
         'Overlay lightning strikes within the last hour',
@@ -397,7 +412,6 @@ $layerDesc = array(
         'View current weather alerts from the NWS',
         'Review current severe & fire outlooks from the SPC',
         'View observed and forecasted energy release component (ERC) values for fire danger',
-        /*'Read the technical fire weather forecast from the NWS',*/
         'See current weather obs at remote automatic weather stations (RAWS)',
         'See radar imagery from the last 2 hours',
         'Visualize various weather forecast models',
@@ -413,16 +427,16 @@ $layerDesc = array(
         'Overlay wildfire risk to homes model',
         'Overlay wildfire likelihood (burn probability) model',
         'Overlay wildfire supression difficulty model',
+        'Shows where direct wildfire or indirect sources threaten structures',
         'Overlay current drought conditions',
+        'Overlay major powerlines across the US',
         'Overlay fuel/vegatation LANDFIRE model',
     ],
     'gis' => [
-        //'Overlay counties boundaries',
         'Overlay NWS county warning areas',
         'Show USFS road network',
         'Show federal land ownership',
         'Overlay TRS boundaries',
-        //'Show USFS national forest & wilderness boundaries',
         'Show interagency dispatch center boundaries',
         'Show national Geographic Area Coordination Centers (GACCs)'
     ],

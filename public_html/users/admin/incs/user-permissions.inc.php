@@ -21,6 +21,36 @@ $userPermissions = array(
         'perm' => 'delete'
     ],
     [
+        'name' => 'Manage licensed organizations',
+        'category' => 'manage',
+        'perm' => 'org'
+    ],
+    [
+        'name' => 'Add new licensed organization',
+        'category' => 'orgs',
+        'perm' => 'add'
+    ],
+    [
+        'name' => 'Edit existing licensed organization',
+        'category' => 'orgs',
+        'perm' => 'edit'
+    ],
+    [
+        'name' => 'Manage or revoke users from an organization',
+        'category' => 'orgs',
+        'perm' => 'people'
+    ],
+    [
+        'name' => 'Suspend a licensed organization',
+        'category' => 'orgs',
+        'perm' => 'suspend'
+    ],
+    [
+        'name' => 'Remove a licensed organization',
+        'category' => 'org',
+        'perm' => 'delete'
+    ],
+    [
         'name' => 'Add new trails',
         'category' => 'trails',
         'perm' => 'add'

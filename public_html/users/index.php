@@ -3,9 +3,10 @@ ini_set('display_errors', 1);
 error_reporting(E_ERROR && E_PARSE);
 ini_set('session.cookie_domain', '.mapotechnology.com');
 
-header_remove('Cache-Control');
-header_remove('Expires');
-header_remove('Pragma');
+if (function_exists('opcache_invalidate')) {
+    opcache_invalidate($path, true);
+}
+
 header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
 header('Expires: ' . gmdate('D, d M Y H:i:s', strtotime('-1 hour')) . ' GMT');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -34,6 +35,7 @@ include_once '/home/mapo/public_html/subs.inc.php';
 require_once $baseRoot . '/vendor/autoload.php';
 
 use UAParser\Parser;
+
 $user_agent = Parser::create();
 
 require_once 'permissions.inc.php';
@@ -55,9 +57,10 @@ switch ($path) {
     case 'admin/dispatch':
         $pageTitle = 'Manage Dispatch Centers';
         break;
-    /*case 'admin/api-usage':
-        $pageTitle = 'API Usage';
-        break;*/
+    case 'myorg':
+    case 'myorg/invite':
+        $pageTitle = 'My Organization';
+        break;
     case 'admin/log':
         $pageTitle = 'Activity Log';
         break;
@@ -81,6 +84,9 @@ switch ($path) {
         break;
     case 'admin/trails':
         $pageTitle = 'Trails Management';
+        break;
+    case 'admin/organizations':
+        $pageTitle = 'License Organizations';
         break;
     case 'admin/avalanches':
         $pageTitle = 'Avalanche Accidents';
@@ -128,30 +134,30 @@ $lock = '<i class="far fa-lock"></i>';
     <meta name="theme-color" content="#ffc65c" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@200;400;500;600&display=swap">
     <link rel="stylesheet" href="https://www.mapotechnology.com/src/css/global.css">
-    <link rel="stylesheet" href="<?=$baseURL?>src/css/account.css">
+    <link rel="stylesheet" href="<?= $baseURL ?>src/css/account.css">
     <script async src="https://kit.fontawesome.com/a107124392.js" crossorigin="anonymous"></script>
-    <? if (in_array($pageFile, $leafletPages) || $method.$function == 'trailscreate' || $method.$function == 'trailsedit') { ?>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@<?=$versions['leaflet']?>/dist/leaflet.min.css">
+    <? if (in_array($pageFile, $leafletPages) || $method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet.min.css">
     <? } ?>
     <link rel="shortcut icon" href="https://www.mapotechnology.com/images/favicon.ico" type="image/x-icon" />
     <link rel="canonical" href="<?= substr($baseURL, 0, -1) . $_SERVER['REQUEST_URI'] ?>" />
 </head>
 
 <body>
-    <? if (!isset($_GET['ref']) && $_GET['ref'] != 'com.mapollc.mapofire') {?>
-    <header>
-        <div class="container">
-            <div class="row align-center space-between">
-                <div class="col">
-                    <a href="https://www.mapotechnology.com/account/home"><img src="https://www.mapotechnology.com/assets/images/mapo_logo.png" style="height:35px"></a>
-                </div>
-                <div class="col">
-                    <div id="menuIcon"><i class="far fa-bars"></i></div>
+    <? if (!isset($_GET['ref']) && $_GET['ref'] != 'com.mapollc.mapofire') { ?>
+        <header>
+            <div class="container">
+                <div class="row align-center space-between">
+                    <div class="col">
+                        <a href="https://www.mapotechnology.com/account/home"><img src="https://www.mapotechnology.com/assets/images/mapo_logo.png" style="height:35px"></a>
+                    </div>
+                    <div class="col">
+                        <div id="menuIcon"><i class="far fa-bars"></i></div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </header>
-    <? } else { 
+        </header>
+    <? } else {
         echo '<div style="display:block;clear:both;margin:0.5em 0"></div>';
     } ?>
 
@@ -159,31 +165,35 @@ $lock = '<i class="far fa-lock"></i>';
         <div class="sidebar-wrapper">
             <?/*<span id="close-sidebar"><i class="fat fa-xmark"></i></span>*/ ?>
             <ul class="nav">
-                <li><a href="<?=$linkURL?>home"><span>Home</span></a></li>
-                <li><a href="<?=$linkURL?>settings"><span>Account</span></a></li>
-                <? if($_SESSION['uid'] == 1 || $_SESSION['uid'] == 2172) {?>
-                <li><a href="<?=$linkURL?>billing"><span>Billing</span></a></li>
-                <?}
-                if ($permission->user()->add() || $permission->user()->edit()) { ?>
-                <li><a href="<?=$linkURL?>admin/people"><span>Manage Users</span><?=$lock?></a></li>
-                <?}
-                if ($permission->fire()->add() || $permission->fire()->edit()) {?>
-                <li><a href="<?=$linkURL?>admin/wildfires"><span>Wildfire Management</span><?=$lock?></a></li>
-                <?}
-                if ($permission->view()->reports() || $permission->manage()->reports()) {?>
-                <li><a href="<?=$linkURL?>admin/crowdsource"><span>Crowdsource Reports</span><?=$lock?></a></li>
-                <?}
-                if ($permission->manage()->dispatch()) {?>
-                <li><a href="<?=$linkURL?>admin/dispatch"><span>Dispatch Centers</span><?=$lock?></a></li>
-                <?}
-                if ($permission->view()->avys()) {?>
-                <li><a href="<?=$linkURL?>admin/avalanches"><span>Avalanche Accidents</span><?=$lock?></a></li>
-                <?}
-                if ($permission->trails()->add() || $permission->trails()->edit()->all() || $permission->trails()->edit()->own()) {?>
-                <li><a href="<?=$linkURL?>admin/trails"><span>Manage Trails</span></a></li>
-                <?}?>
-                <li><a href="<?=$linkURL?>mapofire"><span>Map of Fire Settings</span></a></li>
-                <li><a href="<?=$baseURL?>logout?<?=time()?>"><span>Logout</span></a></li>
+                <li><a href="<?= $linkURL ?>home"><span>Home</span></a></li>
+                <li><a href="<?= $linkURL ?>settings"><span>Account</span></a></li>
+                <? if ($_SESSION['org_admin']) { ?>
+                    <li><a href="myorg">My Organization</a></li>
+                <? } ?>
+                <li><a href="<?= $linkURL ?>billing"><span>Billing</span></a></li>
+                <? if ($permission->user()->add() || $permission->user()->edit()) { ?>
+                    <li><a href="<?= $linkURL ?>admin/people"><span>Manage Users</span><?= $lock ?></a></li>
+                <? }
+                if ($permission->orgs()->add() || $permission->orgs()->edit()) { ?>
+                    <li><a href="<?= $linkURL ?>admin/organizations"><span>Manage Licensed Orgs</span><?= $lock ?></a></li>
+                <? }
+                if ($permission->fire()->add() || $permission->fire()->edit()) { ?>
+                    <li><a href="<?= $linkURL ?>admin/wildfires"><span>Wildfire Management</span><?= $lock ?></a></li>
+                <? }
+                if ($permission->view()->reports() || $permission->manage()->reports()) { ?>
+                    <li><a href="<?= $linkURL ?>admin/crowdsource"><span>Crowdsource Reports</span><?= $lock ?></a></li>
+                <? }
+                if ($permission->manage()->dispatch()) { ?>
+                    <li><a href="<?= $linkURL ?>admin/dispatch"><span>Dispatch Centers</span><?= $lock ?></a></li>
+                <? }
+                if ($permission->view()->avys()) { ?>
+                    <li><a href="<?= $linkURL ?>admin/avalanches"><span>Avalanche Accidents</span><?= $lock ?></a></li>
+                <? }
+                if ($permission->trails()->add() || $permission->trails()->edit()->all() || $permission->trails()->edit()->own()) { ?>
+                    <li><a href="<?= $linkURL ?>admin/trails"><span>Manage Trails</span></a></li>
+                <? } ?>
+                <li><a href="<?= $linkURL ?>mapofire"><span>Map of Fire Settings</span></a></li>
+                <li><a href="<?= $baseURL ?>logout?<?= time() ?>"><span>Logout</span></a></li>
             </ul>
         </div>
     </div>
@@ -208,34 +218,37 @@ $lock = '<i class="far fa-lock"></i>';
         </div>
     </section>
 
-    <? if (!isset($_GET['ref']) && $_GET['ref'] != 'com.mapollc.mapofire') {?>
-    <footer>
-        <div class="container">
-            <div class="row space-between">
-                <div class="col">
-                    <p>&copy; <?=date('Y').' '.$companyName?></p>
-                </div>
-                <div class="col">
-                    <ul class="inline-menu">
-                        <li><a href="<?= $baseURL ?>about">About</a>
-                        <li><a href="<?= $baseURL ?>about/contact">Contact</a>
-                        <li><a href="<?= $baseURL ?>checkout?price_id=<?=$mapoSubscriptions['donate']['live']?>">Donate</a>
-                        <li><a href="<?= $baseURL ?>about/legal/terms">Terms</a>
-                        <li><a href="<?= $baseURL ?>about/legal/privacy">Privacy</a>
-                    </ul>
+    <? if (!isset($_GET['ref']) && $_GET['ref'] != 'com.mapollc.mapofire') { ?>
+        <footer>
+            <div class="container">
+                <div class="row space-between">
+                    <div class="col">
+                        <p>&copy; <?= date('Y') . ' ' . $companyName ?></p>
+                    </div>
+                    <div class="col">
+                        <ul class="inline-menu">
+                            <li><a href="<?= $baseURL ?>about">About</a>
+                            <li><a href="<?= $baseURL ?>about/contact">Contact</a>
+                            <li><a href="<?= $baseURL ?>checkout?price_id=<?= $mapoSubscriptions['donate']['live'] ?>">Donate</a>
+                            <li><a href="<?= $baseURL ?>about/legal/terms">Terms</a>
+                            <li><a href="<?= $baseURL ?>about/legal/privacy">Privacy</a>
+                        </ul>
+                    </div>
                 </div>
             </div>
-        </div>
-    </footer>
+        </footer>
     <? } ?>
 
     <div id="shadow"></div>
 
-    <script>let uid=<?= $_SESSION['uid'] ?>,userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;</script>
-    <? if (in_array($pageFile, $leafletPages) || $method.$function == 'trailscreate' || $method.$function == 'trailsedit') { ?>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@<?=$versions['leaflet']?>/dist/leaflet-src.min.js"></script>
+    <script>
+        let uid = <?= $_SESSION['uid'] ?>,
+            userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;
+    </script>
+    <? if (in_array($pageFile, $leafletPages) || $method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet-src.min.js"></script>
     <? } ?>
-    <script src="<?=$baseURL?>src/js/account.js?<?=time()?>"></script>
+    <script src="<?= $baseURL ?>src/js/account.js?<?= time() ?>"></script>
 
 </body>
 

@@ -7,7 +7,7 @@ self.onmessage = (e) => {
     if (wwa.onset) {
         valid = `from <b>${wwa.onset}</b> until <b>${wwa.expires}</b>`;
     } else {
-        valid = `until ${wwa.expires}`;
+        valid = `until <b>${wwa.expires}</b>`;
     }
 
     let content = `<div class="container">
@@ -23,7 +23,7 @@ self.onmessage = (e) => {
                     </div>
 
                     <p class="timestamps">
-                        Issued <b>${wwa.issued}</b> &middot; Valid ${valid} &middot; Issued by <a target="blank" href="https://weather.gov/${wwa.wfo.toLowerCase()}" title="Issued by the National Weather Service in ${wwa.office}">NWS ${wwa.office}</a>
+                        Issued <b>${wwa.issued}</b> &middot; Valid ${valid} &middot; Issued by <a target="blank" href="https://weather.gov/${wwa.wfo.toLowerCase()}" title="Issued by the National Weather Service in ${wwa.office}"><b>NWS ${wwa.office}</b></a>
                     </p>
                 </div>
             </header>

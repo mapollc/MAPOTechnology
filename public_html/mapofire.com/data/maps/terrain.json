@@ -14,7 +14,7 @@
             "url": "https://tiles.openfreemap.org/planet"
         }
     },
-    "sprite": "https://tiles.openfreemap.org/sprites/ofm_f384/ofm",
+    "sprite": "https://www.mapofire.com/data/maps/terrain-sprite",
     "glyphs": "https://www.mapofire.com/data/maps/fonts/{fontstack}/{range}.pbf",
     "layers": [
         {

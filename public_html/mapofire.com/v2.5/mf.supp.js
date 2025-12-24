@@ -500,7 +500,9 @@ class Weather {
                             ]
                         }
                     });
+                }
 
+                if (!map.getLayer('stns_text')) {
                     map.addLayer({
                         id: 'stns_text',
                         type: 'symbol',
@@ -656,6 +658,7 @@ class ChangeListener {
         map.setStyle(config.tiles[tile]);
 
         map.once('styledata', () => {
+            config.layersHandler.add3D();
             config.layersHandler.init();
             config.wildfire.getWildfires();
             config.wildfire.perimeters();
@@ -747,6 +750,7 @@ class ChangeListener {
         // toggle the layer on or off
         const id = this.target.id,
             checked = this.target.checked;
+
         toggleLayer({ id, checked });
     }
 
@@ -1002,20 +1006,6 @@ function initNDFDTimes() {
     return o;
 }
 
-function sfpTimes() {
-    let o = '';
-
-    for (let z = 0; z < 6; z++) {
-        let t = new Date(new Date().getTime() + (z * 24 * 60 * 60 * 1000)),
-            d = config.days[t.getUTCDay()] + ', ' + config.months[t.getUTCMonth()] + ' ' + t.getUTCDate(),
-            v = t.getUTCFullYear() + '-' + (t.getUTCMonth() < 10 ? '0' : '') + (t.getUTCMonth() + 1) + '-' + (t.getUTCDate() < 10 ? '0' : '') + t.getUTCDate() + 'T00:00:00.0Z';
-
-        o += '<option value="' + v + '">' + d + (z == 0 ? ' (Today)' : (z == 1 ? ' (Tomorrow)' : '')) + '</option>';
-    }
-
-    return o;
-}
-
 function setHeaders(title, urlPath, description) {
     const fullUrl = `${config.specificURL}${urlPath.replace(/incident\/|wildfire\//g, 'fires/')}${window.location.search}${window.location.hash}`;
     const pageTitle = `${title} | ${config.productName}`;
@@ -1133,9 +1123,9 @@ function newFiresReport() {
     let content = document.createElement('ul');
     content.classList.add('new_fires');
 
-    newFires.forEach((fire) => {
+    newFires.forEach(fire => {
         const li = document.createElement('li'),
-            name = fire.properties.name + (fire.properties.type == 'Wildfire' ? ' Fire' : ''),
+            name = fire.properties.name.replace(' Fire', '') + (fire.properties.type == 'Wildfire' ? ' Fire' : ''),
             near = fire.properties.near,
             acres = fire.properties.acres,
             size = conversion.sizeFormat(acres);
@@ -1166,7 +1156,7 @@ function createDataForm(title, content, center = false) {
 
 /* allow user to submit report to MAPO of a new wildfire incident */
 function doReport(data, lat, lon) {
-    let county = '';
+    /*let county = '';
     const e = map.project([lon, lat]),
         f = map.queryRenderedFeatures(([
             [e.x - 5, e.y - 5],
@@ -1179,7 +1169,7 @@ function doReport(data, lat, lon) {
                 county = g.properties.NAME;
             }
         });
-    }
+    }*/
 
     if (settings.user != null) {
         document.querySelector('#newReport input[name=authUser]').value = 1;
@@ -1188,7 +1178,7 @@ function doReport(data, lat, lon) {
 
     document.querySelector('#newReport input[name=lat]').value = lat;
     document.querySelector('#newReport input[name=lon]').value = lon;
-    document.querySelector('#newReport input[id=gc]').value = county ? county : 'Undetermined';
+    document.querySelector('#newReport input[id=gc]').value = data.geocode.county.county ? data.geocode.county.county : 'Undetermined';
     document.querySelector('#newReport input[id=gl]').value = data.geocode.near;
     document.querySelector('#newReport input[id=gs]').value = data.geocode.state ? stateLabels[data.geocode.state].v : 'Undetermined';
     document.querySelector('#newReport input[name=geolocation]').value = data.geocode.near;
@@ -1201,11 +1191,17 @@ function doReport(data, lat, lon) {
     config.disableClicks = false;
 }
 
-async function onRasterLayerClick(coords) {
-    const fuels = map.getStyle().layers.find(l => l.id === 'fuels'),
+async function onRasterLayerClick(e) {
+    const coords = e.lngLat,
+        fuels = map.getStyle().layers.find(l => l.id === 'fuels'),
         drought = map.getStyle().layers.find(l => l.id === 'drought'),
         bp = map.getStyle().layers.find(l => l.id === 'bp'),
-        rth = map.getStyle().layers.find(l => l.id === 'rth');
+        rth = map.getStyle().layers.find(l => l.id === 'rth'),
+        whp = map.getStyle().layers.find(l => l.id === 'whp'),
+        wildfireRiskLayer = [
+            { ref: rth, id: 'rth', key: 'rps', title: 'Wildfire Risk', label: 'Risk to Homes' },
+            { ref: bp, id: 'bp', key: 'bp', title: 'Wildfire Likelihood', label: 'Wildfire Likelihood' }
+        ].find(l => l.ref?.layout?.visibility === 'visible');
 
     if (fuels && fuels.layout.visibility.toString() == 'visible') {
         const popup = new Popup('', true).create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>'),
@@ -1292,57 +1288,53 @@ async function onRasterLayerClick(coords) {
             });
     }
 
-    if (rth && rth.layout.visibility.toString() == 'visible' && map.getZoom() >= 6) {
-        const popup = new Popup('Wildfire Risk', true).create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>'),
-            f = map.queryRenderedFeatures(map.project(coords)),
-            getRisk = async (fips) => {
-                const data = await api(config.apiURL + 'risk/' + fips);
+    if (wildfireRiskLayer && map.getZoom() >= 6) {
+        const { id, key, title, label } = wildfireRiskLayer,
+            popup = new Popup(title, true).create('<div id="spinner" class="sm" style="display:block;margin:0 auto"></div>');
 
-                a = Math.round(data.data.rps.state * 100),
-                    b = Math.round(data.data.rps.us * 100),
-                    state = 'On average, ' + data.name + ' has a ' + (a < 5 ? 'lower' : 'greater') + ' risk than ' + (a < 5 ? 'nearly all' : a + '% of') + ' other counties in ' + stateLabels[data.state].v,
-                    us = 'On average, ' + data.name + ' has a ' + (b < 5 ? 'lower' : 'greater') + ' risk than ' + (b < 5 ? 'nearly all' : b + '% of') + ' other counties in the US',
-                    content = `<div class="item"><div class="t">Location</div><div class="v">${data.name}, ${data.state}</div></div>
-                        <div class="item"><div class="t">Risk to Homes</div><div class="v">${data.data.rps.rank}</div></div>
-                        <div class="item"><div class="t">State Comparison</div><div class="v">${state}</div></div>
-                        <div class="item"><div class="t">US Comparison</div><div class="v">${us}</div></div>
-                        <a target="blank" href="https://wildfirerisk.org/explore/risk-to-homes/${fips.substring(0, 2)}/${fips}/">Learn More</a>`;
+        const [respRes, pcRes] = await Promise.allSettled([
+            api(`${config.apiURL}risk`, [['lat', coords.lat], ['lon', coords.lng]]),
+            new Convert().getRasterColor(e.lngLat, id)
+        ]);
 
-                popup.update(content);
+        const resp = respRes.status === 'fulfilled' ? respRes.value : null,
+            pc = pcRes.status === 'fulfilled' ? pcRes.value : null;
+
+        if (resp?.risk) {
+            const data = resp.risk, d = data.data[key];
+            const localVal = legend.items[id].find(i => i[2] === pc)?.[3] || 'Unknown';
+
+            // Short function to generate the comparison text
+            const getComp = (val, region) => {
+                const pct = Math.round(val * 100);
+                return `On average, ${data.name} has a ${pct < 5 ? 'lower' : 'greater'} risk than ${pct < 5 ? 'nearly all' : pct + '% of'} other counties in ${region}`;
             };
 
-        for (let i = 0; i < f.length; i++) {
-            if (f[i].layer.id == 'us_counties') {
-                getRisk(f[i].properties.FIPS);
-                break;
-            }
+            const content = `<div class="item"><div class="t">Location</div><div class="v">${data.name}, ${data.state}</div></div>
+                ${pc ? `<div class="item"><div class="t">${title === 'Wildfire Risk' ? 'Risk' : 'Likelihood'} at this Location</div><div class="v">${localVal}</div></div>` : ''}
+                <div class="item"><div class="t">${label} in this County</div><div class="v">${d.rank}</div></div>
+                <div class="item"><div class="t">State Comparison</div><div class="v">${getComp(d.state, stateLabels[data.state].v)}</div></div>
+                <div class="item"><div class="t">US Comparison</div><div class="v">${getComp(d.us, 'the US')}</div></div>
+                <a target="_blank" href="https://apps.wildfirerisk.org/explore/${title.toLowerCase().replace(/ /g, '-')}/${String(data.fips).slice(0, 2)}/${data.fips}/">Learn More</a>`;
+
+            popup.update(content);
+        } else {
+            popup.update(`<p>Unable to retrieve ${title.toLowerCase()} risk report.</p>`);
         }
     }
 
-    if (bp && bp.layout.visibility.toString() == 'visible' && map.getZoom() >= 6) {
-        const popup = new Popup('Wildfire Likelihood', true).create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>'),
-            f = map.queryRenderedFeatures(map.project(coords)),
-            getRisk = async (fips) => {
-                const data = await api(config.apiURL + 'risk/' + fips);
+    if (whp && whp.layout.visibility == 'visible' && map.getZoom() >= 6) {
+        const popup = new Popup('Wildfire Hazard Potential', true).create('<div id="spinner" class="sm" style="display:block;margin:0 auto"></div>');
 
-                a = Math.round(data.data.bp.state * 100),
-                    b = Math.round(data.data.bp.us * 100),
-                    state = 'On average, ' + data.name + ' has a ' + (a < 5 ? 'lower' : 'greater') + ' risk than ' + (a < 5 ? 'nearly all' : a + '% of') + ' other counties in ' + stateLabels[data.state].v,
-                    us = 'On average, ' + data.name + ' has a ' + (b < 5 ? 'lower' : 'greater') + ' risk than ' + (b < 5 ? 'nearly all' : b + '% of') + ' other counties in the US',
-                    content = `<div class="item"><div class="t">Location</div><div class="v">${data.name}, ${data.state}</div></div>
-                        <div class="item"><div class="t">Wildfire Likelihood</div><div class="v">${data.data.bp.rank}</div></div>
-                        <div class="item"><div class="t">State Comparison</div><div class="v">${state}</div></div>
-                        <div class="item"><div class="t">US Comparison</div><div class="v">${us}</div></div>
-                        <a target="blank" href="https://wildfirerisk.org/explore/wildfire-likelihood/${fips.substring(0, 2)}/${fips}/">Learn More</a>`;
+        const pc = await new Convert().getRasterColor(e.lngLat, 'whp'),
+            val = legend.items.whp.find(i => i[2] === pc);
 
-                popup.update(content);
-            };
+        if (val) {
+            const desc = `There is a ${val[3].toLowerCase()} potential for a wildfire that may be difficult to manage`;
 
-        for (let i = 0; i < f.length; i++) {
-            if (f[i].layer.id == 'us_counties') {
-                getRisk(f[i].properties.FIPS);
-                break;
-            }
+            popup.update(`<div class="item"><div class="t">Difficulty</div><div class="v">${desc}</div></div>`);
+        } else {
+            popup.update('<p>Unable to retrieve wildfire hazard potential data.</p>');
         }
     }
 }
@@ -1353,7 +1345,7 @@ async function onMapClick(e) {
         [e.point.x + 5, e.point.y + 5]
     ]);
 
-    onRasterLayerClick(e.lngLat);
+    onRasterLayerClick(e);
 
     if (features.length > 0) {
         const wfClass = new Wildfires();
@@ -1461,7 +1453,7 @@ async function onMapClick(e) {
                         zoom: 12,
                         duration: 1000
                     });
-                    
+
                     break;
                 }
             }
@@ -1538,6 +1530,19 @@ async function onMapClick(e) {
                 break;
             }
 
+            if (feature.source == 'firemed') {
+                const cityState = `${feature.properties.CITY}, ${feature.properties.STATE} ${feature.properties.ZIPCODE}`,
+                    type = feature.properties.type == 'hosp' ? 'Hospital' : (feature.properties.type == 'ems' ? 'Emergency Medical Service' : 'Fire Department');
+
+                new Popup('Emergency Response').create('<div class="item"><div class="t">Type</div><div class="v">' + type + '</div></div>' +
+                    '<div class="item"><div class="t">Name</div><div class="v">' + feature.properties.NAME + '</div></div>' +
+                    '<div class="item"><div class="t">Address</div><div class="v">' + feature.properties.ADDRESS + '</div></div>' +
+                    '<div class="item"><div class="t">City/State</div><div class="v">' + cityState + '</div></div>'
+                )
+
+                break;
+            }
+
             /* on air quality click */
             if (feature.source == 'airq') {
                 const w = new Weather(),
@@ -1597,36 +1602,65 @@ async function onMapClick(e) {
 
             /* ERC PSA click */
             if (feature.source == 'erc') {
+                /*const psaCode = feature.properties.PSANationalCode,
+                    data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/NFDRS_ERC_and_BI_Percentiles_and_Trends/FeatureServer/5/query', [
+                        ['where', 'PSANationalCode = \'' + psaCode + '\''],
+                        ['outFields', 'OBJECTID,PSANAME,avg_erc_fcast_percentile,avg_erc_fcast_trend,avg_erc_percentile,avg_erc_trend,update_date,update_time'],
+                        ['f', 'json']
+                    ]);
+
+                if (data.features && data.features.length > 0) {
+                    const prop = data.features[0].attributes,
+                        psa = prop.PSANAME,
+                        obs_pct = prop.avg_erc_percentile,
+                        obs_trend = prop.avg_erc_trend,
+                        fcst_pct = prop.avg_erc_fcast_percentile,
+                        fcst_trend = prop.avg_erc_fcast_trend,
+                        time = prop.update_time.substring(0, 2) + ':' + prop.update_time.substring(2, 4),
+                        dt = dateTime(new Date(`${prop.update_date} ${time} UTC`).getTime(), true),
+                        popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>' +
+                            '<p style="text-align:center;margin-top:0.5em;font-size:14px">Getting ERC data...</p>');
+
+                    const ercContent = `<div class="item"><div class="t">Area (PSA)</div><div class="v">${psa}</div></div>
+                        ${settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? `<div class="item"><div class="t">PSA Code</div><div class="v">${psaCode}</div></div>` : ``}
+                        <div class="item"><div class="t">ERC Percentile (Today)</div><div class="v">${obs_pct}%</div></div>
+                        <div class="item"><div class="t">ERC Trend (Today)</div><div class="v">${obs_trend}</div></div>
+                        <div class="item"><div class="t">ERC Percentile (Tomorrow)</div><div class="v">${fcst_pct}%</div></div>
+                        <div class="item"><div class="t">ERC Trend (Tomorrow)</div><div class="v">${fcst_trend}</div></div>
+                        <div class="item"><div class="t">Last Updated</div><div class="v">${dt}</div></div>`;
+
+                    popup.update(ercContent, 'Energy Release Component');
+                }*/
+
                 let p = feature.properties,
                     psa = p.PSANAME,
                     code = p.PSANationalCode,
-                    obs_pct = p.avg_ec_percentile,
-                    obs_trend = p.avg_ec_trend.replace('ase', 'asing'),
-                    fcst_pct = p.avg_ec_fcast_percentile,
-                    fcst_trend = p.avg_ec_fcast_trend.replace('ase', 'asing'),
+                    obs_pct = p.avg_erc_percentile,
+                    obs_trend = p.avg_erc_trend.replace('ase', 'asing'),
+                    fcst_pct = p.avg_erc_fcast_percentile,
+                    fcst_trend = p.avg_erc_fcast_trend.replace('ase', 'asing'),
                     chart = p.ERC_Chart_URL,
-                    dt = dateTime(new Date(p.nfdr_dt).getTime()),
+                    time = p.update_time.substring(0, 2) + ':' + p.update_time.substring(2, 4),
+                    dt = dateTime(new Date(`${p.update_date} ${time} UTC`).getTime(), true),
                     erc = '',
                     date = '',
                     popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>' +
                         '<p style="text-align:center;margin-top:0.5em;font-size:14px">Getting ERC data...</p>');;
 
                 if (settings.special().erc() == null || settings.special().erc() == 'obs') {
-                    date = dateTime(new Date().getTime()) + ' (Today)';
+                    date = 'Today (' + dateTime(new Date().getTime()) + ')';
                     erc = '<div class="item"><div class="t">ERC Percentile</div><div class="v">' + obs_pct + '%</div></div>' +
                         '<div class="item"><div class="t">ERC Trend</div><div class="v">' + obs_trend + '</div></div>';
                 } else {
-                    date = dateTime((new Date().getTime()) + 86400000) + ' (Tomorrow)';
+                    date = 'Tomorrow (' + dateTime((new Date().getTime()) + 86400000) + ')';
                     erc = '<div class="item"><div class="t">ERC Percentile</div><div class="v">' + fcst_pct + '%</div></div>' +
                         '<div class="item"><div class="t">ERC Trend</div><div class="v">' + fcst_trend + '</div></div>';
                 }
 
-                const ec = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/DRAFT_NFDRS_v3_view/FeatureServer/0/query?where=PSA+%3D+%27' + code + '%27&returnGeometry=false&outFields=AVG(ec)%20AS%20average&f=json');
-
                 const ercContent = `<div class="item"><div class="t">ERC Date</div><div class="v">${date}</div></div>
                         <div class="item"><div class="t">Area (PSA)</div><div class="v">${psa}</div></div>
                         ${settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? `<div class="item"><div class="t">PSA Code</div><div class="v">${code}</div></div>` : ``}
-                        ${ec ? `<div class="item"><div class="t">Current ERC Value</div><div class="v">${ec.features[0].attributes.average.toFixed(2)}</div></div>` : ``}
+                        <div class="item"><div class="t">Current ERC Value</div><div class="v">${p.avg_erc}</div></div>
                         ${erc}
                         <div class="item"><div class="t">NFDRS Obs Date</div><div class="v">${dt}</div></div>
                         ${chart != null && chart != '' ? `<a target="blank" href="${chart}" style="display:block;text-align:center">View ERC Chart</a>` : ``}`;
@@ -1681,7 +1715,7 @@ async function onMapClick(e) {
                     <div class="item"><div class="t">People/Square Mile</div><div class="v">${psm}</div></div>
                     <div class="item"><div class="t">Agricultural Value</div><div class="v">$${value.ag}</div></div>
                     <div class="item"><div class="t">Building Values</div><div class="v">$${value.build}</div></div>
-                    <a target="blank" href="https://hazards.fema.gov/nri/report/viewer?dataLOD=Counties&dataIDs=${p.NRI_ID}" style="display:block;text-align:center">Full Report</a>`;
+                    <a target="blank" href="https://www.fema.gov/flood-maps/products-tools/national-risk-index" style="display:block;text-align:center">Learn about NRI</a>`;
 
                 selected.nri = feature.id;
 

@@ -144,7 +144,7 @@ if (isset($_GET['state']) && in_array(str_replace('-', ' ', $_GET['state']), $pr
 
 // mapbox sdk version
 $mapboxVersion = '3.14.0';
-$maplibreVersion = '5.6.2';
+$maplibreVersion = '5.15.0';
 
 //ga4 ID
 $ga_id = /*$host == 'wildfiremap.org' ? 'G-2DNCL70GJF' : */ 'G-X03WWLX3BJ';

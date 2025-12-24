@@ -20,6 +20,10 @@ a {
     font-family: roboto!important;
 }
 
+p {
+    line-height: 1.2;
+}
+
 input:-webkit-autofill::first-line,
 input:-webkit-autofill,
 input:-webkit-autofill:hover,

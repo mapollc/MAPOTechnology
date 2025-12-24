@@ -1,0 +1,9 @@
+Hello,<br><br>
+
+Someone from {company} you work with has invited you to create an account with MAPO LLC to gain access <a href="https://mapofire.com">Map of Fire</a>'s premium and professional features.<br><br>
+
+Before gaining access, you will need to accept the invitation using the link below:<br><br>
+
+<a href="https://www.mapotechnology.com/secure/invitation?service=mapofire&org_key={org_key}&email={email}&invite_code={token}">Confirm your email</a><br><br>
+
+If you did not create this account, please contact us to resolve the issue.

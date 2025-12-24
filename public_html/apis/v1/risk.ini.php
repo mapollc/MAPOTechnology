@@ -1,34 +1,48 @@
 <?
 $fips = $method;
 
-if ($fips == '') {
+if (empty($fips) && !isset($_REQUEST['lat']) && !isset($_REQUEST['lon'])) {
     $returnJson = array('response' => 'error', 'code' => 1, 'msg' => 'An invalid FIPS location was specified');
-} else {
-    if (strlen($fips) > 6) {
-        $sql = "SELECT r.*, county, zip_code FROM risk AS r LEFT JOIN cities AS c ON c.fips = r.fips WHERE r.fips = ?";
+    return;
+}
+
+if (isset($_REQUEST['lat']) && isset($_REQUEST['lon'])) {
+    $geo = getCounty($con, [$_REQUEST['lat'], $_REQUEST['lon']]);
+
+    if ($geo && $geo['fips']) {
+        $fips = $geo['fips'];
     } else {
-        $sql = "SELECT * FROM risk WHERE fips = ?";
+        $returnJson = array('response' => 'error', 'code' => 1, 'msg' => 'Unable to obtain FIPS for the provided coordinates');
+        return;    
     }
+}
 
-    $row = prepareQuery('s', [$fips], $sql);
+if (strlen($fips) > 6) {
+    $sql = "SELECT r.*, county, zip_code FROM risk AS r LEFT JOIN cities AS c ON c.fips = r.fips WHERE r.fips = ?";
+} else {
+    $sql = "SELECT * FROM risk WHERE fips = ?";
+}
 
-    if (!isset($row['error']) && count($row) > 0) {
-        $row['data'] = json_decode(unserialize($row['data']));
-        $row['data']->buildings->count = intval($row['data']->buildings->count);
-        $row['data']->pop = intval($row['data']->pop);
+$row = prepareQuery('s', [$fips], $sql);
 
-        $returnJson = [
+if (!isset($row['error']) && count($row) > 0) {
+    $row['data'] = json_decode(unserialize($row['data']));
+    $row['data']->buildings->count = intval($row['data']->buildings->count);
+    $row['data']->pop = intval($row['data']->pop);
+
+    $returnJson = [
+        'risk' => [
             'id' => intval($row['id']),
-            'fips' => intval($row['fips']),
+            'fips' => $row['fips'],
             'type' => $row['type'],
             'name' => $row['name'],
             'county' => $row['county'],
             'state' => $row['state'],
             'data' => $row['data']
-        ];
-    } else {
-        $returnJson = ['response' => 'error', 'code' => 1, 'The risk location requested does not exist'];
-    }
+        ]
+    ];
+} else {
+    $returnJson = ['response' => 'error', 'code' => 1, 'The risk location requested does not exist'];
 }
 
 /*function fetch($url) {

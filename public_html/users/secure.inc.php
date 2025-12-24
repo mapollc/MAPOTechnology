@@ -43,6 +43,14 @@ if ($redirect === true) {
         } else {
             $subs = prepareQuery('s', [$u['email']], "SELECT * FROM billing WHERE email = ? AND status = 'active'");
 
+            if (!isset($_SESSION['org_admin'])) {
+                $orgs = prepareQuery('s', [$u['email']], "SELECT org_key FROM groups WHERE admin_email = ?");
+
+                if ($orgs) {
+                    $_SESSION['org_admin'] = true;
+                }
+            }
+
             if (isset($subs['cid'])) {
                 $sub = [$subs];
             } else {

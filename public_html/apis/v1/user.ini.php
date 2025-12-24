@@ -798,6 +798,71 @@ class SSO
         }
     }
 
+    function invitation() {
+        $error = false;
+        $invite_code = $this->fields['invite_code'];
+        $email = $this->fields['email'];
+
+        $match = prepareQuery('ss', [$email, $invite_code], "SELECT * FROM group_users WHERE email = ? AND invite_code = ?");
+
+        if (!$match) {
+            $error = true;
+            $code = 1;
+            $msg = 'The email address and invite code provided do not match.';
+        } else {
+            $perror = false;
+            $pass = $this->fields['pass'];
+            $cpass = $this->fields['confirm_pass'];
+            $passVal = $this->validatePassword($pass);
+            $validToken = $this->validToken($invite_code);
+
+            if ($validToken) {
+                if (!$pass) {
+                    $perror = true;
+                    $msgs[] = 'You must enter a password.';
+                } else {
+                    if ($passVal[0]) {
+                        $perror = true;
+                        foreach ($passVal[1] as $p) {
+                            $msgs[] = $p;
+                        }
+                    }
+
+                    if (!$cpass) {
+                        $perror = true;
+                        $msgs[] = 'You must confirm your password.';
+                    } else if ($pass != $cpass) {
+                        $perror = true;
+                        $msgs[] = 'Your passwords don\'t match.';
+                    }
+                }
+
+                if (!$perror) {
+                    $password = password_hash($this->fields['pass'], PASSWORD_DEFAULT);
+
+                    $create = $this->createAccount($this->fields['first_name'], $this->fields['last_name'], $email, $password, $_SERVER['REMOTE_ADDR'], '1', '', '', 0, false);
+
+                    if ($create && $create['response'] == 'error') {
+                        return $create;
+                    } else {
+                        $newUID = mysqli_insert_id($this->con);
+                        mysqli_query($this->con, "UPDATE group_users SET status = 1, uid = $newUID WHERE email = '$email'");
+                    }
+                } else {
+                    return array('response' => 'error', 'code' => 3, 'msg' => implode('<br>', $msgs));
+                }
+            } else {
+                $error = true;
+                $code = 2;
+                $msg = 'The invite code provided is invalid.';    
+            }
+        }
+
+        if ($error) {
+            return array('response' => 'error', 'code' => $code, 'msg' => $msg);
+        }
+    }
+
     function confirmation()
     {
         $error = false;
@@ -863,7 +928,7 @@ class SSO
         return $password;
     }
 
-    function createAccount($fname, $lname, $email, $pass, $ip, $role, $phone, $location, $thirdParty = 0)
+    function createAccount($fname, $lname, $email, $pass, $ip, $role, $phone, $location, $thirdParty = 0, $needToConfirm = true)
     {
         $out = [];
         $tok = $this->createToken(['email' => $email]);
@@ -908,11 +973,13 @@ class SSO
                         $out['next'] = $this->returnURL(null);
                     }
 
-                    prepareQuery('s', [$email], "UPDATE confirmation SET valid = 0 WHERE email = ?");
-                    prepareQuery('ss', [$email, $tok], "INSERT INTO confirmation (email,token,confirmed) VALUES(?,?,'0')");
+                    if ($needToConfirm) {
+                        prepareQuery('s', [$email], "UPDATE confirmation SET valid = 0 WHERE email = ?");
+                        prepareQuery('ss', [$email, $tok], "INSERT INTO confirmation (email,token,confirmed) VALUES(?,?,'0')");
 
-                    $fields = array('{fname}' => $fname, '{email}' => $email, '{token}' => $tok, '{subscribe}' => (isset($this->fields['price_id']) ? '&subscriber=1' : ''));
-                    sendEmail($email, 'Confirm your new account', 'newaccount', $fields);
+                        $fields = array('{fname}' => $fname, '{email}' => $email, '{token}' => $tok, '{subscribe}' => (isset($this->fields['price_id']) ? '&subscriber=1' : ''));
+                        sendEmail($email, 'Confirm your new account', 'newaccount', $fields);
+                    }
                 }
             }
         }
@@ -1108,6 +1175,9 @@ if (empty($method)) {
         } # confirm email address after account creation
         else if ($method == 'confirmation') {
             $returnJson = $sso->confirmation();
+        } # confirm email address for a user that was invited as a part of an organization
+        else if ($method == 'invitation') {
+            $returnJson = $sso->invitation();
         } # logout the user
         else if ($method == 'logout') {
             $returnJson = $sso->logout();

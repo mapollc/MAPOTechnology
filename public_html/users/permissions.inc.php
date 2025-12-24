@@ -47,6 +47,10 @@ class Permissions
                 return $this->perms['dispatch'] == 1 ? true : false;
             }
 
+            public function org() {
+                return $this->perms['org'] == 1 ? true : false;
+            }
+
             public function reports() {
                 return $this->perms['reports'] == 1 ? true : false;
             }
@@ -81,6 +85,43 @@ class Permissions
             public function perms()
             {
                 return $this->perms['perms'] == 1 ? true : false;
+            }
+        };
+    }
+
+    public function orgs()
+    {
+        return new class($this->perms) {
+            public $perms;
+
+            public function __construct($perms)
+            {
+                $this->perms = $perms['orgs'];
+            }
+
+            public function add()
+            {
+                return $this->perms['add'] == 1 ? true : false;
+            }
+
+            public function edit()
+            {
+                return $this->perms['edit'] == 1 ? true : false;
+            }
+
+            public function people()
+            {
+                return $this->perms['people'] == 1 ? true : false;
+            }
+
+            public function suspend()
+            {
+                return $this->perms['suspend'] == 1 ? true : false;
+            }
+
+            public function delete()
+            {
+                return $this->perms['delete'] == 1 ? true : false;
             }
         };
     }

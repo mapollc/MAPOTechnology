@@ -176,6 +176,32 @@ class SSO {
         });
     }
 
+    invitation() {
+        const fd = new FormData();
+
+        fd.append('ip', document.querySelector('input[name=ip]').value);
+        fd.append('invite_code', document.querySelector('input[name=invite_code]').value);
+        fd.append('org_key', document.querySelector('input[name=org_key]').value);
+        fd.append('email', document.querySelector('input[name=email]').value);
+        fd.append('first_name', document.querySelector('input[name=first_name]').value);
+        fd.append('last_name', document.querySelector('input[name=last_name]').value);
+        fd.append('pass', document.querySelector('input[name=pass]').value);
+        fd.append('confirm_pass', document.querySelector('input[name=confirm_pass]').value);
+
+        this.request(fd, 'invitation').then(async (resp) => {
+            const api = await resp.json();
+
+            if (api.response == 'error') {
+                submitBtn.value = submitBtn.getAttribute('data-o');
+                submitBtn.disabled = false;
+
+                createError(api.msg);
+            } else {
+
+            }
+        });
+    }
+
     confirmation() {
         const fd = new FormData();
 
@@ -291,6 +317,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             submitBtn.value = 'Verifying...';
             submitBtn.disabled = true;
+        });
+    }
+
+    if (document.querySelector('#invitation')) {
+        document.querySelector('#invitation').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            sso.invitation();
+
+            //submitBtn.value = 'Verifying...';
+            //submitBtn.disabled = true;
         });
     }
 
@@ -466,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (document.querySelector('#register') || (document.querySelector('#forgot') && document.querySelector('input[name=verify]'))) {
+    if (document.querySelector('#register') || document.querySelector('#invitation') || (document.querySelector('#forgot') && document.querySelector('input[name=verify]'))) {
         document.querySelector('input[name=pass]').addEventListener('focus', () => {
             document.querySelector('.req').style.display = 'block';
         });

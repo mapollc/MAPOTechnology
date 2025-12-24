@@ -63,6 +63,7 @@ const specificURL = window.location.origin + '/',
             ADMIN: 3
         },
         modisZoomLevel: 7,
+        firemedZoomLevel: 9,
         toolsInstance: null,
         workers: {
             incident: new Worker(specificURL + (debugMode ? 'v' + version + '/incident.js' : 'src/js/incident-' + version + '.js')),
@@ -122,6 +123,7 @@ const specificURL = window.location.origin + '/',
             'countyBounds': { layers: ['countyBounds'], exe: () => { config.layersHandler.countyBounds(); } },
             'nwsCWAs': { layers: ['nwsCWAs'], exe: () => { config.layersHandler.nwsCWAs(); } },
             'evac': { layers: ['evac', 'evac_outline', 'evac_title'] },
+            'firemed': { layers: ['firemed'], exe: () => { config.layersHandler.firemed(); } },
             'odfFDR': { layers: ['odfFDR', 'odfFDR_outline', 'odfFDR_title'], exe: () => { config.layersHandler.odfFDR(); } },
             'calfireUnits': { layers: ['calfireUnits', 'calfireUnits_title'], exe: () => { config.layersHandler.calfireUnits(); } },
             'cdfFHSZ': { layers: ['cdfFHSZ', 'cdfFHSZ_title'], exe: () => { config.layersHandler.cdfFHSZ(); } },
@@ -135,18 +137,20 @@ const specificURL = window.location.origin + '/',
             'gaccBounds': { layers: ['gaccBounds', 'gaccBounds_title'], exe: () => { config.layersHandler.gaccBounds(); } },
             'perimeters': { layers: ['perimeters_outline', 'perimeters_fill', 'perimeters_title', 'ca_perimeters_outline', 'ca_perimeters_fill', 'ca_perimeters_title'] },
             'nri': { layers: ['nri_outline', 'nri_fill'], exe: () => { config.layersHandler.nri(); } },
+            'power': { layers: ['power'], exe: () => { config.layersHandler.power(); } },
             'modis24': { layers: ['modis24'], exe: () => { config.layersHandler.modis(1); } },
             'modis48': { layers: ['modis48'], exe: () => { config.layersHandler.modis(2); } },
             'modis72': { layers: ['modis72'], exe: () => { config.layersHandler.modis(3); } },
             'ev': { layers: ['ev'], exe: () => { config.layersHandler.ev(); } },
             'rth': { layers: ['rth'], exe: () => { config.layersHandler.rth(); } },
+            'wet': { layers: ['wet'], exe: () => { config.layersHandler.wet(); } },
             'bp': { layers: ['bp'], exe: () => { config.layersHandler.bp(); } },
             'whp': { layers: ['whp'], exe: () => { config.layersHandler.whp(); } },
             'drought': { layers: ['drought'], exe: () => { config.layersHandler.drought(); } },
             'visSatellite': { layers: ['satellite1'], exe: () => { new NWS().satellite(1); } },
             'irSatellite': { layers: ['satellite2'], exe: () => { new NWS().satellite(2); } },
             'wvSatellite': { layers: ['satellite3'], exe: () => { new NWS().satellite(3); } },
-            'wwas': { layers: ['wwas_fill', 'wwas_outline'], exe: () => { new NWS().get(); } },
+            'wwas': { layers: ['wwas_fill', 'wwas_outline', 'wwas_title'], exe: () => { new NWS().get(); } },
             'stns': { layers: ['stns', 'stns_text'], exe: () => { new Weather().raws(); } },
             'airq': {
                 run: (checked) => {
@@ -232,7 +236,6 @@ const specificURL = window.location.origin + '/',
             },
             'sfp': {
                 run: (checked) => {
-                    console.log(checked);
                     if (impact.style.display == 'flex') {
                         document.querySelector('#sfpDateSelect').disabled = !checked;
                     }
@@ -541,6 +544,7 @@ const specificURL = window.location.origin + '/',
             { 'fhsz': 'CAL FIRE Hazard Severity Zones' },
             { 'lands': 'Land Ownership' },
             { 'rth': 'Wildfire Risk to Homes' },
+            { 'wet': 'Wildfire Exposure Type' },
             { 'bp': 'Wildfire Likelihood' },
             { 'whp': 'Wildfire Hazard Potential' },
             { 'nri': 'FEMA Wildfire Risk Index' }
@@ -646,21 +650,28 @@ const specificURL = window.location.origin + '/',
                 ['color', '', '#f21900', '90-95th percentile'],
                 ['color', '', '#c4001a', '95-100th percentile']
             ],
+            'wet': [
+                ['color', '', '#d6d6d6', 'Not Exposed'],
+                ['color', '', '#ff8f50', 'Indirectly Exposed'],
+                ['color', '', '#ff3b54', 'Directly Exposed']
+            ],
             'bp': [
-                ['color', '', '#fff0cf', 'Very Low'],
-                ['color', '', '#fdca94', 'Low'],
-                ['color', '', '#f26d4b', 'Moderate'],
-                ['color', '', '#c91d13', 'High'],
-                ['color', '', '#7f0000', 'Very High']
+                ['color', '', '#fff0cf', 'Very Low'], // 0 to to 1-in-4,643
+                ['color', '', '#fdca94', 'Low'], // 1-in-4,643 to 1-in-2,154
+                ['color', '', '#fdb27b', 'Low'], // 1-in-2,154 to 1-in-1,000
+                ['color', '', '#fc8d59', 'Moderate'], // 1-in-1,000 to 1-in-464
+                ['color', '', '#f26d4b', 'Moderate'], // 1-in-464 to 1-in-215
+                ['color', '', '#e1452f', 'High'], // 1-in-215 to 1-in-100
+                ['color', '', '#c91d13', 'High'], // 1-in-100 to 1-in-46
+                ['color', '', '#a90000', 'Very High'], // 1-in-46 to 1-in-22
+                ['color', '', '#7f0000', 'Very High'] // 1-in-22+
             ],
             'whp': [
-                ['color', '', '#37a300', 'Very Low'],
-                ['color', '', '#a3ff94', 'Low'],
-                ['color', '', '#ffff63', 'Moderate'],
-                ['color', '', '#ffa300', 'High'],
-                ['color', '', '#ee1900', 'Very High'],
-                ['color', '', '#e1e1e1', 'Non-burnable'],
-                ['color', '', '#006fff', 'Water']
+                ['color', '', '#38a800', 'Very Low'],
+                ['color', '', '#d1ff73', 'Low'],
+                ['color', '', '#ffff00', 'Moderate'],
+                ['color', '', '#ffaa00', 'High'],
+                ['color', '', '#ff0000', 'Very High']
             ],
             'drought': [
                 ['color', '', '#ffff00', 'Abnormally Dry'],
@@ -959,7 +970,8 @@ config.tiles = {
     //outdoors: 'https://tiles.openfreemap.org/styles/liberty',
     satellite: config.host + 'data/maps/satellite.json',
     osm: osm,
-    fs16: fs16,
+    //fs16: fs16,
+    fs16: config.host + 'data/maps/usfs.json',
     caltopo: caltopo,
     terrain: terrain,
     topofire: topofire,
@@ -1055,6 +1067,23 @@ function gmtime(s) {
         t = d.getUTCFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (d.getUTCDate() < 10 ? '0' : '') + d.getUTCDate() + 'T' + (d.getUTCHours() < 10 ? '0' : '') + d.getUTCHours() + ':00:00';
 
     return t;
+}
+
+function sfpTimes() {
+    return Array.from({ length: 7 }, (_, z) => {
+        const t = new Date();
+        t.setDate(t.getDate() + z);
+
+        const y = t.getFullYear(),
+            m = String(t.getMonth() + 1).padStart(2, '0'),
+            d = String(t.getDate()).padStart(2, '0'),
+            dayLabel = z === 0 ? ' (Today)' : (z === 1 ? ' (Tomorrow)' : '');
+
+        return {
+            key: `${y}-${m}-${d}T00:00:00.0Z`,
+            value: `${config.days[t.getDay()]}, ${config.months[t.getMonth()]} ${t.getDate()}${dayLabel}`
+        };
+    });
 }
 
 function getbbox() {
@@ -1541,6 +1570,40 @@ class Convert {
         }
         return d;
     }
+
+    async getRasterColor(coords, layerId) {
+        if (!map.getLayer(layerId)) {
+            return null;
+        }
+
+        const source = map.getSource(map.getLayer(layerId).source),
+            z = Math.floor(map.getZoom()),
+            tileX = Math.floor((coords.lng + 180) / 360 * Math.pow(2, z)),
+            tileY = Math.floor((1 - Math.log(Math.tan(coords.lat * Math.PI / 180) + 1 / Math.cos(coords.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z)),
+            getBBox = (tx, ty, z) => {
+                const s = 20037508.34 * 2;
+                const res = s / Math.pow(2, z);
+                const minX = -20037508.34 + tx * res;
+                const maxY = 20037508.34 - ty * res;
+                return `${minX},${maxY - res},${minX + res},${maxY}`;
+            };
+
+        const url = source.tiles[0].replace('{bbox-epsg-3857}', getBBox(tileX, tileY, z)),
+            img = new Image();
+
+        img.crossOrigin = "Anonymous";
+        await new Promise(res => { img.onload = res; img.src = url; });
+
+        const canvas = new OffscreenCanvas(1, 1),
+            ctx = canvas.getContext('2d'),
+            px = Math.floor(((coords.lng + 180) / 360 * Math.pow(2, z) % 1) * 256),
+            py = Math.floor(((1 - Math.log(Math.tan(coords.lat * Math.PI / 180) + 1 / Math.cos(coords.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z) % 1) * 256);
+
+        ctx.drawImage(img, px, py, 1, 1, 0, 0, 1, 1);
+
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    }
 }
 
 class ClickListener {
@@ -1827,7 +1890,7 @@ class ClickListener {
             content += `<div class="group"><h3 class="group-title">${categoryTitle}</h3><ul class="layers-list">`;
 
             // Loop through layers in each category
-            layers.layers[categoryId].forEach(layer => {
+            layers.layers[categoryId].filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
                 content += `<li class="layer${layer.minZoom && layer.minZoom > zoom ? ' more-zoom' : ''}"${layer.minZoom ? ' data-min-zoom="' + layer.minZoom + '"' : ''} data-p="${layer.perms}" data-id="${layer.id}" title="${layer.minZoom && layer.minZoom > zoom ? 'You must be zoomed in more' : layer.name}">` +
                     `<div class="checkbox"><input type="checkbox" id="${layer.id}" class="layChkBx" data-action="toggle-layer">` +
                     `</div><div class="desc"><label for="${layer.id}">${layer.name}</label><span>${layer.desc}</span>${this.layerExtras(layer)}</div></li>`;
@@ -1851,7 +1914,7 @@ class ClickListener {
         impact.innerHTML = impactHeader + config.layersMenu;
         impact.querySelector('#a').innerHTML = 'Layers';
 
-        config.listOfLayers.forEach(layer => {
+        config.listOfLayers.filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
             const hasPermissions = settings.hasPermissions(layer.perms2),
                 isChecked = (layer.default && !settings.get('checkboxes')) || (settings.get('checkboxes') && settings.includes(layer.id)),
                 item = impact.querySelector('li.layer[data-id="' + layer.id + '"]'),
@@ -1888,6 +1951,13 @@ class ClickListener {
                     filter.querySelectorAll('select').forEach(select => {
                         select.disabled = false;
                     });
+
+                    if (layer.id == 'sfp') {
+                        const s = filter.querySelector('#sfpDateSelect');
+                        s.value = settings.get('special').sfpDate;
+
+                        if (!s.value) s.selectedIndex = 1;
+                    }
                 }
             }
         });
@@ -1925,7 +1995,9 @@ class ClickListener {
                 '<option ' + (settings.get('special').forecastModel == 'total_sky_cover' ? 'selected ' : '') + 'value="total_sky_cover">Cloud Cover</option><option ' + (settings.get('special').forecastModel == '12hr_precipitation_probability' ? 'selected ' : '') + 'value="12hr_precipitation_probability">12-hr POPs</option></select>' +
                 '<select id="fcstTime" data-action="ndfd" data-type="reg" style="min-width:100px;max-width:35%">' + initNDFDTimes() + '</select></div>';
         } else if (l.id == 'sfp') {
-            lay += '<div class="data-filter" id="sfpDate"><i class="far fa-filter-list" style="color:#bde4fb"></i><select id="sfpDateSelect" data-action="sfp-date">' + sfpTimes() + '</select></div>';
+            const times = sfpTimes().map(i => `<option value="${i.key}">${i.value}</option>`).join('');
+
+            lay += '<div class="data-filter" id="sfpDate"><i class="far fa-filter-list" style="color:#bde4fb"></i><select id="sfpDateSelect" data-action="sfp-date">' + times + '</select></div>';
         } else if (l.id == 'spc') {
             lay += '<div class="data-filter" id="otlks"><i class="far fa-filter-list" style="color:#bde4fb"></i><select id="otlkType" data-action="spc-outlook" style="min-width:170px">' +
                 '<option ' + (settings.special().otlkType() == 'fire' ? 'selected ' : '') + 'value="fire">Fire Weather</option>' +
@@ -2393,7 +2465,9 @@ class NWS {
                                 visibility: 'visible'
                             }
                         });
+                    }
 
+                    if (!map.getLayer('wwas_fill')) {
                         map.addLayer({
                             id: 'wwas_fill',
                             type: 'fill',
@@ -2413,6 +2487,34 @@ class NWS {
 
                         map.on('mouseleave', 'wwas_fill', () => {
                             map.getCanvas().style.cursor = 'auto';
+                        });
+                    }
+
+                    if (!map.getLayer('wwas_title')) {
+                        map.addLayer({
+                            id: 'wwas_title',
+                            type: 'symbol',
+                            source: 'wwas',
+                            minzoom: 8.9,
+                            paint: {
+                                'text-color': '#000',
+                                'text-halo-color': '#fff',
+                                'text-halo-blur': 1,
+                                'text-halo-width': 1
+                            },
+                            layout: {
+                                'symbol-placement': 'line',
+                                'symbol-spacing': 450,
+                                'text-font': config.fonts.din(),
+                                'text-field': ['get', 'Event'],
+                                'text-justify': 'auto',
+                                'text-size': 14,
+                                'text-max-width': 12,
+                                'text-max-angle': 30,
+                                'text-anchor': 'bottom',
+                                'text-offset': [0, 1.3],
+                                'text-letter-spacing': 0.05
+                            }
                         });
                     }
                 }
@@ -2495,7 +2597,9 @@ class NWS {
                 map.on('mouseleave', 'outlook_fill', () => {
                     map.getCanvas().style.cursor = 'auto';
                 });
+            }
 
+            if (!map.getLayer('outlook_outline')) {
                 map.addLayer({
                     id: 'outlook_outline',
                     type: 'line',
@@ -2507,7 +2611,9 @@ class NWS {
                         visibility: 'visible'
                     }
                 });
+            }
 
+            if (!map.getLayer('outlook_title')) {
                 map.addLayer({
                     id: 'outlook_title',
                     type: 'symbol',
@@ -2647,7 +2753,7 @@ class NWS {
             map.addSource('satellite' + w, {
                 'type': 'raster',
                 'tiles': [
-                    'https://nowcoast.noaa.gov/geoserver/satellite/wms?service=WMS&layers=' + layer + '&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=1920&height=625&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
+                    'https://nowcoast.noaa.gov/geoserver/satellite/wms?service=WMS&layers=' + layer + '&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=256&height=256&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
                 ],
                 'tileSize': 256
             });
@@ -3603,7 +3709,6 @@ class Wildfires {
                             const nfc = document.createElement('div'),
                                 mi = document.createElement('li');
 
-                            mi.classList.add('ttip');
                             mi.id = 'new_fires';
                             mi.setAttribute('data-action', 'new_fires');
                             mi.setAttribute('title', 'New Fires');
@@ -4025,7 +4130,9 @@ class Wildfires {
                         visibility: vis
                     }
                 });
+            }
 
+            if (!map.getLayer('ca_perimeters_fill')) {
                 map.addLayer({
                     id: 'ca_perimeters_fill',
                     type: 'fill',
@@ -4109,7 +4216,9 @@ class Wildfires {
                         visibility: vis
                     }
                 });
+            }
 
+            if (!map.getLayer('perimeters_fill')) {
                 map.addLayer({
                     id: 'perimeters_fill',
                     type: 'fill',
@@ -4122,7 +4231,9 @@ class Wildfires {
                         visibility: vis
                     }
                 });
+            }
 
+            if (!map.getLayer('perimeters_title')) {
                 map.addLayer({
                     id: 'perimeters_title',
                     type: 'symbol',
@@ -4178,6 +4289,20 @@ class Layers {
 
         /* get evacuations */
         this.evacuations();
+    }
+
+    add3D() {
+        if (settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && settings.getBasemap() == 'outdoors') {
+            map.addSource('terrain', {
+                'type': 'raster-dem',
+                'url': 'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=ZeQEIVoqyieC6wk8qxJH',
+            });
+
+            map.setTerrain({
+                source: 'terrain',
+                exaggeration: 2
+            });
+        }
     }
 
     async airQuality() {
@@ -4266,7 +4391,9 @@ class Layers {
                 map.on('mouseleave', 'airQuality', () => {
                     map.getCanvas().style.cursor = 'auto';
                 });
+            }
 
+            if (!map.getLayer('airQuality_text')) {
                 map.addLayer({
                     id: 'airQuality_text',
                     type: 'symbol',
@@ -4636,10 +4763,14 @@ class Layers {
         if (toggle) {
             map.setPaintProperty('erc_fill', 'fill-color', dy == 'obs' ? obs : fcst);
         } else {
-            const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/DRAFT_NFDRS_v3_view/FeatureServer/1/query', [
+            ////https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/DRAFT_NFDRS_v3_view/FeatureServer/1/query
+            const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/PSA_ERC_and_BI_Percentiles_and_Trends/FeatureServer/0/query', [
                 ['where', '1=1'],
-                ['outFields', 'OBJECTID,PSANAME,PSANationalCode,avg_ec_fcast_percentile,avg_ec_fcast_trend,avg_ec_percentile,avg_ec_trend,nfdr_dt,ERC_Chart_URL'],
+                ['outFields', 'OBJECTID,PSANAME,PSANationalCode,avg_erc,avg_erc_fcast_percentile,avg_erc_fcast_trend,avg_erc_percentile,avg_erc_trend,update_date,update_time,ERC_Chart_URL'],
+                //['outFields', 'PSANationalCode'],
                 ['returnGeometry', true],
+                ['inSR', 4326],
+                ['outSR', 4326],
                 ['resultType', 'tile'],
                 ['geometryPrecision', 6],
                 ['geometry', getbbox()],
@@ -4670,13 +4801,15 @@ class Layers {
                             source: 'erc',
                             paint: {
                                 'fill-color': dy == 'obs' ? obs : fcst,
-                                'fill-opacity': 0.6
+                                'fill-opacity': 0.5
                             },
                             layout: {
                                 visibility: 'visible'
                             }
                         });
+                    }
 
+                    if (!map.getLayer('erc_outline')) {
                         map.addLayer({
                             id: 'erc_outline',
                             type: 'line',
@@ -4715,7 +4848,7 @@ class Layers {
                 'tileSize': 256
             });
         }
-
+ 
         if (!map.getLayer('nfdrs')) {
             map.addLayer({
                 id: 'nfdrs',
@@ -4733,8 +4866,9 @@ class Layers {
 
     sfp(update = false) {
         const ss = document.querySelector('#sfpDateSelect'),
-            time = settings.get('special').sfpDate ? settings.get('special').sfpDate : ss,
-            url = 'https://fsapps.nwcg.gov/psp/arcgis/services/npsg/current_forecast/MapServer/WMSServer?service=WMS&request=GetMap&layers=0&styles=&format=image/png&transparent=true&version=1.1.1&id=National Significant Fire Potential Outlook&time=' + time + '&f=image&width=256&height=256&srs=EPSG:3857&bbox={bbox-epsg-3857}';
+            bkTime = ss ? ss.options[ss.selectedIndex].value : sfpTimes()[0].key,
+            time = settings.get('special').sfpDate && new Date(settings.get('special').sfpDate) >= new Date() ? settings.get('special').sfpDate : bkTime,
+            url = 'https://fsapps.nwcg.gov/psp/arcgis/services/npsg/current_forecast/MapServer/WMSServer?service=WMS&request=GetMap&layers=0&styles=&format=image%2Fpng&transparent=true&version=1.1.1&Index=1&height=512&width=512&TIME=' + time + '&srs=EPSG%3A3857&bbox={bbox-epsg-3857}';
 
         if (update) {
             map.getSource('sfp').setTiles([
@@ -4786,7 +4920,7 @@ class Layers {
                 });
             }
 
-            if (!map.getLayer('nri_outline')) {
+            if (!map.getLayer('nri_fill')) {
                 map.addLayer({
                     id: 'nri_fill',
                     type: 'fill',
@@ -4807,7 +4941,11 @@ class Layers {
                     layout: {
                         visibility: 'visible'
                     }
-                }).addLayer({
+                });
+            }
+
+            if (!map.getLayer('nri_outline')) {
+                map.addLayer({
                     id: 'nri_outline',
                     type: 'line',
                     source: 'nri',
@@ -4833,12 +4971,57 @@ class Layers {
         }
     }
 
+    async power(update = false) {
+        const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/powerlines/FeatureServer/0/query', [
+            ['where', '1=1'],
+            ['outFields', '*'],
+            ['geometry', getbbox()],
+            ['geometryPrecision', 6],
+            ['returnGeometry', true],
+            ['f', 'geojson']]);
+
+        if (update) {
+            map.getSource('power').setData(data);
+        } else {
+            if (!map.getSource('power')) {
+                map.addSource('power', {
+                    type: 'geojson',
+                    data: data
+                });
+            }
+
+            if (!map.getLayer('power')) {
+                map.addLayer({
+                    id: 'power',
+                    type: 'line',
+                    source: 'power',
+                    minzoom: 6,
+                    paint: {
+                        'line-color': '#9c27b0',
+                        'line-width': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            6,
+                            2,
+                            16,
+                            6
+                        ]
+                    },
+                    layout: {
+                        visibility: 'visible'
+                    }
+                });
+            }
+        }
+    }
+
     rth() {
         if (!map.getSource('rth')) {
             map.addSource('rth', {
                 type: 'raster',
                 tiles: [
-                    'https://apps.fs.usda.gov/fsgisx01/rest/services/RDW_Wildfire/RMRS_WRC_RiskToPotentialStructures/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Risk%20to%20Homes&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
+                    'https://imagery.geoplatform.gov/iipp/rest/services/Fire_Aviation/USFS_EDW_RMRS_WRC_RiskToPotentialStructures/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Risk%20to%20Homes&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
                 ],
                 tileSize: 256
             });
@@ -4859,12 +5042,38 @@ class Layers {
         }
     }
 
+    wet() {
+        if (!map.getSource('wet')) {
+            map.addSource('wet', {
+                type: 'raster',
+                tiles: [
+                    'https://imagery.geoplatform.gov/iipp/rest/services/Fire_Aviation/USFS_EDW_RMRS_WRC_ExposureType/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Risk%20to%20Homes&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
+                ],
+                tileSize: 256
+            });
+        }
+
+        if (!map.getLayer('wet')) {
+            map.addLayer({
+                id: 'wet',
+                type: 'raster',
+                source: 'wet',
+                paint: {
+                    'raster-opacity': 0.6
+                },
+                layout: {
+                    visibility: 'visible'
+                }
+            });
+        }
+    }
+
     bp() {
         if (!map.getSource('bp')) {
             map.addSource('bp', {
                 type: 'raster',
                 tiles: [
-                    'https://apps.fs.usda.gov/fsgisx01/rest/services/RDW_Wildfire/RMRS_WRC_BurnProbability/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Risk%20to%20Homes&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
+                    'https://imagery.geoplatform.gov/iipp/rest/services/Fire_Aviation/USFS_EDW_RMRS_WRC_BurnProbablility/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Risk%20to%20Homes&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
                 ],
                 tileSize: 256
             });
@@ -4890,7 +5099,7 @@ class Layers {
             map.addSource('whp', {
                 type: 'raster',
                 tiles: [
-                    'https://apps.fs.usda.gov/arcx/rest/services/RDW_Wildfire/RMRS_WildfireHazardPotential_2018/MapServer/export?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Hazard%20Potential%20(2018)&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
+                    'https://imagery.geoplatform.gov/iipp/rest/services/Fire_Aviation/USFS_EDW_RMRS_WRC_WildfireHazardPotential/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Hazard%20Potential%20(2018)&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
                 ],
                 tileSize: 256
             });
@@ -5189,7 +5398,11 @@ class Layers {
                         layout: {
                             visibility: 'visible'
                         }
-                    }).addLayer({
+                    });
+                }
+
+                if (!map.getLayer('dispatch_title')) {
+                    map.addLayer({
                         id: 'dispatch_title',
                         type: 'symbol',
                         source: 'dispatch',
@@ -5252,7 +5465,11 @@ class Layers {
                         layout: {
                             visibility: 'visible'
                         }
-                    }).addLayer({
+                    });
+                }
+
+                if (!map.getLayer('gaccBounds_title')) {
+                    map.addLayer({
                         id: 'gaccBounds_title',
                         type: 'symbol',
                         source: 'gaccBounds',
@@ -5524,7 +5741,9 @@ class Layers {
                     map.on('mouseleave', 'odfFDR', () => {
                         map.getCanvas().style.cursor = 'auto';
                     });
+                }
 
+                if (!map.getLayer('odfFDR_outline')) {
                     map.addLayer({
                         id: 'odfFDR_outline',
                         type: 'line',
@@ -5537,7 +5756,9 @@ class Layers {
                             visibility: 'visible'
                         }
                     });
+                }
 
+                if (!map.getLayer('odfFDR_title')) {
                     map.addLayer({
                         id: 'odfFDR_title',
                         type: 'symbol',
@@ -5622,7 +5843,9 @@ class Layers {
                             visibility: 'visible'
                         }
                     });
+                }
 
+                if (!map.getLayer('calfireUnits_title')) {
                     map.addLayer({
                         id: 'calfireUnits_title',
                         type: 'symbol',
@@ -5731,7 +5954,9 @@ class Layers {
                                     visibility: 'visible'
                                 }
                             });
+                        }
 
+                        if (!map.getLayer('calfireAircraft_title')) {
                             map.addLayer({
                                 id: 'calfireAircraft_title',
                                 type: 'symbol',
@@ -5887,6 +6112,76 @@ class Layers {
                         'text-letter-spacing': 0.05,
                         visibility: settings.includes('evac') ? 'visible' : 'none'
                     }
+                });
+            }
+        }
+    }
+
+    async firemed(update = false) {
+        const types = ['hosp', 'ems', 'fire'],
+            baseURL = 'https://services2.arcgis.com/FiaPA4ga0iQKduv3/ArcGIS/rest/services/Structures_Medical_Emergency_Response_v1/FeatureServer/',
+            fields = [
+                ['where', '1=1'],
+                ['outFields', 'OBJECTID,NAME,ADDRESS,CITY,STATE,ZIPCODE'],
+                ['resultType', 'tile'],
+                ['geometry', getbbox()],
+                ['geometryPrecision', 6],
+                ['returnGeometry', true],
+                ['f', 'geojson']
+            ];
+
+        types.forEach(async (type) => {
+            const icon = type == 'fire' ? 'fire_dept' : type;
+            if (!map.hasImage(type)) {
+                const image = await map.loadImage(config.domain + 'assets/images/icons/fire/' + icon + '_icon.png');
+                map.addImage(type, image.data);
+            }
+        });
+
+        const results = await Promise.allSettled(types.map((_, i) => api(`${baseURL}${i}/query`, fields)));
+        const mergedFeatures = results.flatMap((res, i) => {
+            if (res.status !== 'fulfilled' || !res.value?.features) return [];
+
+            return res.value.features.map(f => {
+                f.properties.type = types[i];
+                return f;
+            });
+        });
+        const data = { type: 'FeatureCollection', features: mergedFeatures };
+
+        if (update && map.getSource('firemed')) {
+            map.getSource('firemed').setData(data);
+        } else {
+            if (!map.getSource('firemed')) {
+                map.addSource('firemed', {
+                    type: 'geojson',
+                    data: data,
+                    cluster: true,
+                    clusterMaxZoom: 11,
+                    clusterMinPoints: 3,
+                    clusterRadius: 20
+                });
+            }
+
+            if (!map.getLayer('firemed')) {
+                map.addLayer({
+                    id: 'firemed',
+                    type: 'symbol',
+                    source: 'firemed',
+                    minzoom: config.firemedZoomLevel,
+                    layout: {
+                        'icon-image': ['get', 'type'],
+                        'icon-size': 0.22,
+                        visibility: 'visible'
+                    }
+                });
+
+                map.on('mouseenter', 'firemed', () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
+
+                map.on('mouseleave', 'firemed', () => {
+                    map.getCanvas().style.cursor = 'auto';
                 });
             }
         }
@@ -6108,8 +6403,14 @@ function toggleLayer(e) {
         executeToggle = (sourceId, action, checked) => {
             const visibility = checked ? 'visible' : 'none';
 
+            if (sourceId == 'visSatellite') sourceId = 'satellite1';
+            else if (sourceId == 'irSatellite') sourceId = 'satellite2';
+            else if (sourceId == 'wvSatellite') sourceId = 'satellite3';
+
             if (map.getSource(sourceId)) {
-                action.layers.forEach(id => map.setLayoutProperty(id, 'visibility', visibility));
+                action.layers.forEach(id => {
+                    map.setLayoutProperty(id, 'visibility', visibility)
+                });
             } else if (checked) {
                 action.exe();
             }
@@ -6124,8 +6425,7 @@ function toggleLayer(e) {
     } else if (action.exe) {
         executeToggle(layerId, action, checked);
     } else {
-        const visibility = checked ? 'visible' : 'none';
-        action.layers.forEach(id => map.setLayoutProperty(id, 'visibility', visibility));
+        action.layers.forEach(id => map.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none'));
     }
 }
 
@@ -6168,9 +6468,6 @@ async function preload() {
         /* change menu button */
         if (usr != null) {
             a.querySelector('span').innerHTML = 'Account';
-            a.setAttribute('data-tooltip', 'Account Settings');
-        } else {
-            a.setAttribute('data-tooltip', 'Login');
         }
     } else {
         document.querySelector('#save').remove();
@@ -6188,14 +6485,14 @@ async function preload() {
     settings = new Settings(usr);
 
     // if user is admin, load the tools functions
-    if (settings.hasPermissions(config.PERMISSION_LEVELS.ADMIN)) {
+    /*if (settings.hasPermissions(config.PERMISSION_LEVELS.ADMIN)) {
         setTimeout(() => {
             loadScript(config.specificURL + (debugMode ? 'v' + version + '/mf.tools.js' : 'src/js/mf.tools-' + version + '.js')).then(() => {
                 config.toolsInstance = new Tools();
                 config.toolsInstance.use();
             });
         }, 1500);
-    }
+    }*/
 
     const li1 = document.createElement('li'),
         li2 = document.createElement('li');
@@ -6205,55 +6502,15 @@ async function preload() {
         li2.classList.add('disabled');
     }
 
-    li1.classList.add('ttip');
     li1.id = 'fwf';
     li1.setAttribute('data-action', 'fwf');
-    li1.setAttribute('data-tooltip', 'Spot Fire Weather Forecast');
     li1.innerHTML = '<i class="far fa-cloud-bolt"></i><span>Fire WX</span>';
 
-    li2.classList.add('ttip');
     li2.setAttribute('data-action', 'archive');
-    li2.setAttribute('data-tooltip', 'Archived fire maps');
     li2.innerHTML = '<i class="far fa-calendars"></i><span>Historical</span>';
 
     document.querySelector('#legend').insertAdjacentElement('afterend', li1);
     document.querySelector('#refresh').insertAdjacentElement('afterend', li2);
-
-    // add a tooltip element
-    if (window.innerWidth > 600) {
-        const tooltip = document.createElement('div');
-        tooltip.id = 'tooltip';
-        tooltip.classList.add('tooltip');
-        document.body.appendChild(tooltip);
-
-        // add title attributes to menu items until we have a tooltip feature in place
-        document.querySelectorAll('nav ul li').forEach(item => {
-            // Show the tooltip on mouse enter
-            item.addEventListener('mouseenter', (e) => {
-                // Find the closest list item, which holds the data-tooltip attribute
-                const listItem = e.target.closest('li');
-
-                // Check if a list item was found before proceeding
-                if (!listItem || !listItem.dataset.tooltip) return;
-
-                const ttipText = listItem.dataset.tooltip;
-
-                tooltip.textContent = ttipText;
-
-                const targetRect = listItem.getBoundingClientRect();
-                const tooltipRect = tooltip.getBoundingClientRect();
-
-                tooltip.style.left = `${targetRect.right + window.scrollX + 6}px`;
-                tooltip.style.top = `${targetRect.top + window.scrollY + (targetRect.height / 2) - (tooltipRect.height / 2)}px`;
-                tooltip.style.display = 'block';
-            });
-
-            // Hide the tooltip on mouse leave
-            item.addEventListener('mouseleave', () => {
-                tooltip.removeAttribute('style');
-            });
-        });
-    }
 
     /* get user's currently tracked wildfires */
     config.wildfire.getTrackedFires();
@@ -6479,7 +6736,9 @@ function getCounties() {
                 visibility: 'visible'
             }
         });
+    }
 
+    if (!map.getLayer('county-boundaries')) {
         map.addLayer({
             id: 'county-boundaries',
             type: 'line',
@@ -6680,17 +6939,7 @@ function init() {
 
         getCounties();
 
-        if (settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
-            map.addSource('terrain', {
-                'type': 'raster-dem',
-                'url': 'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=ZeQEIVoqyieC6wk8qxJH',
-            });
-
-            map.setTerrain({
-                source: 'terrain',
-                exaggeration: 2
-            });
-        }
+        new Layers().add3D();
 
         map.setSky(config.fog);
 
@@ -6754,8 +7003,8 @@ function init() {
 
         /* processing layers on startup */
         config.layersHandler.init();
-        config.wildfire.perimeters();
         config.wildfire.getWildfires();
+        config.wildfire.perimeters();
 
         const dont = ['newFires', 'allFires', 'smokeChecks', 'rxBurns', 'perimeters'];
 
@@ -6894,6 +7143,10 @@ function init() {
             config.wildfire.getWildfires(true);
         }
 
+        if (settings.includes('firemed') && map.getZoom() >= config.firemedZoomLevel) {
+            config.layersHandler.firemed(true);
+        }
+
         if (settings.includes('modis24') && map.getZoom() >= config.modisZoomLevel) {
             config.layersHandler.modis(1, true);
         }
@@ -6933,6 +7186,10 @@ function init() {
 
         if (settings.includes('nri')) {
             config.layersHandler.nri(true);
+        }
+
+        if (settings.includes('power')) {
+            config.layersHandler.power(true);
         }
 
         if (settings.includes('dispatch')) {
@@ -7175,7 +7432,7 @@ window.addEventListener('click', async (e) => {
 
     /* hide impact panel if outside of container */
     if (impact != null && impact.style.display == 'flex' && !impact.contains(e.target) && e.target !== impact && impact.dataset.display !== 'my-content') {
-        if (!actionsThatOpenImpact.includes(action)) {
+        if (!actionsThatOpenImpact.includes(action) && !document.querySelector('nav').contains(e.target)) {
             clickListener.closeImpact();
         }
     }
