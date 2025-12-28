@@ -32,7 +32,7 @@ RewriteCond %{REQUEST_URI} !^/images/ [NC]
 RewriteCond %{REQUEST_URI} !^/oreroads/ [NC]
 RewriteCond %{REQUEST_URI} !^/favicon.ico [NC]
 
-RewriteRule ^\/?([\w]+)(?:\/(.*))?$ /index.php?route=$1&params=$2 [NC,L,QSA]
+RewriteRule ^\/?([\w]+)(?:\/(.*))?$ /index.php?route=$1&params=$2 [NC,L,QSA,B]
 
 # php -- BEGIN cPanel-generated handler, do not edit
 # Set the “ea-php84” package as the default “PHP” programming language.

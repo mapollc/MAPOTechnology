@@ -1120,6 +1120,43 @@ select {
     border-radius: 3px;
 }
 
+.dark-input {
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    background-color: var(--box-border-light);
+    border-radius: 4px;
+}
+
+#layerSearch {
+    display: block;
+    width: inherit;
+    padding: 8px;
+    font-family: 'Roboto';
+    font-size: 16px;
+    background: transparent;
+    color: #f1f1f1;
+    border: 0;
+    outline: none;
+}
+
+#layerSearch::selection {
+    color: #000;
+    background-color: #9ed2ff;
+}
+
+#layerSearch::placeholder {
+    color: #e3e3e3;
+}
+
+.clearSearch {
+    padding: 0 var(--half-spacing);
+    font-size: 18px;
+    color: #fff;
+    cursor: pointer;
+    user-select: none;
+}
+
 .layers-list {
     list-style: none;
     display: flex;
@@ -1202,6 +1239,7 @@ select {
     }
 
     select {
+        flex: 1;
         border: 1px solid #394b64;
         background-color: var(--box-border-light);
         color: #fff;
@@ -1235,13 +1273,14 @@ select {
     cursor: default;
 }
 
-#perimeterSize,
+/*#perimeterSize,
 #models,
 #sfpDate,
 #otlks,
 #ercs,
 #sfcSmokes,
-#viSmokes {
+#viSmokes*/
+.data-filter {
     display: inline-flex;
     gap: 0.75em;
     align-items: center;
@@ -1251,14 +1290,29 @@ select {
     border-radius: 4px;
 }
 
-#perimeterSize>i,
+/*#perimeterSize>i,
 #models>i,
 #sfpDate>i,
 #ercs>i,
 #sfcSmokes>i,
-#viSmokes>i {
+#viSmokes>i*/
+.data-filter i {
     display: block;
     /*margin-right: 10px*/
+}
+
+/*#perimeterSize>div,
+#models>div,
+#sfpDate>div,
+#otlks>div,
+#ercs>div,
+#sfcSmokes>div,
+#viSmokes>div*/
+.data-filter div {
+    display: inline-flex;
+    gap: 0.5em;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
 #pSize {
@@ -1386,6 +1440,24 @@ select {
     padding: .5em;
     border-radius: 5px 5px 0 0;
 }
+
+/*.temp-legend { width: 400px; font-family: sans-serif; }
+
+.gradient-bar {
+  height: 15px;
+  margin: 0 auto;
+  width: calc(100% - 16px);
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+text-align: left;
+  color: #9caab3;
+  margin-top: 4px;
+}
+*/
 
 .my-fires {
     display: flex;
@@ -1529,12 +1601,12 @@ select {
 }
 
 #modal .content::-webkit-scrollbar-thumb {
-    background: var(--box-border);
+    background: var(--box-color);
     border-radius: 2px;
 }
 
 #modal .content::-webkit-scrollbar-track {
-    background: var(--box-color);
+    background: var(--box-border);
     border-radius: 2px;
 }
 
@@ -1542,6 +1614,10 @@ select {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
+}
+
+#modal .message {
+    color: #fff!important;
 }
 
 #modal p,
@@ -3388,15 +3464,14 @@ span.status.out {
 
 @media (max-width: 479px) {
 
-    #perimeterSize,
+    /*#perimeterSize,
     #models,
     #sfpDate,
     #otlks,
     #ercs,
     #sfcSmokes,
-    #viSmokes {
-        flex-direction: column;
-        align-items: flex-start;
+    #viSmokes*/
+    .data-filter select {
         justify-content: unset;
         gap: 0.5em;
     }

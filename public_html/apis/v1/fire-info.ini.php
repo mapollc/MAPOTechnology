@@ -138,7 +138,7 @@ if (!$cache || filemtime(root() . 'fire-info.ini.php') > $memcache->get($cachefi
 
             $fire['inciweb'] = $inciweb;
 
-            // remove coordinates form inciweb data
+            // remove coordinates from inciweb data
             for ($i = 0; $i < count($fire['inciweb']['current']['data']['Basic Information']); $i++) {
                 if ($fire['inciweb']['current']['data']['Basic Information'][$i]['desc'] == 'Coordinates') {
                     unset($fire['inciweb']['current']['data']['Basic Information'][$i]);

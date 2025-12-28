@@ -110,14 +110,14 @@ function getData(reload = false) {
                     card += '<h2><p>' + wx.name + '</p><span>elev. ' + wx.elevation + ' ft</span></h2>' +
                         '<div class="components"><div class="now">' +
                         '<p class="temp">' + (temp == null ? '--' : Math.round(temp)) + '<sup class="unit">&deg;' + tempUnit + '</sup></p>' +
-                        '</div><div class="snow">';
+                        '</div>';
 
                     if (wx.obs.snow) {
                         const sn6 = wx.obs.snow['6hr'] || wx.obs.snow['6hr'] == 0 ? sn(wx.obs.snow['6hr']) + '<span' + (wx.unit != 'f' ? ' class="cm"' : '') + '>' + heightUnit + '</span>' : '--',
                             sn12 = wx.obs.snow['12hr'] || wx.obs.snow['12hr'] == 0 ? sn(wx.obs.snow['12hr']) + '<span' + (wx.unit != 'f' ? ' class="cm"' : '') + '>' + heightUnit + '</span>' : '--',
                             sn24 = wx.obs.snow['24hr'] || wx.obs.snow['24hr'] == 0 ? sn(wx.obs.snow['24hr']) + '<span' + (wx.unit != 'f' ? ' class="cm"' : '') + '>' + heightUnit + '</span>' : '--';
 
-                        card += '<div class="item hs"><label>Snow Depth</label>' +
+                        card += '<div class="snow"><div class="item hs"><label>Snow Depth</label>' +
                             '<div class="value">' + wx.obs.snow.hs + '<span' + (wx.unit != 'f' ? ' class="cm"' : '') + '>' + heightUnit + '</span></div>' +
                             '</div><div class="item"><label>6-hr Snow</label>' +
                             '<div class="value">' + sn6 + '</div>' +
@@ -125,10 +125,10 @@ function getData(reload = false) {
                             '<div class="value">' + sn12 + '</div>' +
                             '</div><div class="item"><label>24-hr Snow</label>' +
                             '<div class="value">' + sn24 + '</div>' +
-                            '</div>';
+                            '</div></div>';
                     }
 
-                    card += '</div></div><span class="updated">Last report ' + timeAgo(wx.updated) + '</span>' +
+                    card += '</div><span class="updated">Last report ' + timeAgo(wx.updated) + '</span>' +
                         (!isSnolite ? '<a href="https://www.weather.gov/wrh/timeseries?site=' + wx.id + '&hours=72" target="blank" class="btn centered">More Details</a>' : '');
                 }
 

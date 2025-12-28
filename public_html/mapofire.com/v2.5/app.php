@@ -48,9 +48,6 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
     <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@<?= $maplibreVersion ?>/dist/maplibre-gl.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="<?= $baseURL ?>src/css/mf.app-<?= $version ?>.css">
     <link rel="stylesheet" href="https://www.mapotechnology.com/src/css/global.css">
-    <?if ($dark_mode) {?>
-        <link rel="stylesheet" href="<?= $baseURL ?>src/css/mf.app-dark_mode-<?= $version ?>.css">
-    <?}?>
     <link rel="preload" href="//fonts.googleapis.com/css2?family=Roboto:wght@200;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="<?= $baseURL ?>src/css/mf.supp-<?= $version ?>.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript>
@@ -62,7 +59,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
         <link rel="shortlink" href="https://<?= "$_SERVER[HTTP_HOST]/f/$_GET[wfid]" ?>" />
     <?}?>
 </head>
-<body<?= $dark_mode ? ' class="dark-mode"' : '' ?>>
+<body>
 
     <div class="android-banner">
         <div class="inner">
@@ -89,12 +86,10 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
                     <li data-action="basemap"><i class="far fa-grid"></i><span>Maps</span></li>
                     <li data-action="layers"><i class="far fa-layer-group"></i><span>Layers</span></li>
                     <li id="legend" data-action="legend"><i class="far fa-list"></i><span>Legend</span></li>
-                    <li data-action="myfires"><i class="fas fa-fire-extinguisher"></i><span>My Fires</span></li>
+                    <li data-action="myfires"><i class="far fa-display-chart-up"></i><span>My Fires</span></li>
                     <li id="refresh" data-action="refresh"><i class="far fa-sync"></i><span>Refresh</span></li>
                     <li id="report" data-action="report" data-active="0"><i class="far fa-location-plus"></i><span>Report</span></li>
                     <li id="save" data-action="save"><i class="far fa-cloud-arrow-up"></i><span>Sync</span></li>
-                    <?/*<li id="logout" data-action="logout"><i class="far fa-right-from-bracket"></i><span>Logout</span></li>
-                    <li><label class="switch"><input id="dark_mode" type="checkbox"<?=$dark_mode ? ' checked' : ''?>><div class="slider"></div></label><span>Dark Mode</span></li>*/ ?>
                 </ul>
                 <i class="fas fa-chevron-left" title="Toggle navigation" id="close-navbar" data-action="close-navbar" data-open="1"></i>
 
@@ -105,7 +100,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
             <div id="map"></div>
             <div class="bd"></div>
             <div class="loading">
-                <img src="//mapotechnology.com/assets/images/mapofire_logo.png" alt="Map of Fire logo" title="Map of Fire logo" style="height:50px">
+                <img src="//mapotechnology.com/assets/images/mapofire_logo.png" alt="Map of Fire logo" title="Map of Fire" style="height:50px">
                 <div class="s"></div><span>Loading wildfires...</span>
             </div>
 
@@ -114,6 +109,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
                 <div class="search control">
                     <span class="far fa-magnifying-glass"></span>
                     <input type="text" id="q" autocomplete="off" disabled placeholder="Search wildfires, cities, or coordinates">
+                    <span id="clearSearch" data-action="clear-search" class="far fa-xmark"></span>
                     <ul id="search-results" class="control">
                         <li class="standby" style="gap:.5em"><i class="fa-duotone fa-spinner-third"></i><span>Searching...</span></li>
                     </ul>

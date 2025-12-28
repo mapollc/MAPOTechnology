@@ -1,5 +1,7 @@
 :root {
-    --nav-width: 85px/*100px*/;
+    --nav-width: 85px
+        /*100px*/
+    ;
     --mb-button-width: 35px;
     --container-space: 0.7em;
     --modal-height: 8vh;
@@ -224,7 +226,7 @@ nav ul li.disabled:hover span {
 
 nav ul li.disabled {
     cursor: not-allowed;
-    color: #646c78!important;
+    color: #646c78 !important;
 }
 
 nav ul li i {
@@ -346,22 +348,27 @@ nav.hide #close-navbar {
 .filter-controls .search {
     display: none;
     width: var(--search-results-width);
-    height: 37px;
-    gap: 0.5em;
-    padding: 0.6em;
     align-items: center;
     font-size: 18px;
 }
 
-.filter-controls .search > span {
+.filter-controls .search>span {
+    padding: 0 calc(var(--spacing) * .75);
     color: var(--box-text-color);
     font-size: 17px;
     user-select: none;
 }
 
+.filter-controls .search #clearSearch {
+    display: none;
+    padding: 0 calc(var(--spacing) * .75);
+    cursor: pointer;
+}
+
 .filter-controls .search input {
     display: block;
     width: 100%;
+    height: 100%;
     border: 0;
     outline: none;
     background: transparent;
@@ -491,44 +498,19 @@ ul#search-results li.standby i {
     color: #b9b9b9;
 }
 
-.maplibregl-ctrl-group:not(:empty) {
-    box-shadow: 0 0 0 2px rgb(100 100 100 / 10%);
-}
-
+/* OVERRIDE MAPLIBRE CONTROL STYLES */
 .maplibregl-ctrl-attrib-inner {
     padding: 4px 0;
 }
 
 .maplibregl-ctrl-attrib.maplibregl-compact {
-    margin: 0 var(--spacing) var(--spacing) var(--spacing)!important;
+    margin: 0 var(--spacing) var(--spacing) var(--spacing) !important;
 }
 
-.maplibregl-ctrl-attrib-button:focus, .maplibregl-ctrl-group button:focus {
+.maplibregl-ctrl-attrib-button:focus,
+.maplibregl-ctrl-group button:focus {
     box-shadow: unset;
 }
-
-/*.maplibregl-ctrl-attrib.maplibregl-compact {
-    display: inline-flex;
-    align-items: center;
-}
-
-.maplibregl-ctrl-attrib-button:focus, .maplibregl-ctrl-group button:focus {
-    box-shadow: unset;
-}
-
-.maplibregl-ctrl-attrib.maplibregl-compact-show {
-    padding: 0 23px 0 7px;
-}
-
-.maplibregl-ctrl-attrib-button {
-    width: 20px;
-    height: 20px;
-    background-size: cover;
-}
-
-.maplibregl-ctrl-attrib-inner {
-    font-size: 11px;
-}*/
 
 a.maplibregl-ctrl-logo {
     width: 60px;
@@ -549,29 +531,62 @@ a.maplibregl-ctrl-logo {
 }
 
 .maplibregl-ctrl-scale {
-    margin: 0 0 var(--spacing) 0!important;
+    margin: 0 0 var(--spacing) 0 !important;
 }
 
 .maplibregl-ctrl-group button {
     width: var(--mb-button-width);
     height: var(--mb-button-width);
+    transition: all .15s ease-in-out;
 }
 
-.maplibregl-ctrl button:not(.maplibregl-ctrl-fullscreen) .maplibregl-ctrl-icon {
+.maplibregl-ctrl-group button:first-child {
+    border-radius: 4px 4px 0 0;
+}
+
+.maplibregl-ctrl-group button:last-child {
+    border-radius: 0 0 4px 4px;
+}
+
+.maplibregl-ctrl-group button:only-child {
+    border-radius: 4px;
+}
+
+.maplibregl-ctrl button:not(:disabled):hover {
+    background-color: #f0f0f0;
+}
+
+.maplibregl-ctrl-group:not(:empty) {
+    box-shadow: 0 0 var(--spacing) rgb(0 0 0 / 15%);
+}
+
+.maplibregl-ctrl button span {
+    background-size: 56%;
+}
+
+.maplibregl-ctrl button.maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20640%20640%22%3E%3Cpath%20d%3D%22M400%2096C391.2%2096%20384%20103.2%20384%20112C384%20120.8%20391.2%20128%20400%20128L489.4%20128L320%20297.4L150.6%20128L240%20128C248.8%20128%20256%20120.8%20256%20112C256%20103.2%20248.8%2096%20240%2096L112%2096C103.2%2096%2096%20103.2%2096%20112L96%20240C96%20248.8%20103.2%20256%20112%20256C120.8%20256%20128%20248.8%20128%20240L128%20150.6L297.4%20320L128%20489.4L128%20400C128%20391.2%20120.8%20384%20112%20384C103.2%20384%2096%20391.2%2096%20400L96%20528C96%20536.8%20103.2%20544%20112%20544L240%20544C248.8%20544%20256%20536.8%20256%20528C256%20519.2%20248.8%20512%20240%20512L150.6%20512L320%20342.6L489.4%20512L400%20512C391.2%20512%20384%20519.2%20384%20528C384%20536.8%20391.2%20544%20400%20544L528%20544C536.8%20544%20544%20536.8%20544%20528L544%20400C544%20391.2%20536.8%20384%20528%20384C519.2%20384%20512%20391.2%20512%20400L512%20489.4L342.6%20320L512%20150.6L512%20240C512%20248.8%20519.2%20256%20528%20256C536.8%20256%20544%20248.8%20544%20240L544%20112C544%20103.2%20536.8%2096%20528%2096L400%2096z%22%2F%3E%3C%2Fsvg%3E") !important;
+}
+
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20640%20640%22%3E%3Cpath%20d%3D%22M344%20120C344%20106.7%20333.3%2096%20320%2096C306.7%2096%20296%20106.7%20296%20120L296%20296L120%20296C106.7%20296%2096%20306.7%2096%20320C96%20333.3%20106.7%20344%20120%20344L296%20344L296%20520C296%20533.3%20306.7%20544%20320%20544C333.3%20544%20344%20533.3%20344%20520L344%20344L520%20344C533.3%20344%20544%20333.3%20544%20320C544%20306.7%20533.3%20296%20520%20296L344%20296L344%20120z%22%2F%3E%3C%2Fsvg%3E") !important;
+}
+
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20640%20640%22%3E%3Cpath%20d%3D%22M96%20320C96%20311.2%20103.2%20304%20112%20304L528%20304C536.8%20304%20544%20311.2%20544%20320C544%20328.8%20536.8%20336%20528%20336L112%20336C103.2%20336%2096%20328.8%2096%20320z%22%2F%3E%3C%2Fsvg%3E") !important;
+}
+
+.maplibregl-ctrl button.maplibregl-ctrl-geolocate .maplibregl-ctrl-icon {
     background-size: 90%;
 }
 
-.mapbox-gl-draw_ctrl-draw-btn,
-.maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon {
-    background-size: 70%;
-}
-
-.maplibregl-ctrl-group button.maplibregl-ctrl-compass {
+.maplibregl-ctrl button.maplibregl-ctrl-compass {
     cursor: pointer;
-}
 
-.maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23ed254e' width='300' height='300' viewBox='0 0 29 29'%3E%3Cpath d='M10.5 14l4-8 4 8h-8z'/%3E%3Cpath d='M10.5 16l4 8 4-8h-8z' fill='%23ddd'/%3E%3C/svg%3E") !important;
+    .maplibregl-ctrl-icon {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23ed254e' width='300' height='300' viewBox='0 0 29 29'%3E%3Cpath d='M10.5 14l4-8 4 8h-8z'/%3E%3Cpath d='M10.5 16l4 8 4-8h-8z' fill='%23ddd'/%3E%3C/svg%3E") !important;
+        background-size: 90%;
+    }
 }
 
 .tooltip {

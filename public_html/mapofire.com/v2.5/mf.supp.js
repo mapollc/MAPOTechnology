@@ -9,9 +9,9 @@ class NearbyEvacuations {
     }
 
     distanceToSegmentMiles(v, w) {
-        const distToV = distance(this.y, this.x, v[1], v[0]); // distance from p to v
-        const distToW = distance(this.y, this.x, w[1], w[0]); // distance from p to w
-        const lineLength = distance(v[1], v[0], w[1], w[0]);
+        const distToV = conversion.distance(this.y, this.x, v[1], v[0]); // distance from p to v
+        const distToW = conversion.distance(this.y, this.x, w[1], w[0]); // distance from p to w
+        const lineLength = conversion.distance(v[1], v[0], w[1], w[0]);
 
         if (lineLength === 0) return distToV;
 
@@ -29,7 +29,7 @@ class NearbyEvacuations {
         const projX = vx + t * (wx - vx);
         const projY = vy + t * (wy - vy);
 
-        return distance(this.y, this.x, projY, projX);
+        return conversion.distance(this.y, this.x, projY, projX);
     }
 
     isPointInPolygon(polygon) {
@@ -126,6 +126,8 @@ class Popup {
         this.header = '<div class="header"' + (!title ? ' style="margin-bottom:0"' : '') + '><h1>' + title + '</h1><span id="close-popup" data-action="close-popup" title="Close popup" class="far fa-xmark-large"></span></div>';
         this.tall = tall;
         this.dialog = null;
+
+        if (isVisible('#modal')) new ClickListener().closeModal();
     }
 
     create(content) {
@@ -167,69 +169,123 @@ class Popup {
     }
 }
 
-class UTM {
-    constructor() {
-        this.k0 = 0.9996; // scale factor
-        this.e = 0.00669438; // eccentricity
-        this.e1sq = 0.006739497; // second eccentricity squared
-        this.a = 6378137; // major radius of the WGS84 ellipsoid
-    }
-
-    toUTM(lat, lon) {
-        let zoneNumber = Math.floor((lon + 180) / 6) + 1;
-
-        // Special zone for Norway
-        if (lat >= 56.0 && lat < 64.0 && lon >= 3.0 && lon < 12.0) {
-            zoneNumber = 32;
-        }
-
-        // Special zones for Svalbard
-        if (lat >= 72.0 && lat < 84.0) {
-            if (lon >= 0.0 && lon < 9.0) {
-                zoneNumber = 31;
-            } else if (lon >= 9.0 && lon < 21.0) {
-                zoneNumber = 33;
-            } else if (lon >= 21.0 && lon < 33.0) {
-                zoneNumber = 35;
-            } else if (lon >= 33.0 && lon < 42.0) {
-                zoneNumber = 37;
-            }
-        }
-
-        let lonOrigin = (zoneNumber - 1) * 6 - 180 + 3;
-        let lonOriginRad = deg2rad(lonOrigin);
-
-        let latRad = deg2rad(lat);
-        let lonRad = deg2rad(lon);
-
-        let N = this.a / Math.sqrt(1 - this.e * Math.sin(latRad) * Math.sin(latRad));
-        let T = Math.tan(latRad) * Math.tan(latRad);
-        let C = this.e1sq * Math.cos(latRad) * Math.cos(latRad);
-        let A = Math.cos(latRad) * (lonRad - lonOriginRad);
-
-        let M = this.a * ((1 - this.e / 4 - 3 * this.e * this.e / 64 - 5 * this.e * this.e * this.e / 256) * latRad
-            - (3 * this.e / 8 + 3 * this.e * this.e / 32 + 45 * this.e * this.e * this.e / 1024) * Math.sin(2 * latRad)
-            + (15 * this.e * this.e / 256 + 45 * this.e * this.e * this.e / 1024) * Math.sin(4 * latRad)
-            - (35 * this.e * this.e * this.e / 3072) * Math.sin(6 * latRad));
-
-        let UTMEasting = this.k0 * N * (A + (1 - T + C) * A * A * A / 6
-            + (5 - 18 * T + T * T + 72 * C - 58 * this.e1sq) * A * A * A * A * A / 120) + 500000.0;
-
-        let UTMNorthing = this.k0 * (M + N * Math.tan(latRad) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24
-            + (61 - 58 * T + T * T + 600 * C - 330 * this.e1sq) * A * A * A * A * A * A / 720));
-
-        if (lat < 0) {
-            UTMNorthing += 10000000.0; // 10000000 meter offset for southern hemisphere
-        }
-
-        return zoneNumber + 'T ' + UTMEasting.toFixed(1) + 'E ' + UTMNorthing.toFixed(1) + 'N';
-    }
-}
-
 class Weather {
     constructor(lat = null, lon = null) {
         this.lat = lat != null ? parseFloat(lat) : null;
         this.lon = lon != null ? parseFloat(lon) : null;
+        this.scale = [
+            [-50, -40, 'rgb(91, 18, 160)', '#fff'],
+            [-40, -30, 'rgb(203, 72, 207)', '#222'],
+            [-30, -20, 'rgb(111, 91, 226)', '#222'],
+            [-20, -10, 'rgb(117,107,177)', '#222'],
+            [-10, 0, 'rgb(13,0,125)', '#fff'],
+            [0, 10, 'rgb(0,102,194)', '#fff'],
+            [10, 20, 'rgb(74,199,255)', '#222'],
+            [20, 30, 'rgb(173,255,255)', '#222'],
+            [30, 40, 'rgb(0,153,150)', '#fff'],
+            [40, 50, 'rgb(6,109,44)', '#fff'],
+            [50, 60, 'rgb(116,196,118)', '#222'],
+            [60, 70, 'rgb(211,255,190)', '#222'],
+            [70, 80, 'rgb(255,237,160)', '#222'],
+            [80, 90, 'rgb(254,174,42)', '#222'],
+            [90, 100, 'rgb(252,78,42)', '#222'],
+            [100, 110, 'rgb(177,0,38)', '#222'],
+            [110, 120, 'rgb(89,0,66)', '#222']
+        ];
+        this.buildExpression = (steps, isColor = true) => {
+            const isF = settings.weather()?.temp() == 'f',
+                expr = ['case'];
+
+            steps.forEach(([fMin, fMax, val]) => {
+                const min = isF ? fMin : +conversion.FtoC(fMin).toFixed(1),
+                    max = isF ? fMax : +conversion.FtoC(fMax).toFixed(1);
+
+                expr.push(['all', ['>=', ['get', 'temp'], min], ['<', ['get', 'temp'], max]], val);
+            });
+
+            expr.push(isColor ? 'rgb(40,0,40)' : '#222');
+            return expr;
+        };
+        this.stnColors = {
+            bg: this.buildExpression(this.scale.map(s => [s[0], s[1], s[2]])),
+            text: this.buildExpression(this.scale.map(s => [s[0], s[1], s[3]]), false),
+        };
+    }
+
+    async findWXStn(stn) {
+        const resp = await api(`https://api.synopticdata.com/v2/stations/metadata?token=350409c14c544ec9957effb1c15bcb99&stid=${stn}`);
+
+        if (resp) {
+            const lat = resp.STATION[0].LATITUDE,
+                lon = resp.STATION[0].LONGITUDE;
+
+            map.easeTo({
+                center: [lon, lat],
+                zoom: 9.2,
+                duration: 1000
+            });
+
+            map.once('moveend', () => {
+                // get weather stations without checking the layer
+                if (!settings.isEnabled('stns')) config.layerActions['stns'].exe();
+
+                const wait = setInterval(() => {
+                    if (map.getSource('stns')) {
+                        clearInterval(wait);
+                        const data = map.getSource('stns')._data.geojson.features.filter(feat => feat.properties.STID == stn);
+
+                        if (data.length == 0) return;
+
+                        this.currentConds(data[0].properties);
+                    }
+                }, 200);
+            });
+        }
+    }
+
+    currentConds(p) {
+        if (!p) return;
+        setHeaders('Current Fire Weather at ' + p.NAME, 'weather/current/' + p.STID, 'See current fire weather conditions at ' + p.NAME + '.');
+
+        const hasPermissions = settings.hasPermissions('PRO'),
+            popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>');
+
+        let obs = typeof p.OBSERVATIONS === 'string' ? JSON.parse(p.OBSERVATIONS) : p.OBSERVATIONS,
+            t = obs.air_temp_value_1.value,
+            rh = obs.relative_humidity_value_1.value,
+            wetBulb = conversion.wetBulb(t, rh),
+            wd = obs.wind_direction_value_1.value ? conversion.getCompassDirection(obs.wind_direction_value_1.value) : 'Variable',
+            ws = obs.wind_speed_value_1.value,
+            feelsLike = (t < 60 && ws ? conversion.windChill(t, ws) : (t && rh ? conversion.heatIndex(t, rh) : null)),
+            tunit = 'F',
+            wunit = 'mph';
+
+        /* format temperature */
+        if (settings.weather()?.temp() == 'c' && t != null) {
+            tunit = 'C';
+            t = conversion.FtoC(t);
+            feelsLike = feelsLike != null ? conversion.FtoC(feelsLike).toFixed(1) : null;
+        } else {
+            feelsLike = feelsLike != null ? Math.round(conversion.FtoC(feelsLike)) : null;
+            t = Math.round(t);
+        }
+
+        /* format wind speed */
+        if (settings.weather()?.wind() != 'mph' && ws != null) {
+            ws = ws != null ? conversion.speed(ws, settings.weather().wind()) : null;
+            wunit = settings.weather().wind();
+        }
+
+        const stnData = `<div class="item"><div class="t">Station Name</div><div class="v">${p.NAME}</div></div>
+            <div class="item"><div class="t">Temperature</div><div class="v">${Math.round(t)}&deg;${tunit}</div></div>
+            <div class="item"><div class="t">Feels Like</div><div class="v">${feelsLike != null ? `${feelsLike}&deg;${tunit}` : 'N/A'}</div></div>
+            <div class="item"><div class="t">Wet-Bulb Temp.</div><div class="v">${wetBulb != null ? `${wetBulb.toFixed(1)}&deg;${tunit}` : 'N/A'}</div></div>
+            <div class="item"><div class="t">Humidity</div><div class="v">${Math.round(rh)}%</div></div>
+            <div class="item"><div class="t">Wind</div><div class="v">${(ws != null ? (ws == 0 ? 'Calm' : `${wd} at ${Math.round(ws)} ${wunit}`) : 'N/A')}</div></div>
+            <div class="item"><div class="t">Last report</div><div class="v">${timeAgo(new Date(obs.air_temp_value_1.date_time).getTime())}</div></div>
+            ${(!hasPermissions ? `<a href="${config.purchaseLink('wx_stn')}" class="btn btn-sm btn-yellow" style="display:block;margin:0 auto">Upgrade to see more data</a>` : '')}`;
+
+        popup.update(stnData, 'Current Conditions');
     }
 
     windIndicator(d) {
@@ -275,20 +331,21 @@ class Weather {
                     t = (o.temp.current ? Math.round(o.temp.current) : '--'),
                     rh = (o.rh ? Math.round(o.rh) : '--'),
                     wd = (o.wind_dir ? o.wind_dir : '--'),
-                    //rwd = (o.raw_wind_dir ? o.raw_wind_dir : null),
                     ws = (o.wind_speed ? Math.round(o.wind_speed) : '--'),
-                    u = timeAgo(wx.weather.updated);
+                    u = timeAgo(wx.weather.updated),
+                    tunit = 'F',
+                    wunit = 'mph';
 
                 /* format temperature */
-                if (settings.weather() && settings.weather().temp() == 'c' && t != '--') {
-                    t = conversion.FtoC(t) + '&deg;C';
-                } else {
-                    t += '&deg;F';
+                if (settings.weather()?.temp() == 'c' && t != '--') {
+                    t = conversion.FtoC(t).toFixed(1);
+                    tunit = 'C';
                 }
 
                 /* format wind speed */
-                if (settings.weather() && settings.weather().wind() != 'mph' && ws != '--') {
-                    ws = conversion.speed(ws, settings.weather().wind()) + ' ' + settings.weather().wind();
+                if (settings.weather()?.wind() != 'mph' && ws != '--') {
+                    ws = conversion.speed(ws, settings.weather().wind());
+                    wunit = settings.weather().wind();
                 }
 
                 const t1 = document.querySelector('#curwx #a h4'),
@@ -297,10 +354,10 @@ class Weather {
                     up = document.querySelector('#curwx .updated');
 
                 if (t1 && rh1 && w1) {
-                    t1.innerHTML = t;
+                    t1.innerHTML = `${t}&deg;${tunit}`;
                     rh1.innerHTML = (!o.rh || rh == '--' ? '--' : rh + '%');
                     //w1.querySelector('svg').style.transform = 'rotate(' + rwd + 'deg)';
-                    w1.innerHTML = ws + (ws != '--' ? ' mph' : '');
+                    w1.innerHTML = `${wd} @ ${ws} ${ws != '--' ? wunit : ''}`;
                     //w1.setAttribute('title', 'Winds are ' + wd + ' at ' + ws);
 
                     up.innerHTML = `Last report ${u}${settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? ' @ ' + name : ''}`;
@@ -322,87 +379,84 @@ class Weather {
     }
 
     async incidentForecast() {
-        let temp = [],
-            rh = [],
-            wind = [],
-            holder = document.querySelector('#fcstwx');
+        const holder = document.querySelector('#fcstwx'),
+            now = Date.now(),
+            pref = settings.weather() || {},
+            isMetric = pref.temp?.() === 'c',
+            wUnit = pref.wind?.() || 'mph',
+            formatWind = (val) => {
+                if (!isFinite(val)) return '--';
+                const converted = wUnit !== 'mph' ? conversion.speed(Math.round(val), wUnit) : Math.round(val);
+                return `${converted} ${wUnit}`;
+            }
 
         try {
-            const ap = await api('https://api.weather.gov/points/' + this.lat.toFixed(4) + ',' + this.lon.toFixed(4));
-            const data = await api(ap.properties.forecastGridData),
-                prop = data.properties;
+            const ap = await api(`https://api.weather.gov/points/${this.lat.toFixed(4)},${this.lon.toFixed(4)}`);
+            const { properties: prop } = await api(ap.properties.forecastGridData);
 
-            if (prop.temperature) {
-                for (let i = 0; i < prop.temperature.values.length; i++) {
-                    let t = new Date(prop.temperature.values[i].validTime.split('/')[0]).getTime();
+            if (!prop.temperature) throw new Error('No temp data');
 
-                    if (t >= new Date().getTime() && (t - new Date().getTime()) < 86400000) {
-                        temp.push(prop.temperature.values[i].value);
-                        rh.push(prop.relativeHumidity.values[i].value);
+            const validIndices = prop.temperature.values
+                .map((v, i) => ({ t: new Date(v.validTime.split('/')[0]).getTime(), i }))
+                .filter(item => item.t >= now && item.t - now < 86400000)
+                .map(item => item.i);
+            const tempArray = validIndices.map(i => prop.temperature.values[i].value),
+                rhArray = validIndices.map(i => prop.relativeHumidity.values[i].value),
+                windArray = validIndices.filter(i => prop.windSpeed.values[i]).map(i => prop.windSpeed.values[i].value);
 
-                        if (prop.windSpeed.values[i]) {
-                            wind.push(prop.windSpeed.values[i].value);
-                        }
-                    }
-                }
+            let maxT = Math.max(...tempArray) * 1.8 + 32,
+                minRH = Math.min(...rhArray),
+                avgW = (windArray.reduce((a, b) => a + b, 0) / windArray.length) / 1.609,
+                maxW = Math.max(...windArray) / 1.609;
 
-                let a = Math.round((Math.max.apply(null, temp) * 1.8) + 32),
-                    b = Math.min.apply(null, rh),
-                    c = Math.round((wind.reduce((partialSum, a) => partialSum + a, 0) / wind.length) / 1.609),
-                    d = Math.round(Math.max.apply(null, wind) / 1.609),
-                    mt = modal.querySelector('#fcstwx #a h4'),
-                    mh = modal.querySelector('#fcstwx #b h4'),
-                    aw = modal.querySelector('#fcstwx #c h4'),
-                    mw = modal.querySelector('#fcstwx #d h4'),
-                    u = modal.querySelector('#fcstwx .updated'),
-                    btn = '<div class="btn-group centered" style="margin:0">';
+            const displayT = isMetric ? `${conversion.FtoC(maxT).toFixed(1)}&deg;C` : `${Math.round(maxT)}&deg;F`,
+                displayAvgW = formatWind(avgW),
+                displayMaxW = formatWind(maxW);
 
-                /*rating(a, b, c, d);*/
+            // 5. Update DOM
+            const q = (sel) => modal.querySelector(`#fcstwx ${sel}`);
+            q('#a h4').innerHTML = displayT;
+            q('#b h4').innerHTML = `${minRH}%`;
+            q('#c h4').innerHTML = displayAvgW;
+            q('#d h4').innerHTML = displayMaxW;
+            q('.updated').innerHTML = `Last forecasted ${timeAgo(new Date(prop.updateTime).getTime())}`;
 
-                if (settings.weather() && settings.weather().temp() == 'c') {
-                    a = conversion.FtoC(a) + '&deg;C';
-                } else {
-                    a += '&deg;F';
-                }
+            // 6. Premium Button Logic
+            const isPremium = settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM);
+            const btnHtml = isPremium
+                ? `<a href="#" class="btn btn-orange btn-sm" style="margin:0" data-lat="${this.lat}" data-lon="${this.lon}" data-action="incident_wx-fwf" onclick="return false">View the full fire forecast</a>`
+                : `<a href="#" class="btn btn-sm btn-orange" style="margin:0" data-action="upgrade-subscription" data-medium="acres_history" onclick="return false"><i class="fas fa-lock"></i> Upgrade to view forecast</a>`;
 
-                if (settings.weather() && settings.weather().wind() != 'mph') {
-                    c = conversion.speed(c, settings.weather().wind()) + ' ' + settings.weather().wind();
-                    d = conversion.speed(d, settings.weather().wind()) + ' ' + settings.weather().wind();
-                } else {
-                    c += ' mph';
-                    d += ' mph';
-                }
+            q('.updated').insertAdjacentHTML('afterend', `<div class="btn-group centered" style="margin:0">${btnHtml}</div>`);
 
-                mt.innerHTML = a;
-                mh.innerHTML = b + '%';
-                aw.innerHTML = (c.toString() == 'NaN mph' ? '--' : c);
-                mw.innerHTML = (d.toString() == '-Infinity mph' ? '--' : d);
-
-                u.innerHTML = `Last forecasted ${timeAgo(new Date(prop.updateTime).getTime())}`;
-
-                if (settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
-                    btn += '<a href="#" class="btn btn-orange btn-sm" style="margin:0" data-lat="' + this.lat + '" data-lon="' + this.lon + '" data-action="incident_wx-fwf" onclick="return false">View the full fire forecast</a>';
-                } else {
-                    btn += '<a href="#" class="btn btn-sm btn-orange" style="margin:0"  data-action="upgrade-subscription" data-medium="acres_history" onclick="return false"><i class="fas fa-lock"></i>Upgrade to view forecast</a>';
-                }
-
-                u.insertAdjacentHTML('afterend', btn + '</dov>');
-            } else {
-                console.error('There is an error getting incident weather concerns', error);
-
-                if (holder != null) {
-                    holder.innerHTML = '<h3>Incident Weather Concerns</h3><div class="message error">The 24-hour fire forecast is unavailable at this time.</div>';
-                }
-            }
         } catch (error) {
-            console.error('There is an error getting incident weather concerns', error);
-
-            if (holder != null) {
-                holder.innerHTML = '<h3>Incident Weather Concerns</h3><div class="message error">The 24-hour fire forecast is unavailable at this time.</div>';
+            console.error('Incident weather error:', error);
+            if (holder) {
+                holder.innerHTML = `<h3>Incident Weather Concerns</h3><div class="message error">The 24-hour fire forecast is unavailable at this time.</div>`;
             }
         }
-
         return this;
+    }
+
+    updateRAWSUnits() {
+        const isF = settings.weather()?.temp() === 'f';
+
+        const newBg = this.buildExpression(this.scale.map(s => [s[0], s[1], s[2]]));
+        const newText = this.buildExpression(this.scale.map(s => [s[0], s[1], s[3]]), false);
+
+        // 2. Apply directly to map layers
+        if (map.getLayer('stns')) {
+            map.setPaintProperty('stns', 'circle-color', newBg);
+            map.setPaintProperty('stns', 'circle-radius', [
+                'case', ['>', ['get', 'temp'], isF ? 99 : 37.2], 15, 13
+            ]);
+        }
+
+        if (map.getLayer('stns_text')) {
+            map.setPaintProperty('stns_text', 'text-color', newText);
+        }
+
+        this.raws(true);
     }
 
     async raws(update = false) {
@@ -423,9 +477,9 @@ class Weather {
         if (data.STATION) {
             data.STATION.forEach((s) => {
                 if (s.OBSERVATIONS.air_temp_value_1) {
-                    const t = s.OBSERVATIONS.air_temp_value_1.value;
+                    let t = s.OBSERVATIONS.air_temp_value_1.value;
 
-                    if (settings.weather() && settings.weather().temp() == 'c' && t != '--') {
+                    if (settings.weather()?.temp() == 'c' && t != '--') {
                         t = conversion.FtoC(s.OBSERVATIONS.air_temp_value_1.value);
                     }
 
@@ -475,27 +529,10 @@ class Weather {
                             ['!', ['has', 'point_count']]
                         ],
                         paint: {
-                            'circle-color': [
-                                'case',
-                                ['all', ['>=', ['get', 'temp'], -20], ['<', ['get', 'temp'], -10]], 'rgb(117,107,177)',
-                                ['all', ['>=', ['get', 'temp'], -10], ['<', ['get', 'temp'], 0]], 'rgb(13,0,125)',
-                                ['all', ['>=', ['get', 'temp'], 0], ['<', ['get', 'temp'], 10]], 'rgb(0,102,194)',
-                                ['all', ['>=', ['get', 'temp'], 10], ['<', ['get', 'temp'], 20]], 'rgb(74,199,255)',
-                                ['all', ['>=', ['get', 'temp'], 20], ['<', ['get', 'temp'], 30]], 'rgb(173,255,255)',
-                                ['all', ['>=', ['get', 'temp'], 30], ['<', ['get', 'temp'], 40]], 'rgb(0,153,150)',
-                                ['all', ['>=', ['get', 'temp'], 40], ['<', ['get', 'temp'], 50]], 'rgb(6,109,44)',
-                                ['all', ['>=', ['get', 'temp'], 50], ['<', ['get', 'temp'], 60]], 'rgb(116,196,118)',
-                                ['all', ['>=', ['get', 'temp'], 60], ['<', ['get', 'temp'], 70]], 'rgb(211,255,190)',
-                                ['all', ['>=', ['get', 'temp'], 70], ['<', ['get', 'temp'], 80]], 'rgb(255,237,160)',
-                                ['all', ['>=', ['get', 'temp'], 80], ['<', ['get', 'temp'], 90]], 'rgb(254,174,42)',
-                                ['all', ['>=', ['get', 'temp'], 90], ['<', ['get', 'temp'], 100]], 'rgb(252,78,42)',
-                                ['all', ['>=', ['get', 'temp'], 100], ['<', ['get', 'temp'], 110]], 'rgb(177,0,38)',
-                                ['all', ['>=', ['get', 'temp'], 110], ['<', ['get', 'temp'], 120]], 'rgb(89,0,66)',
-                                'rgb(40,0,40)'
-                            ],
+                            'circle-color': this.stnColors.bg,
                             'circle-radius': [
                                 'case',
-                                ['>', ['get', 'temp'], 99], 15,
+                                ['>', ['get', 'temp'], settings.weather()?.temp == 'f' ? 99 : 37.2], 15,
                                 13
                             ]
                         }
@@ -513,24 +550,7 @@ class Weather {
                             ['!', ['has', 'point_count']]
                         ],
                         paint: {
-                            'text-color': [
-                                'case',
-                                ['all', ['>=', ['get', 'temp'], -20], ['<', ['get', 'temp'], -10]], '#222',
-                                ['all', ['>=', ['get', 'temp'], -10], ['<', ['get', 'temp'], 0]], '#fff',
-                                ['all', ['>=', ['get', 'temp'], 0], ['<', ['get', 'temp'], 10]], '#fff',
-                                ['all', ['>=', ['get', 'temp'], 10], ['<', ['get', 'temp'], 20]], '#222',
-                                ['all', ['>=', ['get', 'temp'], 20], ['<', ['get', 'temp'], 30]], '#222',
-                                ['all', ['>=', ['get', 'temp'], 30], ['<', ['get', 'temp'], 40]], '#fff',
-                                ['all', ['>=', ['get', 'temp'], 40], ['<', ['get', 'temp'], 50]], '#fff',
-                                ['all', ['>=', ['get', 'temp'], 50], ['<', ['get', 'temp'], 60]], '#222',
-                                ['all', ['>=', ['get', 'temp'], 60], ['<', ['get', 'temp'], 70]], '#222',
-                                ['all', ['>=', ['get', 'temp'], 70], ['<', ['get', 'temp'], 80]], '#222',
-                                ['all', ['>=', ['get', 'temp'], 80], ['<', ['get', 'temp'], 90]], '#222',
-                                ['all', ['>=', ['get', 'temp'], 90], ['<', ['get', 'temp'], 100]], '#222',
-                                ['all', ['>=', ['get', 'temp'], 100], ['<', ['get', 'temp'], 110]], '#222',
-                                ['all', ['>=', ['get', 'temp'], 110], ['<', ['get', 'temp'], 120]], '#222',
-                                '#222'
-                            ]
+                            'text-color': this.stnColors.text
                         },
                         layout: {
                             'symbol-placement': 'point',
@@ -539,7 +559,7 @@ class Weather {
                             'text-field': ['concat', ['get', 'temp'], '°'],
                             'text-justify': 'center',
                             'text-size': 13,
-                            'text-offset': [0, 0.1]
+                            'text-offset': [0, 0]
                         }
                     });
 
@@ -548,6 +568,14 @@ class Weather {
                     });
 
                     map.on('mouseleave', 'stns', () => {
+                        map.getCanvas().style.cursor = 'auto';
+                    });
+
+                    map.on('mouseenter', 'stns_text', () => {
+                        map.getCanvas().style.cursor = 'pointer';
+                    });
+
+                    map.on('mouseleave', 'stns_text', () => {
                         map.getCanvas().style.cursor = 'auto';
                     });
                 }
@@ -616,7 +644,7 @@ class Weather {
                         stns = [];
 
                     airQualityStns.features.forEach((f) => {
-                        const dist = distance(this.lat, this.lon, f.geometry.coordinates[1], f.geometry.coordinates[0]);
+                        const dist = conversion.distance(this.lat, this.lon, f.geometry.coordinates[1], f.geometry.coordinates[0]);
 
                         distances.push(dist);
                         stns.push(f.properties);
@@ -665,8 +693,8 @@ class ChangeListener {
 
             const dont = ['newFires', 'allFires', 'smokeChecks', 'rxBurns', 'perimeters'];
 
-            if (settings.get('checkboxes')) {
-                settings.get('checkboxes').forEach((c) => {
+            if (settings.checkboxes()) {
+                settings.checkboxes().forEach((c) => {
                     if (!dont.includes(c)) {
                         toggleLayer({ id: c, checked: true });
                     }
@@ -898,39 +926,6 @@ function loadScript(src) {
     });
 }
 
-function convertToDms(dd, isLng) {
-    var dir = dd < 0
-        ? isLng ? 'W' : 'S'
-        : isLng ? 'E' : 'N';
-
-    var absDd = Math.abs(dd),
-        deg = absDd | 0,
-        frac = absDd - deg,
-        min = (frac * 60) | 0,
-        sec = Math.round((frac * 3600 - min * 60) * 100) / 100;
-
-    return deg + "&deg; " + min + "' " + sec + '" ' + dir;
-}
-
-function rad2deg(rad) {
-    return rad / Math.PI * 180;
-}
-
-function deg2rad(deg) {
-    return deg * Math.PI / 180;
-}
-
-function distance(lat1, lon1, lat2, lon2) {
-    var R = 6371,
-        dLat = deg2rad(lat2 - lat1),
-        dLon = deg2rad(lon2 - lon1),
-        a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2),
-        c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
-        d = R * c;
-
-    return (d / 1.609);
-}
-
 function dateTime(it, time = false, timezone = false, longMonth = false) {
     let t = new Date(it.toString().length == 10 ? it * 1000 : it),
         h = (t.getHours() == 0 ? 12 : (t.getHours() > 12 ? t.getHours() - 12 : t.getHours())),
@@ -1000,7 +995,7 @@ function initNDFDTimes() {
             ts = y + '-' + m + '-' + d + 'T' + h + ':00:00.000Z',
             lh = (t.getHours() > 12 ? t.getHours() - 12 : (t.getHours() == 0 ? '12' : t.getHours())) + ':00';
 
-        o += '<option ' + (settings.get('special') && settings.get('special').fcstTime == ts ? 'selected ' : '') + 'value="' + ts + '">' + (lh == 0 ? '12' : lh) + ' ' + (t.getHours() >= 12 ? 'P' : 'A') + 'M</option>';
+        o += `<option ${settings.special().fcstTime() == ts ? 'selected ' : ''}value="${ts}">${lh == 0 ? '12' : lh} ${t.getHours() >= 12 ? 'P' : 'A'}M</option>`;
     }
 
     return o;
@@ -1433,12 +1428,7 @@ async function onMapClick(e) {
                         };
 
                     wfClass.logFire(data.wfid, data);
-
-                    if (settings.fire().display()) {
-                        wfClass.incident(data.wfid, true);
-                    } else {
-                        window.open(config.host + feature.properties.url);
-                    }
+                    wfClass.incident(data.wfid, true);
                 }
 
                 break;
@@ -1836,78 +1826,7 @@ async function onMapClick(e) {
 
             /* on weather stations click */
             if (feature.source == 'stns') {
-                let raws, rawsData = '';
-                const hasPermissions = settings.hasPermissions('PRO'),
-                    popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>'),
-                    fdr = (r) => {
-                        r = r.replace(' ', '');
-
-                        switch (r) {
-                            case 'L': return 'Low';
-                            case 'M': return 'Moderate';
-                            case 'H': return 'High';
-                            case 'E': return 'Extreme';
-                        }
-                    };
-                let p = feature.properties,
-                    stnID = p.STID;
-
-                if (hasPermissions) {
-                    raws = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/DRAFT_NFDRS_v3_view/FeatureServer/0/query?where=MesoWestURL+LIKE+%27%25' + stnID + '%25%27&resultRecordCount=1&outFields=one_hr%2Cten_hr%2Chu_hr%2Cth_hr%2Cic%2Csc%2Cec%2Cbi%2Cadj%2Ckbdi&returnGeometry=false&f=json');
-                }
-
-                let obs = JSON.parse(p.OBSERVATIONS),
-                    t = obs.air_temp_value_1.value,
-                    rh = obs.relative_humidity_value_1.value,
-                    wd = obs.wind_direction_value_1.value,
-                    ws = obs.wind_speed_value_1.value,
-                    fl = (t < 60 && ws ? conversion.windChill(t, ws) : (t && rh ? conversion.heatIndex(t, rh) : null));
-
-                /* format temperature */
-                if (settings.weather() && settings.weather().temp() == 'c' && t != null) {
-                    t = conversion.FtoC(t) + '&deg;C';
-                    fl = fl == null ? null : conversion.FtoC(fl) + '&deg;C';
-                } else {
-                    t = Math.round(t) + '&deg;F';
-                    fl += fl == null ? '' : '&deg;F';
-                }
-
-                if (wd) {
-                    wd = conversion.getCompassDirection(wd);
-                } else {
-                    wd = 'Variable';
-                }
-
-                /* format wind speed */
-                if (settings.weather() && settings.weather().wind() != 'mph' && ws != null) {
-                    ws = conversion.speed(ws, settings.weather().wind()) + ' ' + settings.weather().wind();
-                } else {
-                    ws += ' mph';
-                }
-
-                if (hasPermissions && raws && raws.features.length > 0) {
-                    rawsData = '<div class="item"><div class="t">1-hr Fuel Moisture</div><div class="v">' + raws.features[0].attributes.one_hr.toFixed(1) + '%</div></div>' +
-                        '<div class="item"><div class="t">10-hr Fuel Moisture</div><div class="v">' + raws.features[0].attributes.ten_hr.toFixed(1) + '%</div></div>' +
-                        '<div class="item"><div class="t">100-hr Fuel Moisture</div><div class="v">' + raws.features[0].attributes.hu_hr.toFixed(1) + '%</div></div>' +
-                        '<div class="item"><div class="t">1000-hr Fuel Moisture</div><div class="v">' + raws.features[0].attributes.th_hr.toFixed(1) + '%</div></div>' +
-                        '<div class="item"><div class="t">Ignition Component</div><div class="v">' + raws.features[0].attributes.ic + '</div></div>' +
-                        '<div class="item"><div class="t">Spread Component</div><div class="v">' + raws.features[0].attributes.sc + '</div></div>' +
-                        '<div class="item"><div class="t">Energy Release Component</div><div class="v">' + raws.features[0].attributes.ec + '</div></div>' +
-                        '<div class="item"><div class="t">Burning Index</div><div class="v">' + raws.features[0].attributes.bi + '</div></div>' +
-                        '<div class="item"><div class="t">Keetch-Byram Drought Index</div><div class="v">' + raws.features[0].attributes.kbdi + '</div></div>' +
-                        '<div class="item"><div class="t">Fire Danger</div><div class="v">' + fdr(raws.features[0].attributes.adj) + '</div></div>';
-                }
-
-                const stnData = '<div class="item"><div class="t">Station Name</div><div class="v">' + p.NAME + '</div></div>' +
-                    '<div class="item"><div class="t">Temperature</div><div class="v">' + t + '</div></div>' +
-                    (fl != null ? '<div class="item"><div class="t">Feels Like</div><div class="v">' + fl + '</div></div>' : '') +
-                    '<div class="item"><div class="t">Humidity</div><div class="v">' + Math.round(rh) + '%</div></div>' +
-                    '<div class="item"><div class="t">Wind</div><div class="v">' + (ws == 0 ? 'Calm' : wd + ' at ' + ws) + '</div></div>' +
-                    (rawsData ? rawsData : '') +
-                    '<div class="item"><div class="t">Last reported</div><div class="v">' + timeAgo(new Date(obs.air_temp_value_1.date_time).getTime()) + '</div></div>' +
-                    (!hasPermissions ? '<a href="' + config.purchaseLink('wx_stn') + '" class="btn btn-sm btn-yellow" style="display:block;margin:0 auto">Upgrade to see more data</a>' : '');
-
-                popup.update(stnData, 'Current Weather');
+                new Weather().currentConds(feature.properties);
 
                 break;
             }

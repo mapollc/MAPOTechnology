@@ -141,7 +141,7 @@ const specificURL = window.location.origin + '/',
             'modis24': { layers: ['modis24'], exe: () => { config.layersHandler.modis(1); } },
             'modis48': { layers: ['modis48'], exe: () => { config.layersHandler.modis(2); } },
             'modis72': { layers: ['modis72'], exe: () => { config.layersHandler.modis(3); } },
-            'ev': { layers: ['ev'], exe: () => { config.layersHandler.ev(); } },
+            'ev': { layers: ['ev'], exe: () => { config.layersHandler.pnwVulnerability(); } },
             'rth': { layers: ['rth'], exe: () => { config.layersHandler.rth(); } },
             'wet': { layers: ['wet'], exe: () => { config.layersHandler.wet(); } },
             'bp': { layers: ['bp'], exe: () => { config.layersHandler.bp(); } },
@@ -252,11 +252,6 @@ const specificURL = window.location.origin + '/',
             new maplibregl.FullscreenControl({
                 container: document.body
             }),
-            new maplibregl.NavigationControl({
-                showCompass: true,
-                showZoom: true,
-                visualizePitch: true
-            }),
             new maplibregl.GeolocateControl({
                 positionOptions: {
                     enableHighAccuracy: true
@@ -266,6 +261,11 @@ const specificURL = window.location.origin + '/',
                 },
                 trackUserLocation: true,
                 showUserHeading: true
+            }),
+            new maplibregl.NavigationControl({
+                showCompass: true,
+                showZoom: true,
+                visualizePitch: true
             })
         ]
     },
@@ -374,153 +374,6 @@ const specificURL = window.location.origin + '/',
     impactHeader = `<header><h3 id="a" class="title"><div class="placeholder" style="width:225px;height:28px"></div></h3><div id="mclose" data-action="close-impact" title="Close window">
     <i class="far fa-xmark" data-action="close-impact"></i></div></header>`,
     noneTracked = '<p class="message error">You aren\'t following any wildfires yet. Click on a fire to start following an incident.</p>',
-    userSettingsForm = `<div id="settings">
-<div class="my-subs">
-  <h2 style="margin:0">My Subscriptions</h2>
-  <div id="subs"></div>
-</div>
-  <h2>Map Settings</h2>
-<!--<div class="r" style="margin-bottom:6px">
-  <div class="var">Dark Mode</div>
-  <div class="input">
-    <label class="switch">
-      <input id="dark_mode" data-action="dark_mode" type="checkbox">
-      <div class="slider"></div>
-    </label>
-  </div>
-</div>-->
-<div class="r">
-  <div class="var">Save Frequency</div>
-  <div class="input">
-     <select id="saveFreq" data-action="user-setting">
-        <option value="60000">1 min</option>
-        <option value="300000">5 mins</option>
-        <option value="600000">10 mins</option>
-        <option value="900000">15 mins</option>
-        <option value="1800000">30 mins</option>
-     </select>
-  </div>
-</div>
-<div class="r">
-  <div class="var">Perimeter Color</div>
-  <div class="input">
-     <select id="perimColor" data-action="user-setting">
-        <option value="default">Default</option>
-        <option value="red">Red</option>
-        <option value="blue">Blue</option>
-        <option value="orange">Orange</option>
-        <option value="green">Green</option>
-        <option value="purple">Purple</option>
-        <option value="brown">Brown</option>
-        <option value="black">Black</option>
-     </select>
-  </div>
-</div>
-<div class="r">
-  <div class="var">Perimeter Tooltip</div>
-  <div class="input">
-     <select id="perimTtip" data-action="user-setting">
-        <option value="1">Yes</option>
-        <option value="0">No</option>
-     </select>
-  </div>
-</div>
-<div class="r">
-  <div class="var">Perimeter Zoom</div>
-  <div class="input">
-     <select id="perimZoom" data-action="user-setting">
-        <option value="1">Yes</option>
-        <option value="0">No</option>
-     </select>
-  </div>
-</div>
-<div class="r">
-  <div class="var">Coordinates</div>
-  <div class="input">
-     <select id="coordsDisplay" data-action="user-setting">
-        <option value="dec">Decimal</option>
-        <option value="dms">Degs, Mins, Secs</option>
-        <option value="utm">UTM</option>
-     </select>
-  </div>
-</div>
-<div class="r">
-  <div class="var">Temperature Unit</div>
-  <div class="input">
-     <select id="tempUnit" data-action="user-setting">
-        <option value="f">&deg;F</option>
-        <option value="c">&deg;C</option>
-     </select>
-  </div>
-</div>
-<div class="r">
-  <div class="var">Wind Speed Unit</div>
-  <div class="input">
-     <select id="windSpeedUnit" data-action="user-setting">
-        <option value="mph">mph</option>
-        <option value="m/s">m/s</option>
-        <option value="kts">kts</option>
-        <option value="km/h">km/h</option>
-     </select>
-  </div>
-</div>
-<div class="r">
-  <div class="var">Fire Size Unit</div>
-  <div class="input">
-     <select id="acresUnit" data-action="user-setting">
-        <option value="acres">acres</option>
-        <option value="hectares">hectares</option>
-        <option value="sqmi">sq. mi.</option>
-        <option value="sqkm">sq. km.</option>
-     </select>
-  </div>
-</div>
-<div class="r">
-  <div class="var">Cache Fire Data</div>
-  <div class="input">
-     <select id="locallySave" data-action="user-setting">
-        <option value="y">Yes</option>
-        <option value="n">No</option>
-     </select>
-  </div>
-</div>
-<div class="r">
-  <div class="var">Fire Display</div>
-  <div class="input">
-     <select id="fireDisplay" data-action="user-setting">
-        <option value="page">Open incident page</option>
-        <option value="map">On the map</option>
-     </select>
-  </div>
-</div>
-<div style="margin-top:5em;font-size:12px;text-align:center;color:var(--blue-gray);line-height:1.3">
- &copy; ${new Date().getFullYear()} ${config.company}<br>Version ${version}<br>
- <a class="footer-link" href="${config.specificURL}logout?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}">Logout</a>&nbsp;&middot;&nbsp;
- <a class="footer-link" href="https://mapofire.com/release-notes" target="blank">Change Log</a>&nbsp;&middot;&nbsp;
- <a class="footer-link" href="${config.domain}about/legal/terms" target="blank">Terms</a>&nbsp;&middot;&nbsp;
- <a class="footer-link" href="${config.domain}about/legal/privacy" target="blank">Privacy</a>
-</div>
-</div>`,
-    newReport = `<form id="newReport" method="post">
-<input type="hidden" name="platform" value="web"><input type="hidden" name="authUser" value="0"><input type="hidden" name="lat"><input type="hidden" name="lon"><input type="hidden" name="state">
-<input type="hidden" name="version" value="${version}">
-<input type="hidden" name="geolocation"><label>County</label><input type="text" id="gc" value="Loading..." disabled><label>State</label><input type="text" id="gs" value="Loading..." disabled><label>General Location</label><input type="text" id="gl" value="Loading..." disabled>
-<label>What type of incident is this?</label>
-<select name="type">
-    <option>- Choose -</option>
-    <option value="Wildfire">Wildfire</option>
-    <option value="Smoke Check">Smoke Check</option>
-    <option value="Prescribed Burn">Prescribed Burn</option>
-</select>
-<label>How big is it?</label><input type="text" name="size" placeholder="eg: 10" style="display:inline-block;max-width:100px">
-<div id="alab" style="display:inline-block;padding-left:5px">acres</div>
-<label>Brief description of incident:</label>
-<textarea name="notes" placeholder="Anything else you can add..." style="min-height:100px;resize:none"></textarea>
-<div class="btn-group centered"><input type="submit" class="btn btn-blue" value="Submit Report">
-    <a class="btn btn-gray" href="#" data-action="close-data-form" onclick="return false">Cancel</a>
-</div>
-<div class="disclaimer">Submitting this report only sends information to the ${config.productName} team&mdash;it does not send any information to emergency or governmental authorities. Please call 911 to report a new wildfire.</div>
-</form>`,
     risk = {
         'whp': [
             ['N/A', '#fff'],
@@ -1137,7 +990,7 @@ class Settings {
             saveFreq: 300000
         };
         this.user = u;
-        this.role = u != null ? u.role : 'GUEST';
+        this.role = this.user?.role ?? 'GUEST';
         this.settings = u != null && u.settings.allsettings ? u.settings.allsettings : this.defaultSettings;
         this.archive = typeof historical !== 'undefined' && this.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? historical : null;
 
@@ -1205,6 +1058,7 @@ class Settings {
                 }
 
                 this.settings.weather.temp = val;
+                new Weather().updateRAWSUnits();
             } else if (id == 'windSpeedUnit') {
                 if (!this.settings.weather) {
                     this.settings.weather = {};
@@ -1224,12 +1078,29 @@ class Settings {
         saveSession(true);
     }
 
-    get(t) {
-        return this.settings[t] ? this.settings[t] : false;
+    checkboxes() {
+        return this.settings['checkboxes'];
     }
 
-    includes(v) {
-        return this.get('checkboxes') ? this.get('checkboxes').includes(v) : false;
+    get() {
+        return {
+            coordsDisplay: () => {
+                return this.settings['coordsDisplay'] ?? 'dec';
+            },
+            saveFreq: () => {
+                return this.settings['saveFreq'] ?? 300000;
+            },
+            acres: () => {
+                return this.settings['acres'] ?? 'acres';
+            },
+            locallySave: () => {
+                return this.settings['locallySave'] ?? 'n';
+            }
+        };
+    }
+
+    isEnabled(id) {
+        return this.checkboxes()?.includes(id) ?? false;
     }
 
     map() {
@@ -1244,15 +1115,11 @@ class Settings {
     }
 
     getBasemap() {
-        if (document.body.classList.contains('dark-mode')) {
-            return 'dark';
-        } else {
-            return this.settings.tile;
-        }
+        return this.settings.tile;
     }
 
     subscriptions() {
-        let sub = new Subscription(this.user);
+        const sub = new Subscription(this.user);
 
         return {
             valid: () => {
@@ -1307,24 +1174,24 @@ class Settings {
             getName: () => {
                 return {
                     first: () => {
-                        return this.user == null ? null : this.user.first_name;
+                        return this.user?.first_name ?? null;
                     },
                     last: () => {
-                        return this.user == null ? null : this.user.last_name;
+                        return this.user?.last_name ?? null;
                     }
                 };
             },
             role: () => {
-                return this.user == null ? null : this.role;
+                return this.user ? this.role : null;
             },
             token: () => {
-                return this.user == null ? null : this.user.token;
+                return this.user?.token ?? null;
             },
             uid: () => {
-                return this.user == null ? null : this.user.uid;
+                return this.user?.uid ?? null;
             },
             synced: () => {
-                return this.user == null ? null : this.user.settings.synced;
+                return this.user?.settings.synced ?? null;
             }
         };
     }
@@ -1333,41 +1200,37 @@ class Settings {
         return {
             cache: () => {
                 return this.settings.locallySave == 'y' ? true : false;
-            },
+            }/*,
             display: () => {
                 return this.settings.fireDisplay == 'page' ? false : true;
-            }
+            }*/
         }
     }
 
     perimeters() {
-        if (this.settings.perimeters !== undefined) {
-            return {
-                zoom: () => {
-                    return this.settings.perimeters.zoom;
-                },
-                minSize: () => {
-                    return this.settings.perimeters.minSize;
-                },
-                color: () => {
-                    return this.settings.perimeters.color;
-                },
-                ttip: () => {
-                    return this.settings.perimeters.ttip;
-                }
-            };
-        } else {
-            return null;
-        }
+        return {
+            zoom: () => {
+                return this.settings.perimeters?.zoom ?? 1;
+            },
+            minSize: () => {
+                return Number(this.settings.perimeters?.minSize) ?? 500;
+            },
+            color: () => {
+                return this.settings.perimeters?.color ?? 'default';
+            },
+            ttip: () => {
+                return this.settings.perimeters?.ttip ?? 1;
+            }
+        };
     }
 
     weather() {
         return {
             wind: () => {
-                return this.settings.weather && this.settings.weather.wind ? this.settings.weather.wind : 'mph';
+                return this.settings.weather?.wind ?? 'mph';
             },
             temp: () => {
-                return this.settings.weather && this.settings.weather.temp ? this.settings.weather.temp : 'f';
+                return this.settings.weather?.temp ?? 'f';
             }
         };
     }
@@ -1375,16 +1238,38 @@ class Settings {
     special() {
         return {
             erc: () => {
-                return this.settings.special && this.settings.special.erc ? this.settings.special.erc : 'obs';
+                return this.settings.special?.erc ?? 'obs';
             },
             otlkDay: () => {
-                return this.settings.special && this.settings.special.otlkDay ? this.settings.special.otlkDay : 1;
+                return this.settings.special?.otlkDay ?? 1;
             },
             otlkType: () => {
-                return this.settings.special && this.settings.special.otlkType ? this.settings.special.otlkType : 'severe';
+                return this.settings.special?.otlkType ?? 'severe';
+            },
+            sfpDate: () => {
+                return this.settings.special?.sfpDate ?? '';
+            },
+            forecastModel: () => {
+                return this.settings.special?.forecastModel ?? 'air_temperature';
+            },
+            fcstTime: () => {
+                return this.settings.special?.fcstTime ?? '';
             }
         };
     }
+
+    /*logMovement() {
+        const sn = 'mapofire.movements',
+            c = map.getCenter(),
+            history = JSON.parse(localStorage.getItem(sn) || '[]');
+
+        history.push({
+            g: [c.lat, c.lng, map.getBearing(), map.getPitch()],
+            w: Date.now()
+        });
+
+        localStorage.setItem(sn, JSON.stringify(history));
+    }*/
 }
 
 class Subscription {
@@ -1393,21 +1278,16 @@ class Subscription {
         this.user = u;
 
         if (this.user && this.user.subscriptions != null) {
-            /*this.user.subscriptions.forEach((s) => {
-                if (s.plan == config.sub_id) {
-                    this.sub = s;
-                }
-            });*/
             this.sub = this.user.subscriptions[0];
         }
     }
 
     name() {
-        return this.sub ? this.sub.name : null;
+        return this.sub?.name ?? null;
     }
 
     plan() {
-        return this.sub ? this.sub.id : null;
+        return this.sub?.id ?? null;
     }
 
     isTrial() {
@@ -1419,11 +1299,11 @@ class Subscription {
     }
 
     cid() {
-        return this.sub ? this.sub.cid : null;
+        return this.sub?.cid ?? null;
     }
 
     sid() {
-        return this.sub ? this.sub.subscription : null;
+        return this.sub?.subscription ?? null;
     }
 
     expires() {
@@ -1433,16 +1313,48 @@ class Subscription {
 
 class Convert {
     coords(a, b) {
-        if (!settings.get('coordsDisplay') || settings.get('coordsDisplay') == 'dec') {
+        if (!settings.get().coordsDisplay() || settings.get().coordsDisplay() == 'dec') {
             return parseFloat(a).toFixed(4) + ',&nbsp;' + parseFloat(b).toFixed(4);
-        } else if (settings.get('coordsDisplay') == 'dms') {
-            return convertToDms(a, false) + ',&nbsp;' + convertToDms(b, true);
-        } else if (settings.get('coordsDisplay') == 'utm') {
-            return new UTM().toUTM(a, b);
+        } else if (settings.get().coordsDisplay() == 'dms') {
+            return this.convertToDms(a, false) + ',&nbsp;' + this.convertToDms(b, true);
+        } else if (settings.get().coordsDisplay() == 'utm') {
+            return this.utm(a, b);
         }
     }
 
-    speed(v, u) {
+    utm(a, b) {
+        const lat = parseFloat(a),
+            lon = parseFloat(b);
+
+        return new UTM().toUTM(lat, lon);
+    }
+
+    convertToDms(dd, isLng) {
+        var dir = dd < 0
+            ? isLng ? 'W' : 'S'
+            : isLng ? 'E' : 'N';
+
+        var absDd = Math.abs(dd),
+            deg = absDd | 0,
+            frac = absDd - deg,
+            min = (frac * 60) | 0,
+            sec = Math.round((frac * 3600 - min * 60) * 100) / 100;
+
+        return deg + "&deg; " + min + "' " + sec + '" ' + dir;
+    }
+
+    rad2deg(rad) {
+        return rad / Math.PI * 180;
+    }
+
+    deg2rad(deg) {
+        return deg * Math.PI / 180;
+    }
+
+    speed(spd, u) {
+        if (!spd) return;
+        const v = parseFloat(spd);
+
         if (u == 'km/h') {
             return Math.round(v * 1.609);
         } else {
@@ -1452,7 +1364,7 @@ class Convert {
 
     sizeFormat(size, returnSize = true, returnUnit = true, customUnit = null) {
         let displayUnit = 'acre';
-        const unit = (customUnit !== null ? customUnit : (settings.get('acres') ? settings.get('acres') : 'acres'));
+        const unit = (customUnit !== null ? customUnit : (settings.get().acres() ? settings.get().acres() : 'acres'));
 
         if (size.toString().toLowerCase() == 'unknown') {
             return returnSize ? '0' : (returnUnit ? unit : '');
@@ -1510,65 +1422,42 @@ class Convert {
         return Math.round(35.74 + (0.6215 * t) - (35.75 * Math.pow(w, 0.16)) + (0.4275 * t * Math.pow(w, 0.16)));
     }
 
-    FtoC(t) {
-        var t = ((t - 32) * (5 / 9)).toFixed(1);
-        return (t == '0.0' ? 0 : t);
+    wetBulb(it, hum) {
+        if (it == null || hum == null) return null;
+
+        const t = this.FtoC(it),
+            rh = Number(hum),
+            wetC = t * Math.atan(0.151977 * Math.sqrt(rh + 8.313659)) +
+                Math.atan(t + rh) -
+                Math.atan(rh - 1.676331) +
+                0.00391838 * Math.pow(rh, 1.5) * Math.atan(0.023101 * rh) -
+                4.686035;
+
+        return Number(settings.weather()?.temp() == 'f' ? this.CtoF(wetC) : wetC);
     }
 
-    getCompassDirection(b) {
-        var d,
-            b = Math.round(b / 22.5);
+    FtoC(t) {
+        return Number((t - 32) * 5 / 9);
+    }
 
-        switch (b) {
-            case 1:
-                d = "NNE";
-                break;
-            case 2:
-                d = "NE";
-                break;
-            case 3:
-                d = "ENE";
-                break;
-            case 4:
-                d = "E";
-                break;
-            case 5:
-                d = "ESE";
-                break;
-            case 6:
-                d = "SE";
-                break;
-            case 7:
-                d = "SSE";
-                break;
-            case 8:
-                d = "S";
-                break;
-            case 9:
-                d = "SSW";
-                break;
-            case 10:
-                d = "SW";
-                break;
-            case 11:
-                d = "WSW";
-                break;
-            case 12:
-                d = "W";
-                break;
-            case 13:
-                d = "WNW";
-                break;
-            case 14:
-                d = "NW";
-                break;
-            case 15:
-                d = "NNW";
-                break;
-            default:
-                d = "N";
-        }
-        return d;
+    CtoF(t) {
+        return Number((t * 1.8) + 32);
+    }
+
+    distance(lat1, lon1, lat2, lon2) {
+        var R = 6371,
+            dLat = this.deg2rad(lat2 - lat1),
+            dLon = this.deg2rad(lon2 - lon1),
+            a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2),
+            c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
+            d = R * c;
+
+        return (d / 1.609);
+    }
+
+    getCompassDirection(bearing) {
+        const dir = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+        return dir[Math.round(bearing / 22.5) % 16];
     }
 
     async getRasterColor(coords, layerId) {
@@ -1603,6 +1492,53 @@ class Convert {
 
         const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
         return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    }
+}
+
+class UTM {
+    constructor() {
+        this.a = 6378137;         // WGS84 Major Axis
+        this.f = 1 / 298.257223563; // Flattening
+        this.k0 = 0.9996;        // Scale factor
+        this.e2 = 2 * this.f - Math.pow(this.f, 2); // Eccentricity squared (e^2)
+        this.e2prime = this.e2 / (1 - this.e2);      // e'2
+    }
+
+    toUTM(lat, lon) {
+        const letters = 'CDEFGHJKLMNPQRSTUVWXX',
+            latRad = conversion.deg2rad(lat),
+            lonRad = conversion.deg2rad(lon);
+
+        let zone = Math.floor((lon + 180) / 6) + 1;
+        // Handle Svalbard/Norway exceptions
+        if (lat >= 56 && lat < 64 && lon >= 3 && lon < 12) zone = 32;
+        if (lat >= 72 && lat < 84) {
+            if (lon >= 0 && lon < 9) zone = 31;
+            else if (lon >= 9 && lon < 21) zone = 33;
+            else if (lon >= 21 && lon < 33) zone = 35;
+            else if (lon >= 33 && lon < 42) zone = 37;
+        }
+
+        const lonOriginRad = conversion.deg2rad((zone - 1) * 6 - 180 + 3);
+
+        const N = this.a / Math.sqrt(1 - this.e2 * Math.pow(Math.sin(latRad), 2)),
+            T = Math.pow(Math.tan(latRad), 2),
+            C = this.e2prime * Math.pow(Math.cos(latRad), 2),
+            A = Math.cos(latRad) * (lonRad - lonOriginRad);
+
+        const M = this.a * (
+            (1 - this.e2 / 4 - 3 * Math.pow(this.e2, 2) / 64 - 5 * Math.pow(this.e2, 3) / 256) * latRad -
+            (3 * this.e2 / 8 + 3 * Math.pow(this.e2, 2) / 32 + 45 * Math.pow(this.e2, 3) / 1024) * Math.sin(2 * latRad) +
+            (15 * Math.pow(this.e2, 2) / 256 + 45 * Math.pow(this.e2, 3) / 1024) * Math.sin(4 * latRad) -
+            (35 * Math.pow(this.e2, 3) / 3072) * Math.sin(6 * latRad)
+        );
+
+        let easting = this.k0 * N * (A + (1 - T + C) * Math.pow(A, 3) / 6 + (5 - 18 * T + Math.pow(T, 2) + 72 * C - 58 * this.e2prime) * Math.pow(A, 5) / 120) + 500000,
+            northing = this.k0 * (M + N * Math.tan(latRad) * (Math.pow(A, 2) / 2 + (5 - T + 9 * C + 4 * Math.pow(C, 2)) * Math.pow(A, 4) / 24 + (61 - 58 * T + Math.pow(T, 2) + 600 * C - 330 * this.e2prime) * Math.pow(A, 6) / 720));
+
+        if (lat < 0) northing += 10000000;
+
+        return `${zone}${letters[Math.floor((lat + 80) / 8)] || 'X'} ${easting.toFixed(1)}E ${northing.toFixed(1)}N`;
     }
 }
 
@@ -1645,6 +1581,22 @@ class ClickListener {
 
     closeArchive() {
         window.location.href = window.location.href.replace(/archive\/([0-9]+)/g, '');
+    }
+
+    clearSearch() {
+        const q = document.querySelector('#q');
+
+        q.value = '';
+        document.querySelector('#clearSearch').style.display = 'none';
+        new Search('').do();
+        q.focus();
+    }
+
+    clearLayerSearch() {
+        const i = impact.querySelector('#layerSearch');
+
+        document.querySelectorAll('.layers-list li.layer').forEach(layer => layer.style.display = 'flex');
+        if (i) i.value = '';
     }
 
     closeImpact() {
@@ -1723,6 +1675,10 @@ class ClickListener {
         });
 
         if (handle) {
+            handle.addEventListener('dblclick', () => {
+                this.closeModal();
+            });
+
             handle.addEventListener('pointerdown', (e) => {
                 isDragging = true;
                 startY = e.clientY;
@@ -1795,11 +1751,16 @@ class ClickListener {
     }
 
     closePopup() {
-        if (marker) {
-            marker.remove();
+        if (marker) marker.remove();
+        if (!settings.isEnabled('stns') && map.getSource('stns')) {
+            map.removeLayer('stns');
+            map.removeLayer('stns_text');
+            map.removeSource('stns');
         }
 
         document.querySelector('.popup')?.remove();
+
+        unsetHeaders();
 
         if (selected.caperim && map.getSource('ca_perimeters')) {
             map.removeFeatureState({
@@ -1883,7 +1844,7 @@ class ClickListener {
 
     createLayers() {
         const zoom = map.getZoom();
-        let content = '<div class="content">';
+        let content = '<div class="content"><div class="dark-input"><input type="text" id="layerSearch" placeholder="Filter through layers..."><i data-action="clear-layer-search" class="fat fa-xmark clearSearch"></i></div>';
 
         // Loop through layer categories
         Object.entries(layers.categories).forEach(([categoryId, categoryTitle]) => {
@@ -1891,9 +1852,16 @@ class ClickListener {
 
             // Loop through layers in each category
             layers.layers[categoryId].filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
-                content += `<li class="layer${layer.minZoom && layer.minZoom > zoom ? ' more-zoom' : ''}"${layer.minZoom ? ' data-min-zoom="' + layer.minZoom + '"' : ''} data-p="${layer.perms}" data-id="${layer.id}" title="${layer.minZoom && layer.minZoom > zoom ? 'You must be zoomed in more' : layer.name}">` +
-                    `<div class="checkbox"><input type="checkbox" id="${layer.id}" class="layChkBx" data-action="toggle-layer">` +
-                    `</div><div class="desc"><label for="${layer.id}">${layer.name}</label><span>${layer.desc}</span>${this.layerExtras(layer)}</div></li>`;
+                content += `<li class="layer${layer.minZoom && layer.minZoom > zoom ? ' more-zoom' : ''}"${layer.minZoom ? ' data-min-zoom="' + layer.minZoom + '"' : ''} data-p="${layer.perms}" data-id="${layer.id}" title="${layer.minZoom && layer.minZoom > zoom ? 'You must be zoomed in more' : layer.name}">
+                    <div class="checkbox">
+                        <input type="checkbox" id="${layer.id}" class="layChkBx" data-action="toggle-layer">
+                    </div>
+                    <div class="desc">
+                        <label for="${layer.id}">${layer.name}</label>
+                        <span>${layer.desc}</span>
+                        ${this.layerExtras(layer)}
+                    </div>
+                </li>`;
             });
 
             content += '</ul></div>';
@@ -1916,19 +1884,17 @@ class ClickListener {
 
         config.listOfLayers.filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
             const hasPermissions = settings.hasPermissions(layer.perms2),
-                isChecked = (layer.default && !settings.get('checkboxes')) || (settings.get('checkboxes') && settings.includes(layer.id)),
+                isChecked = (layer.default && !settings.checkboxes()) || (settings.checkboxes() && settings.isEnabled(layer.id)),
                 item = impact.querySelector('li.layer[data-id="' + layer.id + '"]'),
                 filter = item.querySelector('.data-filter'),
                 box = item.querySelector('.checkbox');
 
-            if (box) {
-                box.querySelector('input[type=checkbox]').checked = isChecked;
-            }
+            if (box) box.querySelector('input[type=checkbox]').checked = isChecked;
 
             if (layer.minZoom) {
                 if (map.getZoom() >= item.getAttribute('data-min-zoom')) {
                     item.classList.remove('more-zoom');
-                    item.setAttribute('title', item.querySelector('label').innerHTML.toString());
+                    item.setAttribute('title', String(item.querySelector('label').innerHTML));
                 } else {
                     item.classList.add('more-zoom');
                     item.setAttribute('title', 'You must be zoomed in more');
@@ -1938,25 +1904,54 @@ class ClickListener {
             if (!hasPermissions) {
                 item.classList.add('locked');
 
-                if (filter) {
-                    filter.style.display = 'none';
-                }
+                if (filter) filter.style.display = 'none';
 
                 box.innerHTML = premFeature;
                 item.addEventListener('click', () => {
-                    notify('info', 'This is a ' + (layer.perms2.includes('PREMIUM') ? 'premium' : 'pro') + ' layer. <a href="' + config.purchaseLink('layers_snackbar') + '">Get access</a>', 4);
+                    notify('info', `This is a ${layer.perms2.includes('PREMIUM') ? 'premium' : 'pro'} layer. <a href="${config.purchaseLink('layers_snackbar')}">Get access</a>`, 4);
                 });
             } else {
                 if (filter) {
-                    filter.querySelectorAll('select').forEach(select => {
-                        select.disabled = false;
-                    });
+                    const adjust = {
+                        spc: [{
+                            q: 'otlkType',
+                            v: settings.special().otlkType()
+                        }, {
+                            q: 'otlkDay',
+                            v: settings.special().otlkDay()
+                        }],
+                        erc: [{
+                            q: 'erc_time',
+                            v: settings.special().erc()
+                        }],
+                        sfp: [{
+                            q: 'sfpDateSelect',
+                            v: settings.special().sfpDate()
+                        }],
+                        ndfd: [{
+                            q: 'forecastModel',
+                            v: settings.special().forecastModel()
+                        }, {
+                            q: 'fcstTime',
+                            v: settings.special().fcstTime()
+                        }]
+                    };
 
-                    if (layer.id == 'sfp') {
-                        const s = filter.querySelector('#sfpDateSelect');
-                        s.value = settings.get('special').sfpDate;
+                    if (isChecked) {
+                        filter.querySelectorAll('select').forEach(select => {
+                            select.disabled = false;
+                        });
+                    }
 
-                        if (!s.value) s.selectedIndex = 1;
+                    const filterLayer = adjust[layer.id];
+
+                    if (filterLayer) {
+                        for (let i = 0; i < filterLayer.length; i++) {
+                            const s = filter.querySelector(`#${filterLayer[i].q}`);
+                            s.value = filterLayer[i].v;
+
+                            if (!s.value) s.selectedIndex = 1;
+                        }
                     }
                 }
             }
@@ -1965,60 +1960,77 @@ class ClickListener {
         impact.setAttribute('data-display', 'layers');
         impact.style.display = 'flex';
 
-        if (scrollPosition !== null && scrollPosition !== '0') {
-            impact.scrollTop = scrollPosition;
-        }
+        if (scrollPosition !== null && scrollPosition !== '0') impact.scrollTop = scrollPosition;
     }
 
     layerExtras(l) {
-        let smokeOptions = '',
-            lay = '';
+        const spec = settings.special?.() || {},
+            icon = (cls) => `<i class="${cls}" style="color:#9caab3"></i>`,
+            wrap = (id, content) => `<div class="data-filter" id="${id}">${icon('far fa-filter-list')}<div>${content}</div></div>`,
+            sel = (val, target) => val === target ? 'selected' : '',
+            smokeOptions = () => Array.from({ length: 15 }, (_, i) => {
+                const timeVal = gmtime(++i * 3600),
+                    date = new Date(timeVal + '+00:00'),
+                    hrs = date.getHours(),
+                    isMid = hrs === 0,
+                    day = date.getDate() === config.curTime.getDate() + 1 ? 'Tomorrow' : 'Today',
+                    label = isMid ? 'Midnight' : `${day} at ${hrs % 12 || 12} ${hrs >= 12 ? 'PM' : 'AM'}`;
 
-        for (let i = 1; i < 16; i++) {
-            const unix = new Date(gmtime(+(i * 60 * 60)) + '+00:00'),
-                isMidnight = unix.getHours() == 0 ? true : false,
-                next = config.curTime.getDate() + 1,
-                day = unix.getDate() == next ? 'Tomorrow' : 'Today',
-                time = (isMidnight ? '12' : (unix.getHours() > 12 ? unix.getHours() - 12 : unix.getHours())) + ' ' + (unix.getHours() > 12 ? 'P' : 'A') + 'M';
+                return `<option value="${timeVal}">${label}</option>`;
+            }).join('');
 
-            smokeOptions += '<option value="' + gmtime(+(i * 60 * 60)) + '">' + (isMidnight ? 'Midnight' : day + ' at ' + time) + '</option>';
-        }
+        const filters = {
+            perimeters: () => {
+                const size = settings.get('perimeters').minSize;
 
-        if (l.id == 'perimeters') {
-            lay += '<div class="data-filter" id="perimeterSize" data-action="change-perim-size"><i class="fad fa-filters" style="color:#bde4fb"></i><input type="range" class="slider" min="0" max="1000" step="25" value="' + settings.get('perimeters').minSize + '">' +
-                '<div id="pSize" style="width:69.11px">' + settings.get('perimeters').minSize + ' acres</div></div>';
-        }
+                return `<div class="data-filter" id="perimeterSize" data-action="change-perim-size">
+                    ${icon('fad fa-filters')}
+                    <input type="range" class="slider" min="0" max="1000" step="25" value="${size}">
+                    <div id="pSize" style="width:69.11px">${size} acres</div>
+                </div>`;
+            },
 
-        if (l.id == 'ndfd') {
-            lay += '<div class="data-filter" id="models"><i class="far fa-filter-list" style="color:#bde4fb"></i><select id="forecastModel" data-action="ndfd" style="min-width:170px"><option ' + (settings.get('special').forecastModel == 'apparent_temperature' || !settings.get('special') ? 'selected ' : '') + 'value="apparent_temperature">Temperature</option>' +
-                '<option ' + (settings.get('special').forecastModel == 'relative_humidity' ? 'selected ' : '') + 'value="relative_humidity">Humidity</option><option ' + (settings.get('special').forecastModel == 'wind_speed' ? 'selected ' : '') + 'value="wind_speed">Wind Speed</option>' +
-                '<option ' + (settings.get('special').forecastModel == 'total_sky_cover' ? 'selected ' : '') + 'value="total_sky_cover">Cloud Cover</option><option ' + (settings.get('special').forecastModel == '12hr_precipitation_probability' ? 'selected ' : '') + 'value="12hr_precipitation_probability">12-hr POPs</option></select>' +
-                '<select id="fcstTime" data-action="ndfd" data-type="reg" style="min-width:100px;max-width:35%">' + initNDFDTimes() + '</select></div>';
-        } else if (l.id == 'sfp') {
-            const times = sfpTimes().map(i => `<option value="${i.key}">${i.value}</option>`).join('');
+            ndfd: () => {
+                const model = spec.forecastModel || 'air_temperature',
+                    opts = [
+                        ['air_temperature', 'Temperature'],
+                        ['relative_humidity', 'Humidity'],
+                        ['wind_speed', 'Wind Speed'],
+                        ['total_sky_cover', 'Cloud Cover'],
+                        ['12hr_precipitation_probability', '12-hr POPs']
+                    ].map(([v, n]) => `<option ${sel(v, model)} value="${v}">${n}</option>`).join('');
 
-            lay += '<div class="data-filter" id="sfpDate"><i class="far fa-filter-list" style="color:#bde4fb"></i><select id="sfpDateSelect" data-action="sfp-date">' + times + '</select></div>';
-        } else if (l.id == 'spc') {
-            lay += '<div class="data-filter" id="otlks"><i class="far fa-filter-list" style="color:#bde4fb"></i><select id="otlkType" data-action="spc-outlook" style="min-width:170px">' +
-                '<option ' + (settings.special().otlkType() == 'fire' ? 'selected ' : '') + 'value="fire">Fire Weather</option>' +
-                '<option ' + (settings.special().otlkType() == 'severe' ? 'selected ' : '') + 'value="severe">Severe/Convective</option></select>' +
-                '<select id="otlkDay" data-action="spc-outlook" style="min-width:100px"><option ' + (settings.special().otlkDay() == 1 ? 'selected ' : '') + 'value="1">Day 1</option>' +
-                '<option ' + (settings.special().otlkDay() == 2 ? 'selected ' : '') + 'value="2">Day 2</option>' +
-                (settings.special().otlkType() != 'fire' ? '<option ' + (settings.special().otlkDay() == 3 ? 'selected ' : '') + 'value="3">Day 3</option>' : '') +
-                '</select></div>';
-        } else if (l.id == 'erc') {
-            lay += '<div class="data-filter" id="ercs"><i class="far fa-filter-list" style="color:#bde4fb"></i><select id="erc_time" data-action="erc_time" style="min-width:197px">' +
-                '<option ' + (settings.special().erc() == 'obs' ? 'selected ' : '') + 'value="obs">Observed (Today)</option>' +
-                '<option ' + (settings.special().erc() == 'fcst' ? 'selected ' : '') + 'value="fcst">Forecasted (Tomorrow)</option></select></div>';
-        } else if (l.id == 'viSmoke') {
-            lay += '<div class="data-filter" id="viSmokes"><i class="far fa-filter-list" style="color:#bde4fb"></i><select id="vi_smoke_time" data-action="vi_smoke_time" style="min-width:160px">' +
-                smokeOptions + '</select></div>';
-        } else if (l.id == 'sfcSmoke') {
-            lay += '<div class="data-filter" id="sfcSmokes"><i class="far fa-filter-list" style="color:#bde4fb"></i><select id="sfc_smoke_time" data-action="sfc_smoke_time" style="min-width:160px">' +
-                smokeOptions + '</select></div>';
-        }
+                return wrap('models', `<select id="forecastModel" data-action="ndfd" style="min-width:170px" disabled>${opts}</select>
+                <select id="fcstTime" data-action="ndfd" data-type="reg" style="min-width:100px;max-width:35%" disabled>${initNDFDTimes()}</select>`);
+            },
 
-        return lay;
+            sfp: () => wrap('sfpDate', `<select id="sfpDateSelect" data-action="sfp-date" disabled>
+                ${sfpTimes().map(i => `<option value="${i.key}">${i.value}</option>`).join('')}</select>`
+            ),
+
+            spc: () => {
+                const type = spec.otlkType?.() || 'fire', day = spec.otlkDay?.() || 1;
+
+                return wrap('otlks', `<select id="otlkType" data-action="spc-outlook" style="min-width:170px" disabled>
+                    <option ${sel('fire', type)} value="fire">Fire Weather</option>
+                    <option ${sel('severe', type)} value="severe">Severe/Convective</option></select>
+                    <select id="otlkDay" data-action="spc-outlook" style="min-width:100px" disabled>
+                    <option ${sel(1, day)} value="1">Day 1</option><option ${sel(2, day)} value="2">Day 2</option>
+                    ${type !== 'fire' ? `<option ${sel(3, day)} value="3">Day 3</option>` : ''}</select>`
+                );
+            },
+
+            erc: () => wrap('ercs', `<select id="erc_time" data-action="erc_time" style="min-width:197px" disabled>
+                <option ${sel('obs', spec.erc?.())} value="obs">Observed (Today)</option>
+                <option ${sel('fcst', spec.erc?.())} value="fcst">Forecasted (Tomorrow)</option></select>`
+            ),
+
+            viSmoke: () => wrap('viSmokes', `<select id="vi_smoke_time" data-action="vi_smoke_time" style="min-width:160px" disabled>${smokeOptions()}</select>`),
+
+            sfcSmoke: () => wrap('sfcSmokes', `<select id="sfc_smoke_time" data-action="sfc_smoke_time" style="min-width:160px" disabled>${smokeOptions()}</select>`)
+        };
+
+        return filters[l.id]?.() || '';
     }
 
     basemaps() {
@@ -2058,16 +2070,14 @@ class ClickListener {
                 radioDiv.innerHTML = premFeature;
 
                 radioDiv.addEventListener('click', () => {
-                    notify('info', 'This is a ' + (tile.permissions.includes('PREMIUM') ? 'premium' : 'pro') + ' basemap. <a href="' + config.purchaseLink('basemaps_snackbar') + '">Get access</a>', 4);
+                    notify('info', `This is a ${tile.permissions.includes('PREMIUM') ? 'premium' : 'pro'} basemap. <a href="${config.purchaseLink('basemaps_snackbar')}">Get access</a>`, 4);
                 });
             }
 
             // Add the icon and label
             img.src = `${config.domain}assets/images/icons/fire/basemaps/${tile.imgs}.png`;
 
-            if (!hasPerms) {
-                img.style.opacity = '0.5';
-            }
+            if (!hasPerms) img.style.opacity = '0.5';
 
             label.innerHTML = tile.name + (tile.permissions.length > 0 ? '<p>' + tile.permissions[0] + '</p>' : '');
 
@@ -2102,30 +2112,112 @@ class ClickListener {
         });
     }
 
+    acctSettings() {
+        let content = '';
+        const settings = [
+            {
+                t: 'Save Frequency',
+                i: 'saveFreq',
+                o: { 60000: '1 min', 300000: '5 mins', 600000: '10 mins', 900000: '15 mins', 1800000: '30 mins' }
+            },
+            {
+                t: 'Perimeter Color',
+                i: 'perimColor',
+                o: { 'default': 'Default', 'red': 'Red', 'blue': 'Blue', 'orange': 'Orange', 'green': 'Green', 'purple': 'Purple', 'brown': 'Brown', 'black': 'Black' }
+            },
+            {
+                t: 'Perimeter Tooltip',
+                i: 'perimTtip',
+                o: { 1: 'Yes', 0: 'No' }
+            },
+            {
+                t: 'Perimeter Zoom',
+                i: 'perimZoom',
+                o: { 1: 'Yes', 0: 'No' }
+            },
+            {
+                t: 'Coordinates',
+                i: 'coordsDisplay',
+                o: { 'dec': 'Decimal', 'dms': 'Degs, Mins, Secs', 'utm': 'UTM' }
+            },
+            {
+                t: 'Temperature Unit',
+                i: 'tempUnit',
+                o: { 'f': '&deg;F', 'c': '&deg;C' }
+            },
+            {
+                t: 'Wind Speed Unit',
+                i: 'windUnit',
+                o: { 'mph': 'mph', 'm/s': 'm/s', 'kts': 'kts', 'km/h': 'km/h' }
+            },
+            {
+                t: 'Fire Size Unit',
+                i: 'acresUnit',
+                o: { 'acres': 'acres', 'hectares': 'hectares', 'sqmi': 'sq. mi.', 'sqkm': 'sq. km.' }
+            },
+            {
+                t: 'Cache Fire Data',
+                i: 'locallySave',
+                o: { 'y': 'Yes', 'n': 'No' }
+            }
+        ];
+
+        settings.forEach(setting => {
+            const options = Object.entries(setting.o)
+                .map(([val, label]) => `<option value="${val}">${label}</option>`)
+                .join('');
+            content += `<div class="r"><div class="var">${setting.t}</div><div class="input"><select id="${setting.i}" data-action="user-setting">${options}</select></div></div>`;
+        });
+
+        return content;
+    }
+
     account() {
         if (settings.user == null) {
             window.location.href = config.domain + 'secure/login?service=' + getPlatform() + '&next=' + encodeURIComponent(window.location.href);
         } else {
             let ms = '';
-            const userProfile = `<div id="sync"><i class="fa-regular fa-arrow-down-to-line" aria-hidden="true"></i><span title="${dateTime(settings.getUser().synced(), true, true, true).toString()}">Account last synced ${timeAgo(settings.user.settings.synced)}</span></div>
-                <div class="btn-group centered"><a target="blank" class="btn btn-blue" style="width:100%" href="${config.domain}account/settings">Manage account</a></div>`;
+            const userProfile = `<div class="content">
+                <div id="sync"><i class="fa-regular fa-arrow-down-to-line" aria-hidden="true"></i><span title="${dateTime(settings.getUser().synced(), true, true, true).toString()}">Account last synced ${timeAgo(settings.user.settings.synced)}</span></div>
+                <div class="btn-group centered"><a target="blank" class="btn btn-blue" style="width:100%" href="${config.domain}account/settings">Manage account</a></div>
+                <div id="settings">
+                    <div class="my-subs">
+                        <h2 style="margin:0">My Subscriptions</h2>
+                        <div id="subs"></div>
+                    </div>
+                    <h2>Map Settings</h2>
+                    ${this.acctSettings()}
+                    <div style="margin-top:5em;font-size:12px;text-align:center;color:var(--blue-gray);line-height:1.3">
+                        &copy; ${new Date().getFullYear()} ${config.company}<br>Version ${version}<br>
+                        <a class="footer-link" href="${config.specificURL}logout?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}">Logout</a>&nbsp;&middot;&nbsp;
+                        <a class="footer-link" href="https://mapofire.com/release-notes" target="blank">Change Log</a>&nbsp;&middot;&nbsp;
+                        <a class="footer-link" href="${config.domain}about/legal/terms" target="blank">Terms</a>&nbsp;&middot;&nbsp;
+                        <a class="footer-link" href="${config.domain}about/legal/privacy" target="blank">Privacy</a>
+                    </div>
+                </div>
+            </div>`;
 
-            impact.innerHTML = impactHeader + '<div class="content">' + userProfile + userSettingsForm + '</div>';
+            impact.innerHTML = impactHeader + userProfile;
             impact.style.display = 'flex';
             impact.querySelector('#a').innerHTML = 'Hello, ' + settings.getUser().getName().first();
 
-            //document.querySelector('input#dark_mode').checked = document.body.classList.contains('dark-mode');
-            //document.querySelector('input#dark_mode').parentElement.querySelector('.slider').setAttribute('title', 'Turn dark mode ' + (document.body.classList.contains('dark-mode') ? 'off' : 'on'));
-            document.querySelector('select#saveFreq').value = settings.get('saveFreq');
-            document.querySelector('select#perimColor').value = settings.perimeters().color() ? settings.perimeters().color() : 'default';
-            document.querySelector('select#perimTtip').value = settings.perimeters().ttip() ? settings.perimeters().ttip() : 1;
-            document.querySelector('select#perimZoom').value = settings.perimeters().zoom() ? settings.perimeters().zoom() : 1;
-            document.querySelector('select#coordsDisplay').value = settings.get('coordsDisplay') ? settings.get('coordsDisplay') : 'dec';
-            document.querySelector('select#tempUnit').value = settings.weather().temp() ? settings.weather().temp() : 'f';
-            document.querySelector('select#windSpeedUnit').value = settings.weather().wind() ? settings.weather().wind() : 'mph';
-            document.querySelector('select#acresUnit').value = settings.get('acres') ? settings.get('acres') : 'acres';
-            document.querySelector('select#locallySave').value = settings.get('locallySave') ? settings.get('locallySave') : 'n';
-            document.querySelector('select#fireDisplay').value = settings.get('fireDisplay') ? settings.get('fireDisplay') : 'map';
+            const prefs = {
+                'saveFreq': settings.get().saveFreq(),
+                'perimColor': settings.perimeters().color() ?? 'default',
+                'perimTtip': settings.perimeters().ttip() ?? 1,
+                'perimZoom': settings.perimeters().zoom() ?? 1,
+                'coordsDisplay': settings.get().coordsDisplay() ?? 'dec',
+                'tempUnit': settings.weather().temp() ?? 'f',
+                'windSpeedUnit': settings.weather().wind() ?? 'mph',
+                'acresUnit': settings.get().acres() ?? 'acres',
+                'locallySave': settings.get().locallySave() ?? 'n'/*,
+                'fireDisplay': settings.get('fireDisplay') ?? 'map'*/
+            };
+
+            Object.entries(prefs).forEach(([id, val]) => {
+                const el = document.querySelector(`select#${id}`);
+                if (el) el.value = val;
+            });
 
             if (!settings.subscriptions().valid()) {
                 ms = '<p style="color:#bdbdbd;font-size:15px">You don\'t have a subscription to Map of Fire. <a class="btn btn-green" style="width:100%;margin:1em 0 0 0" href="' + config.purchaseLink('account', encodeURIComponent(window.location.href)) + '">Try it out!</a>';
@@ -2373,7 +2465,8 @@ class ClickListener {
                     .setLngLat([lon, lat])
                     .addTo(map);
 
-                new Popup('City').create(`${name[0]}, ${p.dataset.county} County, ${name[1]}`);
+                new Popup('City').create(`<p style="margin-bottom:6px;color:#fff">${name[0]}, ${p.dataset.county} County, ${name[1]}</p>
+                    <span style="display:block;font-size:14px">${lat}, ${lon}</span>`);
 
                 map.easeTo({
                     center: new maplibregl.LngLat(lon, lat),
@@ -2408,7 +2501,9 @@ class ClickListener {
                     .setLngLat([lon, lat])
                     .addTo(map);
 
-                new Popup('Coordinates').create(`${lat},&nbsp;${lon}`);
+                new Popup('Coordinates').create(`<p style="margin-bottom:6px;color:#fff">${lat},&nbsp;${lon}</p>
+                    <span style="display:block;margin-bottom:3px;font-size:14px">${String(conversion.convertToDms(lat, false) + '&nbsp;' + conversion.convertToDms(lon, true)).replace(/\s/g, '')}</span>
+                    <span style="display:block;font-size:14px">${conversion.utm(lat, lon)}</span>`);
 
                 map.easeTo({
                     center: [lon, lat],
@@ -2436,6 +2531,8 @@ class NWS {
             ['outFields', 'OBJECTID,Event,Affected,End_'],
             ['returnGeometry', true],
             ['geometryPrecision', 6],
+            ['geometryType', 'esriGeometryEnvelope'],
+            ['spatialRel', 'esriSpatialRelIntersects'],
             ['geometry', getbbox()],
             ['f', 'geojson']
         ]);
@@ -2665,49 +2762,44 @@ class NWS {
     }
 
     ndfd(update = false) {
-        let fm, ft, ur, leg;
+        let fm, ft, ur, leg, legend = document.querySelector('.ndfdLegend');
+        const fcstMod = document.querySelector('#forecastModel'),
+            fcstTime = document.querySelector('#fcstTime');
 
-        if (document.querySelector('#forecastModel')) {
-            fm = document.querySelector('#forecastModel').options[document.querySelector('#forecastModel').selectedIndex].value;
-            ft = document.querySelector('#fcstTime').options[document.querySelector('#fcstTime').selectedIndex].value;
+        if (fcstMod) {
+            fm = fcstMod.options[fcstMod.selectedIndex].value;
+            ft = fcstTime.options[fcstTime.selectedIndex].value;
         } else {
-            fm = settings.get('special').forecastModel;
-            ft = settings.get('special').fcstTime;
+            fm = settings.special().forecastModel();
+            ft = settings.special().fcstTime();
         }
 
         if (!ft) {
             ft = config.curTime.getUTCFullYear() + '-' + ((config.curTime.getUTCMonth() + 1) < 10 ? '0' : '') + (config.curTime.getUTCMonth() + 1) + '-' + (config.curTime.getUTCDate() < 10 ? '0' : '') + config.curTime.getUTCDate() + 'T' + ((config.curTime.getUTCHours() + 1) < 10 ? '0' : '') + (config.curTime.getUTCHours() + 1) + ':00:00.000Z';
         }
 
-        if (fm == '12hr_precipitation_probability') {
-            ur = 'ndfd_precipitation';
-            leg = 'forecasts/ndfd_precipitation/ows?layer=conus_12hr_precipitation_probability';
-        } else if (fm == 'relative_humidity') {
-            ur = 'ndfd_moisture';
-            leg = 'forecasts/ndfd_moisture/ows?layer=conus_relative_humidity';
-        } else if (fm == 'wind_speed') {
-            ur = 'ndfd_wind';
-            leg = 'forecasts/ndfd_wind/ows?layer=conus_wind_speed';
-        } else if (fm == 'total_sky_cover') {
-            ur = 'ndfd_sky';
-            leg = 'forecasts/ndfd_sky/ows?layer=conus_total_sky_cover';
-        } else if (fm == 'apparent_temperature') {
-            ur = 'ndfd_temperature';
-            leg = 'ndfd_temperature/ows?layer=conus_apparent_temperature';
+        const ops = {
+            '12hr_precipitation_probability': ['ndfd_precipitation', 'forecasts/ndfd_precipitation/ows?layer=conus_12hr_precipitation_probability'],
+            'relative_humidity': ['ndfd_moisture', 'forecasts/ndfd_moisture/ows?layer=conus_relative_humidity'],
+            'wind_speed': ['ndfd_wind', 'forecasts/ndfd_wind/ows?layer=conus_wind_speed'],
+            'total_sky_cover': ['ndfd_sky', 'forecasts/ndfd_sky/ows?layer=conus_total_sky_cover'],
+            'air_temperature': ['ndfd_temperature', 'ndfd_temperature/ows?layer=conus_air_temperature']
+        };
+
+        if (ops[fm]) [ur, leg] = ops[fm];
+
+        if (!legend) {
+            const container = document.createElement('div');
+            container.className = 'ndfdLegend';
+            document.body.append(container);
         }
 
-        leg = 'https://nowcoast.noaa.gov/geoserver/' + leg + '&service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=283&height=33';
+        document.querySelector('.ndfdLegend').innerHTML = `<img src="https://nowcoast.noaa.gov/geoserver/${leg}&service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=283&height=33" alt="Legend">`;
 
         if (update) {
             map.getSource('ndfd').setTiles([
                 'https://nowcoast.noaa.gov/geoserver/' + ur + '/wms?service=WMS&layers=' + fm + '&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=1920&height=626&time=' + ft + '&dim_time_reference=' + this.fcstHour() + '&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
             ]);
-
-            const lgnd = document.querySelector('.ndfdLegend img');
-
-            if (lgnd != null) {
-                lgnd.setAttribute('src', leg);
-            }
         } else {
             if (!map.getSource('ndfd')) {
                 map.addSource('ndfd', {
@@ -2732,11 +2824,6 @@ class NWS {
                     }
                 });
             }
-
-            const ndfdLeg = document.createElement('div');
-            ndfdLeg.classList.add('ndfdLegend');
-            ndfdLeg.innerHTML = '<img src="' + leg + '">';
-            document.body.append(ndfdLeg);
         }
     }
 
@@ -3460,7 +3547,7 @@ class Wildfires {
 
         const chk = setInterval(() => {
             if (map.isSourceLoaded('ca_fires')) {
-                const vis = settings.includes('allFires') ? 'visible' : 'none';
+                const vis = settings.isEnabled('allFires') ? 'visible' : 'none';
 
                 clearInterval(chk);
 
@@ -3757,7 +3844,7 @@ class Wildfires {
     async displayFires(type, n) {
         const lay = ['allFires', 'newFires', 'smokeChecks', 'rxBurns'],
             fireLayerName = type + '_fires_layer',
-            vis = settings.includes(lay[n]) || !settings.get('checkboxes') && type != 'rx' ? 'visible' : 'none';
+            vis = settings.isEnabled(lay[n]) || !settings.checkboxes() && type != 'rx' ? 'visible' : 'none';
 
         /* add fires to map */
         if (map.getSource(type + '_fires')) {
@@ -3858,6 +3945,27 @@ class Wildfires {
         return this;
     }
 
+    getAssociatedPerim(fireName) {
+        if (!settings.isEnabled('perimeters')) return;
+
+        const src = map.getSource('perimeters')._data.geojson.features,
+            wait = setInterval(() => {
+                if (src) {
+                    const name = fireName.replace(/\s/gm, '').toLowerCase();
+                    clearInterval(wait);
+
+                    const results = src.filter(feat => {
+                        const p = feat.properties;
+
+                        return p.attr_IncidentName.replace(/\s/gm, '').toLowerCase() == name ||
+                            p.poly_IncidentName.replace(/\s/gm, '').toLowerCase() == name;
+                    });
+
+                    console.log(results);
+                }
+            }, 200);
+    }
+
     doWeather(geo) {
         let wx = new Weather(geo[1], geo[0]);
 
@@ -3939,7 +4047,8 @@ class Wildfires {
 
             const fname = this.fireName(prop.fireName, prop.type, prop.incidentId),
                 near = fire.geometry.near,
-                acresHistory = prop.acres_history;
+                acresHistory = prop.acres_history/*,
+                nearbyPerims = this.getAssociatedPerim(prop.fireName)*/;
 
             /* zoom to fire on the map */
             if (!click) {
@@ -4022,6 +4131,7 @@ class Wildfires {
 
                 /* remove any features that require a user to be subscribed */
                 if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
+                    modal.querySelector('#acres_history').style.height = 'unset';
                     modal.querySelector('#acres_history').innerHTML = '<a href="#" data-action="upgrade-subscription" data-medium="acres_history" class="btn btn-orange btn-lg" onclick="return false"><i class="fas fa-lock"></i>Upgrade to see growth history</a>';
                     /*document.querySelector('#acres_history').parentElement.parentElement.remove();*/
 
@@ -4087,7 +4197,7 @@ class Wildfires {
     }
 
     async caPerimeters(update = false) {
-        let vis = !settings.user || !settings.get('checkboxes') || settings.includes('perimeters') ? 'visible' : 'none',
+        let vis = !settings.user || !settings.checkboxes() || settings.isEnabled('perimeters') ? 'visible' : 'none',
             min = settings.perimeters().minSize(),
             pc = this.perimeterColor(settings.perimeters().color());
 
@@ -4097,6 +4207,8 @@ class Wildfires {
             ['resultType', 'tile'],
             ['geometry', getbbox()],
             ['geometryPrecision', 6],
+            ['geometryType', 'esriGeometryEnvelope'],
+            ['spatialRel', 'esriSpatialRelIntersects'],
             ['returnGeometry', true],
             ['f', 'geojson']
         ]);
@@ -4160,13 +4272,13 @@ class Wildfires {
     }
 
     async perimeters(update = false) {
-        let vis = !settings.user || !settings.get('checkboxes') || settings.includes('perimeters') ? 'visible' : 'none',
+        let vis = !settings.user || !settings.checkboxes() || settings.isEnabled('perimeters') ? 'visible' : 'none',
             y = (settings.archive ? settings.archive : config.curTime.getFullYear()),
             min = settings.perimeters().minSize(),
             pc = this.perimeterColor(settings.perimeters().color()),
             o = 'OBJECTID,attr_UniqueFireIdentifier,poly_IncidentName,attr_IncidentName,poly_DateCurrent,poly_GISAcres,poly_Acres_AutoCalc,poly_MapMethod,attr_POOState,attr_ContainmentDateTime,attr_FireOutDateTime',
             perimName = 'attr_IncidentName',
-            w = 'attr_FireDiscoveryDateTime>=TIMESTAMP \'' + y + '-01-01 00:00:00\' AND attr_FireDiscoveryDateTime<=TIMESTAMP \'' + y + '-12-31 23:59:59\'';
+            w = `attr_FireDiscoveryDateTime>=TIMESTAMP '${y}-01-01 00:00:00'`;
 
         if (!settings.archive) {
             w += ' AND (poly_GISAcres > ' + min + ' OR poly_Acres_AutoCalc > ' + min + ') AND attr_FireOutDateTime IS NULL';
@@ -4183,6 +4295,8 @@ class Wildfires {
             ['resultType', 'tile'],
             ['geometry', getbbox()],
             ['geometryPrecision', 6],
+            ['geometryType', 'esriGeometryEnvelope'],
+            ['spatialRel', 'esriSpatialRelIntersects'],
             ['returnGeometry', true],
             ['f', 'geojson']
         ]);
@@ -4292,7 +4406,7 @@ class Layers {
     }
 
     add3D() {
-        if (settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && settings.getBasemap() == 'outdoors') {
+        if (settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && settings.getBasemap() == 'outdoors' && !map.getSource('terrain')) {
             map.addSource('terrain', {
                 'type': 'raster-dem',
                 'url': 'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=ZeQEIVoqyieC6wk8qxJH',
@@ -4336,48 +4450,25 @@ class Layers {
                     type: 'circle',
                     source: 'airq',
                     filter: [
-                        '==', ['typeof', ['get', 'PM25_AQI']], 'number'
+                        'all',
+                        ['has', 'PM25_AQI'],
+                        ['==', ['typeof', ['get', 'PM25_AQI']], 'number']
                     ],
                     layout: {
-                        visibility: settings.includes('airq') ? 'visible' : 'none'
+                        visibility: settings.isEnabled('airq') ? 'visible' : 'none'
                     },
                     paint: {
                         'circle-radius': 12,
                         'circle-color': [
-                            'case',
-                            ['<=', ['get', 'PM25_AQI'], 50],
-                            '#00e400',
-                            [
-                                'all',
-                                ['>', ['get', 'PM25_AQI'], 50],
-                                ['<=', ['get', 'PM25_AQI'], 100]
-                            ],
-                            '#ffff00',
-                            [
-                                'all',
-                                ['>', ['get', 'PM25_AQI'], 100],
-                                ['<=', ['get', 'PM25_AQI'], 150]
-                            ],
-                            '#ff7e00',
-                            [
-                                'all',
-                                ['>', ['get', 'PM25_AQI'], 150],
-                                ['<=', ['get', 'PM25_AQI'], 200]
-                            ],
-                            '#ff0000',
-                            [
-                                'all',
-                                ['>', ['get', 'PM25_AQI'], 200],
-                                ['<=', ['get', 'PM25_AQI'], 300]
-                            ],
-                            '#8f3f97',
-                            [
-                                'all',
-                                ['>', ['get', 'PM25_AQI'], 300],
-                                ['<=', ['get', 'PM25_AQI'], 500]
-                            ],
-                            '#7e0023',
-                            '#d9d9d9'
+                            'step',
+                            ['coalesce', ['get', 'PM25_AQI'], -1], // Fallback to -1 if null
+                            '#d9d9d9', // Default for anything below 0
+                            0, '#00e400', // 0-50 (Good)
+                            51, '#ffff00', // 51-100 (Moderate)
+                            101, '#ff7e00', // 101-150 (Unhealthy SG)
+                            151, '#ff0000', // 151-200 (Unhealthy)
+                            201, '#8f3f97', // 201-300 (Very Unhealthy)
+                            301, '#7e0023'  // 301+ (Hazardous)
                         ],
                         'circle-stroke-color': 'black',
                         'circle-stroke-width': 1
@@ -4398,10 +4489,15 @@ class Layers {
                     id: 'airQuality_text',
                     type: 'symbol',
                     source: 'airq',
+                    filter: [
+                        'all',
+                        ['has', 'PM25_AQI'],
+                        ['==', ['typeof', ['get', 'PM25_AQI']], 'number']
+                    ],
                     paint: {
                         'text-color': [
                             'case',
-                            ['>=', ['get', 'PM25_AQI'], 150],
+                            ['>=', ['number', ['get', 'PM25_AQI'], 0], 150],
                             '#fff',
                             '#000'
                         ]
@@ -4409,13 +4505,11 @@ class Layers {
                     layout: {
                         'text-ignore-placement': true,
                         'text-allow-overlap': true,
-                        'symbol-placement': 'point',
-                        'symbol-spacing': 150,
                         'text-font': config.fonts.din(),
-                        'text-field': ['get', 'PM25_AQI'],
-                        'text-justify': 'center',
+                        'text-field': ['to-string', ['number', ['get', 'PM25_AQI'], 0]],
                         'text-size': 11,
-                        visibility: settings.includes('airq') ? 'visible' : 'none'
+                        'text-justify': 'center',
+                        visibility: settings.isEnabled('airq') ? 'visible' : 'none'
                     }
                 });
             }
@@ -4450,7 +4544,7 @@ class Layers {
             type: 'raster',
             source: 'lightning1',
             layout: {
-                visibility: settings.includes('lightning1') || !settings.get('checkboxes') ? 'visible' : 'none'
+                visibility: settings.isEnabled('lightning1') || !settings.checkboxes() ? 'visible' : 'none'
             }
         });
         
@@ -4470,7 +4564,7 @@ class Layers {
             type: 'raster',
             source: 'lightning24',
             layout: {
-                visibility: settings.includes('lightning24') || !settings.get('checkboxes') ? 'visible' : 'none'
+                visibility: settings.isEnabled('lightning24') || !settings.checkboxes() ? 'visible' : 'none'
             }
         });*/
     }
@@ -4550,83 +4644,88 @@ class Layers {
     async modis(w, update = false) {
         const url = 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/Satellite_VIIRS_Thermal_Hotspots_and_Fire_Activity/FeatureServer/0/query',
             n = (w == 1 ? '24' : (w == 2 ? '48' : '72')),
-            ts = (days) => {
-                const date = new Date(new Date().getTime() - (days * 60 * 60 * 24 * 1000)),
-                    hours = date.getHours(),
-                    minutes = date.getMinutes().toString().padStart(2, '0');
-
-                return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} ${hours}:${minutes}`;
+            ts = (d) => {
+                const dt = new Date(Date.now() - d * 86400000),
+                    pad = (n) => n.toString().padStart(2, '0');
+                return `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
             },
-            fd1 = ts(1),
-            fd2 = ts(2),
-            fd3 = ts(3);
+            start = ts(w),
+            end = w > 1 ? ts(w - 1) : null;
 
         if (map.getZoom() >= config.modisZoomLevel) {
-            await fetch(url + '?where=acq_time >= DATE \'' + (w == 1 ? fd1 : (w == 2 ? fd2 : fd3)) + ':00\'' + (w != 1 ? ' AND acq_time <= DATE \'' + (w == 2 ? fd1 : fd2) + ':00\'' : '') + '&outFields=*&geometry=' + getbbox() + '&geometryPrecision=6&returnGeometry=true&f=geojson')
-                .then(async (resp) => {
-                    const data = await resp.json();
+            const data = await api(url, [
+                ['where', `acq_time >= DATE '${start}:00'${end ? ` AND acq_time < DATE '${end}:00'` : ''}`],
+                ['outFields', '*'],
+                ['geometry', getbbox()],
+                ['geometryPrecision', 6],
+                ['geometryType', 'esriGeometryEnvelope'],
+                ['spatialRel', 'esriSpatialRelIntersects'],
+                ['returnGeometry', true],
+                ['f', 'geojson']
+            ]);
 
-                    if (update && data) {
-                        map.getSource('modis' + n).setData(data);
-                    } else {
-                        if (!map.getSource('modis' + n)) {
-                            map.addSource('modis' + n, {
-                                type: 'geojson',
-                                data: data,
-                                cluster: true,
-                                clusterMaxZoom: window.innerWidth < 600 || window.outerWidth < 600 ? 8 : 9,
-                                clusterMinPoints: 4,
-                                clusterRadius: 20
-                            });
+            if (update && data) {
+                map.getSource('modis' + n).setData(data);
+            } else {
+                if (!map.getSource('modis' + n)) {
+                    map.addSource('modis' + n, {
+                        type: 'geojson',
+                        data: data,
+                        cluster: true,
+                        clusterMaxZoom: window.innerWidth < 600 || window.outerWidth < 600 ? 8 : 9,
+                        clusterMinPoints: 4,
+                        clusterRadius: 20
+                    });
+                }
+
+                if (!map.getLayer('modis' + n)) {
+                    map.addLayer({
+                        id: 'modis' + n,
+                        type: 'symbol',
+                        source: 'modis' + n,
+                        layout: {
+                            'icon-image': 'modis' + w,
+                            'icon-size': 0.5,
+                            'icon-allow-overlap': true
+                        },
+                        paint: {
+                            'icon-opacity': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                0,
+                                0.5,
+                                10,
+                                0.5,
+                                13.5,
+                                1
+                            ]
                         }
+                    });
 
-                        if (!map.getLayer('modis' + n)) {
-                            map.addLayer({
-                                id: 'modis' + n,
-                                type: 'symbol',
-                                source: 'modis' + n,
-                                layout: {
-                                    'icon-image': 'modis' + w,
-                                    'icon-size': 0.5,
-                                    'icon-allow-overlap': true
-                                },
-                                paint: {
-                                    'icon-opacity': [
-                                        'interpolate',
-                                        ['linear'],
-                                        ['zoom'],
-                                        0,
-                                        0.5,
-                                        10,
-                                        0.5,
-                                        13.5,
-                                        1
-                                    ]
-                                }
-                            });
+                    map.on('mouseenter', 'modis' + n, () => {
+                        map.getCanvas().style.cursor = 'pointer';
+                    });
 
-                            map.on('mouseenter', 'modis' + n, () => {
-                                map.getCanvas().style.cursor = 'pointer';
-                            });
-
-                            map.on('mouseleave', 'modis' + n, () => {
-                                map.getCanvas().style.cursor = 'auto';
-                            });
-                        }
-                    }
-                });
+                    map.on('mouseleave', 'modis' + n, () => {
+                        map.getCanvas().style.cursor = 'auto';
+                    });
+                }
+            }
         } else {
             notify('info', 'You must be zoomed in more to see hotspots.');
         }
     }
 
-    async ev() {
+    async pnwVulnerability() {
         const data = await api('https://services1.arcgis.com/gGHDlz6USftL5Pau/ArcGIS/rest/services/PNW_community_vulnerability_ranks_only/FeatureServer/0/query', [
             ['where', '1=1'],
             ['outFields', 'FID,City,State,Overall_Vu'],
             ['returnGeometry', true],
             ['resultType', 'tile'],
             ['geometryPrecision', 6],
+            ['geometryType', 'esriGeometryEnvelope'],
+            ['spatialRel', 'esriSpatialRelIntersects'],
             ['f', 'geojson']
         ]);
 
@@ -4773,6 +4872,8 @@ class Layers {
                 ['outSR', 4326],
                 ['resultType', 'tile'],
                 ['geometryPrecision', 6],
+                ['geometryType', 'esriGeometryEnvelope'],
+                ['spatialRel', 'esriSpatialRelIntersects'],
                 ['geometry', getbbox()],
                 ['f', 'geojson']
             ]);
@@ -4867,7 +4968,7 @@ class Layers {
     sfp(update = false) {
         const ss = document.querySelector('#sfpDateSelect'),
             bkTime = ss ? ss.options[ss.selectedIndex].value : sfpTimes()[0].key,
-            time = settings.get('special').sfpDate && new Date(settings.get('special').sfpDate) >= new Date() ? settings.get('special').sfpDate : bkTime,
+            time = settings.special().sfpDate() && new Date(settings.special().sfpDate()) >= new Date() ? settings.special().sfpDate() : bkTime,
             url = 'https://fsapps.nwcg.gov/psp/arcgis/services/npsg/current_forecast/MapServer/WMSServer?service=WMS&request=GetMap&layers=0&styles=&format=image%2Fpng&transparent=true&version=1.1.1&Index=1&height=512&width=512&TIME=' + time + '&srs=EPSG%3A3857&bbox={bbox-epsg-3857}';
 
         if (update) {
@@ -4907,6 +5008,8 @@ class Layers {
             ['outFields', 'OBJECTID,NRI_ID,COUNTY,STATE,STATEABBRV,WFIR_RISKS,WFIR_RISKR,EAL_SPCTL,POPULATION,BUILDVALUE,AGRIVALUE,AREA'],
             ['geometry', getbbox()],
             ['geometryPrecision', 6],
+            ['geometryType', 'esriGeometryEnvelope'],
+            ['spatialRel', 'esriSpatialRelIntersects'],
             ['returnGeometry', true],
             ['f', 'geojson']]);
 
@@ -4977,6 +5080,8 @@ class Layers {
             ['outFields', '*'],
             ['geometry', getbbox()],
             ['geometryPrecision', 6],
+            ['geometryType', 'esriGeometryEnvelope'],
+            ['spatialRel', 'esriSpatialRelIntersects'],
             ['returnGeometry', true],
             ['f', 'geojson']]);
 
@@ -5371,6 +5476,8 @@ class Layers {
             ['returnGeometry', true],
             ['resultType', 'tile'],
             ['geometryPrecision', 6],
+            ['geometryType', 'esriGeometryEnvelope'],
+            ['spatialRel', 'esriSpatialRelIntersects'],
             ['geometry', getbbox()],
             ['f', 'geojson']
         ]);
@@ -5437,6 +5544,8 @@ class Layers {
             ['outFields', 'OBJECTID,GACCUnitID,GACCName,GACCLocation'],
             ['returnGeometry', true],
             ['geometryPrecision', 6],
+            ['geometryType', 'esriGeometryEnvelope'],
+            ['spatialRel', 'esriSpatialRelIntersects'],
             ['resultType', 'tile'],
             ['geometry', getbbox()],
             ['f', 'geojson']
@@ -5505,6 +5614,8 @@ class Layers {
             ['resultType', 'tile'],
             ['geometry', getbbox()],
             ['geometryPrecision', 6],
+            ['geometryType', 'esriGeometryEnvelope'],
+            ['spatialRel', 'esriSpatialRelIntersects'],
             ['returnGeometry', true],
             ['f', 'geojson']
         ]);
@@ -5572,7 +5683,17 @@ class Layers {
         const start = gmtime(+3600).replace('T', ' '),
             end = gmtime(+7200).replace('T', ' '),
             rounds = ['0 - 3', '3 - 25', '25 - 63', '63 - 158', '158 - 1000'],
-            data = await api('https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NDGD_SmokeForecast_v1/FeatureServer/0/query?where=1%3D1+AND+todate+>%3D+TIMESTAMP+%27' + start + '%27+AND+todate+<%3D+TIMESTAMP+%27' + end + '%27&outFields=*&resultType=tile&geometry=' + getbbox() + '&geometryPrecision=6&returnGeometry=true&f=geojson');
+            data = await api('https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NDGD_SmokeForecast_v1/FeatureServer/0/query', [
+                ['where', '1=1 AND todate > DATE \'' + start + '\' AND todate < DATE \'' + end + '\''],
+                ['outFields', '*'],
+                ['resultType', 'tile'],
+                ['geometry', getbbox()],
+                ['geometryPrecision', 6],
+                ['geometryType', 'esriGeometryEnvelope'],
+                ['spatialRel', 'esriSpatialRelIntersects'],
+                ['returnGeometry', true],
+                ['f', 'geojson']
+            ]);
 
         // update the geojson so maplibre can parse the colors correctly
         if (data.features && data.features.length > 0) {
@@ -5814,6 +5935,8 @@ class Layers {
             ['outFields', 'UNIT,UNITCODE,REGION'],
             ['returnGeometry', true],
             ['geometryPrecision', 6],
+            ['geometryType', 'esriGeometryEnvelope'],
+            ['spatialRel', 'esriSpatialRelIntersects'],
             ['geometry', getbbox()],
             ['resultType', 'tile'],
             ['f', 'geojson']
@@ -5882,6 +6005,8 @@ class Layers {
             ['returnGeometry', true],
             ['resultType', 'tile'],
             ['geometryPrecision', 6],
+            ['geometryType', 'esriGeometryEnvelope'],
+            ['spatialRel', 'esriSpatialRelIntersects'],
             ['geometry', getbbox()],
             ['f', 'geojson']
         ]);
@@ -5921,75 +6046,78 @@ class Layers {
     }
 
     async calfireAircraft(update = false) {
-        await fetch('https://services1.arcgis.com/jUJYIo9tSA7EHvfZ/ArcGIS/rest/services/CAL_FIRE_Aircraft_Tracking_public_view/FeatureServer/0/query?where=1%3D1&outFields=*&geometryPrecision=6&returnGeometry=true&f=geojson')
-            .then(async (resp) => {
-                const data = await resp.json();
+        const data = await api('https://services1.arcgis.com/jUJYIo9tSA7EHvfZ/ArcGIS/rest/services/CAL_FIRE_Aircraft_Tracking_public_view/FeatureServer/0/query', [
+            ['where', '1=1'],
+            ['outFields', '*'],
+            ['geometryPrecision', 6],
+            ['returnGeometry', true],
+            ['f', 'geojson']
+        ]);
 
-                if (update) {
-                    map.getSource('calfireAircraft').setData(data);
-                } else {
-                    if (data && data.features.length > 0) {
-                        if (!map.getSource('calfireAircraft')) {
-                            map.addSource('calfireAircraft', {
-                                type: 'geojson',
-                                data: data
-                            });
-                        }
-
-                        if (!map.getLayer('calfireAircraft')) {
-                            map.addLayer({
-                                id: 'calfireAircraft',
-                                type: 'symbol',
-                                minzoom: 5.7,
-                                source: 'calfireAircraft',
-                                layout: {
-                                    'icon-image': [
-                                        'case',
-                                        ['==', ['get', 'organizationGroup'], 'Helicopter'], 'helicopter',
-                                        ['==', ['get', 'organizationGroup'], 'Tactical'], 'plane_tactical',
-                                        ['==', ['get', 'organizationGroup'], 'Tanker'], 'plane_large', 'plane_small'],
-                                    'icon-size': 0.8,
-                                    'icon-rotate': ['to-number', ['get', 'cog']],
-                                    'icon-allow-overlap': true,
-                                    visibility: 'visible'
-                                }
-                            });
-                        }
-
-                        if (!map.getLayer('calfireAircraft_title')) {
-                            map.addLayer({
-                                id: 'calfireAircraft_title',
-                                type: 'symbol',
-                                minzoom: 5.7,
-                                source: 'calfireAircraft',
-                                paint: {
-                                    'text-color': '#444',
-                                    'text-halo-color': '#fff',
-                                    'text-halo-blur': 1,
-                                    'text-halo-width': 2
-                                },
-                                layout: {
-                                    'symbol-placement': 'point',
-                                    'text-font': config.fonts.source(),
-                                    'text-field': ['concat', ['get', 'unitId'], ' ', [
-                                        'case',
-                                        ['!=', ['to-string', ['get', 'tailNumber']], 'null'],
-                                        ['concat', '(', ['get', 'tailNumber'], ')'],
-                                        ''
-                                    ], ['get', 'category']],
-                                    'text-justify': 'center',
-                                    'text-size': 12,
-                                    'text-max-width': 8,
-                                    'text-anchor': 'bottom',
-                                    'text-offset': [0, 4.5],
-                                    'text-letter-spacing': 0.05,
-                                    visibility: 'visible'
-                                }
-                            });
-                        }
-                    }
+        if (update) {
+            map.getSource('calfireAircraft').setData(data);
+        } else {
+            if (data && data.features.length > 0) {
+                if (!map.getSource('calfireAircraft')) {
+                    map.addSource('calfireAircraft', {
+                        type: 'geojson',
+                        data: data
+                    });
                 }
-            });
+
+                if (!map.getLayer('calfireAircraft')) {
+                    map.addLayer({
+                        id: 'calfireAircraft',
+                        type: 'symbol',
+                        minzoom: 5,
+                        source: 'calfireAircraft',
+                        layout: {
+                            'icon-image': [
+                                'case',
+                                ['==', ['get', 'organizationGroup'], 'Helicopter'], 'helicopter',
+                                ['==', ['get', 'organizationGroup'], 'Tactical'], 'plane_tactical',
+                                ['==', ['get', 'organizationGroup'], 'Tanker'], 'plane_large', 'plane_small'],
+                            'icon-size': 0.8,
+                            'icon-rotate': ['to-number', ['get', 'cog']],
+                            'icon-allow-overlap': true,
+                            visibility: 'visible'
+                        }
+                    });
+                }
+
+                if (!map.getLayer('calfireAircraft_title')) {
+                    map.addLayer({
+                        id: 'calfireAircraft_title',
+                        type: 'symbol',
+                        minzoom: 5.7,
+                        source: 'calfireAircraft',
+                        paint: {
+                            'text-color': '#444',
+                            'text-halo-color': '#fff',
+                            'text-halo-blur': 1,
+                            'text-halo-width': 2
+                        },
+                        layout: {
+                            'symbol-placement': 'point',
+                            'text-font': config.fonts.source(),
+                            'text-field': ['concat', ['get', 'unitId'], ' ', [
+                                'case',
+                                ['!=', ['to-string', ['get', 'tailNumber']], 'null'],
+                                ['concat', '(', ['get', 'tailNumber'], ')'],
+                                ''
+                            ], ['get', 'category']],
+                            'text-justify': 'center',
+                            'text-size': 12,
+                            'text-max-width': 8,
+                            'text-anchor': 'bottom',
+                            'text-offset': [0, 4.5],
+                            'text-letter-spacing': 0.05,
+                            visibility: 'visible'
+                        }
+                    });
+                }
+            }
+        }
     }
 
     async evacuations() {
@@ -6035,7 +6163,7 @@ class Layers {
                         ]
                     },
                     layout: {
-                        visibility: settings.includes('evac') ? 'visible' : 'none'
+                        visibility: settings.isEnabled('evac') ? 'visible' : 'none'
                     }
                 });
 
@@ -6069,7 +6197,7 @@ class Layers {
                             'line-dasharray': [0, 2, 3]*/
                     },
                     layout: {
-                        visibility: settings.includes('evac') ? 'visible' : 'none'
+                        visibility: settings.isEnabled('evac') ? 'visible' : 'none'
                     }
                 });
             }
@@ -6110,7 +6238,7 @@ class Layers {
                         'text-anchor': 'center',
                         'text-offset': [0, 1],
                         'text-letter-spacing': 0.05,
-                        visibility: settings.includes('evac') ? 'visible' : 'none'
+                        visibility: settings.isEnabled('evac') ? 'visible' : 'none'
                     }
                 });
             }
@@ -6126,6 +6254,8 @@ class Layers {
                 ['resultType', 'tile'],
                 ['geometry', getbbox()],
                 ['geometryPrecision', 6],
+                ['geometryType', 'esriGeometryEnvelope'],
+                ['spatialRel', 'esriSpatialRelIntersects'],
                 ['returnGeometry', true],
                 ['f', 'geojson']
             ];
@@ -6198,7 +6328,7 @@ class Search {
         this.standby = this.results.querySelector('li.standby');
     }
 
-    clearData() {
+    /*clearData() {
         if (!this.emptyHistory) {
             const tmp = [];
 
@@ -6269,7 +6399,7 @@ class Search {
 
             return results;
         }
-    }
+    }*/
 
     async do() {
         Array.from(this.results.querySelectorAll('li:not(.standby)')).forEach(li => li.remove());
@@ -6281,23 +6411,27 @@ class Search {
             const crds = (/([0-9]{2}\.[0-9]+),\s?(-[0-9]{3}.[0-9]+)/gm).exec(this.query);
 
             // store user searches in local storage
-            this.storeSearches();
+            //this.storeSearches();
 
             if (crds != null) {
                 const lat = crds[1],
-                    lon = crds[2],
-                    h = map.getCenter(),
-                    dist = distance(h.lat, h.lng, lat, lon).toFixed(1);
+                    lon = crds[2];
 
-                const li = document.createElement('li');
-                li.setAttribute('data-action', 'sr-onclick');
-                li.setAttribute('data-type', 'coordinates');
-                li.setAttribute('data-lat', lat);
-                li.setAttribute('data-lon', lon);
-                li.innerHTML = `<span class="icon fas fa-map-location"></span><h3>${parseFloat(lat).toFixed(6).replace(/[0]+$/, '')},&nbsp;${parseFloat(lon).toFixed(6).replace(/[0]+$/, '')}<span>${dist} mile${dist != 1 ? 's' : ''} away</span></h3>`;
-                this.results.appendChild(li);
+                if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+                    const h = map.getCenter(),
+                        dist = conversion.distance(h.lat, h.lng, lat, lon).toFixed(1),
+                        dms = String(conversion.convertToDms(lat, false) + '&nbsp;' + conversion.convertToDms(lon, true)).replace(/\s/g, '');
 
-                count++;
+                    const li = document.createElement('li');
+                    li.setAttribute('data-action', 'sr-onclick');
+                    li.setAttribute('data-type', 'coordinates');
+                    li.setAttribute('data-lat', lat);
+                    li.setAttribute('data-lon', lon);
+                    li.innerHTML = `<span class="icon fas fa-map-location"></span><h3>${parseFloat(lat).toFixed(6).replace(/[0]+$/, '')},&nbsp;${parseFloat(lon).toFixed(6).replace(/[0]+$/, '')} <span style="color:#788695">${dms}</span><span>${dist} mile${dist != 1 ? 's' : ''} away</span></h3>`;
+                    this.results.appendChild(li);
+
+                    count++;
+                }
             } else {
                 activeIncidents.forEach((f) => {
                     let use = false,
@@ -6540,6 +6674,12 @@ function popstate() {
     if (window.location.pathname.search('/weather/alert') >= 0) {
         const id = window.location.pathname.split('/')[3];
         new NWS().readWWA(id, false);
+    }
+
+    /* if URL is supposed to open current weather conditions at a wx stn */
+    if (window.location.pathname.search('/weather/current') >= 0) {
+        const stnid = window.location.pathname.split('/')[3];
+        new Weather().findWXStn(stnid);
     }
 
     /* if URL is supposed to open a SPC outlook */
@@ -6897,20 +7037,22 @@ function init() {
     });
 
     /* add map controls */
-    map.addControl(
-        new CustomAttributionControl({
-            compact: true
-        }),
-        'bottom-right'
-    );
+    map.once('load', () => {
+        map.addControl(
+            new CustomAttributionControl({
+                compact: true
+            }),
+            'bottom-right'
+        );
 
-    map.addControl(
-        new maplibregl.ScaleControl({
-            unit: 'imperial'
-        })
-    );
+        map.addControl(
+            new maplibregl.ScaleControl({
+                unit: 'imperial'
+            })
+        );
 
-    addMapControls();
+        addMapControls();
+    });
 
     map.once('styledata', () => {
         /* preload sample images of the basemaps */
@@ -7008,8 +7150,8 @@ function init() {
 
         const dont = ['newFires', 'allFires', 'smokeChecks', 'rxBurns', 'perimeters'];
 
-        if (settings.get('checkboxes')) {
-            settings.get('checkboxes').forEach((c) => {
+        if (settings.checkboxes()) {
+            settings.checkboxes().forEach((c) => {
                 if (!dont.includes(c)) {
                     toggleLayer({ id: c, checked: true });
                 }
@@ -7053,7 +7195,7 @@ function init() {
         }
 
         /* control whether FS roads show on the map based on the zoom level */
-        if (settings.includes('roads')) {
+        if (settings.isEnabled('roads')) {
             if (!map.getLayer('roads')) {
                 config.layersHandler.roads();
             }
@@ -7081,7 +7223,7 @@ function init() {
             const name = 'modis' + item.n,
                 vis = map.getLayer(name) ? 'visible' : 'visible';
 
-            if (settings.includes(name)) {
+            if (settings.isEnabled(name)) {
                 if (!map.getLayer(name)) {
                     config.layersHandler.modis(item.w);
                 }
@@ -7098,7 +7240,43 @@ function init() {
             config.disableClicks = true;
 
             map.panTo([e.lngLat.lng, e.lngLat.lat]);
-            createDataForm('Report an incident', newReport);
+            createDataForm('Report an incident', `<form id="newReport" method="post">
+                <input type="hidden" name="platform" value="web">
+                <input type="hidden" name="authUser" value="0">
+                <input type="hidden" name="lat">
+                <input type="hidden" name="lon">
+                <input type="hidden" name="state">
+                <input type="hidden" name="version" value="${version}">
+                <input type="hidden" name="geolocation">
+                
+                <label>County</label>
+                <input type="text" id="gc" value="Loading..." disabled>
+                
+                <label>State</label>
+                <input type="text" id="gs" value="Loading..." disabled>
+                
+                <label>General Location</label>
+                <input type="text" id="gl" value="Loading..." disabled>
+                
+                <label>What type of incident is this?</label>
+                <select name="type">
+                    <option>- Choose -</option>
+                    <option value="Wildfire">Wildfire</option>
+                    <option value="Smoke Check">Smoke Check</option>
+                    <option value="Prescribed Burn">Prescribed Burn</option>
+                </select>
+
+                <label>How big is it?</label><input type="text" name="size" placeholder="eg: 10" style="display:inline-block;max-width:100px">
+                <div id="alab" style="display:inline-block;padding-left:5px">acres</div>
+                
+                <label>Brief description of incident:</label>
+                <textarea name="notes" placeholder="Anything else you can add..." style="min-height:100px;resize:none"></textarea>
+                
+                <div class="btn-group centered"><input type="submit" class="btn btn-blue" value="Submit Report">
+                    <a class="btn btn-gray" href="#" data-action="close-data-form" onclick="return false">Cancel</a>
+                </div>
+                <div class="disclaimer">Submitting this report only sends information to the ${config.productName} team&mdash;it does not send any information to emergency or governmental authorities. Please call 911 to report a new wildfire.</div>
+            </form>`);
 
             map.getCanvas().style.cursor = 'auto';
 
@@ -7135,35 +7313,37 @@ function init() {
     const moveEnd = debounce(() => {
         map.getCanvas().style.cursor = 'auto';
 
-        if (!settings.user || !settings.get('checkboxes') || settings.includes('perimeters')) {
+        //settings.logMovement();
+
+        if (!settings.user || !settings.checkboxes() || settings.isEnabled('perimeters')) {
             config.wildfire.perimeters(true);
         }
 
-        if ((!settings.get('checkboxes') || settings.includes('allFires')) && settings.archive != null) {
+        if ((!settings.checkboxes() || settings.isEnabled('allFires')) && settings.archive != null) {
             config.wildfire.getWildfires(true);
         }
 
-        if (settings.includes('firemed') && map.getZoom() >= config.firemedZoomLevel) {
+        if (settings.isEnabled('firemed') && map.getZoom() >= config.firemedZoomLevel) {
             config.layersHandler.firemed(true);
         }
 
-        if (settings.includes('modis24') && map.getZoom() >= config.modisZoomLevel) {
+        if (settings.isEnabled('modis24') && map.getZoom() >= config.modisZoomLevel) {
             config.layersHandler.modis(1, true);
         }
 
-        if (settings.includes('modis48') && map.getZoom() >= config.modisZoomLevel) {
+        if (settings.isEnabled('modis48') && map.getZoom() >= config.modisZoomLevel) {
             config.layersHandler.modis(2, true);
         }
 
-        if (settings.includes('modis72') && map.getZoom() >= config.modisZoomLevel) {
+        if (settings.isEnabled('modis72') && map.getZoom() >= config.modisZoomLevel) {
             config.layersHandler.modis(3, true);
         }
 
-        if (settings.includes('wwas')) {
+        if (settings.isEnabled('wwas')) {
             new NWS().get(true);
         }
 
-        if (settings.includes('stns')) {
+        if (settings.isEnabled('stns')) {
             const int = setInterval(() => {
                 if (Weather !== undefined) {
                     new Weather().raws(true);
@@ -7172,39 +7352,39 @@ function init() {
             }, 500);
         }
 
-        if (settings.includes('erc')) {
+        if (settings.isEnabled('erc')) {
             config.layersHandler.erc(true);
         }
 
-        if (settings.includes('hms')) {
+        if (settings.isEnabled('hms')) {
             config.layersHandler.hms(true);
         }
 
-        if (settings.includes('smokeFcst')) {
+        if (settings.isEnabled('smokeFcst')) {
             config.layersHandler.smokeFcst(true);
         }
 
-        if (settings.includes('nri')) {
+        if (settings.isEnabled('nri')) {
             config.layersHandler.nri(true);
         }
 
-        if (settings.includes('power')) {
+        if (settings.isEnabled('power')) {
             config.layersHandler.power(true);
         }
 
-        if (settings.includes('dispatch')) {
+        if (settings.isEnabled('dispatch')) {
             config.layersHandler.dispatch(true);
         }
 
-        if (settings.includes('gaccBounds')) {
+        if (settings.isEnabled('gaccBounds')) {
             config.layersHandler.gaccBounds(true);
         }
 
-        if (settings.includes('calfireUnits')) {
+        if (settings.isEnabled('calfireUnits')) {
             config.layersHandler.calfireUnits(true);
         }
 
-        if (settings.includes('cdfFHSZ')) {
+        if (settings.isEnabled('cdfFHSZ')) {
             config.layersHandler.cdfFHSZ(true);
         }
     }, 500);
@@ -7306,7 +7486,7 @@ window.onload = async () => {
 
         setInterval(() => {
             saveSession(true, false);
-        }, settings.get('saveFreq'));
+        }, settings.get().saveFreq());
     }, 60 * 5 * 1000);
 
     /* send fire click data to server for processing every 20 secs */
@@ -7353,10 +7533,12 @@ window.addEventListener('click', async (e) => {
             'back-my-content': () => clickListener.myContent(),
             'close-historical': () => clickListener.closeArchive(),
             'close-popup': () => clickListener.closePopup(),
+            'clear-search': () => clickListener.clearSearch(),
             'close-data-form': () => clickListener.closeDataForm(),
             'close-impact': () => clickListener.closeImpact(),
             'sr-onclick': () => clickListener.searchResultClick(),
             'close-navbar': () => clickListener.closeNavbar(),
+            'clear-layer-search': () => clickListener.clearLayerSearch(),
             'dropdown-nav': () => document.querySelector('nav').classList.toggle('open'),
             'new-fires': () => clickListener.newFire(),
             'readSPC': () => {
@@ -7501,6 +7683,8 @@ window.addEventListener('keydown', (e) => {
 
     // onkeydown in the search box
     if (e.target.id == 'q') {
+        if (/^(Arrow|Shift|Control|Alt|Tab|CapsLock|Escape)/.test(e.key)) return;
+
         const standby = searchResults.querySelector('.standby');
 
         if (isTypingKey || isPasteAction) {
@@ -7528,12 +7712,26 @@ window.addEventListener('keydown', (e) => {
 
 // user search fires cities etc
 window.addEventListener('keyup', debounce((e) => {
+    if (/^(Arrow|Shift|Control|Alt|Tab|CapsLock|Escape)/.test(e.key)) return;
+
     if (e.target.id == 'q' && config.runSearch) {
+        document.querySelector('#clearSearch').style.display = e.target.value == '' ? 'none' : 'block';
         new Search(e.target.value).do();
 
         config.runSearch = false;
     }
-}, 1050));
+
+    if (e.target.id == 'layerSearch') {
+        const query = e.target.value.toLowerCase();
+
+        impact.querySelectorAll('.layers-list li.layer').forEach(layer => {
+            const matches = layer.dataset.id.toLowerCase().includes(query) ||
+                layer.title.toLowerCase().includes(query);
+
+            layer.style.display = matches || query == '' ? 'flex' : 'none';
+        });
+    }
+}), 1050);
 
 window.addEventListener('focus', (e) => {
     if (e.target.id == 'q') {

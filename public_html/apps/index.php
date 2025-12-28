@@ -1,41 +1,47 @@
 <?
 ini_set('display_errors', 1);
-error_reporting(E_ERROR);
+error_reporting(E_PARSE & E_ERROR);
 ini_set('session.cookie_domain', '.mapotechnology.com');
 session_start();
 date_default_timezone_set('America/Los_Angeles');
 
 $route = $_GET['route'];
 
-class Apps {
+class Apps
+{
     public $route;
     public $thisApp = null;
     public $apps = array(
-        array('name' => 'WarnGEN',
+        array(
+            'name' => 'WarnGEN',
             'url' => 'warngen',
             'path' => './wg',
             'index' => 'index.php',
             'requiresAuth' => true
         ),
-        array('name' => 'Winter Dashboards',
+        array(
+            'name' => 'Winter Dashboards',
             'url' => 'winter',
             'path' => './snow',
             'index' => 'index.php',
             'requiresAuth' => false
         ),
-        array('name' => 'TornadoIQ',
+        array(
+            'name' => 'TornadoIQ',
             'url' => 'tornadoiq',
             'path' => './toriq',
             'index' => 'app.php',
             'requiresAuth' => false
         ),
-        array('name' => 'OregonRoads',
+        array(
+            'name' => 'OregonRoads',
             'url' => 'oregonroads',
             'path' => './oreroads',
             'index' => 'app.php',
             'requiresAuth' => false
         ),
-        array('name' => 'CrisisCoord',
+        array(
+            'name' => 'CrisisCoord',
             'url' => 'crisiscoord',
             'path' => './evac',
             'index' => 'index.php',
@@ -43,7 +49,8 @@ class Apps {
         )
     );
 
-    public function __construct($route) {
+    public function __construct($route)
+    {
         $this->route = $route;
 
         foreach ($this->apps as $app) {
@@ -53,45 +60,55 @@ class Apps {
         }
     }
 
-    public function exists() {
+    public function exists()
+    {
         return $this->thisApp == null ? false : true;
     }
 
-    public function name() {
+    public function name()
+    {
         return $this->thisApp['name'];
     }
 
-    public function url() {
+    public function url()
+    {
         return $this->thisApp['url'];
     }
 
-    public function path() {
+    public function path()
+    {
         return $this->thisApp['path'];
     }
 
-    public function index() {
+    public function index()
+    {
         return $this->thisApp['index'];
     }
 
-    public function requiresAuth() {
+    public function requiresAuth()
+    {
         return $this->thisApp['requiresAuth'];
     }
 }
 
-class Router {
+class Router
+{
     public $params;
     public $url = [];
 
-    public function __construct($params) {
+    public function __construct($params)
+    {
         $this->params = $params['params'];
     }
 
-    public function hasParams() {
+    public function hasParams()
+    {
         return $this->params ? true : false;
     }
 
-    public function params() {
-        $keys = ['a','b','c','d','e','f','g'];
+    public function params()
+    {
+        $keys = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
         $parts = explode('/', $this->params);
 
         $i = 0;
@@ -101,11 +118,18 @@ class Router {
         }
     }
 
-    public function path() {
+    public function path()
+    {
         return $this->url;
     }
 
-    public function url($key) {
+    public function things()
+    {
+        return $this->params;
+    }
+
+    public function url($key)
+    {
         if ($this->hasParams()) {
             $this->params();
 
@@ -121,28 +145,29 @@ if ($route == 'authenticate') {
 
     if ($route != 'src') {
         if (!$thisApp->exists()) {
-            $folder = $_SERVER['DOCUMENT_ROOT'].'/'.$_REQUEST['route'];
+            $folder = $_SERVER['DOCUMENT_ROOT'] . '/' . $_REQUEST['route'];
             $path = $_REQUEST['params'];
 
-            if (is_dir($folder) && $path && file_exists($folder.'/'.$path)) {
+            if (is_dir($folder) && $path && file_exists($folder . '/' . $path)) {
                 $ext = explode('.', $path);
 
                 // if the file is a script, run it as such otherwise just get the text contents of the file
                 if ($ext[1] == 'php') {
-                    include_once $folder.'/'.$path;
+                    include_once $folder . '/' . $path;
                 } else {
-                    echo file_get_contents($folder.'/'.$path);
+                    echo file_get_contents($folder . '/' . $path);
                 }
             } else {
                 header('Location: https://www.mapotechnology.com');
                 exit();
             }
         } else {
-            if ($thisApp->requiresAuth() && !isset($_SESSION['uid'])) {?>
+            if ($thisApp->requiresAuth() && !isset($_SESSION['uid'])) { ?>
                 <!DOCTPYE html>
-                <html lang="en-US">
+                    <html lang="en-US">
+
                     <head>
-                        <title><?=$thisApp->name()?> - MAPO LLC</title>
+                        <title><?= $thisApp->name() ?> - MAPO LLC</title>
                         <meta charset="utf-8">
                         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
                         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=1">
@@ -154,31 +179,33 @@ if ($route == 'authenticate') {
                         <link href="https://www.mapotechnology.com/assets/css/global.css" rel="stylesheet">
                         <link href="https://www.mapotechnology.com/assets/css/user.css" rel="stylesheet">
                     </head>
-                <body>
 
-                <main>
-                    <div class="wrapper">
-                        <a href="https://www.mapotechnology.com" class="logo"><img style="width:inherit" src="https://www.mapotechnology.com/assets/images/mapo_logo.png"></a>
-                        <h1>Login to <?=$thisApp->name()?></h1>
+                    <body>
 
-                        <p style="margin:1em 0;line-height:1.5;text-align:center">Accessing <?=$thisApp->name()?> requires authentication. Please login to your account first. 
-                        You can login to all of MAPO's apps and services from one account using single sign-on (SSO).</p>
+                        <main>
+                            <div class="wrapper">
+                                <a href="https://www.mapotechnology.com" class="logo"><img style="width:inherit" src="https://www.mapotechnology.com/assets/images/mapo_logo.png"></a>
+                                <h1>Login to <?= $thisApp->name() ?></h1>
 
-                        <a class="btn btn-blue btn-lg" style="display:block;margin:25px auto 0 auto" href="https://www.mapotechnology.com/secure/login?service=apps&prod=<?=$thisApp->url()?>&next=<?=urlencode($_SERVER['REQUEST_URI'])?>">Login</a>
-                        <p class="or">or</p>
-                        <a style="display:block;text-align:center" href="https://www.mapotechnology.com/secure/register?service=apps&prod=<?=$thisApp->url()?>&next=<?=urlencode($_SERVER['REQUEST_URI'])?>">Create an account</a>
-                    </div>
-                </main>
+                                <p style="margin:1em 0;line-height:1.5;text-align:center">Accessing <?= $thisApp->name() ?> requires authentication. Please login to your account first.
+                                    You can login to all of MAPO's apps and services from one account using single sign-on (SSO).</p>
 
-                </body>
-                </html>
-            <?} else {
+                                <a class="btn btn-blue btn-lg" style="display:block;margin:25px auto 0 auto" href="https://www.mapotechnology.com/secure/login?service=apps&prod=<?= $thisApp->url() ?>&next=<?= urlencode($_SERVER['REQUEST_URI']) ?>">Login</a>
+                                <p class="or">or</p>
+                                <a style="display:block;text-align:center" href="https://www.mapotechnology.com/secure/register?service=apps&prod=<?= $thisApp->url() ?>&next=<?= urlencode($_SERVER['REQUEST_URI']) ?>">Create an account</a>
+                            </div>
+                        </main>
+
+                    </body>
+
+                    </html>
+    <? } else {
                 // URL successfully maps to a web app, start the router to create the pages
                 $router = new Router($_REQUEST);
 
-                require_once $thisApp->path().'/'.$thisApp->index();
+                require_once $thisApp->path() . '/' . $thisApp->index();
             }
         }
     }
 }
-?>
+    ?>

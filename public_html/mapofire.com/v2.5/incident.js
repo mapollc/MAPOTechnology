@@ -97,7 +97,8 @@ function dispatchCtr() {
 }
 
 function incidentDetails(json, cols) {
-    const totalLength = json.length,
+    const uniqueJson = [...new Map(json.map(item => [item.desc, item])).values()],
+        totalLength = uniqueJson.length,
         createHTML = (dataArray) => {
             const fields = dataArray.map(item => `
                 <dt class="label">${item.desc}</dt>
@@ -107,13 +108,11 @@ function incidentDetails(json, cols) {
             return `<div class="card">${fields}</div>`;
         };
 
-    if (cols === 1) {
-        return createHTML(json);
-    }
+    if (cols === 1) return createHTML(uniqueJson);
 
     const splitIndex = Math.ceil(totalLength / 2),
-        col1Data = json.slice(0, splitIndex),
-        col2Data = json.slice(splitIndex);
+        col1Data = uniqueJson.slice(0, splitIndex),
+        col2Data = uniqueJson.slice(splitIndex);
 
     return `${createHTML(col1Data)}${createHTML(col2Data)}`;
 }
