@@ -1,11 +1,16 @@
 <?
-require_once 'coming-soon.html';
-exit();
-
 ini_set('display_errors', 1);
+ini_set('session.cookie_domain', '.mapotrails.com');
+session_start();
+
+if (!isset($_SESSION['uid']) || $_SESSION['role'] != 'ADMIN') {
+    require_once 'coming-soon.html';
+    exit();
+}
+
 $version = $_GET['version'] ? $_GET['version'] : '2.2';
 
-if ($version == '2.0') {
+/*if ($version == '2.0') {
     include_once '../subs.inc.php';
     $buildDate = date('Y-m-d\TH:i:sO', max(filemtime('./v' . $version . '/index.php'), filemtime('./v' . $version . '/main.js'), filemtime('./v' . $version . '/main.css')));
     $domain = '//mapotrails.com/';
@@ -25,7 +30,7 @@ if ($version == '2.0') {
 if ($_SESSION['role'] != 'ADMIN') {
     header('Location: https://www.mapotechnology.com');
     exit();
-}*/
+}*//*
 
     function ing($t)
     {
@@ -85,7 +90,7 @@ if ($_SESSION['role'] != 'ADMIN') {
     }
 } else if ($_SESSION['mtsettings']) {
     $settings = ($_SESSION['mtsettings'] ? json_decode($_SESSION['mtsettings'], true) : $settings);
-}*/
+}*//*
 
     $settings['category'] = ($_GET['category'] ? $_GET['category'] : 'trail');
 
@@ -108,9 +113,7 @@ if ($_SESSION['role'] != 'ADMIN') {
     $settings['version'] = array($version, (substr($version, -2) == '.0' ? substr($version, 0, -2) : $version));
 
     require './v' . $version . '/index.php';
-} else {
-    ini_set('session.cookie_domain', '.mapotrails.com');
-    session_start();
+} else {*/
 
     include_once '/home/mapo/public_html/subs.inc.php';
 
@@ -163,4 +166,4 @@ if ($_SESSION['role'] != 'ADMIN') {
     } else {
         http_response_code(404);
     }
-}
+//}

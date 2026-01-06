@@ -36,7 +36,7 @@ if ($_SERVER['HTTP_X_REQUESTED_WITH'] == 'com.mapollc.main' || $_GET['android'] 
 }
 
 if ($_COOKIE['token'] || $_SESSION['token']) {
-    $json = json_decode(file_get_contents('https://api.mapotechnology.com/v1/subscriptions?key=cf707f0516e5c1226835bbf0eece4a0c&token='.($_COOKIE['token'] ? $_COOKIE['token'] : ($_SESSION['token'] ? $_SESSION['token'] : ''))))->subscriptions;
+    /*$json = json_decode(file_get_contents('https://api.mapotechnology.com/v1/subscriptions?key=cf707f0516e5c1226835bbf0eece4a0c&token='.($_COOKIE['token'] ? $_COOKIE['token'] : ($_SESSION['token'] ? $_SESSION['token'] : ''))))->subscriptions;
     
     if ($json) {
         foreach ($json as $s) {
@@ -46,7 +46,7 @@ if ($_COOKIE['token'] || $_SESSION['token']) {
         }
     } else {
         $subscribe = array('active' => false);
-    }
+    }*/
 }
 ?>
 <!DOCTYPE html>

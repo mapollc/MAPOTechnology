@@ -411,7 +411,6 @@ $layerDesc = array(
         'See current air quality conditions from the EPA',
         'View current weather alerts from the NWS',
         'Review current severe & fire outlooks from the SPC',
-        'View observed and forecasted energy release component (ERC) values for fire danger',
         'See current weather obs at remote automatic weather stations (RAWS)',
         'See radar imagery from the last 2 hours',
         'Visualize various weather forecast models',
@@ -420,7 +419,7 @@ $layerDesc = array(
         'Visualize the most recent water vapor satellite imagery'
     ],
     'plan' => [
-        'See current national fire danger (NFDRS)',
+        'View observed and forecasted energy release component (ERC) values for fire danger',
         'View evacuation vulnerabilities from the PNW\'s most rural areas',
         'Show significant fire potential outlooks',
         'See each county\'s wildfire risk based on annual loss, vulnerability & resilience',

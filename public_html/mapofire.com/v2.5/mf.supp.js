@@ -135,9 +135,7 @@ class Popup {
 
         const pop = document.createElement('div');
         pop.classList.add('popup');
-        if (this.tall) {
-            pop.classList.add('tall');
-        }
+        if (this.tall) pop.classList.add('tall');
         pop.innerHTML = `<div class="content">${this.header}<div class="data">${content}</div></div>`;
 
         this.dialog = pop;
@@ -161,11 +159,7 @@ class Popup {
     }
 
     close() {
-        if (document.querySelector('.popup') != null) {
-            document.querySelector('.popup').remove();
-
-
-        }
+        if (document.querySelector('.popup') != null) document.querySelector('.popup').remove();
     }
 }
 
@@ -460,7 +454,7 @@ class Weather {
     }
 
     async raws(update = false) {
-        let feat = [],
+        const feat = [],
             b = JSON.parse(getbbox()),
             bx = b.xmax + ',' + b.ymin + ',' + b.xmin + ',' + b.ymax,
             vars = 'token=350409c14c544ec9957effb1c15bcb99' +
@@ -558,7 +552,7 @@ class Weather {
                             'text-font': config.fonts.roboto(),
                             'text-field': ['concat', ['get', 'temp'], '°'],
                             'text-justify': 'center',
-                            'text-size': 13,
+                            'text-size': 12,
                             'text-offset': [0, 0]
                         }
                     });
@@ -586,51 +580,31 @@ class Weather {
     }
 
     airQColor(v) {
-        let r = '';
+        const ranges = [
+            { max: 50, color: '00e400' },
+            { max: 100, color: 'ffff00' },
+            { max: 150, color: 'ff7e00' },
+            { max: 200, color: 'ff0000' },
+            { max: 300, color: '8f3f97' },
+            { max: 500, color: '7e0023' }
+        ];
 
-        if (v <= 50) {
-            r = '00e400';
-        } else if (v > 50 && v <= 100) {
-            r = 'ffff00';
-        } else if (v > 100 && v <= 150) {
-            r = 'ff7e00';
-        } else if (v > 150 && v <= 200) {
-            r = 'ff0000';
-        } else if (v > 200 && v <= 300) {
-            r = '8f3f97';
-        } else if (v > 300 && v <= 500) {
-            r = '7e0023';
-        } else {
-            r = 'd9d9d9';
-        }
-
-        return '#' + r;
+        const range = ranges.find(r => v <= r.max);
+        return '#' + (range ? range.color : 'd9d9d9');
     }
 
     airQDesc(aq) {
-        let l, hm;
+        const ranges = [
+            { max: 50, label: 'Good', desc: 'Air quality is satisfactory, and air pollution poses little or no risk.' },
+            { max: 100, label: 'Moderate', desc: 'Air quality is acceptable. However, there may be a risk for some people, particularly those who are unusually sensitive to air pollution.' },
+            { max: 150, label: 'Unhealthy for Sensitive Groups', desc: 'Members of sensitive groups may experience health effects. The general public is less likely to be affected.' },
+            { max: 200, label: 'Unhealthy', desc: 'Some members of the general public may experience health effects; members of sensitive groups may experience more serious health effects.' },
+            { max: 300, label: 'Very Unhealthy', desc: 'Health alert: The risk of health effects is increased for everyone.' },
+            { max: Infinity, label: 'Hazardous', desc: 'Health warning of emergency conditions: everyone is more likely to be affected.' }
+        ];
 
-        if (aq <= 50) {
-            l = 'Good';
-            hm = 'Air quality is satisfactory, and air pollution poses little or no risk.';
-        } else if (aq > 50 && aq <= 100) {
-            l = 'Moderate';
-            hm = 'Air quality is acceptable. However, there may be a risk for some people, particularly those who are unusually sensitive to air pollution.';
-        } else if (aq > 100 && aq <= 150) {
-            l = 'Unhealthy for Sensitive Groups';
-            hm = 'Members of sensitive groups may experience health effects. The general public is less likely to be affected.';
-        } else if (aq > 150 && aq <= 200) {
-            l = 'Unhealthy';
-            hm = 'Some members of the general public may experience health effects; members of sensitive groups may experience more serious health effects.';
-        } else if (aq > 200 && aq <= 300) {
-            l = 'Very Unhealthy';
-            hm = 'Health alert: The risk of health effects is increased for everyone.';
-        } else if (aq > 300) {
-            l = 'Hazardous';
-            hm = 'Health warning of emergency conditions: everyone is more likely to be affected.';
-        }
-
-        return { 'quality': l, 'desc': hm };
+        const range = ranges.find(r => aq <= r.max);
+        return { quality: range.label, desc: range.desc };
     }
 
     nearbyAQ() {
@@ -643,22 +617,22 @@ class Weather {
                         distances = [],
                         stns = [];
 
-                    airQualityStns.features.forEach((f) => {
+                    airQualityStns.features.forEach(f => {
                         const dist = conversion.distance(this.lat, this.lon, f.geometry.coordinates[1], f.geometry.coordinates[0]);
-
                         distances.push(dist);
                         stns.push(f.properties);
                     });
 
-                    const minDist = Math.min.apply(null, distances);
-
-                    const stn = stns[distances.indexOf(minDist)],
+                    const minDist = Math.min.apply(null, distances),
+                        stn = stns[distances.indexOf(minDist)],
                         aq = stn.PM25_AQI,
                         color = this.airQColor(aq),
                         details = this.airQDesc(aq);
 
-                    aqh.querySelector('.desc').innerHTML = '<span class="air_quality" onclick="notify(\'info\', \'' + details.desc + '\');return false" title="' + details.quality + ': ' + details.desc +
-                        '" style="color:#' + (aq <= 100 ? '000' : 'fff') + ';background-color:' + color + '">' + details.quality.replace('Unhealthy for Sensitive Groups', 'Unhealthy') + '</span>';
+                    aqh.querySelector('.desc').innerHTML = `<span class="air_quality"
+                        onclick="notify('info', '${details.desc}');return false"
+                        title="${details.quality}: ${details.desc}"
+                        style="color:#${(aq <= 100 ? '000' : 'fff')};background-color:${color}">${details.quality.replace('Unhealthy for Sensitive Groups', 'Unhealthy')}'</span>`;
                 } else {
                     aqh.parentElement.classList.remove('max25');
                     aqh.parentElement.classList.add('max33');
@@ -677,9 +651,7 @@ class ChangeListener {
     }
 
     changeBasemap(tile = null) {
-        if (tile == null) {
-            tile = this.target.getAttribute('data-tile');
-        }
+        if (tile == null) tile = this.target.getAttribute('data-tile');
 
         settings.settings.tile = tile;
 
@@ -707,7 +679,6 @@ class ChangeListener {
         const v = this.target.value;
 
         settings.updatePSize(v);
-
         document.querySelector('#pSize').innerHTML = v + ' acres';
 
         map.removeLayer('perimeters_outline')
@@ -718,59 +689,10 @@ class ChangeListener {
         new Wildfires().perimeters();
     }
 
-    /*darkMode() {
-        let useTile = '',
-            url = config.specificURL + (debugMode ? 'v' + version + '/mf.app-dark_mode.css' : 'src/css/mf.app-dark_mode-' + version + '.css'),
-            on = this.target.checked ? true : false,
-            sheets = Array.from(document.styleSheets),
-            isLoaded = () => {
-                sheets.forEach(sheet => {
-                    if (sheet.href && sheet.href.includes(url)) {
-                        return true;
-                    }
-                });
-
-                return false;
-            };
-
-        if (on) {
-            if (!isLoaded()) {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = url;
-                document.head.appendChild(link);
-            }
-
-            useTile = 'dark';
-            document.body.classList.add('dark-mode');
-        } else {
-            sheets.forEach(sheet => {
-                if (sheet.href && sheet.href.includes(url)) {
-                    sheet.ownerNode.remove();
-                }
-            });
-            
-            useTile = 'outdoors';
-            document.body.classList.remove('dark-mode');
-        }
-
-        this.changeBasemap(useTile);
-
-        const ts = new Date();
-        const date = ts.setTime(ts.getTime() + (60 * 60 * 24 * 30 * 1000)),
-            expires = `; expires=${new Date(date).toGMTString()}`;
-
-        document.cookie = `dark_mode=${on ? 'true' : 'false'}` + expires + '; domain=.' + window.location.hostname + '; path=/; secure';
-    }*/
-
     toggle() {
         const layers = [];
 
-        document.querySelectorAll('.layChkBx').forEach((e) => {
-            if (e.checked) {
-                layers.push(e.id);
-            }
-        });
+        document.querySelectorAll('.layChkBx').forEach(e => { if (e.checked) layers.push(e.id); });
 
         // update settings to reflect anytime a checkbox is selected or not
         settings.updateLayers(layers);
@@ -792,7 +714,7 @@ class ChangeListener {
         }
     }
 
-    spc() {
+    async spc() {
         const type = document.querySelector('#otlkType'),
             days = document.querySelector('#otlkDay'),
             day3 = days.querySelector('option[value="3"]');
@@ -806,20 +728,16 @@ class ChangeListener {
                 days.appendChild(opt);
             }
         } else {
-            if (day3) {
-                day3.remove();
-            }
+            if (day3) day3.remove();
         }
 
         settings.updateSpecial();
-        new NWS().spc(true);
+        new (await loadUtils()).NWS().spc(true);
     }
 
     personalize() {
         if (document.querySelector('#impact #settings') != null) {
-            document.querySelectorAll('#impact #settings select').forEach((s) => {
-                settings.updatePersonal(s);
-            });
+            document.querySelectorAll('#impact #settings select').forEach(s => settings.updatePersonal(s));
 
             saveSession(true);
         }
@@ -827,10 +745,11 @@ class ChangeListener {
 
     archive() {
         const ay = document.querySelector('#archive_years'),
-            s = ay.options[ay.selectedIndex].value;
+            s = ay.options[ay.selectedIndex].value,
+            win = window.location;
 
         if (s != '- Choose a year -') {
-            window.location.href = config.host + 'archive/' + s + (window.location.search ? window.location.search : '') + (window.location.hash ? window.location.hash : '');
+            win.href = config.host + 'archive/' + s + (win.search ? win.search : '') + (win.hash ? win.hash : '');
         }
     }
 }
@@ -846,48 +765,39 @@ function isVisible(div) {
     }
 }
 
-function plural(v) {
-    return (v > 1 ? 's' : '');
-}
-
-function matheq(d, s, r) {
-    return Math.floor(((d / s) - Math.floor(d / s)) * r);
-}
-
 function timeAgo(t, w, c) {
-    let val,
-        now = c ? c : new Date().getTime(),
-        d = Math.round((now - (t.toString().length == 10 ? t * 1000 : t)) / 1000);
+    const plural = (v) => { return v > 1 ? 's' : ''; },
+        subUnit = (d, s, r) => { return Math.floor(((d / s) - Math.floor(d / s)) * r); },
+        now = c ?? Date.now(),
+        timestamp = t.toString().length === 10 ? t * 1000 : t,
+        d = Math.round((now - timestamp) / 1000);
 
-    if (d < 10) {
-        val = 'Just now';
-    } else if (d >= 10 && d < 60) {
-        val = d + ' sec' + plural(d);
-    } else if (d >= 60 && d < 3600) {
-        val = Math.floor(d / 60) + ' min' + plural(Math.floor(d / 60)) + ((matheq(d, 60, 60) !== 0) ? ',&nbsp;' + matheq(d, 60, 60) + ' sec' + plural(matheq(d, 60, 60)) : '');
-    } else if (d >= 3600 && d < 86400) {
-        val = Math.floor(d / 3600) + ' hour' + plural(Math.floor(d / 3600)) + ((matheq(d, 3600, 60) !== 0) ? ',&nbsp;' + matheq(d, 3600, 60) + ' min' + plural(matheq(d, 3600, 60)) : '');
-    } else if (d >= 86400 && d < 172800) {
-        val = Math.floor(d / 86400) + ' day' + plural(Math.floor(d / 86400)) + ((matheq(d, 86400, 24) !== 0) ? ',&nbsp;' + matheq(d, 86400, 24) + ' hour' + plural(matheq(d, 86400, 24)) : '');
-    } else if (d >= 172800 && d < 604800) {
-        val = Math.floor(d / 86400) + ' day' + plural(Math.floor(d / 86400));
-    } else if (d >= 604800 && d < 2419200) {
-        val = Math.floor(d / 604800) + ' week' + plural(Math.floor(d / 604800));
-    } else if (d >= 2419200 && d < 31536000) {
-        val = Math.floor(d / 2419200) + ' month' + plural(Math.floor(d / 2419200));
-    } else if (d >= 31536000) {
-        val = Math.floor(d / 31536000) + ' year' + plural(Math.floor(d / 31536000));
+    if (d < 10) return 'Just now';
+
+    const ranges = [
+        { limit: 60, unit: 'sec', div: 1, sub: null },
+        { limit: 3600, unit: 'min', div: 60, sub: { div: 60, unit: 'sec' } },
+        { limit: 86400, unit: 'hour', div: 3600, sub: { div: 60, unit: 'min' } },
+        { limit: 172800, unit: 'day', div: 86400, sub: { div: 24, unit: 'hour' } },
+        { limit: 604800, unit: 'day', div: 86400 },
+        { limit: 2419200, unit: 'week', div: 604800 },
+        { limit: 31536000, unit: 'month', div: 2419200 },
+        { limit: Infinity, unit: 'year', div: 31536000 }
+    ];
+
+    const range = ranges.find(r => d < r.limit);
+    let val = Math.floor(d / range.div) + ' ' + range.unit + plural(Math.floor(d / range.div));
+
+    if (range.sub) {
+        const subVal = subUnit(d, range.div, range.sub.div);
+        if (subVal !== 0) {
+            val += `,&nbsp;${subVal} ${range.sub.unit}${plural(subVal)}`;
+        }
     }
 
-    if (w == 1) {
-        val = val.split(', ')[0];
-    }
+    if (w === 1) val = val.split(',')[0];
 
-    if (val == 'Just now') {
-        return val;
-    } else {
-        return val === undefined ? 'unknown' : val + ' ago';
-    }
+    return val + ' ago';
 }
 
 function ucfirst(s) {
@@ -895,35 +805,14 @@ function ucfirst(s) {
 }
 
 function ucwords(s) {
-    if (s.search(/\s/g) >= 0) {
-        var a = s.split(' '),
-            o = '';
-
-        a.forEach(function (s) {
-            o += s.charAt(0).toUpperCase() + s.slice(1) + ' ';
-        });
-
-        return o.substring(0, o.length - 1);
-    } else {
-        return ucfirst(s);
-    }
+    const smallWords = new Set(['a', 'an', 'the', 'is', 'of', 'and', 'or', 'for', 'to', 'in', 'on', 'at', 'by', 'with']);
+    return s.split(' ').map((word, i) => i === 0 || !smallWords.has(word.toLowerCase()) ? word.charAt(0).toUpperCase() + word.slice(1) : word.toLowerCase()).join(' ');
 }
 
 function numberFormat(n, d = 2) {
     return Intl.NumberFormat('en-US', {
         maximumFractionDigits: d
     }).format(n);
-}
-
-function loadScript(src) {
-    return new Promise(function (resolve, reject) {
-        var s;
-        s = document.createElement('script');
-        s.src = src;
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-    });
 }
 
 function dateTime(it, time = false, timezone = false, longMonth = false) {
@@ -965,40 +854,38 @@ function socialShare(se) {
 }
 
 function ndfdTime(add = null) {
-    var a = new Date(),
+    const a = new Date(),
         e = a.toString().split(' GMT')[0],
-        b = (a.getMonth() + 1) + '/' + a.getDate() + '/' + a.getFullYear();
-    c = e.match(/([0-9:]{8,})/gm)[0].split(':'),
-        h = parseInt(c[0]);
+        b = (a.getMonth() + 1) + '/' + a.getDate() + '/' + a.getFullYear(),
+        c = e.match(/([0-9:]{8,})/gm)[0].split(':');
+    let h = parseInt(c[0]);
 
-    if (c[1] > 0) {
-        h += 1;
-    }
+    if (c[1] > 0) h += 1;
 
-    var t = b + ' ' + h + ':00:00';
+    const t = b + ' ' + h + ':00:00';
 
-    return new Date(t).getTime() + (add ? (add * 60 * 60 * 1000) : 0);
+    return new Date(t).getTime() + (add ? (add * 3600 * 1000) : 0);
 }
 
 function initNDFDTimes() {
-    let o = '';
+    const options = [];
 
     for (let i = 0; i < 24; i++) {
-        let t = new Date(ndfdTime(i)),
+        const t = new Date(ndfdTime(i)),
             y = t.getUTCFullYear(),
-            m1 = (t.getUTCMonth() + 1),
-            m = (m1 < 10 ? '0' : '') + m1,
-            d1 = t.getUTCDate(),
-            d = (d1 < 10 ? '0' : '') + d1,
-            h1 = t.getUTCHours(),
-            h = (h1 < 10 ? '0' : '') + h1,
-            ts = y + '-' + m + '-' + d + 'T' + h + ':00:00.000Z',
-            lh = (t.getHours() > 12 ? t.getHours() - 12 : (t.getHours() == 0 ? '12' : t.getHours())) + ':00';
+            m = String(t.getUTCMonth() + 1).padStart(2, '0'),
+            d = String(t.getUTCDate()).padStart(2, '0'),
+            hUTC = String(t.getUTCHours()).padStart(2, '0'),
+            ts = `${y}-${m}-${d}T${hUTC}:00:00.000Z`;
+        hours = t.getHours(),
+            period = hours >= 12 ? 'PM' : 'AM',
+            lh = hours % 12 || 12;
 
-        o += `<option ${settings.special().fcstTime() == ts ? 'selected ' : ''}value="${ts}">${lh == 0 ? '12' : lh} ${t.getHours() >= 12 ? 'P' : 'A'}M</option>`;
+        const selected = settings.special().fcstTime() === ts ? 'selected ' : '';
+        options.push(`<option ${selected}value="${ts}">${lh}:00 ${period}</option>`);
     }
 
-    return o;
+    return options;
 }
 
 function setHeaders(title, urlPath, description) {
@@ -1024,12 +911,8 @@ function setHeaders(title, urlPath, description) {
     }];
 
     metaTags.forEach(tag => {
-        if (tag.property) {
-            document.querySelector(`meta[property="${tag.property}"]`).setAttribute('content', tag.content);
-        }
-        if (tag.name) {
-            document.querySelector(`meta[name="${tag.name}"]`).setAttribute('content', tag.content);
-        }
+        if (tag.property) document.querySelector(`meta[property="${tag.property}"]`).setAttribute('content', tag.content);
+        if (tag.name) document.querySelector(`meta[name="${tag.name}"]`).setAttribute('content', tag.content);
     });
 }
 
@@ -1050,67 +933,38 @@ function unsetHeaders() {
     }
 }
 
-async function saveSession(method = true, msg) {
-    if (navigator.onLine) {
-        let c = map.getCenter(),
-            lat = c.lat,
-            lon = c.lng,
-            z = map.getZoom(),
-            p = map.getPitch(),
-            b = map.getBearing(),
-            t = settings.getBasemap(),
-            set = settings.settings,
-            sy = document.querySelector('li#save span');
+async function saveSession(method = true) {
+    if (!navigator.onLine) return notify('error', 'Unable to sync due to no internet.');
 
-        set.center = [lat, lon];
-        set.zoom = z;
-        set.pitch = p;
-        set.bearing = b;
-        set.tile = t;
+    const sy = document.querySelector('li#save span'),
+        syncStatus = impact.querySelector('#sync span'),
+        set = {
+            ...settings.settings,
+            center: [map.getCenter().lat, map.getCenter().lng],
+            zoom: map.getZoom(),
+            pitch: map.getPitch(),
+            bearing: map.getBearing(),
+            tile: settings.getBasemap(),
+            weather: settings.settings.weather || { temp: 'f', wind: 'mph' }
+        };
 
-        if (set.weather == null) {
-            set.weather = {
-                temp: 'f',
-                wind: 'mph'
-            };
-        }
+    if (sy) sy.innerHTML = 'Syncing...';
+    if (syncStatus) syncStatus.innerHTML = 'Syncing...';
 
-        if (sy != null) {
-            sy.innerHTML = 'Syncing...';
-        }
+    const send = [['method', method], ['settings', JSON.stringify(set)]];
+    if (settings.user) send.push(['token', settings.getUser().token()]);
 
-        if (impact.querySelector('#sync')) {
-            impact.querySelector('#sync span').innerHTML = 'Syncing...';
-        }
+    const data = await api(config.host + 'api/v1/session', send);
 
-        const send = [
-            ['method', method],
-            ['settings', JSON.stringify(set)]
-        ];
-
-        if (settings.user) {
-            send.push(['token', settings.getUser().token()]);
-        }
-
-        const data = await api(config.host + 'api/v1/session', send);
-
-        if (data.success == 1) {
-            if (settings.user != null) {
-                settings.user.settings.synced = Date.now();
-            }
-
-            if (sy) {
-                sy.innerHTML = 'Sync';
-            }
-
-            if (impact.querySelector('#sync')) {
-                impact.querySelector('#sync span').innerHTML = 'Account synced just now';
-            }
-
-            notify('success', 'Your settings were successfully synced.');
-        }
+    // Optional chaining (?.) prevents the "null" crash if the API fails
+    if (data?.success === 1) {
+        if (settings.user) settings.user.settings.synced = Date.now();
+        if (sy) sy.innerHTML = 'Sync';
+        if (syncStatus) syncStatus.innerHTML = 'Account synced just now';
+        notify('success', 'Your settings were successfully synced.');
     } else {
-        notify('error', 'Unable to sync your settings due to no internet.');
+        if (sy) sy.innerHTML = 'Sync Error';
+        notify('error', 'Sync failed. Server might be down.');
     }
 }
 
@@ -1124,8 +978,6 @@ function newFiresReport() {
             near = fire.properties.near,
             acres = fire.properties.acres,
             size = conversion.sizeFormat(acres);
-        //size = conversion.sizing(2, acres) + ' ' + conversion.sizing(1).toLowerCase(),
-        //ago = timeAgo(fire.properties.time.discovered);
 
         li.setAttribute('data-action', 'new-fires');
         li.setAttribute('data-lat', fire.geometry.coordinates[1]);
@@ -1145,42 +997,34 @@ function createDataForm(title, content, center = false) {
 
     const el = document.createElement('div');
     el.id = 'data-form';
-    el.innerHTML = '<span id="exit" data-action="close-data-form" class="far fa-xmark"></span><div class="wrapper' + (center ? ' center' : '') + '"><h1>' + title + '</h1>' + content + '</div>';
+    el.innerHTML = `<span id="exit" data-action="close-data-form" class="far fa-xmark"></span>
+        <div class="wrapper${(center ? ' center' : '')}">
+            <h1>${title}</h1>${content}
+        </div>`;
     document.body.append(el);
 }
 
 /* allow user to submit report to MAPO of a new wildfire incident */
-function doReport(data, lat, lon) {
-    /*let county = '';
-    const e = map.project([lon, lat]),
-        f = map.queryRenderedFeatures(([
-            [e.x - 5, e.y - 5],
-            [e.x + 5, e.y + 5]
-        ]));
-
-    if (f.length > 0) {
-        f.forEach((g) => {
-            if (g.layer.id == 'us-counties') {
-                county = g.properties.NAME;
-            }
-        });
-    }*/
+async function doReport(data, lat, lon) {
+    const form = document.querySelector('#newReport'),
+        theState = (await loadUtils()).stateLabels[data.geocode.state];
+    form.querySelector('input[type=submit]').disabled = false;
 
     if (settings.user != null) {
-        document.querySelector('#newReport input[name=authUser]').value = 1;
-        document.querySelector('#newReport').insertAdjacentHTML('afterbegin', '<input type="hidden" name="uid" value="' + settings.user.uid + '">');
+        form.querySelector('input[name=authUser]').value = 1;
+        form.insertAdjacentHTML('afterbegin', '<input type="hidden" name="uid" value="' + settings.user.uid + '">');
     }
 
-    document.querySelector('#newReport input[name=lat]').value = lat;
-    document.querySelector('#newReport input[name=lon]').value = lon;
-    document.querySelector('#newReport input[id=gc]').value = data.geocode.county.county ? data.geocode.county.county : 'Undetermined';
-    document.querySelector('#newReport input[id=gl]').value = data.geocode.near;
-    document.querySelector('#newReport input[id=gs]').value = data.geocode.state ? stateLabels[data.geocode.state].v : 'Undetermined';
-    document.querySelector('#newReport input[name=geolocation]').value = data.geocode.near;
-    document.querySelector('#newReport input[name=state]').value = data.geocode.state + ' / ' + stateLabels[data.geocode.state].v;
+    form.querySelector('input[name=lat]').value = lat;
+    form.querySelector('input[name=lon]').value = lon;
+    form.querySelector('input[id=gc]').value = data.geocode.county.county ? data.geocode.county.county : 'Undetermined';
+    form.querySelector('input[id=gl]').value = data.geocode.near;
+    form.querySelector('input[id=gs]').value = data.geocode.state ? theState.name : 'Undetermined';
+    form.querySelector('input[name=geolocation]').value = data.geocode.near;
+    form.querySelector('input[name=state]').value = data.geocode.state + ' / ' + theState.name;
 
-    document.querySelector('#newReport input[name=size]').addEventListener('keyup', (e) => {
-        document.querySelector('#newReport #alab').innerHTML = 'acre' + (e.target.value != 1 ? 's' : '');
+    form.querySelector('input[name=size]').addEventListener('keyup', (e) => {
+        form.querySelector('#alab').innerHTML = 'acre' + (e.target.value != 1 ? 's' : '');
     });
 
     config.disableClicks = false;
@@ -1207,9 +1051,7 @@ async function onRasterLayerClick(e) {
                 try {
                     const data = await fetch(url);
 
-                    if (!data.ok) {
-                        return null;
-                    }
+                    if (!data.ok) return null;
 
                     const json = await data.json();
                     return json.processedValues && json.processedValues[0] === 'NoData' ? null : json;
@@ -1308,7 +1150,7 @@ async function onRasterLayerClick(e) {
             const content = `<div class="item"><div class="t">Location</div><div class="v">${data.name}, ${data.state}</div></div>
                 ${pc ? `<div class="item"><div class="t">${title === 'Wildfire Risk' ? 'Risk' : 'Likelihood'} at this Location</div><div class="v">${localVal}</div></div>` : ''}
                 <div class="item"><div class="t">${label} in this County</div><div class="v">${d.rank}</div></div>
-                <div class="item"><div class="t">State Comparison</div><div class="v">${getComp(d.state, stateLabels[data.state].v)}</div></div>
+                <div class="item"><div class="t">State Comparison</div><div class="v">${getComp(d.state, (await loadUtils()).stateLabels[data.state].name)}</div></div>
                 <div class="item"><div class="t">US Comparison</div><div class="v">${getComp(d.us, 'the US')}</div></div>
                 <a target="_blank" href="https://apps.wildfirerisk.org/explore/${title.toLowerCase().replace(/ /g, '-')}/${String(data.fips).slice(0, 2)}/${data.fips}/">Learn More</a>`;
 
@@ -1343,66 +1185,37 @@ async function onMapClick(e) {
     onRasterLayerClick(e);
 
     if (features.length > 0) {
-        const wfClass = new Wildfires();
+        const wfClass = new (await loadUtils()).Wildfires();
         let clickedCounty = null,
             sources = [],
-            fire_layers = ['all_fires', 'new_fires', 'smk_fires', 'rx_fires']/*,
-            modis_layers = ['modis24', 'modis48', 'modis72']*/;
+            fire_layers = ['all_fires', 'new_fires', 'smk_fires', 'rx_fires'];
 
         features.forEach((feature) => {
             sources.push(feature.source);
         });
 
         /* highlight specific features on the map when clicked on */
-        if (!sources.includes('ca_perimeters') && map.getSource('ca_perimeters') !== undefined || selected.caperim != null) {
-            map.removeFeatureState({
-                source: 'ca_perimeters',
-                id: selected.caperim
-            });
-
-            selected.caperim = null;
-        }
-
-        if (!sources.includes('perimeters') && map.getSource('perimeters') !== undefined || selected.perim != null) {
-            map.removeFeatureState({
-                source: 'perimeters',
-                id: selected.perim
-            });
-
-            selected.perim = null;
-        }
-
-        if (!sources.includes('evac') && map.getSource('evac') !== undefined || selected.evac != null) {
-            map.removeFeatureState({
-                source: 'evac',
-                id: selected.evac
-            });
-
-            selected.evac = null;
-        }
-
-        if (!sources.includes('nri') && map.getSource('nri') !== undefined || selected.nri != null) {
-            map.removeFeatureState({
-                source: 'nri',
-                id: selected.nri
-            });
-
-            selected.nri = null;
-        }
-
-        if (!sources.includes('erc') && map.getSource('erc') !== undefined || selected.erc != null) {
-            map.removeFeatureState({
-                source: 'erc',
-                id: selected.erc
-            });
-
-            selected.erc = null;
-        }
+        Object.entries({
+            ca_perimeters: 'caperim',
+            perimeters: 'perim',
+            evac: 'evac',
+            nri: 'nri',
+            erc: 'erc'
+        }).forEach(([src, selKey]) => {
+            if ((!sources.includes(src) && map.getSource(src)) || selected[selKey] != null) {
+                map.removeFeatureState({
+                    source: src,
+                    id: selected[selKey]
+                });
+                selected[selKey] = null;
+            }
+        });
 
         /* loop through all features to see if county data is available */
         for (let i = 0; i < features.length; i++) {
-            if (features[i].layer.id == 'us-counties') {
+            if (features[i].layer.id == 'us_counties') {
                 clickedCounty = features[i].properties.NAME;
+                break;
             }
         }
 
@@ -1450,7 +1263,7 @@ async function onMapClick(e) {
 
             if (feature.source == 'ca_fires') {
                 const name = feature.properties.name,
-                    state = stateLabels[feature.properties.province].v,
+                    state = (await loadUtils()).stateLabels[feature.properties.province].name,
                     time = JSON.parse(feature.properties.time),
                     acres = feature.properties.acres,
                     status = feature.properties.status,
@@ -1496,7 +1309,6 @@ async function onMapClick(e) {
                     ago = timeAgo(feature.properties.poly_DateCurrent),
                     acres = feature.properties.poly_Acres_AutoCalc > feature.properties.poly_GISAcres ? feature.properties.poly_Acres_AutoCalc : feature.properties.poly_GISAcres,
                     size = conversion.sizeFormat(acres);
-                //size = conversion.sizing(2, acres) + ' ' + conversion.sizing(1).toLowerCase();
 
                 selected.perim = feature.id;
 
@@ -1552,7 +1364,7 @@ async function onMapClick(e) {
 
             /* on wwas click */
             if (feature.source == 'wwas') {
-                new NWS().find(e.lngLat.lat, e.lngLat.lng);
+                new (await loadUtils()).NWS().find(e.lngLat.lat, e.lngLat.lng);
                 break;
             }
 
@@ -1592,36 +1404,6 @@ async function onMapClick(e) {
 
             /* ERC PSA click */
             if (feature.source == 'erc') {
-                /*const psaCode = feature.properties.PSANationalCode,
-                    data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/NFDRS_ERC_and_BI_Percentiles_and_Trends/FeatureServer/5/query', [
-                        ['where', 'PSANationalCode = \'' + psaCode + '\''],
-                        ['outFields', 'OBJECTID,PSANAME,avg_erc_fcast_percentile,avg_erc_fcast_trend,avg_erc_percentile,avg_erc_trend,update_date,update_time'],
-                        ['f', 'json']
-                    ]);
-
-                if (data.features && data.features.length > 0) {
-                    const prop = data.features[0].attributes,
-                        psa = prop.PSANAME,
-                        obs_pct = prop.avg_erc_percentile,
-                        obs_trend = prop.avg_erc_trend,
-                        fcst_pct = prop.avg_erc_fcast_percentile,
-                        fcst_trend = prop.avg_erc_fcast_trend,
-                        time = prop.update_time.substring(0, 2) + ':' + prop.update_time.substring(2, 4),
-                        dt = dateTime(new Date(`${prop.update_date} ${time} UTC`).getTime(), true),
-                        popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>' +
-                            '<p style="text-align:center;margin-top:0.5em;font-size:14px">Getting ERC data...</p>');
-
-                    const ercContent = `<div class="item"><div class="t">Area (PSA)</div><div class="v">${psa}</div></div>
-                        ${settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? `<div class="item"><div class="t">PSA Code</div><div class="v">${psaCode}</div></div>` : ``}
-                        <div class="item"><div class="t">ERC Percentile (Today)</div><div class="v">${obs_pct}%</div></div>
-                        <div class="item"><div class="t">ERC Trend (Today)</div><div class="v">${obs_trend}</div></div>
-                        <div class="item"><div class="t">ERC Percentile (Tomorrow)</div><div class="v">${fcst_pct}%</div></div>
-                        <div class="item"><div class="t">ERC Trend (Tomorrow)</div><div class="v">${fcst_trend}</div></div>
-                        <div class="item"><div class="t">Last Updated</div><div class="v">${dt}</div></div>`;
-
-                    popup.update(ercContent, 'Energy Release Component');
-                }*/
-
                 let p = feature.properties,
                     psa = p.PSANAME,
                     code = p.PSANationalCode,
@@ -1679,7 +1461,7 @@ async function onMapClick(e) {
                         return 'Minimal';
                     },
                     content = '<div class="item"><div class="t">City</div><div class="v">' + p.City + '</div></div>' +
-                        '<div class="item"><div class="t">State</div><div class="v">' + stateLabels[p.State].v + '</div></div>' +
+                        '<div class="item"><div class="t">State</div><div class="v">' + (await loadUtils()).stateLabels[p.State].name + '</div></div>' +
                         '<div class="item"><div class="t">Rank</div><div class="v">' + p.Overall_Vu + ' of 696</div></div>' +
                         '<div class="item"><div class="t">Vulnerability</div><div class="v">' + (p.Overall_Vu / 6.96).toFixed(1) + '/100 (<b>' + rank(p.Overall_Vu) + '</b>)</div></div>';
 
@@ -1723,73 +1505,6 @@ async function onMapClick(e) {
 
             /* on ODF fire danger areas click */
             if (feature.source == 'odfFDR') {
-                const ODF_DISTRICT_NAMES = {
-                    "EL-1": "South Cascade",
-                    "SW-2": "Southwest Oregon",
-                    "MR-1": "North Cascade",
-                    "QC": "South Cascade",
-                    "UA-2": "Douglas FPA",
-                    "DE-1": "Central Oregon",
-                    "SW-1": "Southwest Oregon",
-                    "DG-1": "Douglas FPA",
-                    "SK-1": "Coos FPA",
-                    "RWSC": "Southwest Oregon",
-                    "NW-1": "Northwest",
-                    "CM-2": "North Cascade",
-                    "WR-1": "Walker Range FPA",
-                    "BR-1": "North Cascade",
-                    "NE-2": "Northeast Oregon",
-                    "MH-4": "Central Oregon",
-                    "NE-4": "Northeast Oregon",
-                    "SW-3": "Southwest Oregon",
-                    "SL-2": "Western Lane",
-                    "MA-1": "Central Oregon",
-                    "CM-1": "North Cascade",
-                    "KF-1": "Klamath-Lake",
-                    "WO-3": "West Oregon",
-                    "NE-3": "Northeast Oregon",
-                    "RR-2": "Southwest Oregon",
-                    "UA-3": "South Cascade",
-                    "WC-2": "Central Oregon",
-                    "WC-1": "Central Oregon",
-                    "WL-1": "South Cascade",
-                    "UA-1": "Douglas FPA",
-                    "NE-1": "Northeast Oregon",
-                    "SK-3": "Southwest Oregon",
-                    "MH-3": "North Cascade",
-                    "WO-2": "West Oregon",
-                    "WL-3": "South Cascade",
-                    "LN-1": "South Cascade",
-                    "KR": "Klamath-Lake",
-                    "CS-5": "Coos FPA",
-                    "NW-3": "Northwest",
-                    "WW-2": "Northeast Oregon",
-                    "MH-1": "Central Oregon",
-                    "DG-2": "Douglas FPA",
-                    "HLD": "North Cascade",
-                    "WN-1": "Klamath-Lake",
-                    "WT-1": "Western Lane",
-                    "WO-1": "West Oregon",
-                    "MA-2": "Central Oregon",
-                    "KF-2": "Klamath-Lake",
-                    "SW-4": "Southwest Oregon",
-                    "CS-1": "Coos FPA",
-                    "MH-2": "North Cascade",
-                    "CR-1": "Central Oregon",
-                    "UM-1": "Northeast Oregon",
-                    "RR-1": "Southwest Oregon",
-                    "OC-2": "Central Oregon",
-                    "EC-1": "Central Oregon",
-                    "WL-2": "South Cascade",
-                    "RR-3": "Southwest Oregon",
-                    "HC-1": "Northeast Oregon",
-                    "EC-2": "Central Oregon",
-                    "CS-2": "Coos FPA",
-                    "NW-2": "Northwest",
-                    "SK-2": "Coos FPA",
-                    "CS-4": "Coos FPA"
-                };
-
                 let danger = '',
                     ifpl = feature.properties.ifplrestrictionlevel ? feature.properties.ifplrestrictionlevel : 'N/A';
 
@@ -1802,7 +1517,7 @@ async function onMapClick(e) {
                 }
 
                 new Popup('ODF Fire Danger').create(
-                    '<div class="item"><div class="t">District</div><div class="v">' + ODF_DISTRICT_NAMES[feature.properties.regusearea] + '</div></div>' +
+                    '<div class="item"><div class="t">District</div><div class="v">' + (await loadUtils()).ODF_DISTRICT_NAMES[feature.properties.regusearea] + '</div></div>' +
                     '<div class="item"><div class="t">Reg. Use Area</div><div class="v">' + feature.properties.regusearea + '</div></div>' +
                     '<div class="item"><div class="t">Fire Danger</div><div class="v">' + danger + '</div></div>' +
                     '<div class="item"><div class="t">IFPL</div><div class="v">' + ifpl + '</div></div>'
@@ -1853,7 +1568,7 @@ async function onMapClick(e) {
 
                 new Popup('Evacuations').create('<div class="item"><div class="t">Level</div><div class="v"><span class="evac-circ l' + p.level + '"></span>Level ' + p.level + '</div></div>' +
                     '<div class="item"><div class="t">Status</div><div class="v">' + d + '</div></div>' +
-                    '<div class="item"><div class="t">' + (p.county ? 'County' : 'State') + '</div><div class="v">' + (p.county ? p.county + ' County, ' + p.state : stateLabels[p.state].v) + '</div></div>' +
+                    '<div class="item"><div class="t">' + (p.county ? 'County' : 'State') + '</div><div class="v">' + (p.county ? p.county + ' County, ' + p.state : (await loadUtils()).stateLabels[p.state].name) + '</div></div>' +
                     '<div class="item"><div class="t">Last Updated</div><div class="v">' + u + '</div></div>' +
                     (n ? '<div class="item"><div class="t">Notes</div><div class="v">' + n + '</div></div>' : '')
                 );
@@ -1864,49 +1579,44 @@ async function onMapClick(e) {
     }
 }
 
-window.addEventListener('popstate', () => {
-    popstate();
-});
-
 window.addEventListener('submit', async (e) => {
     /* submit user NEW INCIDENT form */
     if (e.target.id == 'newReport') {
         e.preventDefault();
 
+        const form = document.querySelector('form#newReport');
         let error = false,
             errorMsg = '';
 
-        if (document.querySelector('#nrerrors')) {
-            document.querySelector('#nrerrors').remove();
-        }
+        document.querySelector('#nrerrors')?.remove();
 
         /* error checking */
-        if (document.querySelector('#newReport select[name=type]').options[document.querySelector('#newReport select[name=type]').selectedIndex].value == '- Choose -') {
+        if (form.querySelector('select[name=type]').options[form.querySelector('select[name=type]').selectedIndex].value == '- Choose -') {
             error = true;
             errorMsg += '<li>Please choose an incident type</li>';
         }
 
-        if (document.querySelector('#newReport input[name=size]').value == '') {
+        if (form.querySelector('input[name=size]').value == '') {
             error = true;
             errorMsg += '<li>Please estimate the size of the fire (even if it\'s 0)</li>';
-        } else if (!document.querySelector('#newReport input[name=size]').value.match(/([0-9.]+)/)) {
+        } else if (!form.querySelector('input[name=size]').value.match(/([0-9.]+)/)) {
             error = true;
             errorMsg += '<li>Your incident size cannot contain non-numeric characters</li>'
         }
 
-        if (document.querySelector('#newReport textarea[name=notes]').value == '') {
+        if (form.querySelector('textarea[name=notes]').value == '') {
             error = true;
             errorMsg += '<li>Please provide some details about this incident</li>';
         }
 
         if (error === true) {
-            document.querySelector('#newReport').insertAdjacentHTML('afterbegin', '<ul id="nrerrors" style="margin: 0 0 1em 1em;font-size:14px;color:var(--red)">' + errorMsg + '</ul>');
+            form.insertAdjacentHTML('afterbegin', '<ul id="nrerrors" style="margin: 0 0 1em 1em;font-size:14px;color:var(--red)">' + errorMsg + '</ul>');
         } else {
             if (confirm('Are you sure this is a new incident? If so, click "OK." Otherwise, please click "Cancel."')) {
-                const sub = document.querySelector('#newReport input[type=submit]'),
-                    canc = document.querySelector('#newReport .btn-group a'),
+                const sub = form.querySelector('input[type=submit]'),
+                    canc = form.querySelector('.btn-group a'),
                     fd = [],
-                    ent = new URLSearchParams(new FormData(document.querySelector('form#newReport')).entries());
+                    ent = new URLSearchParams(new FormData(form).entries());
 
                 document.querySelector('li#report').setAttribute('data-active', '0');
                 sub.disabled = true;
@@ -1952,7 +1662,6 @@ window.addEventListener('change', (e) => {
         actionHandlers = {
             'change-basemap': () => changeListener.changeBasemap(),
             'change-perim-size': () => changeListener.minPerimSize(),
-            //'dark_mode': () => changeListener.darkMode(),
             'toggle-layer': () => changeListener.toggle(),
             'erc_time': () => {
                 settings.updateSpecial();
@@ -1961,9 +1670,9 @@ window.addEventListener('change', (e) => {
             'sfc_smoke_time': () => changeListener.smoke(true),
             'vi_smoke_time': () => changeListener.smoke(false),
             'spc-outlook': () => changeListener.spc(),
-            'ndfd': () => {
+            'ndfd': async () => {
                 settings.updateSpecial();
-                new NWS().ndfd(true);
+                new (await loadUtils()).NWS().ndfd(true, target.id);
             },
             'sfp-date': () => {
                 settings.updateSpecial();

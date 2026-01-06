@@ -2,6 +2,41 @@
 include_once '../db.ini.php';
 include_once '../apis/functions.inc.php';
 
+/*$result = mysqli_query($con, "SELECT * FROM counties ORDER BY state ASC, name ASC LIMIT 5");
+
+while ($row = mysqli_fetch_assoc($result)) {
+    $feat[] = [
+        'id' => $row['id'],
+        'type' => 'Feature',
+        'geometry' => json_decode(gzuncompress($row['geo'])),
+        'properties' => [
+            'id' => $row['id'],
+            'name' => $row['name'],
+            'fips' => str_pad($row['fips'], 5, '0', STR_PAD_LEFT),
+        ]
+    ];
+}
+
+$features = ['type' => 'FeatureCollection', 'features' => $feat];
+echo json_encode($features);
+
+
+exit();
+
+$result = mysqli_query($con, "SELECT d.agency, COUNT(w.unit) as total 
+          FROM wildfires w
+          JOIN dispatch_zones d ON w.unit = d.unit
+          WHERE d.agency != ''
+          GROUP BY d.agency 
+          ORDER BY total DESC");
+
+$count = array_column(mysqli_fetch_all($result, MYSQLI_ASSOC), 'total', 'agency');
+
+arsort($count);
+
+print_r($count);*/
+exit();
+
 function isValidCoordinate($lat, $lon) {
     // Check both are numeric
     if (!is_numeric($lat) || !is_numeric($lon)) {

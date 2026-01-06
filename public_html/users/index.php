@@ -190,7 +190,7 @@ $lock = '<i class="far fa-lock"></i>';
                     <li><a href="<?= $linkURL ?>admin/avalanches"><span>Avalanche Accidents</span><?= $lock ?></a></li>
                 <? }
                 if ($permission->trails()->add() || $permission->trails()->edit()->all() || $permission->trails()->edit()->own()) { ?>
-                    <li><a href="<?= $linkURL ?>admin/trails"><span>Manage Trails</span></a></li>
+                    <li><a href="<?= $linkURL ?>admin/trails"><span>Manage Trails</span><?= $lock ?></a></li>
                 <? } ?>
                 <li><a href="<?= $linkURL ?>mapofire"><span>Map of Fire Settings</span></a></li>
                 <li><a href="<?= $baseURL ?>logout?<?= time() ?>"><span>Logout</span></a></li>

@@ -82,13 +82,13 @@ a:visited:hover {
     height: 100%;
 }
 
-.main {
+main {
     position: relative;
     width: 100%;
     height: 100%;
 }
 
-.wrapper {
+.app-wrapper {
     position: relative;
     width: 100%;
     height: 100%;
@@ -501,10 +501,20 @@ ul#search-results li.standby i {
 /* OVERRIDE MAPLIBRE CONTROL STYLES */
 .maplibregl-ctrl-attrib-inner {
     padding: 4px 0;
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
 }
 
 .maplibregl-ctrl-attrib.maplibregl-compact {
-    margin: 0 var(--spacing) var(--spacing) var(--spacing) !important;
+    background-color: rgb(250 250 250 / 70%);
+    margin: 0 var(--spacing) calc(var(--spacing) - 2px) var(--spacing) !important;
+}
+
+.maplibregl-ctrl-attrib-button {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill-rule='evenodd' viewBox='0 0 20 20'%3E%3Cpath fill='%2300a6ed' d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E%3C/svg%3E");
 }
 
 .maplibregl-ctrl-attrib-button:focus,
@@ -519,19 +529,19 @@ a.maplibregl-ctrl-logo {
 
 .maplibregl-ctrl-top-left,
 .maplibregl-ctrl-bottom-left {
-    left: var(--nav-width);
+    left: calc(var(--nav-width) + var(--spacing));
 }
 
 .maplibregl-ctrl-top-right .maplibregl-ctrl {
     margin: var(--spacing) var(--spacing) 0 0;
 }
 
-.maplibregl-ctrl-bottom-left .maplibregl-ctrl {
+/*.maplibregl-ctrl-bottom-left .maplibregl-ctrl {
     margin: 0 0 var(--spacing) var(--spacing);
-}
+}*/
 
 .maplibregl-ctrl-scale {
-    margin: 0 0 var(--spacing) 0 !important;
+    margin: 0 0 var(--spacing) 0!important
 }
 
 .maplibregl-ctrl-group button {
@@ -717,7 +727,8 @@ a.maplibregl-ctrl-logo {
     }
 
     nav ul {
-        padding: var(--spacing) calc(var(--spacing) * 2) calc(var(--spacing) * 2);
+        gap: calc(var(--spacing) * 1.5);
+        padding: 0 calc(var(--spacing) * 2) calc(var(--spacing) * 2);
     }
 
     nav ul li {
@@ -757,13 +768,29 @@ a.maplibregl-ctrl-logo {
 
     .maplibregl-ctrl-top-left,
     .maplibregl-ctrl-bottom-left {
-        left: var(--container-space);
+        left: var(--spacing);
     }
 }
 
-@media (max-width: 370px) {
+@media (max-width: 400px) {
     :root {
         --mb-button-width: 28px;
+    }
+
+    .maplibregl-ctrl-attrib-inner {
+        padding: 3px 0 0 4px;
+        font-size: 11px;
+    }
+
+    .maplibregl-ctrl-attrib.maplibregl-compact {
+        padding: 0px 18px 0px 0px;
+        min-height: 18px;
+    }
+
+    .maplibregl-ctrl-attrib-button {
+        width: 18px;
+        height: 18px;
+        background-size: 18px 18px;
     }
 
     .android-banner {

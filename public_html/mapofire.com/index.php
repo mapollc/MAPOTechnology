@@ -5,7 +5,7 @@
 // set the base URL for this app
 $host = preg_replace('/(www\.)?([a-z]+)\.([a-z]+)/', '$2.$3', $_SERVER['HTTP_HOST']);
 $rootURL = 'https://www.' . $host . '/';
-$baseURL = 'https://www.mapofire.com/';
+$baseURL = '//mapofire.com/';
 $root = '/home/mapo/public_html/mapofire.com/';
 
 // get the current map version to load all relevant files
@@ -142,8 +142,8 @@ if (isset($_GET['state']) && in_array(str_replace('-', ' ', $_GET['state']), $pr
     header("Location: $baseURL" . "state/$_GET[state]");
 }
 
-// mapbox sdk version
-$mapboxVersion = '3.14.0';
+// mapbox & maplibre sdk version
+$mapboxVersion = '3.17.0';
 $maplibreVersion = '5.15.0';
 
 //ga4 ID
@@ -152,7 +152,7 @@ $ga_id = /*$host == 'wildfiremap.org' ? 'G-2DNCL70GJF' : */ 'G-X03WWLX3BJ';
 // get subscription array
 #include_once '/home/mapo/public_html/subs.inc.php';
 
-$files = ['index.php', 'mf.app.css', 'mf.app.js', 'mf.supp.css', 'mf.supp.js'];
+$files = ['index.php', 'mf.app.css', 'mf.app.js', 'mf.supp.css', 'mf.supp.js', 'mf.utils.js'];
 foreach ($files as $file) {
     $times[] = filemtime($root . 'v' . $version . '/' . $file);
 }
@@ -163,28 +163,28 @@ require_once $root . 'layers.inc.php';
 
 // load the current index.php file for the version
 if (file_exists($root . 'v' . $version . '/app.php')) {
-    $dark_mode = $_COOKIE['dark_mode'] && $_COOKIE['dark_mode'] == 'true' ? true : false;
+    //$dark_mode = $_COOKIE['dark_mode'] && $_COOKIE['dark_mode'] == 'true' ? true : false;
 
     $state = ucwords(str_replace('-', ' ', $_GET['state']));
     $county = ucwords(str_replace('-', ' ', $_GET['county']));
 
-    ob_start();
-    if (!isset($_GET['version'])) {?>
-        window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X03WWLX3BJ',{'user_id':'<?= $_COOKIE['uuid'] ?>'});
-    <? } else {
-        echo 'function gtag(){}';  
-    } ?>
-    let version='<?= $version ?>',
-    mbVersion='<?= $mapboxVersion ?>',
-    buildDate='<?= $buildDate ?>',
+    if (!isset($_GET['version'])) {
+        $javascript = "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X03WWLX3BJ',{'user_id':'$_COOKIE[uuid]'});";
+    } else {
+        $javascript = "function gtag(){}";
+    }
+
+    $javascript .= "const version='$version',
+    mbVersion='$maplibreVersion',
+    buildDate='$buildDate',
+    state=" . ($state ? "'$state'" : 'null') . ",
+    county=" . ($county ? "'$county'" : 'null') . ",
     defaultTitle='{{title}}',
-    defaultDesc='{{desc}}',
-    <?= $_GET['archive'] ? "historical='$_GET[archive]'," : '' ?>
-    state=<?= $state ? "'" . $state . "'" : 'null' ?>,
-    county=<?= $county ? "'" . $county . "'" : 'null' ?>,
-    layers=<?= json_encode($layers) ?>;
-<?
-    $javascript = preg_replace('/(\n|\r|\s{2,})/', '', ob_get_clean());
+    defaultDesc='{{desc}}'," .
+    ($_GET['archive'] ? "historical='$_GET[archive]'," : '') .
+    "layers=" . json_encode($layers) . ";";
+
+    $javascript = preg_replace('/(\n|\r|\s{2,})/', '', $javascript);
 
     require_once $root . 'v' . $version . '/app.php';
 } else {

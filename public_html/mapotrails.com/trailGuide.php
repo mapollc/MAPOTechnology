@@ -322,10 +322,10 @@ if (isset($_COOKIE['token'])) {
     $i = 0;
     $subscribe = null;
 
-    $sql = mysqli_query($con, "SELECT u.uid, first_name, last_name, role, token, expires, settings, cid, subscription AS sid, plan, b.created, start, end, active FROM sessions AS s LEFT JOIN users AS u ON u.uid = s.uid LEFT JOIN trail_settings AS ts ON ts.uid = u.uid LEFT JOIN billing AS b ON b.email = u.email WHERE s.token = '$token' AND expires > $now AND active = 1");
+    $sql = mysqli_query($con, "SELECT u.uid, first_name, last_name, role, token, expires, settings FROM sessions AS s LEFT JOIN users AS u ON u.uid = s.uid LEFT JOIN trail_settings AS ts ON ts.uid = u.uid WHERE s.token = '$token' AND expires > $now");
     while ($row = mysqli_fetch_assoc($sql)) {
-        $subscribe[] = array('cid' => $row['cid'], 'sid' => $row['sid'], 'plan' => $row['plan'], 'created' => $row['created'], 'starts' => $row['start'],
-                            'ends' => $row['end'], 'active' => ($row['active'] == 1 ? true : false));
+        /*$subscribe[] = array('cid' => $row['cid'], 'sid' => $row['sid'], 'plan' => $row['plan'], 'created' => $row['created'], 'starts' => $row['start'],
+                            'ends' => $row['end'], 'active' => ($row['active'] == 1 ? true : false));*/
 
         if ($i == 0) {
             $settings = json_decode($row['settings'], true);
@@ -335,7 +335,7 @@ if (isset($_COOKIE['token'])) {
 
         $i++;
     }
-    $user['subscribe'] = $subscribe;
+    //$user['subscribe'] = $subscribe;
     $settings['user'] = $user;
 
     mysqli_close($con);

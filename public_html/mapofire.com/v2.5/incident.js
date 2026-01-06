@@ -1,223 +1,153 @@
-function numberFormat(n, d = 2) {
+let domain, agencies, tracked, sizeUnit, reported, updated, wfid, type, state, incID,
+    acres, dispatch, agency, center, isTracked, contain, notes, fuels, cost, resources,
+    behavior, cause, inciweb, website = '';
+
+const numberFormat = (n, d = 2) => {
     return Intl.NumberFormat('en-US', {
         maximumFractionDigits: d
     }).format(n);
-}
+},
+    ucfirst = (s) => {
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    },
+    social = (fireName) => {
+        const socialName = fireName.replace(/\s/g, '');
 
-function ucfirst(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function ucwords(s) {
-    if (s.search(/\s/g) >= 0) {
-        var a = s.split(' '),
-            o = '';
-
-        a.forEach(function (s) {
-            o += s.charAt(0).toUpperCase() + s.slice(1) + ' ';
-        });
-
-        return o.substring(0, o.length - 1);
-    } else {
-        return ucfirst(s);
-    }
-}
-
-function parseFireName(n, t, i) {
-    let o = '';
-
-    if (t == 'Prescribed Fire') {
-        o = (n.includes('RX') ? n : n + ' RX');
-    } else if (t == 'Smoke Check') {
-        o = 'Smoke Check' + (i !== undefined ? ' #' + i.split('-')[1] + '-' + parseInt(i.split('-')[2]) : '');
-    } else {
-        if (n === undefined || n == '') {
-            o = 'Incident #' + parseInt(i.split('-')[2]);
-        } else {
-            const cleanedName = n.replace(/^\d+(?=\D)\s?/, '');
-            o = ucwords(cleanedName.toLowerCase()) + ' Fire';
-        }
-    }
-    return o;
-}
-
-function getStatus(s, n) {
-    if (s == '' || s === false && n == '') {
-        return 'active';
-    } else {
-        return (s == null ? (n.search('contain') >= 0 ? 'contained' : (n.search('control') >= 0 ? 'controlled' : 'active')) : (s.Out ? 'out' : (s.Control ? 'controlled' : (s.Contain ? 'contained' : ''))));
-    }
-}
-
-function juris() {
-    return '<b>' + type.toUpperCase() + '</b> reported' +
-        (dispatch == '' || (dispatch == 'MAPO' && agency.agency == '') ? ' by National Interagency Fire Center' :
-            (agency.area ? (agency.area.search(' Center') >= 0 ? ' by' : ' in') + ' ' +
-                (abbr ? abbr + ' ' : '') + agency.area : (agency.unit == 'NWCG' ? ' by NWCG/Inciweb' : '')
-            )
-        ) + ',&nbsp;' + stateLabels[state].v;
-}
-
-function social() {
-    const socialName = fireName.replace(/\s/g, '');
-
-    return `<div class="social">
-        <i class="fab fa-facebook" title="Share about #${socialName} on Facebook" onclick="socialShare('fb')"></i>
-        <i class="fab fa-x-twitter" title="Tweet about #${socialName} on X" onclick="socialShare('tw')"></i>
-        <i class="fab fa-tiktok" title="Find #${socialName} videos on TikTok" onclick="socialShare('tt')"></i>
-        <i class="fal fa-share-nodes" title="Share: text, email, or copy link" data-action="sharer"></i>
-    </div>`;
-}
-
-function disclaimer() {
-    return `<p class="disclaimer">
-        This information is collected from various state and federal interagency dispatch centers and other official
-        government sources. While we make every effort to provide accurate and up-to-date data, it may not reflect
-        the latest conditions. Always verify with your local authorities for current information on evacuations, fire
-        activity, or other critical safety alerts.
-    </p>`;
-}
-
-function dispatchCtr() {
-    if (center == null) return '';
-
-    let website = '';
-
-    if (center.website != '') {
-        website = `<p><a target="blank" href="${center.website}">${center.website}</a></p>`;
-    }
-
-    return `<h2>Dispatch Center</h2>
-        <div class="grid top-align">
-            <div class="card dispatch">
-                <dt class="label large">${center.name} (${center.agency})</dt>
-                <dd><p>${center.location}</p>${website}</dd>
-            </div>
+        return `<div class="social">
+            <i class="fab fa-facebook" title="Share about #${socialName} on Facebook" onclick="socialShare('fb')"></i>
+            <i class="fab fa-x-twitter" title="Tweet about #${socialName} on X" onclick="socialShare('tw')"></i>
+            <i class="fab fa-tiktok" title="Find #${socialName} videos on TikTok" onclick="socialShare('tt')"></i>
+            <i class="fal fa-share-nodes" title="Share: text, email, or copy link" data-action="sharer"></i>
         </div>`;
-}
+    },
+    disclaimer = () => {
+        return `<p class="disclaimer">
+            This information is collected from various state and federal interagency dispatch centers and other official
+            government sources. While we make every effort to provide accurate and up-to-date data, it may not reflect
+            the latest conditions. Always verify with your local authorities for current information on evacuations, fire
+            activity, or other critical safety alerts.
+        </p>`;
+    },
+    dispatchCtr = () => {
+        if (center == null) return '';
+        let website = '';
 
-function incidentDetails(json, cols) {
-    const uniqueJson = [...new Map(json.map(item => [item.desc, item])).values()],
-        totalLength = uniqueJson.length,
-        createHTML = (dataArray) => {
-            const fields = dataArray.map(item => `
+        if (center.website != '') website = `<p><a target="blank" href="${center.website}">${center.website}</a></p>`;
+
+        return `<h2>Dispatch Center</h2>
+            <div class="grid top-align">
+                <div class="card dispatch">
+                    <dt class="label large">${center.name} (${center.agency})</dt>
+                    <dd><p>${center.location}</p>${website}</dd>
+                </div>
+            </div>`;
+    },
+    incidentDetails = (json, cols) => {
+        const uniqueJson = [...new Map(json.map(item => [item.desc, item])).values()],
+            totalLength = uniqueJson.length,
+            createHTML = (dataArray) => {
+                const fields = dataArray.map(item => `
                 <dt class="label">${item.desc}</dt>
                 <dd>${item.info}</dd>
             `).join('');
 
-            return `<div class="card">${fields}</div>`;
-        };
+                return `<div class="card">${fields}</div>`;
+            };
 
-    if (cols === 1) return createHTML(uniqueJson);
+        if (cols === 1) return createHTML(uniqueJson);
 
-    const splitIndex = Math.ceil(totalLength / 2),
-        col1Data = uniqueJson.slice(0, splitIndex),
-        col2Data = uniqueJson.slice(splitIndex);
+        const splitIndex = Math.ceil(totalLength / 2),
+            col1Data = uniqueJson.slice(0, splitIndex),
+            col2Data = uniqueJson.slice(splitIndex);
 
-    return `${createHTML(col1Data)}${createHTML(col2Data)}`;
-}
+        return `${createHTML(col1Data)}${createHTML(col2Data)}`;
+    },
+    getInciweb = () => {
+        let content = '',
+            inciwebPhoto = '',
+            inciwebFields = ['Basic Information', 'Current Situation', 'Current Weather', 'Outlook'],
+            inciwebIDs = ['basic', 'cursit', 'inciwx', 'otlk'];
 
-function getInciweb() {
-    let content = '',
-        inciwebPhoto = '',
-        inciwebFields = ['Basic Information', 'Current Situation', 'Current Weather', 'Outlook'],
-        inciwebIDs = ['basic', 'cursit', 'inciwx', 'otlk'];
+        if (inciweb != null) {
+            if (inciweb.photo) {
+                inciwebPhoto = `<div class="col" data-width="25">
+                    <figure>
+                        <a href="https://www.mapofire.com/src/images/incident?path=${inciweb.photo.url}" target="blank"><img loading="lazy" src="https://www.mapofire.com/src/images/incident?path=${inciweb.photo.url}" alt="${inciweb.photo.caption}" title="${inciweb.photo.caption}"></a>
+                        <figcaption>${inciweb.photo.caption}</figcaption>
+                    </figure>
+                </div>`;
+            }
 
-    if (inciweb != null) {
-        if (inciweb.photo) {
-            inciwebPhoto = `<div class="col" data-width="25">
-                <figure>
-                    <a href="https://www.mapofire.com/src/images/incident?path=${inciweb.photo.url}" target="blank"><img loading="lazy" src="https://www.mapofire.com/src/images/incident?path=${inciweb.photo.url}" alt="${inciweb.photo.caption}" title="${inciweb.photo.caption}"></a>
-                    <figcaption>${inciweb.photo.caption}</figcaption>
-                </figure>
-            </div>`;
-        }
+            content += `<div class="inciweb">
+                <div class="block" id="overview">
+                    <h2>Incident Overview</h2>
 
-        content += `<div class="inciweb">
-            <div class="block" id="overview">
-                <h2>Incident Overview</h2>
-
-                <div class="card row">
-                    <div class="col text" data-width="${inciweb.photo ? 75 : 100}">
-                        ${inciweb.incident_info}
+                    <div class="card row">
+                        <div class="col text" data-width="${inciweb.photo ? 75 : 100}">
+                            ${inciweb.incident_info}
+                        </div>
+                        ${inciwebPhoto}
                     </div>
-                    ${inciwebPhoto}
-                </div>
-            </div>`;
+                </div>`;
 
-        inciwebFields.forEach((field, i) => {
-            if (inciweb.current.data[field]) {
-                const useCols = inciwebIDs[i] == 'inciwx' || inciwebIDs[i] == 'otlk' ? 1 : 2;
+            inciwebFields.forEach((field, i) => {
+                if (inciweb.current.data[field]) {
+                    const useCols = inciwebIDs[i] == 'inciwx' || inciwebIDs[i] == 'otlk' ? 1 : 2;
 
-                content += `<div class="block" id="${inciwebIDs[i]}">
-                    <h2>${field}</h2>
+                    content += `<div class="block" id="${inciwebIDs[i]}">
+                        <h2>${field}</h2>
 
-                    <div class="grid cols-${useCols} top-align">
-                        ${incidentDetails(inciweb.current.data[field], useCols)}
+                        <div class="grid cols-${useCols} top-align">
+                            ${incidentDetails(inciweb.current.data[field], useCols)}
+                        </div>
+                    </div>`;
+                }
+            });
+
+            if (inciweb.contacts.pio) {
+                content += `<div class="block">
+                    <h2>Public Information</h2>
+
+                    <div class="card row">
+                        <div class="col" data-width="100">
+                            <p>${inciweb.contacts.pio}</p>
+                        </div>
                     </div>
                 </div>`;
             }
-        });
 
-        if (inciweb.contacts.pio) {
-            content += `<div class="block">
-                <h2>Public Information</h2>
-
-                <div class="card row">
-                    <div class="col" data-width="100">
-                        <p>${inciweb.contacts.pio}</p>
-                    </div>
-                </div>
-            </div>`;
+            return content + `</div>`;
+        } else {
+            return '';
         }
+    },
+    dt = (time) => {
+        const date = new Date(time * 1000);
+        const options = {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'America/Los_Angeles'
+        };
 
-        return content + `</div>`;
-    } else {
-        return '';
-    }
-}
-
-function geoLocate(fire) {
-    let land = '';
-
-    if (agency.logo == 'usfs') {
-        land = ` the ${agency.area}, `;
-    }
-
-    return `<b>${type.toUpperCase()}</b> in ${land}${fire.geometry.geo.county} County, ${fire.geometry.state}`;
-}
-
-function dt(time) {
-    const date = new Date(time * 1000);
-    const options = {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'America/Los_Angeles'
+        return date.toLocaleString('en-US', options).replace(/(.*),\s(.*)/gm, `$1 at $2`);
     };
 
-    return date.toLocaleString('en-US', options).replace(/(.*),\s(.*)/gm, `$1 at $2`);
-}
-
-let domain, agencies, stateLabels, tracked, sizeUnit, reported, updated,
-    wfid, type, state, incID, fireName, acres, dispatch, agency, center, abbr, isTracked,
-    fstat, st1, st, contain, notes, fuels, cost, resources, behavior, cause, /*incstatus = 'Active', */inciweb, website = '';
-
 self.onmessage = (e) => {
-    let data = e.data.json,
+    let object = e.data.fire,
+        data = object.json,
         role = e.data.role,
         vars = e.data.vars,
         fire = data.fire,
-        fr = fire.properties,
-        curTime = new Date();
+        fr = fire.properties;
 
     /* assign global variables */
     domain = vars.domain;
-    stateLabels = vars.stateLabels;
     agencies = vars.agencies;
+    center = vars.center;
     tracked = vars.tracked;
     acres = vars.acres;
     sizeUnit = vars.sizeUnit;
@@ -229,16 +159,8 @@ self.onmessage = (e) => {
     type = fr.type;
     state = fr.fireState;
     incID = fr.incidentId;
-    fireName = parseFireName(fr.fireName, type, incID);
-    acres = (acres == '' ? 'Unknown' : (acres != "Unknown" && parseInt(acres.replace(',', ''), 10) > 100000 ? (acres.search('.') >= 0 ? acres.split('.')[0] : acres) : acres));
-    //acres = (fr.acres == 'Unknown' ? 'Unknown' : numberFormat(fr.acres));
     dispatch = fire.protection.dispatch;
     agency = fire.protection;
-    center = vars.center;
-    fstat = fr.status;
-    st1 = fire.time.year < curTime.getFullYear() ? 'out' : getStatus(fstat, fr.notes);
-    st = st1 ? st1 : 'active';
-    abbr = agency.agency != 'US Forest Service' ? agencies[agency.agency] : '';
     isTracked = tracked.includes(parseInt(wfid));
     contain = fr.containment;
     notes = fr.notes ? fr.notes : 'None provided';
@@ -247,14 +169,14 @@ self.onmessage = (e) => {
     behavior = fr.behavior ? Object.values(fr.behavior).join(', ') : null;
     cause = fr.cause ? Object.values(fr.cause).join(' / ') : 'Unknown';
     cost = fr.cost ? fr.cost : null;
-    near = fire.geometry.near;
+    near = fire.geometry.near; //fire.geometry.geo.near
     inciweb = fire.inciweb ? fire.inciweb : null;
 
     /* create inline variables for the template */
     let coords = fire.geometry.lat.toFixed(4) + ', ' + fire.geometry.lon.toFixed(4),
         edit = role == 'ADMIN' ? '<a target="blank" href="' + domain + 'account/admin/wildfires/' + (dispatch == 'MAPO' ? 'modify' : 'edit') + '?wfid=' + wfid + '" style="display:inline-block;font-size:14px;color:var(--box-orange);margin-right:5px"><i class="far fa-pen-to-square"></i></a>' : '',
-        jdesc = (!agency.agency && !agency.unit ? 'Unknown' : (agency.agency ? agency.agency + ' &mdash; ' : '') + (agency.area ? agency.area : ''));
-    logo = '';
+        jdesc = (!agency.agency && !agency.unit ? 'Unknown' : (agency.agency ? agency.agency + ' &mdash; ' : '') + (agency.area ? agency.area : '')),
+        logo = '';
 
     if (agency.logo || dispatch == 'CAL FIRE') {
         logo = '<img loading="lazy" class="logo" src="' + domain + 'assets/images/icons/fire/agencies/agency_' + (agency.logo ? agency.logo : (dispatch == 'CAL FIRE' ? 'calfire' : '')) + '_logo.png" alt="' + agency.agency + ' - ' + agency.area + ' (' + agency.unit + ')' + '" title="' + agency.agency + ' - ' + agency.area + ' (' + agency.unit + ')' + '">';
@@ -269,11 +191,11 @@ self.onmessage = (e) => {
                 <div class="title">
                     <div class="tray">
                         ${edit}
-                        <h1>${fireName}</h1>
+                        <h1>${object.fireName}</h1>
                     </div>
                     <div class="desc">
                         ${logo}
-                        <span>${geoLocate(fire)}</span>
+                        <span>${object.geoLocate}</span>
                     </div>
 
                     <p class="timestamps">
@@ -288,7 +210,7 @@ self.onmessage = (e) => {
             <div class="grid cols-4 stats">
                 <div class="card">
                     <dt class="label">Status</dt>
-                    <span class="status ${st1}" title="${ucfirst(st1)}">${st1}</span>
+                    <span class="status ${object.status}" title="${ucfirst(object.status)}">${object.status}</span>
                 </div>
                 <div class="card">
                     <dt class="label">Size</dt>
@@ -305,7 +227,7 @@ self.onmessage = (e) => {
                 </div>
                 <div class="card">
                     <dt class="label">Coordinates</dt>
-                    <span class="coords" title="Coordinates for ${fireName}">${coords}</span>
+                    <span class="coords" title="Coordinates for ${object.fireName}">${coords}</span>
                 </div>
             </div>
 
@@ -404,7 +326,7 @@ self.onmessage = (e) => {
 
             ${center != null ? dispatchCtr() : ''}
 
-            ${social()}
+            ${social(object.fireName)}
 
             ${disclaimer()}
         </div>

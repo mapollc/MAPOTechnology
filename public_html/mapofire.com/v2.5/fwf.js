@@ -1,7 +1,4 @@
-let lat,
-    lon,
-    tempUnit,
-    windUnit;
+let lat, lon, tempUnit, windUnit;
 
 const forecastLabels = [
     { label: 'Max Temperature', path: 'maxTemp', format: 'temp' },
@@ -64,73 +61,110 @@ const forecastLabels = [
             min: [],
             max: []
         }
+    },
+    getCompassDirection = (bearing) => {
+        const dir = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+        return dir[Math.round(bearing / 22.5) % 16];
+    },
+    average = (arr) => {
+        let total = 0;
+
+        arr.forEach((v) => {
+            total += v;
+        });
+
+        return Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(total / arr.length);
+    },
+    getLocation = (data) => {
+        const total = (data.distance.value / 1609).toFixed(1).toString(),
+            dist = total.substring(total.length - 1) == '0' ? total.split('.')[0] : total;
+
+        return dist + ' mile' + (dist == '1' ? '' : 's') + ' ' + getCompassDirection(data.bearing.value) + ' of ' + data.city + ', ' + data.state;
+    },
+    getNestedValue = (obj, path) => {
+        // Safely gets a nested value from an object using a dot-separated path string
+        return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+    },
+    temp = (v) => {
+        if (tempUnit == 'c') {
+            return Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format((v - 32) * (5 / 9));
+        } else {
+            return v;
+        }
+    },
+    speed = (v) => {
+        if (windUnit == 'm/s') {
+            return Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(v / 2.237);
+        } else if (windUnit == 'kts') {
+            return Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(v / 1.151);
+        } else if (windUnit == 'km/h') {
+            return Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(v * 1.609);
+        } else {
+            return v;
+        }
+    },
+    getTextColor = (color) => {
+        if (!color || color === "transparent") return "#000";
+
+        const m = color.match(/rgba?\((\d+)[ ,]+(\d+)[ ,]+(\d+)/);
+        if (!m) return "#000";
+
+        const r = parseInt(m[1], 10) / 255,
+            g = parseInt(m[2], 10) / 255,
+            b = parseInt(m[3], 10) / 255,
+            toLinear = c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4),
+            R = toLinear(r),
+            G = toLinear(g),
+            B = toLinear(b),
+            luminance = 0.2126 * R + 0.7152 * G + 0.0722 * B;
+
+        return luminance > 0.5 ? '#2c2c2c' : '#fff';
+    },
+    hexToRgba = (hex, alpha) => {
+        if (!hex || hex === 'transparent') {
+            return `rgba(0,0,0,${alpha})`;
+        }
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgb(${r} ${g} ${b} / ${alpha * 100}%)`;
+    },
+    getColor = (value, thresholds, colors) => {
+        if (value === null || value === undefined) {
+            return 'unset';
+        }
+
+        for (let i = 0; i < thresholds.length; i++) {
+            if (value <= thresholds[i] || i === thresholds.length - 1) {
+                return hexToRgba(colors[i], 0.95);
+            }
+        }
+
+        return hexToRgba(colors[colors.length - 1], 0.95);
+    },
+    getStyleForFormat = (format, value) => {
+        if (value == null || isNaN(value)) return '';
+
+        let bg, txt;
+
+        switch (format) {
+            case 'temp':
+                bg = getColor(value, tempThresholds, tempColors);
+                break;
+            case 'rhpct':
+                bg = getColor(value, rhThresholds, rhColors);
+                break;
+            case 'mph':
+                bg = getColor(value, windThresholds, windColors);
+                break;
+            default:
+                bg = null;
+                return '';
+        }
+
+        txt = getTextColor(bg);
+        return ` style="background-color:${bg};color:${txt}"`;
     };
-
-function getCompassDirection(b) {
-    var d,
-        b = Math.round(b / 22.5);
-
-    switch (b) {
-        case 1:
-            d = "NNE";
-            break;
-        case 2:
-            d = "NE";
-            break;
-        case 3:
-            d = "ENE";
-            break;
-        case 4:
-            d = "E";
-            break;
-        case 5:
-            d = "ESE";
-            break;
-        case 6:
-            d = "SE";
-            break;
-        case 7:
-            d = "SSE";
-            break;
-        case 8:
-            d = "S";
-            break;
-        case 9:
-            d = "SSW";
-            break;
-        case 10:
-            d = "SW";
-            break;
-        case 11:
-            d = "WSW";
-            break;
-        case 12:
-            d = "W";
-            break;
-        case 13:
-            d = "WNW";
-            break;
-        case 14:
-            d = "NW";
-            break;
-        case 15:
-            d = "NNW";
-            break;
-        default:
-            d = "N";
-    }
-    return d;
-}
-
-function average(arr) {
-    let total = 0;
-
-    arr.forEach((v) => {
-        total += v;
-    });
-
-    return Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(total / arr.length);
-}
 
 async function getWeather(json) {
     let error = false;
@@ -239,104 +273,6 @@ async function getWeather(json) {
         console.error('There is an error getting FWF', error);
         return null;
     }
-}
-
-function getLocation(data) {
-    const total = (data.distance.value / 1609).toFixed(1).toString(),
-        dist = total.substring(total.length - 1) == '0' ? total.split('.')[0] : total;
-
-    return dist + ' mile' + (dist == '1' ? '' : 's') + ' ' + getCompassDirection(data.bearing.value) + ' of ' + data.city + ', ' + data.state;
-}
-
-function getNestedValue(obj, path) {
-    // Safely gets a nested value from an object using a dot-separated path string
-    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
-}
-
-function temp(v) {
-    if (tempUnit == 'c') {
-        return Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format((v - 32) * (5 / 9));
-    } else {
-        return v;
-    }
-}
-
-function speed(v) {
-    if (windUnit == 'm/s') {
-        return Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(v / 2.237);
-    } else if (windUnit == 'kts') {
-        return Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(v / 1.151);
-    } else if (windUnit == 'km/h') {
-        return Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(v * 1.609);
-    } else {
-        return v;
-    }
-}
-
-function getTextColor(color) {
-    if (!color || color === "transparent") return "#000";
-
-    const m = color.match(/rgba?\((\d+)[ ,]+(\d+)[ ,]+(\d+)/);
-    if (!m) return "#000";
-
-    const r = parseInt(m[1], 10) / 255,
-        g = parseInt(m[2], 10) / 255,
-        b = parseInt(m[3], 10) / 255,
-        toLinear = c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4),
-        R = toLinear(r),
-        G = toLinear(g),
-        B = toLinear(b),
-        luminance = 0.2126 * R + 0.7152 * G + 0.0722 * B;
-
-    return luminance > 0.5 ? '#2c2c2c' : '#fff';
-}
-
-function hexToRgba(hex, alpha) {
-    if (!hex || hex === 'transparent') {
-        return `rgba(0,0,0,${alpha})`;
-    }
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgb(${r} ${g} ${b} / ${alpha * 100}%)`;
-}
-
-function getColor(value, thresholds, colors) {
-    if (value === null || value === undefined) {
-        return 'unset';
-    }
-
-    for (let i = 0; i < thresholds.length; i++) {
-        if (value <= thresholds[i] || i === thresholds.length - 1) {
-            return hexToRgba(colors[i], 0.95);
-        }
-    }
-
-    return hexToRgba(colors[colors.length - 1], 0.95);
-}
-
-function getStyleForFormat(format, value) {
-    if (value == null || isNaN(value)) return '';
-
-    let bg, txt;
-
-    switch (format) {
-        case 'temp':
-            bg = getColor(value, tempThresholds, tempColors);
-            break;
-        case 'rhpct':
-            bg = getColor(value, rhThresholds, rhColors);
-            break;
-        case 'mph':
-            bg = getColor(value, windThresholds, windColors);
-            break;
-        default:
-            bg = null;
-            return '';
-    }
-
-    txt = getTextColor(bg);
-    return ` style="background-color:${bg};color:${txt}"`;
 }
 
 function createForecastTable(data, numDays = 5) {

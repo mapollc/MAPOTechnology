@@ -108,166 +108,146 @@ const specificURL = window.location.origin + '/',
                 };
                 return fontMap[settings.getBasemap()] || fontMap['default'];
             }
+        }
+    },
+    layerActions = {
+        'newFires': { layers: ['new_fires_layer', 'new_fire_title'] },
+        'allFires': { layers: ['all_fires_layer', 'all_fire_title', 'ca_fires', 'ca_fire_title'] },
+        'smokeChecks': { layers: ['smk_fires_layer', 'smk_fire_title'] },
+        'rxBurns': { layers: ['rx_fires_layer', 'rx_fire_title'] },
+        'lightning1': { layers: ['lightning1'] },
+        'lightning24': { layers: ['lightning24'] },
+        //'nfdrs': { layers: ['nfdrs'], exe: () => { config.layersHandler.nfdrs(); } },
+        'roads': { layers: ['roads'], exe: () => { config.layersHandler.roads(); } },
+        'lands': { layers: ['lands'], exe: () => { config.layersHandler.lands(); } },
+        'plss': { layers: ['plss'], exe: () => { config.layersHandler.plss(); } },
+        'countyBounds': { layers: ['countyBounds'], exe: () => { config.layersHandler.countyBounds(); } },
+        'nwsCWAs': { layers: ['nwsCWAs'], exe: () => { config.layersHandler.nwsCWAs(); } },
+        'evac': { layers: ['evac', 'evac_outline', 'evac_title'] },
+        'firemed': { layers: ['firemed'], exe: () => { config.layersHandler.firemed(); } },
+        'odfFDR': { layers: ['odfFDR', 'odfFDR_outline', 'odfFDR_title'], exe: () => { config.layersHandler.odfFDR(); } },
+        'calfireUnits': { layers: ['calfireUnits', 'calfireUnits_title'], exe: () => { config.layersHandler.calfireUnits(); } },
+        'cdfFHSZ': { layers: ['cdfFHSZ', 'cdfFHSZ_title'], exe: () => { config.layersHandler.cdfFHSZ(); } },
+        'calfireAircraft': { layers: ['calfireAircraft', 'calfireAircraft_title'], exe: () => { config.layersHandler.calfireAircraft(); } },
+        'hms': { layers: ['hms', 'hms_title'], exe: () => { config.layersHandler.hms(); } },
+        'smokeFcst': { layers: ['smokeFcst'], exe: () => { config.layersHandler.smokeFcst(); } },
+        'sfcSmoke': { layers: ['sfcSmoke'], exe: () => { config.layersHandler.sfcSmoke(); } },
+        'viSmoke': { layers: ['viSmoke'], exe: () => { config.layersHandler.viSmoke(); } },
+        'fuels': { layers: ['fuels', 'fuelsAK'], exe: () => { config.layersHandler.fuels(); } },
+        'dispatch': { layers: ['dispatch_outline', 'dispatch_title'], exe: () => { config.layersHandler.dispatch(); } },
+        'gaccBounds': { layers: ['gaccBounds', 'gaccBounds_title'], exe: () => { config.layersHandler.gaccBounds(); } },
+        'perimeters': { layers: ['perimeters_outline', 'perimeters_fill', 'perimeters_title', 'ca_perimeters_outline', 'ca_perimeters_fill', 'ca_perimeters_title'] },
+        'nri': { layers: ['nri_outline', 'nri_fill'], exe: () => { config.layersHandler.nri(); } },
+        'power': { layers: ['power'], exe: () => { config.layersHandler.power(); } },
+        'modis24': { layers: ['modis24'], exe: () => { config.layersHandler.modis(1); } },
+        'modis48': { layers: ['modis48'], exe: () => { config.layersHandler.modis(2); } },
+        'modis72': { layers: ['modis72'], exe: () => { config.layersHandler.modis(3); } },
+        'ev': { layers: ['ev'], exe: () => { config.layersHandler.pnwVulnerability(); } },
+        'rth': { layers: ['rth'], exe: () => { config.layersHandler.rth(); } },
+        'wet': { layers: ['wet'], exe: () => { config.layersHandler.wet(); } },
+        'bp': { layers: ['bp'], exe: () => { config.layersHandler.bp(); } },
+        'whp': { layers: ['whp'], exe: () => { config.layersHandler.whp(); } },
+        'drought': { layers: ['drought'], exe: () => { config.layersHandler.drought(); } },
+        'visSatellite': { layers: ['satellite1'], exe: async () => { new (await loadUtils()).NWS().satellite(1); } },
+        'irSatellite': { layers: ['satellite2'], exe: async () => { new (await loadUtils()).NWS().satellite(2); } },
+        'wvSatellite': { layers: ['satellite3'], exe: async () => { new (await loadUtils()).NWS().satellite(3); } },
+        'wwas': { layers: ['wwas_fill', 'wwas_outline', 'wwas_title'], exe: async () => { new (await loadUtils()).NWS().get(); } },
+        'stns': { layers: ['stns', 'stns_text'], exe: () => { new Weather().raws(); } },
+        'airq': {
+            run: (checked) => {
+                const i = setInterval(() => {
+                    if (map.getSource('airq')) {
+                        clearInterval(i);
+                        const visibility = checked ? 'visible' : 'none';
+                        map.setLayoutProperty('airQuality', 'visibility', visibility)
+                            .setLayoutProperty('airQuality_text', 'visibility', visibility);
+                    }
+                }, 500);
+            }
         },
-        layerActions: {
-            'newFires': { layers: ['new_fires_layer', 'new_fire_title'] },
-            'allFires': { layers: ['all_fires_layer', 'all_fire_title', 'ca_fires', 'ca_fire_title'] },
-            'smokeChecks': { layers: ['smk_fires_layer', 'smk_fire_title'] },
-            'rxBurns': { layers: ['rx_fires_layer', 'rx_fire_title'] },
-            'lightning1': { layers: ['lightning1'] },
-            'lightning24': { layers: ['lightning24'] },
-            //'nfdrs': { layers: ['nfdrs'], exe: () => { config.layersHandler.nfdrs(); } },
-            'roads': { layers: ['roads'], exe: () => { config.layersHandler.roads(); } },
-            'lands': { layers: ['lands'], exe: () => { config.layersHandler.lands(); } },
-            'plss': { layers: ['plss'], exe: () => { config.layersHandler.plss(); } },
-            'countyBounds': { layers: ['countyBounds'], exe: () => { config.layersHandler.countyBounds(); } },
-            'nwsCWAs': { layers: ['nwsCWAs'], exe: () => { config.layersHandler.nwsCWAs(); } },
-            'evac': { layers: ['evac', 'evac_outline', 'evac_title'] },
-            'firemed': { layers: ['firemed'], exe: () => { config.layersHandler.firemed(); } },
-            'odfFDR': { layers: ['odfFDR', 'odfFDR_outline', 'odfFDR_title'], exe: () => { config.layersHandler.odfFDR(); } },
-            'calfireUnits': { layers: ['calfireUnits', 'calfireUnits_title'], exe: () => { config.layersHandler.calfireUnits(); } },
-            'cdfFHSZ': { layers: ['cdfFHSZ', 'cdfFHSZ_title'], exe: () => { config.layersHandler.cdfFHSZ(); } },
-            'calfireAircraft': { layers: ['calfireAircraft', 'calfireAircraft_title'], exe: () => { config.layersHandler.calfireAircraft(); } },
-            'hms': { layers: ['hms', 'hms_title'], exe: () => { config.layersHandler.hms(); } },
-            'smokeFcst': { layers: ['smokeFcst'], exe: () => { config.layersHandler.smokeFcst(); } },
-            'sfcSmoke': { layers: ['sfcSmoke'], exe: () => { config.layersHandler.sfcSmoke(); } },
-            'viSmoke': { layers: ['viSmoke'], exe: () => { config.layersHandler.viSmoke(); } },
-            'fuels': { layers: ['fuels', 'fuelsAK'], exe: () => { config.layersHandler.fuels(); } },
-            'dispatch': { layers: ['dispatch_outline', 'dispatch_title'], exe: () => { config.layersHandler.dispatch(); } },
-            'gaccBounds': { layers: ['gaccBounds', 'gaccBounds_title'], exe: () => { config.layersHandler.gaccBounds(); } },
-            'perimeters': { layers: ['perimeters_outline', 'perimeters_fill', 'perimeters_title', 'ca_perimeters_outline', 'ca_perimeters_fill', 'ca_perimeters_title'] },
-            'nri': { layers: ['nri_outline', 'nri_fill'], exe: () => { config.layersHandler.nri(); } },
-            'power': { layers: ['power'], exe: () => { config.layersHandler.power(); } },
-            'modis24': { layers: ['modis24'], exe: () => { config.layersHandler.modis(1); } },
-            'modis48': { layers: ['modis48'], exe: () => { config.layersHandler.modis(2); } },
-            'modis72': { layers: ['modis72'], exe: () => { config.layersHandler.modis(3); } },
-            'ev': { layers: ['ev'], exe: () => { config.layersHandler.pnwVulnerability(); } },
-            'rth': { layers: ['rth'], exe: () => { config.layersHandler.rth(); } },
-            'wet': { layers: ['wet'], exe: () => { config.layersHandler.wet(); } },
-            'bp': { layers: ['bp'], exe: () => { config.layersHandler.bp(); } },
-            'whp': { layers: ['whp'], exe: () => { config.layersHandler.whp(); } },
-            'drought': { layers: ['drought'], exe: () => { config.layersHandler.drought(); } },
-            'visSatellite': { layers: ['satellite1'], exe: () => { new NWS().satellite(1); } },
-            'irSatellite': { layers: ['satellite2'], exe: () => { new NWS().satellite(2); } },
-            'wvSatellite': { layers: ['satellite3'], exe: () => { new NWS().satellite(3); } },
-            'wwas': { layers: ['wwas_fill', 'wwas_outline', 'wwas_title'], exe: () => { new NWS().get(); } },
-            'stns': { layers: ['stns', 'stns_text'], exe: () => { new Weather().raws(); } },
-            'airq': {
-                run: (checked) => {
-                    const i = setInterval(() => {
-                        if (map.getSource('airq')) {
-                            clearInterval(i);
-                            const visibility = checked ? 'visible' : 'none';
-                            map.setLayoutProperty('airQuality', 'visibility', visibility)
-                                .setLayoutProperty('airQuality_text', 'visibility', visibility);
-                        }
-                    }, 500);
+        'spc': {
+            run: async (checked) => {
+                const visibility = checked ? 'visible' : 'none';
+
+                if (impact.style.display == 'flex' && impact.getAttribute('data-content') == 'layers') {
+                    document.querySelector('#otlkType').disabled = !checked;
+                    document.querySelector('#otlkDay').disabled = !checked;
                 }
-            },
-            'spc': {
-                run: (checked) => {
-                    const visibility = checked ? 'visible' : 'none';
 
-                    if (impact.style.display == 'flex' && impact.getAttribute('data-content') == 'layers') {
-                        document.querySelector('#otlkType').disabled = !checked;
-                        document.querySelector('#otlkDay').disabled = !checked;
-                    }
-
-                    if (map.getSource('outlook')) {
-                        map.setLayoutProperty('outlook_fill', 'visibility', visibility)
-                            .setLayoutProperty('outlook_outline', 'visibility', visibility)
-                            .setLayoutProperty('outlook_title', 'visibility', visibility);
-                    } else if (checked) {
-                        new NWS().spc();
-                    }
+                if (map.getSource('outlook')) {
+                    map.setLayoutProperty('outlook_fill', 'visibility', visibility)
+                        .setLayoutProperty('outlook_outline', 'visibility', visibility)
+                        .setLayoutProperty('outlook_title', 'visibility', visibility);
+                } else if (checked) {
+                    new (await loadUtils()).NWS().spc();
                 }
-            },
-            'radar': {
-                run: (checked) => {
-                    if (checked) {
-                        config.layersHandler.radarInit();
-                    } else {
-                        radarPlay = true;
-                        document.querySelector('.radar').remove();
-                        clearInterval(radarAnim);
+            }
+        },
+        'radar': {
+            run: (checked) => {
+                if (checked) {
+                    config.layersHandler.radarInit();
+                } else {
+                    radarPlay = true;
+                    document.querySelector('.radar').remove();
+                    clearInterval(radarAnim);
 
-                        for (let i = 0; i < radarImgs.length; i++) {
-                            map.removeLayer('radar-layer-' + i);
-                            map.removeSource('radar-' + i);
-                        }
-                    }
-                }
-            },
-            'ndfd': {
-                run: (checked) => {
-                    const visibility = checked ? 'visible' : 'none';
-
-                    if (impact.style.display == 'flex') {
-                        document.querySelector('#forecastModel').disabled = !checked;
-                        document.querySelector('#fcstTime').disabled = !checked;
-                    }
-
-                    if (map.getSource('ndfd')) {
-                        map.setLayoutProperty('ndfd', 'visibility', visibility);
-
-                        if (!checked) {
-                            document.querySelector('.ndfdLegend')?.remove();
-                        }
-                    } else if (checked) {
-                        new NWS().ndfd();
-                    }
-                }
-            },
-            'erc': {
-                run: (checked) => {
-                    const visibility = checked ? 'visible' : 'none';
-
-                    if (impact.style.display == 'flex') {
-                        document.querySelector('#erc_time').disabled = !checked;
-                    }
-
-                    if (map.getSource('erc')) {
-                        map.setLayoutProperty('erc_fill', 'visibility', visibility);
-                        map.setLayoutProperty('erc_outline', 'visibility', visibility);
-                    } else if (checked) {
-                        config.layersHandler.erc();
-                    }
-                }
-            },
-            'sfp': {
-                run: (checked) => {
-                    if (impact.style.display == 'flex') {
-                        document.querySelector('#sfpDateSelect').disabled = !checked;
-                    }
-
-                    if (map.getSource('sfp')) {
-                        map.setLayoutProperty('sfp', 'visibility', checked ? 'visible' : 'none');
-                    } else if (checked) {
-                        config.layersHandler.sfp();
+                    for (let i = 0; i < radarImgs.length; i++) {
+                        map.removeLayer('radar-layer-' + i);
+                        map.removeSource('radar-' + i);
                     }
                 }
             }
         },
-        mapControls: [
-            new maplibregl.FullscreenControl({
-                container: document.body
-            }),
-            new maplibregl.GeolocateControl({
-                positionOptions: {
-                    enableHighAccuracy: true
-                },
-                fitBoundsOptions: {
-                    maxZoom: 10.16
-                },
-                trackUserLocation: true,
-                showUserHeading: true
-            }),
-            new maplibregl.NavigationControl({
-                showCompass: true,
-                showZoom: true,
-                visualizePitch: true
-            })
-        ]
+        'ndfd': {
+            run: async (checked) => {
+                const visibility = checked ? 'visible' : 'none';
+
+                if (impact.style.display == 'flex') {
+                    document.querySelector('#forecastModel').disabled = !checked;
+                    document.querySelector('#fcstTime').disabled = !checked;
+                }
+
+                if (map.getSource('ndfd')) {
+                    map.setLayoutProperty('ndfd', 'visibility', visibility);
+
+                    if (!checked) {
+                        document.querySelector('.ndfdLegend')?.remove();
+                    }
+                } else if (checked) {
+                    new (await loadUtils()).NWS().ndfd();
+                }
+            }
+        },
+        'erc': {
+            run: (checked) => {
+                const visibility = checked ? 'visible' : 'none';
+
+                if (impact.style.display == 'flex') {
+                    document.querySelector('#erc_time').disabled = !checked;
+                }
+
+                if (map.getSource('erc')) {
+                    map.setLayoutProperty('erc_fill', 'visibility', visibility);
+                    map.setLayoutProperty('erc_outline', 'visibility', visibility);
+                } else if (checked) {
+                    config.layersHandler.erc();
+                }
+            }
+        },
+        'sfp': {
+            run: (checked) => {
+                if (impact.style.display == 'flex') {
+                    document.querySelector('#sfpDateSelect').disabled = !checked;
+                }
+
+                if (map.getSource('sfp')) {
+                    map.setLayoutProperty('sfp', 'visibility', checked ? 'visible' : 'none');
+                } else if (checked) {
+                    config.layersHandler.sfp();
+                }
+            }
+        }
     },
     osm = {
         version: 8,
@@ -384,356 +364,24 @@ const specificURL = window.location.origin + '/',
             ['Very High', '#ff0000']
         ]
     },
-    legend = {
-        'categories': [
-            { 'fire': 'Wildfires' },
-            { 'viirs': 'VIIRS Hotspots' },
-            { 'smoke': 'Smoke Forecast' },
-            { 'drought': 'Drought Conditions' },
-            //{ 'nfdrs': 'Fire Danger' },
-            { 'sfp': 'Significant Fire Potential' },
-            { 'erc': 'Energy Release Component' },
-            /*{ 'burnProb': 'Burn Probability' },*/
-            { 'fhsz': 'CAL FIRE Hazard Severity Zones' },
-            { 'lands': 'Land Ownership' },
-            { 'rth': 'Wildfire Risk to Homes' },
-            { 'wet': 'Wildfire Exposure Type' },
-            { 'bp': 'Wildfire Likelihood' },
-            { 'whp': 'Wildfire Hazard Potential' },
-            { 'nri': 'FEMA Wildfire Risk Index' }
-        ],
-        'items': {
-            'fire': [
-                ['icon', '<div class="fire-icon new"><i class="fas fa-fire"></i></div>', '', 'New Fire'],
-                ['icon', '<div class="fire-icon new fast"><i class="fas fa-fire"></i></div>', '', 'Fast Growing Fire'],
-                ['icon', '<div class="fire-icon big"><i class="fas fa-fire"></i></div>', '', 'Active Fire (0-100 acres)'],
-                ['icon', '<div class="fire-icon"><i class="fas fa-fire"></i></div>', '', 'Active Fire (100-1000 acres)'],
-                ['icon', '<div class="fire-icon large"><i class="fas fa-fire"></i></div>', '', 'Active Fire (>1000 acres)'],
-                ['icon', '<div class="fire-icon complex"><i class="fad fa-fire-flame-curved" aria-hidden="true" style="position:absolute;left:2px;top:2px;color:rgb(255 255 255 / 100%)"></i>' +
-                    '<i class="fad fa-fire-flame-curved" aria-hidden="true" style="position:absolute;right:1px;bottom:2px;color:rgb(255 255 255 / 100%)"></i>' +
-                    '<div style="position:absolute;width:25px;border-bottom:1px solid rgb(255 255 255 / 68%);top:50%;transform:rotate(-45deg)"></div></div>', '', 'Complex'],
-                ['icon', '<div class="fire-icon contain"><i class="fas fa-fire"></i></div>', '', 'Contained Fire'],
-                ['icon', '<div class="fire-icon controlled"><i class="fas fa-fire"></i></div>', '', 'Controlled Fire'],
-                ['icon', '<div class="fire-icon rx"><i class="fas fa-prescription"></i></div>', '', 'Prescribed Burn'],
-                ['icon', '<div class="fire-icon smkchk"><i class="fas fa-badge-check"></i></div>', '', 'Smoke Check']
-            ],
-            'viirs': [
-                ['icon', '<div class="viirs t24"></div>', '', 'Heat Detection (0-24 hrs)'],
-                ['icon', '<div class="viirs t48"></div>', '', 'Heat Detection (24-48 hrs)'],
-                ['icon', '<div class="viirs t72"></div>', '', 'Heat Detection (48-72 hrs)']
-            ],
-            'smoke': [
-                ['color', '', '#ffffc0', '0-3 µg/m³'],
-                ['color', '', '#fcdf8b', '3-25 µg/m³'],
-                ['color', '', '#f6c26d', '25-63 µg/m³'],
-                ['color', '', '#c5885c', '63-158 µg/m³'],
-                ['color', '', '#974f4f', '158-1000 µg/m³'],
-                ['color', '', '#f8fed0', 'No Data']
-            ],
-            /*'nfdrs': [
-                ['color', '', '#3db471', 'Low'],
-                ['color', '', '#00ff00', 'Moderate'],
-                ['color', '', '#ffff00', 'High'],
-                ['color', '', '#ff8b00', 'Very High'],
-                ['color', '', '#b31f1f', 'Extreme']
-            ],*/
-            'sfp': [
-                ['color', '', '#85ca0a', 'Little or No Risk'],
-                ['color', '', '#ffff00', 'Low Risk'],
-                ['color', '', '#ad7c23', 'Moderate Risk'],
-                ['color', 'D', '#ff9900', 'Dry'],
-                ['color', 'W', '#ff9900', 'Hot & Dry'],
-                ['color', 'H', '#ff9900', 'Hot'],
-                ['color', 'U', '#ff9900', 'Unstable'],
-                ['color', 'L', '#ff0000', 'Lightning'],
-                ['color', 'R', '#ff0000', 'Recreation'],
-                ['color', 'B', '#ff0000', 'Burn Environment']
-            ],
-            'erc': [
-                ['color', '', 'rgb(56, 168, 0)', '<60% higher than normal'],
-                ['color', '', 'rgb(209, 255, 115)', '60-79.9% higher than normal'],
-                ['color', '', 'rgb(255, 255, 190)', '80-89.9% higher than normal'],
-                ['color', '', 'rgb(255, 170, 0)', '90-96.9% higher than normal'],
-                ['color', '', 'rgb(255, 0, 0)', '97-99.9% higher than normal'],
-                ['color', '', 'rgb(168, 0, 0)', '>=100% higher than normal'],
-                ['color', '', '#e1e1e1', 'No data'],
-            ],
-            /*'burnProb': [
-                ['color', '', '#fff0cf', '0-0.01%'],
-                ['color', '', '#fddcaf', '0.01-0.02%'],
-                ['color', '', '#fdca94', '0.02-0.05%'],
-                ['color', '', '#fdb27b', '0.05-0.1%'],
-                ['color', '', '#fc8d59', '0.1-0.2%'],
-                ['color', '', '#f26d4b', '0.2-.05%'],
-                ['color', '', '#e1452f', '0.5-1%'],
-                ['color', '', '#c91d13', '1-2.2%'],
-                ['color', '', '#a90000', '2.2-4.5%'],
-                ['color', '', '#7f0000', '4.5-12.5%']
-            ],*/
-            'fhsz': [
-                ['color', '', '#ffff69', 'Moderate'],
-                ['color', '', '#ffcd69', 'High'],
-                ['color', '', '#ff6969', 'Very High']
-            ],
-            'nri': [
-                ['color', '', '#4d6dbd', 'Very Low'],
-                ['color', '', '#509bc7', 'Relatively Low'],
-                ['color', '', '#f0d55d', 'Relatively Moderate'],
-                ['color', '', '#e07069', 'Relatively High'],
-                ['color', '', '#c7445d', 'Very High'],
-                ['color', '', '#ffffff', 'No Rating'],
-                ['color', '', '#9e9e9e', 'Insufficient Data']
-            ],
-            'lands': [
-                ['color', '', '#fcb5ce', 'Department of Defense'],
-                ['color', '', '#fee67a', 'Bureau of Land Management'],
-                ['color', '', '#cabddd', 'National Park Service'],
-                ['color', '', '#cdecc5', 'U.S. Forest Service'],
-                ['color', '', '#7fcda7', 'U.S. Fish & Wildlife Service'],
-                ['color', '', '#ffffb4', 'Bureau of Reclamation'],
-                ['color', '', '#fdb56b', 'Bureau of Indian Affairs'],
-                ['color', '', '#e4c4a0', 'Other Federal'],
-                ['color', '', '#b4e3ef', 'State']
-            ],
-            'rth': [
-                ['color', '', '#ffffff', '0 percentile'],
-                ['color', '', '#f1f2a0', '0-40th percentile'],
-                ['color', '', '#f2c13c', '40-70th percentile'],
-                ['color', '', '#f28017', '70-90th percentile'],
-                ['color', '', '#f21900', '90-95th percentile'],
-                ['color', '', '#c4001a', '95-100th percentile']
-            ],
-            'wet': [
-                ['color', '', '#d6d6d6', 'Not Exposed'],
-                ['color', '', '#ff8f50', 'Indirectly Exposed'],
-                ['color', '', '#ff3b54', 'Directly Exposed']
-            ],
-            'bp': [
-                ['color', '', '#fff0cf', 'Very Low'], // 0 to to 1-in-4,643
-                ['color', '', '#fdca94', 'Low'], // 1-in-4,643 to 1-in-2,154
-                ['color', '', '#fdb27b', 'Low'], // 1-in-2,154 to 1-in-1,000
-                ['color', '', '#fc8d59', 'Moderate'], // 1-in-1,000 to 1-in-464
-                ['color', '', '#f26d4b', 'Moderate'], // 1-in-464 to 1-in-215
-                ['color', '', '#e1452f', 'High'], // 1-in-215 to 1-in-100
-                ['color', '', '#c91d13', 'High'], // 1-in-100 to 1-in-46
-                ['color', '', '#a90000', 'Very High'], // 1-in-46 to 1-in-22
-                ['color', '', '#7f0000', 'Very High'] // 1-in-22+
-            ],
-            'whp': [
-                ['color', '', '#38a800', 'Very Low'],
-                ['color', '', '#d1ff73', 'Low'],
-                ['color', '', '#ffff00', 'Moderate'],
-                ['color', '', '#ffaa00', 'High'],
-                ['color', '', '#ff0000', 'Very High']
-            ],
-            'drought': [
-                ['color', '', '#ffff00', 'Abnormally Dry'],
-                ['color', '', '#ffcc99', 'Moderate Drought'],
-                ['color', '', '#ff6600', 'Severe Drought'],
-                ['color', '', '#ff0000', 'Extreme Drought'],
-                ['color', '', '#660000', 'Exceptional Drought']
-            ]
+    loadUtils = async () => {
+        if (lu) return lu;
+
+        try {
+            lu = await import(config.specificURL + (debugMode ? 'v' + version + '/mf.utils.js' : 'src/js/mf.utils-' + version + '.js'));
+            return lu;
+        } catch (e) {
+            console.error('Failed to load utils', e);
+            lu = null;
+            throw e;
         }
     },
-    wwaColors = [
-        'case',
-        ['==', ['get', 'Event'], '911 Telephone Outage'], '#bfbfbf',
-        ['==', ['get', 'Event'], 'Administrative Message'], '#fefefe',
-        ['==', ['get', 'Event'], 'Air Quality Alert'], '#7f7f7f',
-        ['==', ['get', 'Event'], 'Air Stagnation Advisory'], '#7f7f7f',
-        ['==', ['get', 'Event'], 'Arroyo and Small Stream Flood Advisory'], '#00fe7e',
-        ['==', ['get', 'Event'], 'Ashfall Advisory'], '#686868',
-        ['==', ['get', 'Event'], 'Ashfall Warning'], '#a8a8a8',
-        ['==', ['get', 'Event'], 'Avalanche Advisory'], '#cc843e',
-        ['==', ['get', 'Event'], 'Avalanche Warning'], '#1d8ffe',
-        ['==', ['get', 'Event'], 'Avalanche Watch'], '#f3a35f',
-        ['==', ['get', 'Event'], 'Beach Hazards Statement'], '#3fdfcf',
-        ['==', ['get', 'Event'], 'Blizzard Warning'], '#fe4400',
-        ['==', ['get', 'Event'], 'Blizzard Watch'], '#acfe2e',
-        ['==', ['get', 'Event'], 'Blowing Dust Advisory'], '#bcb66a',
-        ['==', ['get', 'Event'], 'Brisk Wind Advisory'], '#d7bed7',
-        ['==', ['get', 'Event'], 'Child Abduction Emergency'], '#fed600',
-        ['==', ['get', 'Event'], 'Civil Danger Warning'], '#feb5c0',
-        ['==', ['get', 'Event'], 'Civil Emergency Message'], '#feb5c0',
-        ['==', ['get', 'Event'], 'Coastal Flood Advisory'], '#7bfb00',
-        ['==', ['get', 'Event'], 'Coastal Flood Statement'], '#6a8d22',
-        ['==', ['get', 'Event'], 'Coastal Flood Warning'], '#218a21',
-        ['==', ['get', 'Event'], 'Coastal Flood Watch'], '#65cca9',
-        ['==', ['get', 'Event'], 'Dense Fog Advisory'], '#6f7f8f',
-        ['==', ['get', 'Event'], 'Dense Smoke Advisory'], '#efe58b',
-        ['==', ['get', 'Event'], 'Dust Storm Warning'], '#fee3c3',
-        ['==', ['get', 'Event'], 'Earthquake Warning'], '#8a4412',
-        ['==', ['get', 'Event'], 'Evacuation - Immediate'], '#7efe00',
-        ['==', ['get', 'Event'], 'Excessive Heat Warning'], '#c61484',
-        ['==', ['get', 'Event'], 'Excessive Heat Watch'], '#7f0000',
-        ['==', ['get', 'Event'], 'Extreme Cold Warning'], '#0000fe',
-        ['==', ['get', 'Event'], 'Extreme Cold Watch'], '#0000fe',
-        ['==', ['get', 'Event'], 'Extreme Fire Danger'], '#e89579',
-        ['==', ['get', 'Event'], 'Extreme Wind Warning'], '#fe8b00',
-        ['==', ['get', 'Event'], 'Fire Warning'], '#9f512c',
-        ['==', ['get', 'Event'], 'Fire Weather Watch'], '#feddac',
-        ['==', ['get', 'Event'], 'Flash Flood Statement'], '#8a0000',
-        ['==', ['get', 'Event'], 'Flash Flood Warning'], '#8a0000',
-        ['==', ['get', 'Event'], 'Flash Flood Watch'], '#2d8a56',
-        ['==', ['get', 'Event'], 'Flood Advisory'], '#00fe7e',
-        ['==', ['get', 'Event'], 'Flood Statement'], '#00fe00',
-        ['==', ['get', 'Event'], 'Flood Warning'], '#00fe00',
-        ['==', ['get', 'Event'], 'Flood Watch'], '#2d8a56',
-        ['==', ['get', 'Event'], 'Freeze Warning'], '#473c8a',
-        ['==', ['get', 'Event'], 'Freeze Watch'], '#00fefe',
-        ['==', ['get', 'Event'], 'Freezing Fog Advisory'], '#007f7f',
-        ['==', ['get', 'Event'], 'Freezing Rain Advisory'], '#d96fd5',
-        ['==', ['get', 'Event'], 'Freezing Spray Advisory'], '#00befe',
-        ['==', ['get', 'Event'], 'Frost Advisory'], '#6394ec',
-        ['==', ['get', 'Event'], 'Gale Warning'], '#dc9fdc',
-        ['==', ['get', 'Event'], 'Gale Watch'], '#febfca',
-        ['==', ['get', 'Event'], 'Hard Freeze Warning'], '#9300d2',
-        ['==', ['get', 'Event'], 'Hard Freeze Watch'], '#4068e0',
-        ['==', ['get', 'Event'], 'Hazardous Materials Warning'], '#4a0081',
-        ['==', ['get', 'Event'], 'Hazardous Seas Warning'], '#d7bed7',
-        ['==', ['get', 'Event'], 'Hazardous Seas Watch'], '#473c8a',
-        ['==', ['get', 'Event'], 'Hazardous Weather Outlook'], '#ede7a9',
-        ['==', ['get', 'Event'], 'Heat Advisory'], '#fe7e4f',
-        ['==', ['get', 'Event'], 'Heavy Freezing Spray Warning'], '#00befe',
-        ['==', ['get', 'Event'], 'Heavy Freezing Spray Watch'], '#bb8e8e',
-        ['==', ['get', 'Event'], 'High Surf Advisory'], '#b954d2',
-        ['==', ['get', 'Event'], 'High Surf Warning'], '#218a21',
-        ['==', ['get', 'Event'], 'High Wind Warning'], '#d9a41f',
-        ['==', ['get', 'Event'], 'High Wind Watch'], '#b7850a',
-        ['==', ['get', 'Event'], 'Hurricane Force Wind Warning'], '#cc5b5b',
-        ['==', ['get', 'Event'], 'Hurricane Force Wind Watch'], '#9831cb',
-        ['==', ['get', 'Event'], 'Hurricane Local Statement'], '#fee3b4',
-        ['==', ['get', 'Event'], 'Hurricane Warning'], '#db133b',
-        ['==', ['get', 'Event'], 'Hurricane Watch'], '#fe00fe',
-        ['==', ['get', 'Event'], 'Hydrologic Advisory'], '#00fe7e',
-        ['==', ['get', 'Event'], 'Hydrologic Outlook'], '#8fed8f',
-        ['==', ['get', 'Event'], 'Ice Storm Warning'], '#8a008a',
-        ['==', ['get', 'Event'], 'Lake Effect Snow Advisory'], '#47d0cb',
-        ['==', ['get', 'Event'], 'Lake Effect Snow Warning'], '#008a8a',
-        ['==', ['get', 'Event'], 'Lake Effect Snow Watch'], '#86cdf9',
-        ['==', ['get', 'Event'], 'Lake Wind Advisory'], '#d1b38b',
-        ['==', ['get', 'Event'], 'Lakeshore Flood Advisory'], '#7bfb00',
-        ['==', ['get', 'Event'], 'Lakeshore Flood Statement'], '#6a8d22',
-        ['==', ['get', 'Event'], 'Lakeshore Flood Warning'], '#218a21',
-        ['==', ['get', 'Event'], 'Lakeshore Flood Watch'], '#65cca9',
-        ['==', ['get', 'Event'], 'Law Enforcement Warning'], '#bfbfbf',
-        ['==', ['get', 'Event'], 'Local Area Emergency'], '#bfbfbf',
-        ['==', ['get', 'Event'], 'Low Water Advisory'], '#a42929',
-        ['==', ['get', 'Event'], 'Marine Weather Statement'], '#feeed4',
-        ['==', ['get', 'Event'], 'Nuclear Power Plant Warning'], '#4a0081',
-        ['==', ['get', 'Event'], 'Radiological Hazard Warning'], '#4a0081',
-        ['==', ['get', 'Event'], 'Red Flag Warning'], '#fe1392',
-        ['==', ['get', 'Event'], 'Rip Current Statement'], '#3fdfcf',
-        ['==', ['get', 'Event'], 'Severe Thunderstorm Warning'], '#fea400',
-        ['==', ['get', 'Event'], 'Severe Thunderstorm Watch'], '#da6f92',
-        ['==', ['get', 'Event'], 'Severe Weather Statement'], '#00fefe',
-        ['==', ['get', 'Event'], 'Shelter In Place Warning'], '#f97f71',
-        ['==', ['get', 'Event'], 'Short Term Forecast'], '#97fa97',
-        ['==', ['get', 'Event'], 'Small Craft Advisory'], '#d7bed7',
-        ['==', ['get', 'Event'], 'Small Craft Advisory For Hazardous Seas'], '#d7bed7',
-        ['==', ['get', 'Event'], 'Small Craft Advisory For Rough Bar'], '#d7bed7',
-        ['==', ['get', 'Event'], 'Small Craft Advisory For Winds'], '#d7bed7',
-        ['==', ['get', 'Event'], 'Small Stream Flood Advisory'], '#00fe7e',
-        ['==', ['get', 'Event'], 'Special Marine Warning'], '#fea400',
-        ['==', ['get', 'Event'], 'Special Weather Statement'], '#fee3b4',
-        ['==', ['get', 'Event'], 'Storm Warning'], '#9300d2',
-        ['==', ['get', 'Event'], 'Storm Watch'], '#fee3b4',
-        ['==', ['get', 'Event'], 'Test'], '#effefe',
-        ['==', ['get', 'Event'], 'Tornado Warning'], '#fe0000',
-        ['==', ['get', 'Event'], 'Tornado Watch'], '#fefe00',
-        ['==', ['get', 'Event'], 'Tropical Depression Local Statement'], '#fee3b4',
-        ['==', ['get', 'Event'], 'Tropical Storm Local Statement'], '#fee3b4',
-        ['==', ['get', 'Event'], 'Tropical Storm Warning'], '#b12121',
-        ['==', ['get', 'Event'], 'Tropical Storm Watch'], '#ef7f7f',
-        ['==', ['get', 'Event'], 'Tsunami Advisory'], '#d1681d',
-        ['==', ['get', 'Event'], 'Tsunami Warning'], '#fc6246',
-        ['==', ['get', 'Event'], 'Tsunami Watch'], '#fe00fe',
-        ['==', ['get', 'Event'], 'Typhoon Local Statement'], '#fee3b4',
-        ['==', ['get', 'Event'], 'Typhoon Warning'], '#db133b',
-        ['==', ['get', 'Event'], 'Typhoon Watch'], '#fe00fe',
-        ['==', ['get', 'Event'], 'Urban and Small Stream Flood Advisory'], '#00fe7e',
-        ['==', ['get', 'Event'], 'Volcano Warning'], '#2e4e4e',
-        ['==', ['get', 'Event'], 'Wind Advisory'], '#d1b38b',
-        ['==', ['get', 'Event'], 'Wind Chill Advisory'], '#aeeded',
-        ['==', ['get', 'Event'], 'Wind Chill Warning'], '#afc3dd',
-        ['==', ['get', 'Event'], 'Wind Chill Watch'], '#5e9d9f',
-        ['==', ['get', 'Event'], 'Winter Storm Warning'], '#fe68b3',
-        ['==', ['get', 'Event'], 'Winter Storm Watch'], '#4581b3',
-        ['==', ['get', 'Event'], 'Winter Weather Advisory'], '#7a67ed',
-        '#eee'
-    ],
-    stateLabels =
-    {
-        'AB': { v: 'Alberta', c: [-113.5, 54.5] },
-        'AL': { v: 'Alabama', c: [-86.8295337, 33.2588817] },
-        'AK': { v: 'Alaska', c: [-149.680909, 64.4459613] },
-        'AZ': { v: 'Arizona', c: [-111.7632755, 34.395342] },
-        'AR': { v: 'Arkansas', c: [-92.4479108, 35.2048883] },
-        'BC': { v: 'British Columbia', c: [-123.5, 54.5] },
-        'CA': { v: 'California', c: [-118.7559974, 36.7014631] },
-        'CO': { v: 'Colorado', c: [-105.6077167, 38.7251776] },
-        'CT': { v: 'Connecticut', c: [-72.7342163, 41.6500201] },
-        'DE': { v: 'Delaware', c: [-75.4013315, 38.6920451] },
-        'DC': { v: 'District of Columbia', c: [-77.0365529, 38.8948932] },
-        'FL': { v: 'Florida', c: [-81.4639835, 27.7567667] },
-        'GA': { v: 'Georgia', c: [-83.1137366, 32.3293809] },
-        'HI': { v: 'Hawaii', c: [-157.975203, 21.2160437] },
-        'ID': { v: 'Idaho', c: [-114.74121, 45.61788] },
-        'IL': { v: 'Illinois', c: [-89.4337288, 40.0796606] },
-        'IN': { v: 'Indiana', c: [-86.1746933, 40.3270127] },
-        'IA': { v: 'Iowa', c: [-93.3122705, 41.9216734] },
-        'KS': { v: 'Kansas', c: [-98.5821872, 38.27312] },
-        'KY': { v: 'Kentucky', c: [-85.1551411, 37.5726028] },
-        'LA': { v: 'Louisiana', c: [-92.007126, 30.8703881] },
-        'MB': { v: 'Manitoba', c: [-97.8, 55.0] },
-        'ME': { v: 'Maine', c: [-68.8590201, 45.709097] },
-        'MD': { v: 'Maryland', c: [-76.9382069, 39.5162234] },
-        'MA': { v: 'Massachusetts', c: [-72.032366, 42.3788774] },
-        'MI': { v: 'Michigan', c: [-84.6824346, 43.6211955] },
-        'MN': { v: 'Minnesota', c: [-94.6113288, 45.9896587] },
-        'MS': { v: 'Mississippi', c: [-89.7348497, 32.9715645] },
-        'MO': { v: 'Missouri', c: [-92.5617875, 38.7604815] },
-        'MT': { v: 'Montana', c: [-109.6387579, 47.3752671] },
-        'NB': { v: 'New Brunswick', c: [-66.0, 46.5] },
-        'NE': { v: 'Nebraska', c: [-99.5873816, 41.7370229] },
-        'NL': { v: 'Newfoundland', c: [-58.0, 53.0] },
-        'NS': { v: 'Nova Scotia', c: [-63.5, 45.0] },
-        'NV': { v: 'Nevada', c: [-116.8537227, 39.5158825] },
-        'NH': { v: 'New Hampshire', c: [-71.6553992, 43.4849133] },
-        'NJ': { v: 'New Jersey', c: [-74.4041622, 40.0757384] },
-        'NM': { v: 'New Mexico', c: [-105.993007, 34.5708167] },
-        'NY': { v: 'New York', c: [-74.0060152, 40.7127281] },
-        'NC': { v: 'North Carolina', c: [-79.0392919, 35.6729639] },
-        'ND': { v: 'North Dakota', c: [-100.540737, 47.6201461] },
-        'NT': { v: 'Northwest Territories', c: [-117.0, 64.0] },
-        'NU': { v: 'Nunavut', c: [-90.0, 71.0] },
-        'OH': { v: 'Ohio', c: [-82.6881395, 40.2253569] },
-        'OK': { v: 'Oklahoma', c: [-97.2684063, 34.9550817] },
-        'ON': { v: 'Ontario', c: [-84.0, 50.0] },
-        'OR': { v: 'Oregon', c: [-120.737257, 43.9792797] },
-        'PA': { v: 'Pennsylvania', c: [-77.7278831, 40.9699889] },
-        'PE': { v: 'Prince Edward Island', c: [-63.5, 46.3] },
-        'QC': { v: 'Quebec', c: [-71.5, 52.0] },
-        'RI': { v: 'Rhode Island', c: [-71.5992372, 41.7962409] },
-        'SC': { v: 'South Carolina', c: [-80.4363743, 33.6874388] },
-        'SD': { v: 'South Dakota', c: [-100.348761, 44.6471761] },
-        'SK': { v: 'Saskatchewan', c: [-106.0, 52.0] },
-        'TN': { v: 'Tennessee', c: [-86.2820081, 35.7730076] },
-        'TX': { v: 'Texas', c: [-99.5120986, 31.8160381] },
-        'UT': { v: 'Utah', c: [-111.7143584, 39.4225192] },
-        'VT': { v: 'Vermont', c: [-72.5002608, 44.5990718] },
-        'VA': { v: 'Virginia', c: [-78.4927721, 37.1232245] },
-        'WA': { v: 'Washington', c: [-120.74014, 47.75107] },
-        'WV': { v: 'West Virginia', c: [-80.8408415, 38.4758406] },
-        'WI': { v: 'Wisconsin', c: [-89.6884637, 44.4308975] },
-        'WY': { v: 'Wyoming', c: [-107.5685348, 43.1700264] },
-        'YT': { v: 'Yukon', c: [-135.0, 62.0] }
-    };
+    mapControls = [];
 
 let map,
     conversion,
     settings,
-    //darkMode = document.body.classList.contains('dark-mode'),
+    lu,
     trending = false,
     newFires = [],
     CLUSTER_FIRES = true,
@@ -762,6 +410,7 @@ let map,
     airQualityStns = [],
     activeEvacuations = null,
     evacsLoaded = false,
+    controlsAtBottom = null,
     premFeature = '<i class="fas fa-lock" style="color:#656565" title="Subscribe to Map of Fire to gain access to this feature"></i>',
     tileConfig = [
         {
@@ -856,43 +505,38 @@ function notify(t, m, time = null) {
     }, timing);
 }
 
-function debounce(func, wait) {
+function debounce(fn, wait) {
     let timeout;
-    return function () {
-        const context = this;
-        const args = arguments;
+    return (...args) => {
         clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            func.apply(context, args);
-        }, wait);
+        timeout = setTimeout(() => fn.apply(this, args), wait);
     };
 }
 
 async function api(url, fields = null) {
-    let result,
-        ops = {
-            method: url.search('weather.gov') >= 0 || url.search('unl.edu') >= 0 ? 'GET' : 'POST',
-        },
-        fd = new FormData();
-
-    if (url.search(config.apiURL) >= 0 || url.search(config.apiURL.replace('v1', 'v2')) >= 0 || url.search(config.host) >= 0) {
-        fd.append('key', config.apiKey());
-    }
-
-    if (fields != null) {
-        fields.forEach((v) => {
-            fd.append(v[0], v[1]);
-        });
-    }
-
-    if (url.search('weather.gov') < 0 && url.search('unl.edu') < 0) {
-        ops['body'] = fd;
-    }
-
     if (!navigator.onLine) {
         console.error('You are not connected to the internet');
         return null;
     }
+
+    let result;
+
+    const isExternal = url.includes('weather.gov') || url.includes('unl.edu'),
+        isInternal = url.includes(config.apiURL) || url.includes(config.apiURL.replace('v1', 'v2')) || url.includes(config.host),
+        ops = {
+            method: isExternal ? 'GET' : 'POST'
+        },
+        fd = new FormData();
+
+    if (isInternal) fd.append('key', config.apiKey());
+
+    if (fields && Array.isArray(fields)) {
+        for (const [k, v] of fields) {
+            fd.append(k, v);
+        }
+    }
+
+    if (!isExternal) ops['body'] = fd;
 
     try {
         const resp = await fetch(url, ops);
@@ -955,546 +599,6 @@ function getbbox() {
     }) : false);
 }
 
-// custom attribution control to modify links
-class CustomAttributionControl extends maplibregl.AttributionControl {
-    constructor(options) {
-        super(options);
-    }
-
-    onAdd(map) {
-        return super.onAdd(map);
-    }
-
-    _updateAttributions() {
-        ////super._updateAttributions();
-        this._innerContainer.innerHTML = '<a href="https://maplibre.org/">MapLibre</a> | © <a href="https://www.esri.com">Esri</a>, © <a href="https://carto.com/about-carto/" target="_blank" rel="noopener">CARTO</a>, © <a href="http://www.openstreetmap.org/about/" target="_blank">OpenStreetMap</a> contributors';
-        ////if (this._map.getCanvasContainer().offsetWidth <= 640) {
-        this._container.setAttribute('open', '');
-        this._container.classList.remove('maplibregl-compact-show');
-        ////}
-    }
-}
-
-class Settings {
-    constructor(u) {
-        this.defaultLayers = [];
-        this.defaultSettings = {
-            center: [43.67, -117.15],
-            zoom: 5,
-            tile: 'outdoors',
-            perimeters: {
-                'minSize': 500,
-                'color': 'default',
-                'zoom': 1
-            },
-            saveFreq: 300000
-        };
-        this.user = u;
-        this.role = this.user?.role ?? 'GUEST';
-        this.settings = u != null && u.settings.allsettings ? u.settings.allsettings : this.defaultSettings;
-        this.archive = typeof historical !== 'undefined' && this.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? historical : null;
-
-        if (!this.settings.checkboxes) {
-            Object.keys(layers.layers).forEach((e) => {
-                layers.layers[e].forEach((f) => {
-                    if (f.default) {
-                        this.defaultLayers.push(f.id);
-                    }
-                });
-            });
-
-            this.settings.checkboxes = this.defaultLayers;
-        }
-    }
-
-    updateLayers(layers) {
-        this.settings.checkboxes = layers;
-    }
-
-    updateSpecial() {
-        const ot = document.querySelector('#otlkType'),
-            od = document.querySelector('#otlkDay'),
-            fm = document.querySelector('#forecastModel'),
-            ft = document.querySelector('#fcstTime'),
-            sf = document.querySelector('#sfpDateSelect'),
-            ec = document.querySelector('#erc_time');
-
-        this.settings.special = {
-            otlkType: ot.options[ot.selectedIndex].value,
-            otlkDay: od.options[od.selectedIndex].value,
-            erc: ec.options[ec.selectedIndex].value,
-            sfpDate: sf.options[sf.selectedIndex].value,
-            forecastModel: fm.options[fm.selectedIndex].value,
-            fcstTime: ft.options[ft.selectedIndex].value
-        };
-    }
-
-    updatePersonal(s) {
-        if (s.selectedIndex >= 0) {
-            const id = s.id,
-                val = s.options[s.selectedIndex].value;
-
-            if (id == 'perimColor') {
-                this.settings.perimeters.color = val;
-
-                let c = config.wildfire.perimeterColor(val),
-                    pcl = setInterval(() => {
-                        if (map.isStyleLoaded()) {
-                            clearInterval(pcl);
-
-                            map.setPaintProperty('perimeters_outline', 'line-color', c)
-                                .setPaintProperty('perimeters_fill', 'fill-color', c)
-                                .setPaintProperty('ca_perimeters_outline', 'line-color', c)
-                                .setPaintProperty('ca_perimeters_fill', 'fill-color', c);
-                        }
-                    }, 500);
-            } else if (id == 'perimTtip') {
-                this.settings.perimeters.ttip = val;
-            } else if (id == 'perimZoom') {
-                this.settings.perimeters.zoom = val;
-            } else if (id == 'tempUnit') {
-                if (!this.settings.weather) {
-                    this.settings.weather = {};
-                }
-
-                this.settings.weather.temp = val;
-                new Weather().updateRAWSUnits();
-            } else if (id == 'windSpeedUnit') {
-                if (!this.settings.weather) {
-                    this.settings.weather = {};
-                }
-
-                this.settings.weather.wind = val;
-            } else if (id == 'acresUnit') {
-                this.settings.acres = val;
-            } else {
-                this.settings[id] = val;
-            }
-        }
-    }
-
-    updatePSize(v) {
-        this.settings.perimeters.minSize = v;
-        saveSession(true);
-    }
-
-    checkboxes() {
-        return this.settings['checkboxes'];
-    }
-
-    get() {
-        return {
-            coordsDisplay: () => {
-                return this.settings['coordsDisplay'] ?? 'dec';
-            },
-            saveFreq: () => {
-                return this.settings['saveFreq'] ?? 300000;
-            },
-            acres: () => {
-                return this.settings['acres'] ?? 'acres';
-            },
-            locallySave: () => {
-                return this.settings['locallySave'] ?? 'n';
-            }
-        };
-    }
-
-    isEnabled(id) {
-        return this.checkboxes()?.includes(id) ?? false;
-    }
-
-    map() {
-        return {
-            lat: parseFloat(this.settings.center[0]),
-            lon: parseFloat(this.settings.center[1]),
-            zoom: parseInt(this.settings.zoom),
-            tile: this.settings.tile,
-            pitch: this.settings.pitch ? this.settings.pitch : 0,
-            bearing: this.settings.bearing ? this.settings.bearing : 0
-        }
-    }
-
-    getBasemap() {
-        return this.settings.tile;
-    }
-
-    subscriptions() {
-        const sub = new Subscription(this.user);
-
-        return {
-            valid: () => {
-                return sub.valid();
-            },
-            customerID: () => {
-                return sub.cid();
-            },
-            subID: () => {
-                return sub.sid();
-            },
-            name: () => {
-                return sub.name();
-            },
-            plan: () => {
-                return sub.plan();
-            },
-            isTrial: () => {
-                return sub.isTrial();
-            },
-            expires: () => {
-                return sub.expires();
-            }
-        }
-    }
-
-    hasPermissions(levels = null) {
-        const currentPlan = this.subscriptions().plan(),
-            hasValidSubscription = this.subscriptions().valid(),
-            requiredLevels = Array.isArray(levels) ? levels : [levels];
-
-        if (requiredLevels.length == 0 || this.getUser().role() == config.PERMISSION_LEVELS.ADMIN) {
-            return true;
-        }
-
-        // if there is no (valid) subscription, return false
-        if (!hasValidSubscription) {
-            return false;
-        }
-
-        const userLevel = config.TIERS[currentPlan] || null,
-            userRank = userLevel ? config.RANKS[userLevel] : 0;
-
-        return requiredLevels.some(level => {
-            const requiredRank = config.RANKS[level] || 0;
-            return userRank >= requiredRank;
-        });
-    }
-
-    getUser() {
-        return {
-            getName: () => {
-                return {
-                    first: () => {
-                        return this.user?.first_name ?? null;
-                    },
-                    last: () => {
-                        return this.user?.last_name ?? null;
-                    }
-                };
-            },
-            role: () => {
-                return this.user ? this.role : null;
-            },
-            token: () => {
-                return this.user?.token ?? null;
-            },
-            uid: () => {
-                return this.user?.uid ?? null;
-            },
-            synced: () => {
-                return this.user?.settings.synced ?? null;
-            }
-        };
-    }
-
-    fire() {
-        return {
-            cache: () => {
-                return this.settings.locallySave == 'y' ? true : false;
-            }/*,
-            display: () => {
-                return this.settings.fireDisplay == 'page' ? false : true;
-            }*/
-        }
-    }
-
-    perimeters() {
-        return {
-            zoom: () => {
-                return this.settings.perimeters?.zoom ?? 1;
-            },
-            minSize: () => {
-                return Number(this.settings.perimeters?.minSize) ?? 500;
-            },
-            color: () => {
-                return this.settings.perimeters?.color ?? 'default';
-            },
-            ttip: () => {
-                return this.settings.perimeters?.ttip ?? 1;
-            }
-        };
-    }
-
-    weather() {
-        return {
-            wind: () => {
-                return this.settings.weather?.wind ?? 'mph';
-            },
-            temp: () => {
-                return this.settings.weather?.temp ?? 'f';
-            }
-        };
-    }
-
-    special() {
-        return {
-            erc: () => {
-                return this.settings.special?.erc ?? 'obs';
-            },
-            otlkDay: () => {
-                return this.settings.special?.otlkDay ?? 1;
-            },
-            otlkType: () => {
-                return this.settings.special?.otlkType ?? 'severe';
-            },
-            sfpDate: () => {
-                return this.settings.special?.sfpDate ?? '';
-            },
-            forecastModel: () => {
-                return this.settings.special?.forecastModel ?? 'air_temperature';
-            },
-            fcstTime: () => {
-                return this.settings.special?.fcstTime ?? '';
-            }
-        };
-    }
-
-    /*logMovement() {
-        const sn = 'mapofire.movements',
-            c = map.getCenter(),
-            history = JSON.parse(localStorage.getItem(sn) || '[]');
-
-        history.push({
-            g: [c.lat, c.lng, map.getBearing(), map.getPitch()],
-            w: Date.now()
-        });
-
-        localStorage.setItem(sn, JSON.stringify(history));
-    }*/
-}
-
-class Subscription {
-    constructor(u) {
-        this.sub = null;
-        this.user = u;
-
-        if (this.user && this.user.subscriptions != null) {
-            this.sub = this.user.subscriptions[0];
-        }
-    }
-
-    name() {
-        return this.sub?.name ?? null;
-    }
-
-    plan() {
-        return this.sub?.id ?? null;
-    }
-
-    isTrial() {
-        return this.sub ? (this.sub.trial == 1 ? true : false) : false;
-    }
-
-    valid() {
-        return this.sub != null && this.sub.ends * 1000 > new Date().getTime() ? true : false;
-    }
-
-    cid() {
-        return this.sub?.cid ?? null;
-    }
-
-    sid() {
-        return this.sub?.subscription ?? null;
-    }
-
-    expires() {
-        return this.sub ? dateTime(this.sub.ends, false, false, true) : null;
-    }
-}
-
-class Convert {
-    coords(a, b) {
-        if (!settings.get().coordsDisplay() || settings.get().coordsDisplay() == 'dec') {
-            return parseFloat(a).toFixed(4) + ',&nbsp;' + parseFloat(b).toFixed(4);
-        } else if (settings.get().coordsDisplay() == 'dms') {
-            return this.convertToDms(a, false) + ',&nbsp;' + this.convertToDms(b, true);
-        } else if (settings.get().coordsDisplay() == 'utm') {
-            return this.utm(a, b);
-        }
-    }
-
-    utm(a, b) {
-        const lat = parseFloat(a),
-            lon = parseFloat(b);
-
-        return new UTM().toUTM(lat, lon);
-    }
-
-    convertToDms(dd, isLng) {
-        var dir = dd < 0
-            ? isLng ? 'W' : 'S'
-            : isLng ? 'E' : 'N';
-
-        var absDd = Math.abs(dd),
-            deg = absDd | 0,
-            frac = absDd - deg,
-            min = (frac * 60) | 0,
-            sec = Math.round((frac * 3600 - min * 60) * 100) / 100;
-
-        return deg + "&deg; " + min + "' " + sec + '" ' + dir;
-    }
-
-    rad2deg(rad) {
-        return rad / Math.PI * 180;
-    }
-
-    deg2rad(deg) {
-        return deg * Math.PI / 180;
-    }
-
-    speed(spd, u) {
-        if (!spd) return;
-        const v = parseFloat(spd);
-
-        if (u == 'km/h') {
-            return Math.round(v * 1.609);
-        } else {
-            return (u == 'mph' ? v : Math.round(v / (u == 'm/s' ? 2.237 : (u == 'kts' ? 1.151 : 1))));
-        }
-    }
-
-    sizeFormat(size, returnSize = true, returnUnit = true, customUnit = null) {
-        let displayUnit = 'acre';
-        const unit = (customUnit !== null ? customUnit : (settings.get().acres() ? settings.get().acres() : 'acres'));
-
-        if (size.toString().toLowerCase() == 'unknown') {
-            return returnSize ? '0' : (returnUnit ? unit : '');
-        } else if (size !== null && size !== '') {
-            let v = parseFloat(size);
-
-            if (unit === 'hectares') {
-                v /= 2.471;
-                displayUnit = 'hectare';
-            } else if (unit === 'sqmi') {
-                v /= 640;
-                displayUnit = 'square mile';
-            } else if (unit === 'sqkm') {
-                v /= 247.1;
-                displayUnit = 'square km.';
-            }
-
-            // Use toLocaleString() to handle all formatting in one step
-            const formattedSize = v.toLocaleString('en-US', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 2,
-            });
-
-            // Use the original number 'v' to check for pluralization
-            const isOne = (v >= 0.995 && v < 1.005);
-            const unitPlural = (isOne || unit === 'sqkm') ? displayUnit : displayUnit + 's';
-
-            return (returnSize ? formattedSize : '') + (returnUnit ? ` ${unitPlural}` : '');
-        } else {
-            return '';
-        }
-    }
-
-    heatIndex(t, rh) {
-        var hi;
-
-        if (t > 80) {
-            hi = -42.379 + (2.04901523 * t) + (10.14333127 * rh) - (0.22475541 * t * rh) - (0.00683783 * Math.pow(t, 2)) -
-                (0.05481717 * Math.pow(rh, 2)) + (0.00122874 * Math.pow(t, 2) * rh) + (0.00085282 * t * Math.pow(rh, 2)) -
-                (0.00000199 * Math.pow(t, 2) * Math.pow(rh, 2));
-
-            if (rh < 13 && (t > 80 && t < 112)) {
-                hi -= ((13 - rh) / 4) * Math.sqrt((17 - Math.abs(t - 95)) / 17);
-            } else if (rh > 85 && (t > 80 && t < 87)) {
-                hi += ((rh - 85) / 10) * ((87 - t) / 5);
-            }
-        } else {
-            hi = 0.5 * (t + 61 + ((t - 68) * 1.2) + (rh * 0.094));
-        }
-
-        return Math.round(hi);
-    }
-
-    windChill(t, w) {
-        return Math.round(35.74 + (0.6215 * t) - (35.75 * Math.pow(w, 0.16)) + (0.4275 * t * Math.pow(w, 0.16)));
-    }
-
-    wetBulb(it, hum) {
-        if (it == null || hum == null) return null;
-
-        const t = this.FtoC(it),
-            rh = Number(hum),
-            wetC = t * Math.atan(0.151977 * Math.sqrt(rh + 8.313659)) +
-                Math.atan(t + rh) -
-                Math.atan(rh - 1.676331) +
-                0.00391838 * Math.pow(rh, 1.5) * Math.atan(0.023101 * rh) -
-                4.686035;
-
-        return Number(settings.weather()?.temp() == 'f' ? this.CtoF(wetC) : wetC);
-    }
-
-    FtoC(t) {
-        return Number((t - 32) * 5 / 9);
-    }
-
-    CtoF(t) {
-        return Number((t * 1.8) + 32);
-    }
-
-    distance(lat1, lon1, lat2, lon2) {
-        var R = 6371,
-            dLat = this.deg2rad(lat2 - lat1),
-            dLon = this.deg2rad(lon2 - lon1),
-            a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2),
-            c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
-            d = R * c;
-
-        return (d / 1.609);
-    }
-
-    getCompassDirection(bearing) {
-        const dir = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-        return dir[Math.round(bearing / 22.5) % 16];
-    }
-
-    async getRasterColor(coords, layerId) {
-        if (!map.getLayer(layerId)) {
-            return null;
-        }
-
-        const source = map.getSource(map.getLayer(layerId).source),
-            z = Math.floor(map.getZoom()),
-            tileX = Math.floor((coords.lng + 180) / 360 * Math.pow(2, z)),
-            tileY = Math.floor((1 - Math.log(Math.tan(coords.lat * Math.PI / 180) + 1 / Math.cos(coords.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z)),
-            getBBox = (tx, ty, z) => {
-                const s = 20037508.34 * 2;
-                const res = s / Math.pow(2, z);
-                const minX = -20037508.34 + tx * res;
-                const maxY = 20037508.34 - ty * res;
-                return `${minX},${maxY - res},${minX + res},${maxY}`;
-            };
-
-        const url = source.tiles[0].replace('{bbox-epsg-3857}', getBBox(tileX, tileY, z)),
-            img = new Image();
-
-        img.crossOrigin = "Anonymous";
-        await new Promise(res => { img.onload = res; img.src = url; });
-
-        const canvas = new OffscreenCanvas(1, 1),
-            ctx = canvas.getContext('2d'),
-            px = Math.floor(((coords.lng + 180) / 360 * Math.pow(2, z) % 1) * 256),
-            py = Math.floor(((1 - Math.log(Math.tan(coords.lat * Math.PI / 180) + 1 / Math.cos(coords.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z) % 1) * 256);
-
-        ctx.drawImage(img, px, py, 1, 1, 0, 0, 1, 1);
-
-        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-        return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-    }
-}
-
 class UTM {
     constructor() {
         this.a = 6378137;         // WGS84 Major Axis
@@ -1542,10 +646,215 @@ class UTM {
     }
 }
 
+class Convert {
+    coords(a, b) {
+        if (!settings.get().coordsDisplay() || settings.get().coordsDisplay() == 'dec') {
+            return parseFloat(a).toFixed(4) + ',&nbsp;' + parseFloat(b).toFixed(4);
+        } else if (settings.get().coordsDisplay() == 'dms') {
+            return this.convertToDms(a, false) + ',&nbsp;' + this.convertToDms(b, true);
+        } else if (settings.get().coordsDisplay() == 'utm') {
+            return this.utm(a, b);
+        }
+    }
+
+    utm(a, b) {
+        const lat = parseFloat(a),
+            lon = parseFloat(b);
+
+        return new UTM().toUTM(lat, lon);
+    }
+
+    convertToDms(dd, isLng) {
+        var dir = dd < 0
+            ? isLng ? 'W' : 'S'
+            : isLng ? 'E' : 'N';
+
+        var absDd = Math.abs(dd),
+            deg = absDd | 0,
+            frac = absDd - deg,
+            min = (frac * 60) | 0,
+            sec = Math.round((frac * 3600 - min * 60) * 100) / 100;
+
+        return deg + "&deg; " + min + "' " + sec + '" ' + dir;
+    }
+
+    rad2deg(rad) {
+        return rad / (Math.PI * 180);
+    }
+
+    deg2rad(deg) {
+        return deg * (Math.PI / 180);
+    }
+
+    speed(spd, u) {
+        if (!spd) return;
+        const v = parseFloat(spd);
+
+        if (u == 'km/h') {
+            return Math.round(v * 1.609);
+        } else {
+            return (u == 'mph' ? v : Math.round(v / (u == 'm/s' ? 2.237 : (u == 'kts' ? 1.151 : 1))));
+        }
+    }
+
+    sizeUnit(customUnit) {
+        return customUnit !== null ? customUnit : (settings.get().acres() ? settings.get().acres() : 'acres');
+    }
+
+    sizeFormat(size, returnSize = true, returnUnit = true, customUnit = null) {
+        let displayUnit = 'acre';
+        const unit = this.sizeUnit(customUnit);
+
+        if (size.toString().toLowerCase() === 'unknown') {
+            return returnSize ? '0' : (returnUnit ? unit : '');
+        } else if (size !== null && size !== '') {
+            let v = parseFloat(size);
+            
+            switch (unit) {
+                case 'hectares':
+                    v /= 2.471;
+                    displayUnit = 'hectare';
+                    break;
+                case 'sqmi':
+                    v /= 640;
+                    displayUnit = 'square mile';
+                    break;
+                case 'sqkm':
+                    v /= 247.1;
+                    displayUnit = 'square km.';
+                    break;
+            }
+
+            if ((unit === 'acre' || unit === 'hectares') && v > 100000) {
+                v = Math.floor(v);
+            } else if ((unit === 'sqmi' || unit === 'sqkm') && v > 100000) {
+                v = Math.floor(v * 10) / 10;
+            }
+
+            const formattedSize = v.toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: (unit === 'acre' || unit === 'hectares') && v > 100000 ? 0 : 2,
+            });
+
+            // Use the original number 'v' to check for pluralization
+            const isOne = (v >= 0.995 && v < 1.005);
+            const unitPlural = (isOne || unit === 'sqkm') ? displayUnit : displayUnit + 's';
+
+            return (returnSize ? formattedSize : '') + (returnUnit ? ` ${unitPlural}` : '');
+        } else {
+            return '';
+        }
+    }
+
+    heatIndex(t, rh) {
+        var hi;
+
+        if (t > 80) {
+            hi = -42.379 + (2.04901523 * t) + (10.14333127 * rh) - (0.22475541 * t * rh) - (0.00683783 * Math.pow(t, 2)) -
+                (0.05481717 * Math.pow(rh, 2)) + (0.00122874 * Math.pow(t, 2) * rh) + (0.00085282 * t * Math.pow(rh, 2)) -
+                (0.00000199 * Math.pow(t, 2) * Math.pow(rh, 2));
+
+            if (rh < 13 && (t > 80 && t < 112)) {
+                hi -= ((13 - rh) / 4) * Math.sqrt((17 - Math.abs(t - 95)) / 17);
+            } else if (rh > 85 && (t > 80 && t < 87)) {
+                hi += ((rh - 85) / 10) * ((87 - t) / 5);
+            }
+        } else {
+            hi = 0.5 * (t + 61 + ((t - 68) * 1.2) + (rh * 0.094));
+        }
+
+        return Math.round(hi);
+    }
+
+    windChill(t, w) {
+        if (t >= 60 || !w) return null;
+
+        return Math.round(35.74 + (0.6215 * t) - (35.75 * Math.pow(w, 0.16)) + (0.4275 * t * Math.pow(w, 0.16)));
+    }
+
+    wetBulb(it, hum) {
+        if (it == null || hum == null) return null;
+
+        const t = this.FtoC(it),
+            rh = Number(hum),
+            wetC = t * Math.atan(0.151977 * Math.sqrt(rh + 8.313659)) +
+                Math.atan(t + rh) -
+                Math.atan(rh - 1.676331) +
+                0.00391838 * Math.pow(rh, 1.5) * Math.atan(0.023101 * rh) -
+                4.686035;
+
+        return Number(settings.weather()?.temp() == 'f' ? this.CtoF(wetC) : wetC);
+    }
+
+    FtoC(t) {
+        return Number((t - 32) * 5 / 9);
+    }
+
+    CtoF(t) {
+        return Number((t * 1.8) + 32);
+    }
+
+    distance(lat1, lon1, lat2, lon2, metric = false) {
+        var R = 6371,
+            dLat = this.deg2rad(lat2 - lat1),
+            dLon = this.deg2rad(lon2 - lon1),
+            a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2),
+            c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
+            km = R * c,
+            dist = metric ? km : km / 1.60934;
+
+        return dist;
+    }
+
+    getCompassDirection(bearing) {
+        const dir = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+        return dir[Math.round(bearing / 22.5) % 16];
+    }
+
+    async getRasterColor(coords, layerId) {
+        if (!map.getLayer(layerId)) {
+            return null;
+        }
+
+        const source = map.getSource(map.getLayer(layerId).source),
+            z = Math.floor(map.getZoom()),
+            tileX = Math.floor((coords.lng + 180) / 360 * Math.pow(2, z)),
+            tileY = Math.floor((1 - Math.log(Math.tan(coords.lat * Math.PI / 180) + 1 / Math.cos(coords.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z)),
+            getBBox = (tx, ty, z) => {
+                const s = 20037508.34 * 2;
+                const res = s / Math.pow(2, z);
+                const minX = -20037508.34 + tx * res;
+                const maxY = 20037508.34 - ty * res;
+                return `${minX},${maxY - res},${minX + res},${maxY}`;
+            };
+
+        const url = source.tiles[0].replace('{bbox-epsg-3857}', getBBox(tileX, tileY, z)),
+            img = new Image();
+
+        img.crossOrigin = "Anonymous";
+        await new Promise(res => { img.onload = res; img.src = url; });
+
+        const canvas = new OffscreenCanvas(1, 1),
+            ctx = canvas.getContext('2d'),
+            px = Math.floor(((coords.lng + 180) / 360 * Math.pow(2, z) % 1) * 256),
+            py = Math.floor(((1 - Math.log(Math.tan(coords.lat * Math.PI / 180) + 1 / Math.cos(coords.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z) % 1) * 256);
+
+        ctx.drawImage(img, px, py, 1, 1, 0, 0, 1, 1);
+
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    }
+}
+
 class ClickListener {
     constructor(target, sr) {
         this.target = target;
         this.sr = sr;
+    }
+
+    android() {
+        sessionStorage.setItem('recommend_google_play', 1);
+        document.querySelector('.android-banner').remove();
     }
 
     tools() {
@@ -1558,45 +867,32 @@ class ClickListener {
 
     closeDataForm() {
         const r = document.querySelector('li#report'),
-            fw = document.querySelector('li#fwf'),
-            df = document.querySelector('#data-form'),
-            sh = document.querySelector('.shadow');
+            fw = document.querySelector('li#fwf');
 
-        if (df) {
-            df.remove();
-        }
+        document.querySelector('#data-form')?.remove();
+        document.querySelector('.shadow')?.remove();
 
-        if (sh) {
-            sh.remove();
-        }
-
-        if (r && r.getAttribute('data-active') == '1') {
-            r.removeAttribute('data-active');
-        }
-
-        if (fw & fw.getAttribute('data-active') == '1') {
-            fw.removeAttribute('data-active');
-        }
+        if (r?.dataset.active === '1') r.removeAttribute('data-active');
+        if (fw.dataset.active === '1') fw.removeAttribute('data-active');
     }
 
     closeArchive() {
         window.location.href = window.location.href.replace(/archive\/([0-9]+)/g, '');
     }
 
-    clearSearch() {
+    async clearSearch() {
         const q = document.querySelector('#q');
+        if (!q) return;
 
         q.value = '';
-        document.querySelector('#clearSearch').style.display = 'none';
-        new Search('').do();
+        document.querySelector('#clearSearch')?.style.setProperty('display', 'none');
+        new (await loadUtils()).Search('').do();
         q.focus();
     }
 
     clearLayerSearch() {
-        const i = impact.querySelector('#layerSearch');
-
         document.querySelectorAll('.layers-list li.layer').forEach(layer => layer.style.display = 'flex');
-        if (i) i.value = '';
+        impact.querySelector('#layerSearch')?.setProperty('value', '');
     }
 
     closeImpact() {
@@ -1613,25 +909,18 @@ class ClickListener {
     openModal(aClass) {
         if (modal.hasAttribute('open')) return;
 
-        modal.classList.remove(...modal.classList);
-        if (aClass) {
-            modal.classList.add(aClass);
-        }
+        modal.className = aClass || '';
         modal.querySelector('.content').innerHTML = '<div class="loading"><div class="s"></div></div>';
 
         const handle = modal.querySelector('.close'),
             viewportHeight = window.innerHeight,
-            openPosition = viewportHeight * 0.4, // 40vh
+            openPosition = viewportHeight * (viewportHeight > 600 ? 0.4 : 0.3), // 40vh or 30vh if window height is < 600px
             minTop = viewportHeight * 0.1,       // 10vh
             closedPosition = viewportHeight,     // 100%
             snapVelocity = 0.25,                 // px/ms
             throwStartThreshold = viewportHeight * 0.9; // only throw if near bottom
 
-        let isDragging = false,
-            startY = 0,
-            startTop = 0,
-            lastY = 0,
-            lastTime = 0;
+        let isDragging = false, startY = 0, startTop = 0, lastY = 0, lastTime = 0;
 
         modal.onModalChanged = function (callback, { once = true } = {}) {
             if (!this) return;
@@ -1743,7 +1032,7 @@ class ClickListener {
         modal.style.top = '100%';
         setTimeout(() => {
             modal.removeAttribute('open');
-            modal.classList.remove(...modal.classList);
+            modal.className = '';
             modal.innerHTML = '<div class="close" data-action="close-modal"><div class="handle"></div></div><div class="content"></div>';
         }, 200);
 
@@ -1762,62 +1051,34 @@ class ClickListener {
 
         unsetHeaders();
 
-        if (selected.caperim && map.getSource('ca_perimeters')) {
-            map.removeFeatureState({
-                source: 'ca_perimeters',
-                id: selected.caperim
-            });
-        }
-
-        if (selected.perim && map.getSource('perimeters')) {
-            map.removeFeatureState({
-                source: 'perimeters',
-                id: selected.perim
-            });
-        }
-
-        if (selected.evac && map.getSource('evac')) {
-            map.removeFeatureState({
-                source: 'evac',
-                id: selected.evac
-            });
-        }
-
-        if (selected.nri && map.getSource('nri')) {
-            map.removeFeatureState({
-                source: 'nri',
-                id: selected.nri
-            });
-        }
-
-        if (selected.erc && map.getSource('erc')) {
-            map.removeFeatureState({
-                source: 'erc',
-                id: selected.erc
-            });
-        }
+        ['caperim', 'perim', 'evac', 'nri', 'erc'].forEach(key => {
+            const source = key === 'caperim' ? 'ca_perimeters' : key;
+            if (selected[key] && map.getSource(source)) {
+                map.removeFeatureState({ source, id: selected[key] });
+            }
+        });
     }
 
     closeNavbar() {
-        if (this.target.getAttribute('data-open') == '1') {
-            this.target.setAttribute('data-open', '0');
-            this.target.classList.remove('fa-chevron-left');
-            this.target.classList.add('fa-chevron-right');
+        const nav = document.querySelector('nav');
+        if (!this.target) return;
 
+        if (this.target.dataset.open === '1') {
+            this.target.dataset.open = '0';
+            this.target.classList.replace('fa-chevron-left', 'fa-chevron-right');
             document.documentElement.style.setProperty('--nav-width', '40px');
-            document.querySelector('nav').classList.add('hide');
+            nav?.classList.add('hide');
         } else {
-            this.target.setAttribute('data-open', '1');
-            this.target.classList.add('fa-chevron-left');
-            this.target.classList.remove('fa-chevron-right');
-
+            this.target.dataset.open = '1';
+            this.target.classList.replace('fa-chevron-right', 'fa-chevron-left');
             document.documentElement.style.setProperty('--nav-width', '100px');
-            document.querySelector('nav').classList.remove('hide');
+            nav?.classList.remove('hide');
         }
     }
 
     newFire() {
-        const dataset = this.target.closest('li').dataset;
+        const dataset = this.target?.closest('li')?.dataset;
+        if (!dataset) return;
 
         this.closeDataForm();
 
@@ -1829,17 +1090,13 @@ class ClickListener {
     }
 
     sharer() {
-        if (navigator.share) {
-            navigator.share({
-                title: (this.target.getAttribute('title') ? this.target.getAttribute('title') : document.title),
-                text: "",
-                url: (this.target.getAttribute('data-href') ? this.target.getAttribute('data-href').split('#')[0] : window.location.href.split('#')[0])
-            }).then(() => {
-                // nothing to do here
-            }).catch((e) => {
-                console.error(e);
-            });
-        }
+        if (!navigator.share) return;
+
+        navigator.share({
+            title: (this.target.getAttribute('title') ? this.target.getAttribute('title') : document.title),
+            text: "",
+            url: (this.target.getAttribute('data-href') ? this.target.getAttribute('data-href').split('#')[0] : window.location.href.split('#')[0])
+        }).catch(console.error);
     }
 
     createLayers() {
@@ -1981,7 +1238,7 @@ class ClickListener {
 
         const filters = {
             perimeters: () => {
-                const size = settings.get('perimeters').minSize;
+                const size = settings.perimeters().minSize();
 
                 return `<div class="data-filter" id="perimeterSize" data-action="change-perim-size">
                     ${icon('fad fa-filters')}
@@ -2001,7 +1258,7 @@ class ClickListener {
                     ].map(([v, n]) => `<option ${sel(v, model)} value="${v}">${n}</option>`).join('');
 
                 return wrap('models', `<select id="forecastModel" data-action="ndfd" style="min-width:170px" disabled>${opts}</select>
-                <select id="fcstTime" data-action="ndfd" data-type="reg" style="min-width:100px;max-width:35%" disabled>${initNDFDTimes()}</select>`);
+                <select id="fcstTime" data-action="ndfd" data-type="reg" style="min-width:100px;max-width:35%" disabled>${initNDFDTimes().join('')}</select>`);
             },
 
             sfp: () => wrap('sfpDate', `<select id="sfpDateSelect" data-action="sfp-date" disabled>
@@ -2045,9 +1302,7 @@ class ClickListener {
                 isChecked = tile.id === settings.getBasemap(),
                 listItem = document.createElement('li'),
                 radioDiv = document.createElement('div'),
-                descDiv = document.createElement('div'),
-                img = document.createElement('img'),
-                label = document.createElement('label');
+                descDiv = document.createElement('div');
 
             // Create the list item for the basemap
             listItem.dataset.tile = tile.id;
@@ -2059,32 +1314,35 @@ class ClickListener {
             // Add the radio button or premium feature
             if (hasPerms) {
                 const radioInput = document.createElement('input');
-                radioInput.type = 'radio';
-                radioInput.className = 'basemap-option';
-                radioInput.dataset.action = 'change-basemap';
-                radioInput.name = 'bsmo';
-                radioInput.dataset.tile = tile.id;
-                radioInput.checked = isChecked;
+                Object.assign(radioInput, {
+                    type: 'radio',
+                    className: 'basemap-option',
+                    name: 'bsmo',
+                    checked: isChecked
+                });
+                radioInput.setAttribute('data-action', 'change-basemap');
+                radioInput.setAttribute('data-tile', tile.id);
                 radioDiv.appendChild(radioInput);
             } else {
                 radioDiv.innerHTML = premFeature;
 
                 radioDiv.addEventListener('click', () => {
-                    notify('info', `This is a ${tile.permissions.includes('PREMIUM') ? 'premium' : 'pro'} basemap. <a href="${config.purchaseLink('basemaps_snackbar')}">Get access</a>`, 4);
+                    const tier = tile.permissions.includes('PREMIUM') ? 'premium' : 'pro';
+                    notify('info', `This is a ${tier} basemap. <a href="${config.purchaseLink('basemaps_snackbar')}">Get access</a>`, 4);
                 });
             }
 
             // Add the icon and label
+            const img = document.createElement('img');
             img.src = `${config.domain}assets/images/icons/fire/basemaps/${tile.imgs}.png`;
-
             if (!hasPerms) img.style.opacity = '0.5';
 
-            label.innerHTML = tile.name + (tile.permissions.length > 0 ? '<p>' + tile.permissions[0] + '</p>' : '');
-
-            descDiv.appendChild(img);
-            descDiv.appendChild(label);
+            const label = document.createElement('label');
+            label.innerHTML = tile.name + (tile.permissions.length ? '<p>' + tile.permissions[0] + '</p>' : '');
 
             // Assemble the list item
+            descDiv.appendChild(img);
+            descDiv.appendChild(label);
             listItem.appendChild(radioDiv);
             listItem.appendChild(descDiv);
             basemapListUl.appendChild(listItem);
@@ -2098,16 +1356,14 @@ class ClickListener {
         impact.querySelector('#a').innerHTML = 'Basemaps';
 
         // Use event delegation on the parent element
-        basemapListUl.addEventListener('click', (e) => {
+        basemapListUl.addEventListener('click', e => {
             const listItem = e.target.closest('li');
             if (!listItem) return;
 
             const radio = listItem.querySelector('input.basemap-option');
             if (radio) {
                 radio.checked = true;
-                radio.dispatchEvent(new Event('change', {
-                    bubbles: true
-                }));
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
             }
         });
     }
@@ -2228,9 +1484,13 @@ class ClickListener {
                     theEnd = 'Your free trial ends ';
                 }
 
-                ms = '<div style="display:inline-flex;width:100%;justify-content:space-between;gap:1em"><div style="display:inline-flex;flex-direction:column;gap:0.45em">' +
-                    '<span>' + settings.subscriptions().name() + '</span><small style="line-height:1.1;color:#999">' + theEnd + ' on ' + settings.subscriptions().expires() + '.</small></div>' +
-                    '<a class="btn btn-sm btn-black" style="margin:0;height:fit-content" target="blank" href="' + config.domain + 'account/billing#cid=' + settings.subscriptions().customerID() + '">Manage</a></div>';
+                ms = `<div style="display:inline-flex;width:100%;justify-content:space-between;gap:1em">
+                        <div style="display:inline-flex;flex-direction:column;gap:0.45em">
+                            <span>${settings.subscriptions().name()}</span>
+                            <small style="line-height:1.1;color:#999">${theEnd} on ${settings.subscriptions().expires()}.</small>
+                        </div>
+                        <a class="btn btn-sm btn-black" style="margin:0;height:fit-content" target="blank" href="${config.domain}account/billing#cid=${settings.subscriptions().customerID()}">Manage</a>
+                    </div>`;
             }
 
             document.querySelector('#subs').innerHTML = ms;
@@ -2244,6 +1504,7 @@ class ClickListener {
             clearInterval(radarAnim);
             c.classList.remove('fa-pause');
             c.classList.add('fa-play');
+            c.title = 'Start radar';
             radarPlay = false;
         } else {
             let counter = document.querySelector('.radar input[type=range]').value,
@@ -2269,6 +1530,7 @@ class ClickListener {
 
             c.classList.add('fa-pause');
             c.classList.remove('fa-play');
+            c.title = 'Pause radar';
             radarPlay = true;
         }
     }
@@ -2276,7 +1538,7 @@ class ClickListener {
     async follow() {
         let id = parseInt(this.target.getAttribute('data-id')),
             fire = config.wildfire.findFire(id),
-            name = fire.properties.name + (fire.properties.type != 'Smoke Check' ? ' Fire' : ''),
+            name = fire.properties.name.replace(' Fire', '') + (fire.properties.type != 'Smoke Check' ? ' Fire' : ''),
             m;
 
         if (fire != null) {
@@ -2342,11 +1604,10 @@ class ClickListener {
 
     archive() {
         if (settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
-            let yrs = '';
-
-            for (let i = config.curTime.getFullYear(); i >= 2015; i--) {
-                yrs += '<option ' + (i == config.curTime.getFullYear() ? 'disabled ' : '') + 'value="' + i + '">' + i + '</option>';
-            }
+            const yrs = Array.from({ length: config.curTime.getFullYear() - 2014 }, (_, idx) => {
+                const year = config.curTime.getFullYear() - idx;
+                return `<option ${year === config.curTime.getFullYear() ? 'disabled ' : ''}value="${year}">${year}</option>`;
+            }).join('');
 
             new Popup('Historical Wildfires').create('<p style="font-size:14px;line-height:1.2">See historical wildfires by selecting a year in our archive.</p>' +
                 '<select id="archive_years" data-action="archive_years" style="border:1px solid #cfcfcf;margin-top:1em"><option>- Choose a year -</option>' + yrs + '</select>' +
@@ -2354,105 +1615,109 @@ class ClickListener {
         }
     }
 
-    legend() {
-        /* create dynamic legend from json array */
+    async legend() {
+        const { legend } = await loadUtils();
+
+        if (!legend || !legend.categories || !legend.items) return;
+
         let legCont = '';
 
         legend.categories.forEach(cat => {
             const key = Object.keys(cat)[0];
-            legCont += '<div class="group"><h3 class="group-title">' + cat[key] + '</h3>';
+            legCont += `<div class="group"><h3 class="group-title">${cat[key]}</h3>`;
 
-            legend.items[key].forEach(item => {
-                const icon = item[0] == 'icon' ? item[1] : `<div class="color" style="background-color:${item[2]}">${item[1] ? item[1] : ''}</div>`;
+            const items = legend.items[key];
+            if (items && items.length) {
+                items.forEach(item => {
+                    const icon = item[0] === 'icon' ? item[1] : `<div class="color" style="background-color:${item[2]}">${item[1] ?? ''}</div>`;
 
-                legCont += `<div class="row">
-                    <div class="ic">
-                        ${icon}
-                    </div>
-                    <div class="desc">
-                        ${item[3]}
-                    </div>
-                </div>`;
-            });
+                    legCont += `<div class="row"><div class="ic">${icon}</div><div class="desc">${item[3] ?? ''}</div></div>`;
+                });
+            }
 
             legCont += '</div>';
         });
 
-        impact.innerHTML = impactHeader + '<div class="content"><div class="legend">' + legCont + '</div></div>';
+        impact.innerHTML = impactHeader + `<div class="content"><div class="legend">${legCont}</div></div>`;
         impact.setAttribute('data-display', 'legend');
         impact.style.display = 'flex';
-        impact.querySelector('#a').innerHTML = 'Legend';
+        const aEl = impact.querySelector('#a');
+        if (aEl) aEl.innerHTML = 'Legend';
     }
 
-    myfires() {
+    async myfires() {
         impact.innerHTML = impactHeader + '<div class="content"><div id="spinner" class="centered"></div></div>';
         impact.style.display = 'flex';
         impact.querySelector('#a').innerHTML = 'My Fires';
 
-        const r = setInterval(() => {
-            if (trackedDone) {
-                let count = 0,
-                    listOfMyFires = [];
-
-                clearInterval(r);
-
-                /* if user is following any incidents */
-                if (tracked.length > 0) {
-                    tracked.forEach((id) => {
-                        const fire = config.wildfire.findFire(id);
-
-                        if (fire != null) {
-                            const p = fire.properties,
-                                name = p.name,
-                                //acres = (p.acres == 'Unknown' ? 'Unknown' : numberFormat(p.acres)),
-                                //size = (acres != 'Unknown' ? conversion.sizing(2, acres.replaceAll(',', '')) : acres) + (acres != 'Unknown' ? ' <small style="font-size:14px">' + (acres == 1 ? conversion.sizing(1).slice(0, -1) : conversion.sizing(1)).toLowerCase() : '') + '</small>',
-                                size = conversion.sizeFormat(p.acres),
-                                fstat = p.status,
-                                st1 = (p.time.year < config.curTime.getFullYear() ? 'out' : config.wildfire.getStatus(fstat, p.notes)),
-                                st = (st1 ? st1 : 'active'),
-                                /*state = stateLabels[p.state].v,*/
-                                state = p.near,
-                                up = timeAgo(p.time.updated);
-
-                            const lis = document.createElement('li');
-                            lis.id = "my-fire-incident";
-                            lis.setAttribute('data-coords', JSON.stringify(fire.geometry.coordinates));
-
-                            lis.innerHTML += `<div class="header"><h3>${name}</h3>
-                            <i class="fas fa-circle-check" data-action="my-fire-unfollow" title="Unfollow this incident" data-name="${name}" data-wfid="${p.wfid}"></i></div>
-                            <span class="state">${state}</span>
-                            <div class="inf"><p style="color:#fff;font-size:18px">${size}</p>
-                            <span class="status ${st}">${st.toUpperCase()}</span></div>`;
-
-                            listOfMyFires.push(lis);
-                            count++;
-                        }
-                    });
+        await new Promise(resolve => {
+            const check = setInterval(() => {
+                if (trackedDone) {
+                    clearInterval(check);
+                    resolve();
                 }
+            }, 100);
+        });
 
-                if (count > 0) {
-                    impact.querySelector('.content').innerHTML = '<ul class="my-fires"></ul>';
-                    listOfMyFires.forEach((element) => {
-                        element.addEventListener('click', (event) => {
-                            const c = JSON.parse(event.currentTarget.getAttribute('data-coords'));
+        const content = impact.querySelector('.content'),
+            myFires = tracked.map(id => config.wildfire.findFire(id)).filter(fire => fire != null);
 
-                            if (c != null) {
-                                map.flyTo({ center: c, zoom: 11.5 });
-                            }
-                        });
+        if (myFires.length === 0) {
+            content.innerHTML = tracked.length > 0 ? '<div class="message error">The wildfires you were following are no longer available.</div>' : noneTracked;
+            return;
+        }
 
-                        document.querySelector('.my-fires').appendChild(element);
-                    });
-                } else {
-                    impact.querySelector('.content').innerHTML = noneTracked;
-                }
+        // build the list of "my fires"
+        const ul = document.createElement('ul');
+        ul.className = 'my-fires';
+
+        myFires.forEach(fire => {
+            const { properties: p, geometry } = fire,
+                name = p.name,
+                size = conversion.sizeFormat(p.acres),
+                fstat = p.status,
+                st = p.time.year < config.curTime.getFullYear() ? 'out' : config.wildfire.getStatus(fstat, p.notes) || 'active',
+                state = p.near/*,
+                up = timeAgo(p.time.updated)*/;
+
+            const li = document.createElement('li');
+            li.id = 'my-fire-incident';
+            li.dataset.coords = JSON.stringify(geometry.coordinates);
+
+            li.innerHTML = `<div class="header">
+                    <h3>${name}</h3>
+                    <i class="fas fa-circle-check" data-action="my-fire-unfollow" title="Unfollow this incident" data-name="${name}" data-wfid="${p.wfid}"></i>
+                </div>
+                <span class="state">${state}</span>
+                <div class="inf">
+                    <p style="color:#fff;font-size:18px">${size}</p>
+                    <span class="status ${st}">${st.toUpperCase()}</span>
+                </div>`;
+
+            ul.appendChild(li);
+        });
+
+        // Use event delegation for clicks
+        ul.addEventListener('click', event => {
+            const li = event.target.closest('li#my-fire-incident');
+            if (!li) return;
+
+            const coords = JSON.parse(li.dataset.coords);
+            if (coords) {
+                map.flyTo({ center: coords, zoom: 11.5 });
             }
-        }, 500);
+        });
+
+        // Replace spinner with list
+        content.innerHTML = '';
+        content.appendChild(ul);
     }
 
     searchResultClick() {
         const p = this.target.closest('li'),
             type = p.dataset.type;
+
+        if (marker) marker.remove();
 
         if (!p.classList.contains('standby')) {
             const lat = p.dataset.lat,
@@ -2524,4014 +1789,9 @@ class ClickListener {
     }
 }
 
-class NWS {
-    async get(update = false) {
-        const wwa = await api('https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/NWS_Watches_Warnings_v1/FeatureServer/6/query', [
-            ['where', '1=1'],
-            ['outFields', 'OBJECTID,Event,Affected,End_'],
-            ['returnGeometry', true],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['geometry', getbbox()],
-            ['f', 'geojson']
-        ]);
-
-        if (wwa && wwa.features.length > 0) {
-            if (update) {
-                map.getSource('wwas').setData(wwa);
-            } else {
-                if (wwa && wwa.features.length > 0) {
-                    if (!map.getSource('wwas')) {
-                        map.addSource('wwas', {
-                            type: 'geojson',
-                            data: wwa
-                        });
-                    }
-
-                    if (!map.getLayer('wwas_outline')) {
-                        map.addLayer({
-                            id: 'wwas_outline',
-                            type: 'line',
-                            source: 'wwas',
-                            paint: {
-                                'line-color': wwaColors,
-                                'line-width': 2
-                            },
-                            layout: {
-                                visibility: 'visible'
-                            }
-                        });
-                    }
-
-                    if (!map.getLayer('wwas_fill')) {
-                        map.addLayer({
-                            id: 'wwas_fill',
-                            type: 'fill',
-                            source: 'wwas',
-                            paint: {
-                                'fill-color': wwaColors,
-                                'fill-opacity': 0.35
-                            },
-                            layout: {
-                                visibility: 'visible'
-                            }
-                        });
-
-                        map.on('mouseenter', 'wwas_fill', () => {
-                            map.getCanvas().style.cursor = 'pointer';
-                        });
-
-                        map.on('mouseleave', 'wwas_fill', () => {
-                            map.getCanvas().style.cursor = 'auto';
-                        });
-                    }
-
-                    if (!map.getLayer('wwas_title')) {
-                        map.addLayer({
-                            id: 'wwas_title',
-                            type: 'symbol',
-                            source: 'wwas',
-                            minzoom: 8.9,
-                            paint: {
-                                'text-color': '#000',
-                                'text-halo-color': '#fff',
-                                'text-halo-blur': 1,
-                                'text-halo-width': 1
-                            },
-                            layout: {
-                                'symbol-placement': 'line',
-                                'symbol-spacing': 450,
-                                'text-font': config.fonts.din(),
-                                'text-field': ['get', 'Event'],
-                                'text-justify': 'auto',
-                                'text-size': 14,
-                                'text-max-width': 12,
-                                'text-max-angle': 30,
-                                'text-anchor': 'bottom',
-                                'text-offset': [0, 1.3],
-                                'text-letter-spacing': 0.05
-                            }
-                        });
-                    }
-                }
-            }
-        }
-    }
-
-    /* get current weather alerts at the lat/lon of the users' click point */
-    async find(lat, lon) {
-        let out = '<p>There are no valid weather alerts at this location</p>',
-            popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>' +
-                '<p style="text-align:center;margin-top:0.5em;font-size:14px">Getting weather alerts...</p>');
-
-        /*new maplibregl.Popup()
-            .setLngLat([lon, lat])
-            .setHTML('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div><p style="text-align:center;margin-top:0.5em">Getting weather alerts...</p>')
-            .addTo(map);*/
-
-        const data = await api(config.apiURL + 'nws', [['lat', lat], ['lon', lon]]);
-
-        if (data.alerts && data.alerts.length > 0) {
-            let c = '';
-
-            data.alerts.forEach((a) => {
-                c += '<li style="line-height:1.3"><a href="#" data-action="readWWA" onclick="return false" data-id="' + a.id + '">' + a.event + '</a> until ' + a.expires + '</li>';
-            });
-
-            /* update the popup with valid alerts */
-            out = '<ul style="padding-inline-start:1em;display:inline-flex;flex-direction:column;gap:.5em">' + c + '</ul>';
-        }
-
-        popup.update(out, 'Current Alerts');
-    }
-
-    /* get SPC convective and fire weather outlooks */
-    async spc(update = false) {
-        let od = document.querySelector('#otlkDay'),
-            ot = document.querySelector('#otlkType'),
-            dy,
-            ty;
-
-        if (od) {
-            dy = od.options[od.selectedIndex].value;
-            ty = ot.options[ot.selectedIndex].value;
-        } else {
-            dy = settings.special().otlkDay();
-            ty = settings.special().otlkType();
-        }
-
-        const out = await api(config.apiURL + 'outlooks/' + ty, [['day', (dy ? dy : 1)]]);
-
-        if (update) {
-            map.getSource('outlook').setData(out);
-        } else {
-            if (!map.getSource('outlook')) {
-                map.addSource('outlook', {
-                    type: 'geojson',
-                    data: out
-                });
-            }
-
-            if (!map.getLayer('outlook_fill')) {
-                map.addLayer({
-                    id: 'outlook_fill',
-                    type: 'fill',
-                    source: 'outlook',
-                    paint: {
-                        'fill-color': ['get', 'fill'],
-                        'fill-opacity': 0.4
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-
-                map.on('mouseenter', 'outlook_fill', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'outlook_fill', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
-
-            if (!map.getLayer('outlook_outline')) {
-                map.addLayer({
-                    id: 'outlook_outline',
-                    type: 'line',
-                    source: 'outlook',
-                    paint: {
-                        'line-color': ['get', 'stroke']
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-
-            if (!map.getLayer('outlook_title')) {
-                map.addLayer({
-                    id: 'outlook_title',
-                    type: 'symbol',
-                    source: 'outlook',
-                    minzoom: 5.7,
-                    paint: {
-                        'text-color': '#000',
-                        'text-halo-color': '#fff',
-                        'text-halo-blur': 1,
-                        'text-halo-width': 1
-                    },
-                    layout: {
-                        'symbol-placement': 'line',
-                        'symbol-spacing': 450,
-                        'text-font': config.fonts.din(),
-                        'text-field': ['get', 'name'],
-                        'text-justify': 'auto',
-                        'text-size': 14,
-                        'text-max-width': 12,
-                        'text-max-angle': 30,
-                        'text-anchor': 'bottom',
-                        'text-offset': [0, 1.3],
-                        'text-letter-spacing': 0.05
-                    }
-                });
-            }
-        }
-    }
-
-    fcstHour() {
-        var h = config.curTime.getUTCHours(),
-            m = config.curTime.getUTCMonth() + 1,
-            m = (m < 10 ? '0' : '') + m,
-            d = config.curTime.getUTCDate(),
-            d = (d < 10 ? '0' : '') + d,
-            t;
-
-        if (h >= 19 && h <= 23 || h == 0) {
-            t = '18';
-        } else if (h >= 1 && h <= 6) {
-            t = '00';
-        } else if (h >= 7 && h <= 12) {
-            t = '06';
-        } else {
-            t = '12';
-        }
-
-        return config.curTime.getUTCFullYear() + '-' + m + '-' + d + 'T' + t + ':00:00.000Z';
-    }
-
-    ndfd(update = false) {
-        let fm, ft, ur, leg, legend = document.querySelector('.ndfdLegend');
-        const fcstMod = document.querySelector('#forecastModel'),
-            fcstTime = document.querySelector('#fcstTime');
-
-        if (fcstMod) {
-            fm = fcstMod.options[fcstMod.selectedIndex].value;
-            ft = fcstTime.options[fcstTime.selectedIndex].value;
-        } else {
-            fm = settings.special().forecastModel();
-            ft = settings.special().fcstTime();
-        }
-
-        if (!ft) {
-            ft = config.curTime.getUTCFullYear() + '-' + ((config.curTime.getUTCMonth() + 1) < 10 ? '0' : '') + (config.curTime.getUTCMonth() + 1) + '-' + (config.curTime.getUTCDate() < 10 ? '0' : '') + config.curTime.getUTCDate() + 'T' + ((config.curTime.getUTCHours() + 1) < 10 ? '0' : '') + (config.curTime.getUTCHours() + 1) + ':00:00.000Z';
-        }
-
-        const ops = {
-            '12hr_precipitation_probability': ['ndfd_precipitation', 'forecasts/ndfd_precipitation/ows?layer=conus_12hr_precipitation_probability'],
-            'relative_humidity': ['ndfd_moisture', 'forecasts/ndfd_moisture/ows?layer=conus_relative_humidity'],
-            'wind_speed': ['ndfd_wind', 'forecasts/ndfd_wind/ows?layer=conus_wind_speed'],
-            'total_sky_cover': ['ndfd_sky', 'forecasts/ndfd_sky/ows?layer=conus_total_sky_cover'],
-            'air_temperature': ['ndfd_temperature', 'ndfd_temperature/ows?layer=conus_air_temperature']
-        };
-
-        if (ops[fm]) [ur, leg] = ops[fm];
-
-        if (!legend) {
-            const container = document.createElement('div');
-            container.className = 'ndfdLegend';
-            document.body.append(container);
-        }
-
-        document.querySelector('.ndfdLegend').innerHTML = `<img src="https://nowcoast.noaa.gov/geoserver/${leg}&service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=283&height=33" alt="Legend">`;
-
-        if (update) {
-            map.getSource('ndfd').setTiles([
-                'https://nowcoast.noaa.gov/geoserver/' + ur + '/wms?service=WMS&layers=' + fm + '&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=1920&height=626&time=' + ft + '&dim_time_reference=' + this.fcstHour() + '&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-            ]);
-        } else {
-            if (!map.getSource('ndfd')) {
-                map.addSource('ndfd', {
-                    'type': 'raster',
-                    'tiles': [
-                        'https://nowcoast.noaa.gov/geoserver/' + ur + '/wms?service=WMS&layers=' + fm + '&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=1920&height=626&time=' + ft + '&dim_time_reference=' + this.fcstHour() + '&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-                    ],
-                    'tileSize': 256
-                });
-            }
-
-            if (!map.getLayer('ndfd')) {
-                map.addLayer({
-                    id: 'ndfd',
-                    type: 'raster',
-                    source: 'ndfd',
-                    paint: {
-                        'raster-opacity': 0.75
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-        }
-    }
-
-    satellite(w) {
-        let layer;
-
-        switch (w) {
-            case 1: layer = 'global_visible_imagery_mosaic'; break;
-            case 2: layer = 'global_longwave_imagery_mosaic'; break;
-            case 3: layer = 'global_water_vapor_imagery_mosaic'; break;
-        }
-
-        if (!map.getSource('satellite' + w)) {
-            map.addSource('satellite' + w, {
-                'type': 'raster',
-                'tiles': [
-                    'https://nowcoast.noaa.gov/geoserver/satellite/wms?service=WMS&layers=' + layer + '&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=256&height=256&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-                ],
-                'tileSize': 256
-            });
-        }
-
-        if (!map.getLayer('satellite' + w)) {
-            map.addLayer({
-                id: 'satellite' + w,
-                type: 'raster',
-                source: 'satellite' + w,
-                paint: {
-                    'raster-opacity': 0.7
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }
-
-    async getOutlookText(otlkType, day, click = true) {
-        if (!settings.hasPermissions(config.PERMISSION_LEVELS.PRO)) {
-            unsetHeaders();
-            return;
-        }
-
-        new ClickListener().openModal('wwa');
-
-        let type,
-            graphics = '',
-            request = await api(config.apiURL + 'outlooks/' + otlkType + '/text', [['day', day]]),
-            valid1 = dateTime(request.outlook.valid, true, true),
-            valid2 = dateTime(request.outlook.expires, true, true);
-
-        if (otlkType == 'severe') {
-            type = 'Convective Outlook';
-        } else {
-            type = 'Fire Weather Outlook';
-        }
-
-        setHeaders('Day ' + day + ' ' + type, 'weather/outlook/' + otlkType + '/' + day,
-            'Read the Day ' + day + ' ' + type + ' from the NWS Storm Prediction Center for ' + valid1 + ' until ' + valid2 + '.');
-
-        request.outlook.graphics.forEach((g) => {
-            graphics += `<div class="g"><a target="blank" href="https://www.spc.noaa.gov/products/${g}"><img alt="Day ${day} ${type}" title="Day ${day} ${type}" src="https://www.spc.noaa.gov/products/${g}"></a></div>`;
-        });
-
-        /*let content = `<div class="container">
-            <h1 class="title">
-                Day ${day} ${type}
-            </h1>
-            <div class="bar">
-                <p class="times">
-                    <span>Issued <b>${timeAgo(request.outlook.issued)}</b></span>
-                    <span>Valid from <b>${valid1}</b> until <b>${valid2}</b></span>
-                    <span>Issued by <a target="blank" href="https://www.spc.noaa.gov/" title="NOAA/NWS Storm Prediction Center">NOAA/NWS Storm Prediction Center</a></span>
-                </p>
-            </div>
-            <div class="wwa-details">
-                ${request.outlook.text}
-                <p style="color:#561717"><b>Forecaster:</b> ${request.outlook.forecaster}</p>
-            </div>
-            <div class="graphics">
-                ${graphics}
-            </div>
-        </div>`;*/
-
-        let content = `<div class="container">
-                <div class="wwa">
-                    <header>
-                        <div class="title">
-                            <div class="tray">
-                                <h1>Day ${day} ${type}</h1>
-                            </div>
-
-                            <p class="timestamps">
-                                Issued <b>${timeAgo(request.outlook.issued)}</b> &middot; Valid from <b>${valid1}</b> until <b>${valid2}</b> &middot; Issued by <a target="blank" href="https://www.spc.noaa.gov/" title="NOAA/NWS Storm Prediction Center">NOAA/NWS Storm Prediction Center</a>
-                            </p>
-                        </div>
-                    </header>
-
-                    <div class="block">
-                        <div class="card row">
-                            <div class="col wwa-details" data-width="100">
-                                ${request.outlook.text}
-
-                                <b>Forecaster:</b> ${request.outlook.forecaster}
-                            </div>
-                        </div>
-
-                        <div class="graphics">
-                            ${graphics}
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-
-        modal.querySelector('.content').innerHTML = content;
-    }
-
-    async readWWA(id, click = true) {
-        new ClickListener().openModal('wwa');
-
-        const request = await api(config.apiURL + 'getWWA', [['id', id]]),
-            a = request.wwa;
-
-        if (config.workers.wwas == null) {
-            config.workers.wwas = new Worker(config.specificURL + (debugMode ? 'v' + version + '/wwas.js' : 'src/js/wwas-' + version + '.js'));
-        }
-
-        setHeaders(a.title + ' issued by the National Weather Service in ' + a.office, 'weather/alert/' + id,
-            'The National Weather Service in ' + a.office + ' has issued a ' + a.title + ' for ' + a.area + ' until ' + a.expires + '.');
-
-        config.workers.wwas.postMessage(a);
-
-        /* add content to modal after service worker finishes */
-        config.workers.wwas.onmessage = (event) => {
-            modal.querySelector('.content').innerHTML = event.data;
-
-            if (a.title == 'Tornado Warning' || a.title == 'Severe Thunderstorm Warning') {
-                modal.querySelector('h1.title').style.color = a.color;
-            }
-        };
-    }
-}
-
-class Wildfires {
-    constructor() {
-        this.store = localStorage.getItem('mapofire.clicks');
-        this.agencies = {
-            'US Forest Service': 'USFS',
-            'Bureau of Land Management': 'BLM',
-            'Bureau of Indian Affairs': 'BIA',
-            'National Park Service': 'NPS',
-            'Bureau of Reclamation': 'BOR',
-            'US Fish & Wildlife Service': 'USFWS',
-            'Oregon Department of Forestry': 'ODF',
-            'Department of Natural Resources': 'DNR',
-            'Idaho Department of Lands': 'IDL',
-            'California Department of Forestry & Fire Protection': 'CAL FIRE',
-            'California Department of Forestry and Fire Protection': 'CAL FIRE'
-        };
-    }
-
-    fireTextSize(t, which) {
-        const thresh = (t == 'new' ? 100 : 1000),
-            size = [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                7,
-                [
-                    'case',
-                    [
-                        'all',
-                        ['>=', ['to-number', ['get', 'acres']], thresh],
-                        ['!', ['has', 'Out']],
-                        ['!', ['has', 'Control']],
-                        ['!', ['has', 'Contain']],
-                    ],
-                    13,
-                    11
-                ],
-                14,
-                [
-                    'case',
-                    [
-                        'all',
-                        ['>=', ['to-number', ['get', 'acres']], thresh],
-                        ['!', ['has', 'Out']],
-                        ['!', ['has', 'Control']],
-                        ['!', ['has', 'Contain']],
-                    ],
-                    15,
-                    12
-                ],
-            ],
-            offset = [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                7,
-                [
-                    'case',
-                    [
-                        'all',
-                        ['>=', ['to-number', ['get', 'acres']], thresh],
-                        ['!', ['has', 'Out']],
-                        ['!', ['has', 'Control']],
-                        ['!', ['has', 'Contain']],
-                    ],
-                    ['literal', [0, 1.2]],
-                    ['literal', [0, 1.0]],
-                ],
-                14,
-                [
-                    'case',
-                    [
-                        'all',
-                        ['>=', ['to-number', ['get', 'acres']], thresh],
-                        ['!', ['has', 'Out']],
-                        ['!', ['has', 'Control']],
-                        ['!', ['has', 'Contain']],
-                    ],
-                    ['literal', [0, 1.3]],
-                    ['literal', [0, 1.0]],
-                ],
-            ];
-
-        return which == 'size' ? size : offset;
-    }
-
-    fireIcon(t) {
-        let exp = '',
-            now = new Date().getTime() / 1000;
-
-        if (t == 'rx') {
-            exp = 'fire-icon-rx';
-        } else if (t == 'smk') {
-            exp = 'fire-icon-smoke';
-        } else if (t == 'new') {
-            exp = [
-                'case',
-                [
-                    '==',
-                    ['get', 'type'],
-                    'Complex'
-                ],
-                'fire-icon-complex',
-                ['has', 'Out'],
-                'fire-icon-out',
-                ['has', 'Contain'],
-                'fire-icon-contained',
-                ['has', 'Control'],
-                'fire-icon-controlled',
-                [
-                    'all',
-                    [
-                        '<',
-                        ['-', now, ['to-number', ['get', 'discovered', ['get', 'time']]]],
-                        ['to-number', (12 * 60 * 60)]
-                    ],
-                    [
-                        '>=',
-                        ['to-number', ['get', 'acres']],
-                        100
-                    ]
-                ],
-                'fire-icon-new-big',
-                'fire-icon-new'
-            ];
-        } else {
-            exp = [
-                'case',
-                [
-                    '==',
-                    ['get', 'type'],
-                    'Complex'
-                ],
-                'fire-icon-complex',
-                [
-                    'all',
-                    ['has', 'time'],
-                    ['!', ['==', ['get', 'time'], null]],
-                    ['==', ['typeof', ['get', 'time']], 'object'],
-                    ['has', 'year', ['get', 'time']],
-                    ['<', ['to-number', ['get', 'year', ['get', 'time']]], config.curTime.getFullYear()]
-                ],
-                'fire-icon-out',
-                ['has', 'Out'],
-                'fire-icon-out',
-                ['has', 'Contain'],
-                'fire-icon-contained',
-                ['has', 'Control'],
-                'fire-icon-controlled',
-                [
-                    'case',
-                    ['>=', ['to-number', ['get', 'acres']], 1000],
-                    'fire-icon-large',
-                    ['>=', ['to-number', ['get', 'acres']], 100],
-                    'fire-icon-big',
-                    'fire-icon'
-                ]
-            ];
-        }
-
-        return exp;
-    }
-
-    async commitLog() {
-        if (this.store != null && this.store != '') {
-            const send = await api(config.apiURL + 'logFire', [['data', this.store]]);
-
-            if (send.success) {
-                clicks = [];
-                localStorage.removeItem('mapofire.clicks');
-            }
-        }
-
-        return this;
-    }
-
-    logFire(id, json) {
-        if (clicks.length == 0) {
-            clicks.push({ wfid: id, count: 1, data: json });
-        } else {
-            let inList = false;
-
-            clicks.forEach((e, n) => {
-                if (e.wfid == id) {
-                    inList = true;
-                    clicks[n].count = clicks[n].count + 1;
-                    clicks[n].data = json;
-                }
-            });
-
-            if (!inList) {
-                clicks.push({ wfid: id, count: 1, data: json });
-            }
-        }
-
-        localStorage.setItem('mapofire.clicks', JSON.stringify(clicks));
-
-        return this;
-    }
-
-    getStatus(s, n) {
-        if (s == '' || s === false && n == '') {
-            return 'active';
-        } else {
-            return (s == null ? (n && n.search('contain') >= 0 ? 'contained' : (n && n.search('control') >= 0 ? 'controlled' : 'active')) : (s.Out ? 'out' : (s.Control ? 'controlled' : (s.Contain ? 'contained' : ''))));
-        }
-    }
-
-    getDispatchCenter(c) {
-        var r = null;
-
-        dispatchCenters.forEach(function (d) {
-            if (c == d.agency || c == d.agency.replace('-', '')) {
-                r = d;
-            }
-        });
-
-        return r;
-    }
-
-    incidentDetails(data) {
-        let a = ['Basic Information', 'Current Situation', 'Outlook', 'Current Weather'],
-            o = '';
-
-        a.forEach((b) => {
-            if (data[b]) {
-                o += '<div class="fire-details title"><h2>' + b + '</h2><div class="body">';
-
-                data[b].forEach((c, n) => {
-                    o += (n % 2 == 0 ? '<div class="row' + (data[b].length != 1 ? ' max50' : '') + ' align-top no-margin">' : '') +
-                        '<div class="col"><div class="box"><div class="label">' + c.desc + '</div><div class="txt">' + c.info + '</div></div></div>' +
-                        (n % 2 != 0 || n == data[b].length - 1 ? '</div>' : '');
-                });
-
-                o += '</div></div>';
-            }
-        });
-
-        return o;
-    }
-
-    largestGrowthTime(it) {
-        const date = new Date(it * 1000);
-        const now = new Date();
-
-        const getMidnight = (d) => {
-            d.setHours(0, 0, 0, 0);
-            return d;
-        };
-
-        const today = getMidnight(new Date(now));
-        const yesterday = getMidnight(new Date(now));
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        const startOfWeek = getMidnight(new Date(now));
-        const day = startOfWeek.getDay();
-        const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
-        startOfWeek.setDate(diff);
-
-        if (date >= today) {
-            return "today";
-        } else if (date >= yesterday) {
-            return "yesterday";
-        } else if (date >= startOfWeek) {
-            const weekdayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'long' });
-            return `on ${weekdayFormatter.format(date)}`;
-        } else {
-            const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-            return `on ${dateFormatter.format(date)}`;
-        }
-    }
-
-    fireStats(history, incID = null) {
-        if (history.length < 2) {
-            return null;
-        }
-
-        const year = Number(incID.split('-')[0]),
-            first = history[0],
-            last = history[history.length - 1],
-            curAcres = parseFloat(first.acres),
-            firstAcres = parseFloat(last.acres),
-            totalMinutes = Math.round(Math.abs((first.updated - last.updated) / 60)),
-            days = totalMinutes / 60 / 24,
-            changes = [];
-
-        let statSentence, avgValue, growthUnit, duration, totalAcres = 0, totalTimeDiff = 0, max;
-
-        for (let i = 0; i < history.length; i++) {
-            const item = history[i],
-                change = parseFloat(item.change);
-
-            changes.push(change);
-            totalAcres += change;
-
-            if (i < history.length - 1) {
-                totalTimeDiff += item.updated - history[i + 1].updated;
-            }
-        }
-
-        const diff = curAcres - firstAcres,
-            overall = conversion.sizeFormat(diff);
-
-        if (days > 2) {
-            avgValue = (totalAcres / history.length) / days;
-            growthUnit = "day";
-        } else {
-            const hours = (totalTimeDiff / history.length) / 3600;
-            avgValue = (totalAcres / history.length) / hours;
-            growthUnit = "hour";
-        }
-
-        const avgGrowth = conversion.sizeFormat(avgValue);
-
-        if (totalMinutes >= 40320) {
-            const d = Math.floor(totalMinutes / 10080);
-            duration = `${d} week${d !== 1 ? "s" : ""}`;
-        } else if (totalMinutes >= 1440) {
-            const d = Math.floor(totalMinutes / 1440);
-            duration = `${d} day${d !== 1 ? "s" : ""}`;
-        } else if (totalMinutes >= 60) {
-            const h = Math.floor(totalMinutes / 60);
-            duration = `${h} hour${h !== 1 ? "s" : ""}`;
-        } else {
-            duration = `${totalMinutes} minute${totalMinutes !== 1 ? "s" : ""}`;
-        }
-
-        max = Math.max(...changes);
-        const whenGrew = this.largestGrowthTime(history[changes.indexOf(max)].updated),
-            howGrew = year == config.curTime.getFullYear() ? 'expanded by' : 'grew to';
-
-        if (diff > 0) {
-            statSentence = `Over ${duration}, this fire ${howGrew} ${overall}, averaging ${avgGrowth} of growth per ${growthUnit}.`;
-        } else {
-            statSentence = `Incident reporting has decreased this fire in size by ${Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} acres.`;
-            max = max + diff;
-        }
-
-        /*const maxSize = max.toString();
-        const finalMaxSize = `${maxSize} acre${parseFloat(maxSize) !== 1 ? "s" : ""}`;*/
-        const finalMaxSize = conversion.sizeFormat(max);
-
-        return `${statSentence} The largest single growth was ${finalMaxSize} ${whenGrew}.`;
-    }
-
-    createChart(fireName, incID, hist) {
-        if (hist.length <= 1) {
-            document.querySelector('#acres_history').parentElement.parentElement.remove();
-        } else {
-            let lastTs = null;
-
-            // reverse data to show oldest to newest
-            hist.sort((a, b) => a.updated - b.updated);
-
-            const data = hist.map((h) => {
-                let ts = h.updated * 1000;
-
-                if (ts === lastTs) ts += 1;
-
-                lastTs = ts;
-                return [ts, h.acres];
-            })
-
-            /* calculate fire growth stats */
-            const fireStats = this.fireStats(hist, incID);
-
-            const fmt = { year: 'numeric', month: 'long', day: 'numeric' },
-                date1 = Intl.DateTimeFormat('en-US', fmt).format(data[0][0]),
-                date2 = Intl.DateTimeFormat('en-US', fmt).format(data[data.length - 1][0]),
-                dates = date1 == date2 ? ' on ' + date1 : ' from ' + date1 + ' to ' + date2;
-
-            Highcharts.setOptions({
-                time: {
-                    timezone: 'America/Los_Angeles'
-                }
-            });
-
-            chart = Highcharts.chart('acres_history', {
-                chart: {
-                    type: 'line',
-                    style: {
-                        fontFamily: 'Roboto'
-                    },
-                    marginTop: 50,
-                    backgroundColor: 'transparent'
-                },
-                accessibility: {
-                    enabled: false
-                },
-                title: {
-                    text: null
-                },
-                legend: {
-                    itemStyle: {
-                        color: '#f1f1f1'
-                    }
-                },
-                /*events: {
-                    render() {
-                        document.querySelector('#acres_history').style.backgroundColor = 'transparent';
-                    }
-                },*/
-                subtitle: {
-                    text: '<b>' + fireName + ' (' + incID + ') growth history ' + dates + '.</b>',
-                    useHTML: true,
-                    verticalAlign: 'bottom',
-                    align: 'left',
-                    style: {
-                        color: '#f1f1f1'
-                    }
-                },
-                navigation: {
-                    buttonOptions: {
-                        enabled: true
-                    }
-                },
-                tooltip: {
-                    xDateFormat: '%a, %b %e, %Y %l:%M %p',
-                    shared: true
-                },
-                xAxis: {
-                    type: 'datetime',
-                    labels: {
-                        style: {
-                            color: '#f1f1f1'
-                        },
-                        format: '{value:%b %e}'
-                    }
-                },
-                yAxis: [{
-                    title: {
-                        text: 'Total Acres',
-                        style: {
-                            color: '#f1f1f1'
-                        }
-                    },
-                    labels: {
-                        style: {
-                            color: '#fff'
-                        }
-                    },
-                    min: 0
-                }],
-                series: [{
-                    name: 'Total Acres',
-                    type: 'line',
-                    data: data
-                }],
-                panning: true,
-                panKey: 'ctrl',
-                zooming: {
-                    type: 'xy'
-                },
-                exporting: {
-                    buttons: {
-                        contextButton: {
-                            symbolStroke: '#eee',
-                            theme: {
-                                fill: 'transparent',
-                                states: {
-                                    hover: {
-                                        fill: '#223260'
-                                    },
-                                    select: {
-                                        fill: '#223260'
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                plotOptions: {
-                    series: {
-                        marker: {
-                            symbol: 'circle',
-                            fillColor: '#fff',
-                            enabled: true,
-                            radius: 3,
-                            lineWidth: 1,
-                            lineColor: null
-                        }
-                    }
-                },
-                responsive: {
-                    rules: [{
-                        condition: {
-                            maxWidth: 600
-                        },
-                        chartOptions: {
-                            yAxis: {
-                                title: {
-                                    text: ''
-                                }
-                            }
-                        }
-                    }]
-                },
-                colors: ['#e41616', '#ffd54f']
-            });
-
-            if (fireStats != null) {
-                const p = document.createElement('p');
-                p.classList.add('fireStats');
-                p.innerHTML = `<i class="fas fa-chevrons-right"></i><span>${fireStats}</span>`;
-                document.querySelector('#acres_history').parentElement.appendChild(p);
-            }
-        }
-
-        return this;
-    }
-
-    findFire(id) {
-        return activeIncidents.get(id) ?? null;
-    }
-
-    async getTrackedFires() {
-        if (settings.user) {
-            const g = await api(config.host + 'api/v1/trackFires/list', [['token', settings.getUser().token()]]);
-
-            trackedDone = true;
-
-            if (g.fires != null) {
-                g.fires.forEach(function (f) {
-                    tracked.push(f.wfid);
-                });
-            }
-        } else {
-            const tr = localStorage.getItem('mapofire.tracked');
-            trackedDone = true;
-
-            if (tr != null) {
-                tracked = JSON.parse(tr);
-            }
-        }
-
-        /* if modal is already open with wildfire data, change the follow button now */
-        if (document.querySelector('#modal').classList.contains('opened', 'fire')) {
-            const tf = document.querySelector('#trackFire');
-
-            if (tf && tracked.includes(tf.getAttribute('data-id'))) {
-                tf.setAttribute('data-following', '1');
-                tf.setAttribute('title', 'You\'re following this fire');
-                tf.classList.add('fas', 'follow');
-                tf.classList.remove('far');
-            }
-        }
-
-        return this;
-    }
-
-    async canada() {
-        const statuses = ['Out of control', 'Being held', 'Under Control', 'Out'],
-            now = new Date().getTime() / 1000,
-            fires = await api(config.apiURL + 'wildfires/canada');
-
-        if (fires != null && fires.features != null) {
-            fires.features.forEach((f, n) => {
-                statuses.forEach((stats) => {
-                    if (f.properties.status && f.properties.status.search(stats) >= 0) {
-                        fires['features'][n]['properties'][stats] = true;
-                    }
-                });
-
-                activeIncidents.set(parseInt(f.properties.wfid, 10), f);
-            });
-        }
-
-        if (!map.getSource('ca_fires')) {
-            map.addSource('ca_fires', {
-                type: 'geojson',
-                data: fires,
-                cluster: CLUSTER_FIRES,
-                clusterMaxZoom: window.innerWidth < 600 || window.outerWidth < 600 ? 6 : 7,
-                clusterMinPoints: 20,
-                clusterRadius: 50
-            });
-        }
-
-        const chk = setInterval(() => {
-            if (map.isSourceLoaded('ca_fires')) {
-                const vis = settings.isEnabled('allFires') ? 'visible' : 'none';
-
-                clearInterval(chk);
-
-                if (!map.getLayer('ca_fires')) {
-                    map.addLayer({
-                        id: 'ca_fires',
-                        type: 'symbol',
-                        source: 'ca_fires',
-                        layout: {
-                            'icon-image': [
-                                'case',
-                                [
-                                    '<',
-                                    ['-', now, ['to-number', ['get', 'discovered', ['get', 'time']]]],
-                                    ['to-number', (12 * 60 * 60)]
-                                ],
-                                [
-                                    'case',
-                                    [
-                                        '>=',
-                                        ['to-number', ['get', 'acres']],
-                                        100
-                                    ],
-                                    'fire-icon-new-big',
-                                    'fire-icon-new'
-                                ],
-                                ['has', 'Out of control'],
-                                'fire-icon',
-                                ['has', 'Under Control'],
-                                'fire-icon-controlled',
-                                ['has', 'Begin held'],
-                                'fire-icon-contained',
-                                ['has', 'Out'],
-                                'fire-icon-out',
-                                [
-                                    '>=',
-                                    ['to-number', ['get', 'acres']],
-                                    1000
-                                ],
-                                'fire-icon-large',
-                                [
-                                    '>=',
-                                    ['to-number', ['get', 'acres']],
-                                    100
-                                ],
-                                'fire-icon-big',
-                                'fire-icon'
-                            ],
-                            'icon-size': [
-                                'case',
-                                ['has', 'Out'],
-                                0.3,
-                                0.4
-                            ],
-                            'icon-allow-overlap': true,
-                            visibility: vis
-                        }
-                    });
-
-                    map.on('mouseenter', 'ca_fires', () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'ca_fires', () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
-                }
-
-                if (!map.getLayer('ca_fire_title')) {
-                    map.addLayer({
-                        id: 'ca_fire_title',
-                        type: 'symbol',
-                        source: 'ca_fires',
-                        minzoom: window.innerWidth < 600 || window.outerWidth < 600 ? 5 : 6,
-                        paint: {
-                            'text-color': '#000',
-                            'text-halo-color': '#fff',
-                            'text-halo-blur': 1,
-                            'text-halo-width': 2,
-                            'text-opacity': [
-                                'step',
-                                ['zoom'],
-                                [
-                                    'case',
-                                    ['>', ['to-number', ['get', 'acres']], 1000],
-                                    1.0,
-                                    0.0
-                                ],
-                                9,
-                                1.0
-                            ]
-                        },
-                        layout: {
-                            'symbol-placement': 'point',
-                            'symbol-spacing': 150,
-                            'text-font': config.fonts.source(),
-                            'text-field': [
-                                'case',
-                                [
-                                    '==',
-                                    ['get', 'type'],
-                                    'Wildfire'
-                                ],
-                                ['concat', ['get', 'name'], ' Fire'],
-                                ['get', 'name']
-                            ],
-                            'text-justify': 'center',
-                            'text-size': [
-                                'interpolate',
-                                ['linear'],
-                                ['zoom'],
-                                7,
-                                [
-                                    'case',
-                                    ['>', ['to-number', ['get', 'acres']], 1000],
-                                    12,
-                                    10
-                                ],
-                                14,
-                                [
-                                    'case',
-                                    ['>', ['to-number', ['get', 'acres']], 1000],
-                                    15,
-                                    13
-                                ]
-                            ],
-                            'text-max-width': 10,
-                            'text-anchor': 'top',
-                            'text-offset': [
-                                'case',
-                                ['>', ['to-number', ['get', 'acres']], 1000],
-                                [0, 1.3],
-                                [0, 1]
-                            ],
-                            'text-allow-overlap': false,
-                            'text-letter-spacing': 0.05,
-                            visibility: vis
-                        }
-                    });
-
-                    map.on('mouseenter', 'ca_fire_title', () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'ca_fire_title', () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
-                }
-            }
-        }, 500);
-
-        return this;
-    }
-
-    /* get wildfires from API */
-    async getWildfires(update = false) {
-        const types = ['all', 'new', 'smk', 'rx'];
-
-        if (settings.archive) {
-            const fires = await api(config.apiURL + 'wildfires/all', [['archive', settings.archive], ['bbox', getbbox()]]);
-
-            /* add status parameters to each property object and push each incident to an array for search capabilities */
-            fires.features.forEach((f, n) => {
-                if (f.properties.status.Out) {
-                    fires['features'][n]['properties']['Out'] = true;
-                }
-
-                if (f.properties.status.Contain) {
-                    fires['features'][n]['properties']['Contain'] = true;
-                }
-
-                if (f.properties.status.Control) {
-                    fires['features'][n]['properties']['Control'] = true;
-                }
-
-                fires['features'][n]['properties']['name'] = config.wildfire.fireName(
-                    fires['features'][n]['properties']['name'],
-                    fires['features'][n]['properties']['type'],
-                    fires['features'][n]['properties']['incidentId']
-                );
-
-                activeIncidents.set(parseInt(f.properties.wfid, 10), f);
-            });
-
-            document.querySelector('#q').disabled = false;
-
-            /* convert wildfire geojson to mapbox data */
-            if (update) {
-                map.getSource(types[0] + '_fires').setData(fires);
-            } else {
-                if (!map.getSource(types[0] + '_fires')) {
-                    map.addSource(types[0] + '_fires', {
-                        type: 'geojson',
-                        data: fires,
-                        cluster: CLUSTER_FIRES,
-                        clusterMaxZoom: window.innerWidth < 600 || window.outerWidth < 600 ? 6 : 7,
-                        clusterMinPoints: 20,
-                        clusterRadius: 50
-                    });
-                }
-            }
-
-            this.displayFires(types[0], 0);
-        } else {
-            /* get canadian wildfires */
-            //this.canada();
-
-            /* iterate through types of fire data */
-            for (const [n, type] of types.entries()) {
-                /* get fire data from API */
-                const fires = await api(config.apiURL + 'wildfires/' + type);
-
-                /* add status parameters to each property object and push each incident to an array for search capabilities */
-                if (fires != null && fires.features != null) {
-                    /* loop through all features in the geojson */
-                    fires.features.forEach((f, n) => {
-                        /* add new fires to their own array */
-                        if (type == 'new' && f.properties.acres >= 100) {
-                            newFires.push(f);
-                        }
-
-                        if (f.properties.status.Out) {
-                            fires['features'][n]['properties']['Out'] = true;
-                        }
-
-                        if (f.properties.status.Contain) {
-                            fires['features'][n]['properties']['Contain'] = true;
-                        }
-
-                        if (f.properties.status.Control) {
-                            fires['features'][n]['properties']['Control'] = true;
-                        }
-
-                        fires['features'][n]['properties']['name'] = config.wildfire.fireName(
-                            fires['features'][n]['properties']['name'],
-                            fires['features'][n]['properties']['type'],
-                            fires['features'][n]['properties']['incidentId']
-                        );
-
-                        activeIncidents.set(parseInt(f.properties.wfid, 10), f);
-                    });
-
-                    /* add new fires to notification bubble if > 0*/
-                    if (type == 'new') {
-                        if (newFires.length > 0 && document.querySelector('#new_fires') == null) {
-                            const nfc = document.createElement('div'),
-                                mi = document.createElement('li');
-
-                            mi.id = 'new_fires';
-                            mi.setAttribute('data-action', 'new_fires');
-                            mi.setAttribute('title', 'New Fires');
-                            mi.innerHTML = '<i class="fas fa-fire-flame"></i><span>New Fires</span>';
-
-                            nfc.classList.add('notify');
-                            nfc.innerHTML = newFires.length;
-
-                            document.querySelector('nav ul li#account').after(mi);
-                            document.querySelector('#new_fires').appendChild(nfc);
-                        }
-                    }
-
-                    /* convert wildfire geojson to mapbox data */
-                    if (!map.getSource(type + '_fires')) {
-                        map.addSource(type + '_fires', {
-                            type: 'geojson',
-                            data: fires,
-                            cluster: CLUSTER_FIRES,
-                            clusterMaxZoom: 8,
-                            clusterMinPoints: 5,
-                            clusterRadius: 20
-                        });
-                    } else {
-                        map.getSource(type + '_fires').setData(fires);
-                    }
-
-                    const chk = setInterval(() => {
-                        if (map.isSourceLoaded(type + '_fires')) {
-                            this.displayFires(type, n);
-                            clearInterval(chk);
-                        }
-                    }, 500);
-                }
-
-                /* make search undisabled */
-                if (n == types.length - 1) {
-                    document.querySelector('#q').disabled = false;
-                }
-            }
-        }
-
-        return this;
-    }
-
-    async displayFires(type, n) {
-        const lay = ['allFires', 'newFires', 'smokeChecks', 'rxBurns'],
-            fireLayerName = type + '_fires_layer',
-            vis = settings.isEnabled(lay[n]) || !settings.checkboxes() && type != 'rx' ? 'visible' : 'none';
-
-        /* add fires to map */
-        if (map.getSource(type + '_fires')) {
-            if (!map.getLayer(fireLayerName)) {
-                map.addLayer({
-                    id: fireLayerName,
-                    type: 'symbol',
-                    source: type + '_fires',
-                    layout: {
-                        'icon-image': this.fireIcon(type),
-                        'icon-size': [
-                            'case',
-                            ['has', 'Out'],
-                            0.3,
-                            0.4
-                        ],
-                        'icon-allow-overlap': true,
-                        visibility: vis
-                    }
-                });
-
-                map.on('mouseenter', fireLayerName, () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', fireLayerName, () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
-
-            if (!map.getLayer(type + '_fire_title')) {
-                map.addLayer({
-                    id: type + '_fire_title',
-                    type: 'symbol',
-                    source: type + '_fires',
-                    minzoom: window.innerWidth < 600 || window.outerWidth < 600 ? 4 : 5,
-                    paint: {
-                        'text-color': '#000',
-                        'text-halo-color': '#fff',
-                        'text-halo-blur': 1,
-                        'text-halo-width': 2,
-                        'text-opacity': [
-                            'step',
-                            ['zoom'],
-                            [
-                                'case',
-                                ['>', ['to-number', ['get', 'acres']], 1000],
-                                1.0,
-                                0.0
-                            ],
-                            9,
-                            1.0
-                        ]
-                    },
-                    layout: {
-                        'symbol-placement': 'point',
-                        'symbol-spacing': 150,
-                        'text-font': config.fonts.source(),
-                        'text-field': ['get', 'name'],
-                        'text-justify': 'center',
-                        'text-size': this.fireTextSize(type, 'size'),
-                        'text-max-width': 10,
-                        'text-anchor': 'top',
-                        'text-offset': this.fireTextSize(type, 'offset')/*[
-                            'case',
-                            [
-                                'all',
-                                ['>=', ['to-number', ['get', 'acres']], (type == 'new' ? 100 : 1000)],
-                                ['!', ['has', 'Out']],
-                                ['!', ['has', 'Contain']],
-                                ['!', ['has', 'Control']],
-                            ],
-                            ['literal', [0, 1.3]],
-                            ['literal', [0, 1]]
-                        ]*/,
-                        'text-allow-overlap': false,
-                        'text-letter-spacing': 0.05,
-                        visibility: vis
-                    }
-                });
-
-                map.on('mouseenter', type + '_fire_title', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', type + '_fire_title', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
-        }
-
-        if (type == 'rx' && map.getSource('perimeters')) {
-            map.moveLayer('perimeters_fill', 'all_fires_layer');
-            map.moveLayer('perimeters_outline', 'all_fires_layer');
-            map.moveLayer('perimeters_title', 'all_fires_layer');
-        }
-
-        return this;
-    }
-
-    getAssociatedPerim(fireName) {
-        if (!settings.isEnabled('perimeters')) return;
-
-        const src = map.getSource('perimeters')._data.geojson.features,
-            wait = setInterval(() => {
-                if (src) {
-                    const name = fireName.replace(/\s/gm, '').toLowerCase();
-                    clearInterval(wait);
-
-                    const results = src.filter(feat => {
-                        const p = feat.properties;
-
-                        return p.attr_IncidentName.replace(/\s/gm, '').toLowerCase() == name ||
-                            p.poly_IncidentName.replace(/\s/gm, '').toLowerCase() == name;
-                    });
-
-                    console.log(results);
-                }
-            }, 200);
-    }
-
-    doWeather(geo) {
-        let wx = new Weather(geo[1], geo[0]);
-
-        wx.incidentWX();
-        wx.incidentForecast();
-        /*wx.nearbyAQ();*/
-    }
-
-    fireName(n, t, i) {
-        let o = '';
-
-        if (t == 'Prescribed Fire') {
-            o = (n.includes('RX') ? n : n + ' RX');
-        } else if (t == 'Smoke Check') {
-            o = 'Smoke Check' + (i !== undefined ? ' #' + i.split('-')[1] + '-' + parseInt(i.split('-')[2]) : '');
-        } else {
-            if (n === undefined || n == '') {
-                o = 'Incident #' + parseInt(i.split('-')[2]);
-            } else {
-                const cleanedName = n.replace(/^\d+(?=\D)\s?/, '');
-                o = ucwords(cleanedName.toLowerCase()) + ' Fire';
-            }
-        }
-        return o;
-    }
-
-    async cacheIncident(wfid) {
-        const cache = await caches.open('mapofire-v' + version);
-
-        try {
-            // if user has in-app caching enabled
-            if (settings.fire().cache()) {
-                const cachedResponse = await cache.match(wfid);
-
-                if (cachedResponse) {
-                    const cachedData = await cachedResponse.json();
-
-                    if (Date.now() - cachedData.timestamp < (10 * 60 * 1000)) {
-                        return cachedData.data;
-                    } else {
-                        cache.delete(wfid);
-                    }
-                }
-            }
-
-            const data = await api(config.apiURL + 'wildfires/incident', [['wfid', wfid], ['history', 1]]);
-
-            // if user has in-app caching enabled
-            if (settings.fire().cache()) {
-                await cache.put(wfid, new Response(
-                    JSON.stringify({
-                        data: data,
-                        timestamp: Date.now()
-                    })
-                ));
-            }
-
-            return data;
-        } catch (error) {
-            console.error(error);
-            return null;
-        }
-    }
-
-    incident(wfid, click = true) {
-        new ClickListener().openModal('fire');
-
-        /*if (click) {
-            modal.classList.add('open');
-        }*/
-
-        /* get incident json from cache or API */
-        this.cacheIncident(wfid).then(async (incident) => {
-            const fire = incident.fire,
-                fireLat = fire.geometry.lat,
-                fireLon = fire.geometry.lon,
-                prop = fire.properties,
-                nearbyEvacs = await new NearbyEvacuations(fireLat, fireLon).get();
-
-            const fname = this.fireName(prop.fireName, prop.type, prop.incidentId),
-                near = fire.geometry.near,
-                acresHistory = prop.acres_history/*,
-                nearbyPerims = this.getAssociatedPerim(prop.fireName)*/;
-
-            /* zoom to fire on the map */
-            if (!click) {
-                map.easeTo({
-                    center: [fireLon, fireLat],
-                    zoom: 12,
-                    duration: 0
-                });
-            }
-
-            /* change the URL in the browser */
-            //if (window.location.pathname.search('/fires') >= 0) {
-            setHeaders(fname + ' near ' + near.split(' of ')[1] + ' - Current Incident Information and Wildfire Map', prop.url,
-                'See current information on the ' + fname + ' near ' + near.split(' of ')[1] + '.');
-
-            if (fire.inciweb && fire.inciweb.photo) {
-                document.querySelector('meta[property="og:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
-                document.querySelector('meta[name="twitter:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
-            }
-
-            if (fire.inciweb && fire.inciweb.photo) {
-                document.querySelector('meta[property="og:image:alt"]').setAttribute('content', fire.inciweb.photo.caption);
-            }
-            //}
-
-            /* send data to service worker */
-            config.workers.incident.postMessage({
-                json: incident,
-                role: settings.getUser().role(),
-                hasPermissions: settings.hasPermissions(),
-                vars: {
-                    domain: config.domain,
-                    center: this.getDispatchCenter(fire.protection.dispatch),
-                    agencies: this.agencies,
-                    stateLabels: stateLabels,
-                    tracked: tracked,
-                    acres: conversion.sizeFormat(prop.acres, true, false),
-                    sizeUnit: conversion.sizeFormat(prop.acres, false),
-                    reported: timeAgo(fire.time.discovered),
-                    updated: timeAgo(fire.time.updated)
-                }
-            });
-
-            /* add content to modal after service worker finishes */
-            config.workers.incident.onmessage = (event) => {
-                modal.querySelector('.content').innerHTML = event.data;
-
-                /* if nearby evacuations exist, show them on the modal */
-                if (nearbyEvacs) {
-                    let theEvacs = '';
-                    const formatArray = (arr) => {
-                        if (arr.length === 2) {
-                            return arr.join(' & ');
-                        } else if (arr.length >= 3) {
-                            const lastTwo = arr.slice(-2).join(' & '),
-                                firstPart = arr.slice(0, -2);
-                            return firstPart.join(', ') + ', ' + lastTwo;
-                        } else if (arr.length === 1) {
-                            return arr[0];
-                        } else {
-                            return '';
-                        }
-                    };
-
-                    if (nearbyEvacs.length > 0) {
-                        nearbyEvacs.reverse().forEach((z) => {
-                            const nomen = (z.level == 1 ? 'Be Ready' : (z.level == 2 ? 'Be Set' : 'Leave Immediately'));
-
-                            theEvacs += '<div class="evac level' + z.level + '"><h3><span class="evac-circ l' + z.level + '"></span>Level ' + z.level + ': ' + nomen + '</h3><details><summary>' +
-                                formatArray(z.counties) + ' Count' + (z.counties.length == 1 ? 'y' : 'ies') +
-                                '</summary><span style="font-size:15px">' + z.notes.join(', ') + '</span></details></div>';
-                        });
-
-                        document.querySelector('.incident #incWX').insertAdjacentHTML('beforebegin', '<div class="evacs">' + theEvacs + '</div>');
-                    }
-                }
-
-                /* get incident weather */
-                this.doWeather([fireLon, fireLat]);
-
-                /* remove any features that require a user to be subscribed */
-                if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
-                    modal.querySelector('#acres_history').style.height = 'unset';
-                    modal.querySelector('#acres_history').innerHTML = '<a href="#" data-action="upgrade-subscription" data-medium="acres_history" class="btn btn-orange btn-lg" onclick="return false"><i class="fas fa-lock"></i>Upgrade to see growth history</a>';
-                    /*document.querySelector('#acres_history').parentElement.parentElement.remove();*/
-
-                    /* blur coordinates */
-                    modal.querySelector('span.coords').innerHTML = '0.0000 -0.0000';
-                    modal.querySelector('span.coords').classList.add('blur');
-                } else {
-                    /* load the script for the chart, then create the acreage chart */
-                    if (acresHistory != null) {
-                        const c = this;
-
-                        if (!highchartsLoad) {
-                            loadScript('https://code.highcharts.com/highcharts.js')
-                                .then(() => {
-                                    highchartsLoad = true;
-
-                                    loadScript('https://code.highcharts.com/modules/exporting.js').then(() => {
-                                        c.createChart(fname, prop.incidentId, acresHistory);
-                                    });
-                                });
-                        } else {
-                            c.createChart(fname, prop.incidentId, acresHistory);
-                        }
-                    } else {
-                        modal.querySelector('#acres_history_wrapper').remove();
-                    }
-                }
-            };
-        });
-
-        return this;
-    }
-
-    perimeterColor(c) {
-        let pc;
-
-        switch (c) {
-            case 'default':
-            case 'red':
-                pc = '#f35a5a';
-                break;
-            case 'blue':
-                pc = '#3289d5';
-                break;
-            case 'orange':
-                pc = '#fb8c00';
-                break;
-            case 'green':
-                pc = '#388e3c';
-                break;
-            case 'purple':
-                pc = '#9c27b0';
-                break;
-            case 'brown':
-                pc = '#795548';
-                break;
-            case 'black':
-                pc = '#333';
-                break;
-        }
-
-        return settings.archive == null ? ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#777', pc] : '#777';
-    }
-
-    async caPerimeters(update = false) {
-        let vis = !settings.user || !settings.checkboxes() || settings.isEnabled('perimeters') ? 'visible' : 'none',
-            min = settings.perimeters().minSize(),
-            pc = this.perimeterColor(settings.perimeters().color());
-
-        const data = await api('https://services.arcgis.com/wjcPoefzjpzCgffS/ArcGIS/rest/services/Active_Wildfire_Perimeters_in_Canada_View/FeatureServer/0/query', [
-            ['where', '1=1 AND AREA >= ' + min],
-            ['outFields', 'OBJECTID'],
-            ['resultType', 'tile'],
-            ['geometry', getbbox()],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['returnGeometry', true],
-            ['f', 'geojson']
-        ]);
-
-        /* when the map moves, update the source data */
-        if (update && map.getSource('ca_perimeters')) {
-            map.getSource('ca_perimeters').setData(data);
-        } else {
-            if (!map.getSource('ca_perimeters')) {
-                map.addSource('ca_perimeters', {
-                    type: 'geojson',
-                    data: data
-                });
-            }
-
-            if (!map.getLayer('ca_perimeters_outline')) {
-                map.addLayer({
-                    id: 'ca_perimeters_outline',
-                    type: 'line',
-                    source: 'ca_perimeters',
-                    paint: {
-                        'line-width': [
-                            'case',
-                            ['boolean', ['feature-state', 'click'], false],
-                            3,
-                            1
-                        ],
-                        'line-color': pc
-                    },
-                    layout: {
-                        visibility: vis
-                    }
-                });
-            }
-
-            if (!map.getLayer('ca_perimeters_fill')) {
-                map.addLayer({
-                    id: 'ca_perimeters_fill',
-                    type: 'fill',
-                    source: 'ca_perimeters',
-                    paint: {
-                        'fill-opacity': 0.3,
-                        'fill-color': pc
-                    },
-                    layout: {
-                        visibility: vis
-                    }
-                });
-
-                map.on('mouseenter', 'ca_perimeters_fill', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'ca_perimeters_fill', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
-        }
-
-        return this;
-    }
-
-    async perimeters(update = false) {
-        let vis = !settings.user || !settings.checkboxes() || settings.isEnabled('perimeters') ? 'visible' : 'none',
-            y = (settings.archive ? settings.archive : config.curTime.getFullYear()),
-            min = settings.perimeters().minSize(),
-            pc = this.perimeterColor(settings.perimeters().color()),
-            o = 'OBJECTID,attr_UniqueFireIdentifier,poly_IncidentName,attr_IncidentName,poly_DateCurrent,poly_GISAcres,poly_Acres_AutoCalc,poly_MapMethod,attr_POOState,attr_ContainmentDateTime,attr_FireOutDateTime',
-            perimName = 'attr_IncidentName',
-            w = `attr_FireDiscoveryDateTime>=TIMESTAMP '${y}-01-01 00:00:00'`;
-
-        if (!settings.archive) {
-            w += ' AND (poly_GISAcres > ' + min + ' OR poly_Acres_AutoCalc > ' + min + ') AND attr_FireOutDateTime IS NULL';
-        }
-
-        /* get Canada wildfire perimeters if not in archive mode */
-        if (!settings.archive) {
-            this.caPerimeters(update);
-        }
-
-        const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0/query', [
-            ['where', w],
-            ['outFields', o],
-            ['resultType', 'tile'],
-            ['geometry', getbbox()],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['returnGeometry', true],
-            ['f', 'geojson']
-        ]);
-
-        /* when the map moves, update the source data */
-        if (update && map.getSource('perimeters')) {
-            map.getSource('perimeters').setData(data);
-        } else {
-            if (!map.getSource('perimeters')) {
-                map.addSource('perimeters', {
-                    type: 'geojson',
-                    data: data
-                });
-            }
-
-            if (!map.getLayer('perimeters_outline')) {
-                map.addLayer({
-                    id: 'perimeters_outline',
-                    type: 'line',
-                    source: 'perimeters',
-                    paint: {
-                        'line-width': [
-                            'case',
-                            ['boolean', ['feature-state', 'click'], false],
-                            3,
-                            1
-                        ],
-                        'line-color': pc
-                    },
-                    layout: {
-                        visibility: vis
-                    }
-                });
-            }
-
-            if (!map.getLayer('perimeters_fill')) {
-                map.addLayer({
-                    id: 'perimeters_fill',
-                    type: 'fill',
-                    source: 'perimeters',
-                    paint: {
-                        'fill-opacity': 0.3,
-                        'fill-color': pc
-                    },
-                    layout: {
-                        visibility: vis
-                    }
-                });
-            }
-
-            if (!map.getLayer('perimeters_title')) {
-                map.addLayer({
-                    id: 'perimeters_title',
-                    type: 'symbol',
-                    source: 'perimeters',
-                    minzoom: 5.8,
-                    paint: {
-                        'text-color': settings.archive ? '#fff' : ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#333', '#fff'],
-                        'text-halo-color': settings.archive ? '#333' : ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#fff', '#ff0000'],
-                        'text-halo-blur': 1,
-                        'text-halo-width': 1
-                    },
-                    layout: {
-                        'symbol-placement': 'line',
-                        'symbol-spacing': 200,
-                        /*'symbol-avoid-edges': true,*/
-                        'text-font': config.fonts.din(),
-                        'text-field': ['upcase', ['concat', ['get', perimName], ' Fire']],
-                        /*'text-justify': 'center',*/
-                        'text-size': 13,
-                        /*'text-max-width': 8,*/
-                        'text-max-angle': 30,
-                        'text-padding': 5,
-                        'text-pitch-alignment': 'viewport',
-                        'text-rotation-alignment': 'map',
-                        'text-offset': [0, 1],
-                        /*'text-anchor': 'center',
-                        'text-letter-spacing': 0.05*/
-                        visibility: vis
-                    }
-                });
-
-                map.on('mouseenter', 'perimeters_fill', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'perimeters_fill', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
-        }
-
-        return this;
-    }
-}
-
-class Layers {
-    init() {
-        /* add lightning layers to the map */
-        this.lightning();
-
-        /* get air quality */
-        this.airQuality();
-
-        /* get evacuations */
-        this.evacuations();
-    }
-
-    add3D() {
-        if (settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && settings.getBasemap() == 'outdoors' && !map.getSource('terrain')) {
-            map.addSource('terrain', {
-                'type': 'raster-dem',
-                'url': 'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=ZeQEIVoqyieC6wk8qxJH',
-            });
-
-            map.setTerrain({
-                source: 'terrain',
-                exaggeration: 2
-            });
-        }
-    }
-
-    async airQuality() {
-        const data = await api('https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Air_Now_Current_Monitors_PM/FeatureServer/0/query', [
-            ['where', '1=1'],
-            ['outFields', 'ObjectId,AQSID,SiteName,LocalTimeString,PM25_AQI,PM25'],
-            ['returnGeometry', 'true'],
-            /*['geometry', getbbox()],*/
-            ['geometryPrecision', '6'],
-            ['returnExceededLimitFeatures', 'true'],
-            ['f', 'geojson']
-        ]);
-
-        airQualityStns = data;
-
-        if (!data.error) {
-            if (!map.getSource('airq')) {
-                map.addSource('airq', {
-                    type: 'geojson',
-                    data: data,
-                    cluster: true,
-                    clusterMaxZoom: 7,
-                    clusterMinPoints: 5,
-                    clusterRadius: 40
-                });
-            }
-
-            if (!map.getLayer('airQuality')) {
-                map.addLayer({
-                    id: 'airQuality',
-                    type: 'circle',
-                    source: 'airq',
-                    filter: [
-                        'all',
-                        ['has', 'PM25_AQI'],
-                        ['==', ['typeof', ['get', 'PM25_AQI']], 'number']
-                    ],
-                    layout: {
-                        visibility: settings.isEnabled('airq') ? 'visible' : 'none'
-                    },
-                    paint: {
-                        'circle-radius': 12,
-                        'circle-color': [
-                            'step',
-                            ['coalesce', ['get', 'PM25_AQI'], -1], // Fallback to -1 if null
-                            '#d9d9d9', // Default for anything below 0
-                            0, '#00e400', // 0-50 (Good)
-                            51, '#ffff00', // 51-100 (Moderate)
-                            101, '#ff7e00', // 101-150 (Unhealthy SG)
-                            151, '#ff0000', // 151-200 (Unhealthy)
-                            201, '#8f3f97', // 201-300 (Very Unhealthy)
-                            301, '#7e0023'  // 301+ (Hazardous)
-                        ],
-                        'circle-stroke-color': 'black',
-                        'circle-stroke-width': 1
-                    }
-                });
-
-                map.on('mouseenter', 'airQuality', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'airQuality', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
-
-            if (!map.getLayer('airQuality_text')) {
-                map.addLayer({
-                    id: 'airQuality_text',
-                    type: 'symbol',
-                    source: 'airq',
-                    filter: [
-                        'all',
-                        ['has', 'PM25_AQI'],
-                        ['==', ['typeof', ['get', 'PM25_AQI']], 'number']
-                    ],
-                    paint: {
-                        'text-color': [
-                            'case',
-                            ['>=', ['number', ['get', 'PM25_AQI'], 0], 150],
-                            '#fff',
-                            '#000'
-                        ]
-                    },
-                    layout: {
-                        'text-ignore-placement': true,
-                        'text-allow-overlap': true,
-                        'text-font': config.fonts.din(),
-                        'text-field': ['to-string', ['number', ['get', 'PM25_AQI'], 0]],
-                        'text-size': 11,
-                        'text-justify': 'center',
-                        visibility: settings.isEnabled('airq') ? 'visible' : 'none'
-                    }
-                });
-            }
-        }
-    }
-
-    async lightning() {
-        const ltime = () => {
-            const now = new Date(),
-                mins = now.getUTCMinutes(),
-                roundedMins = mins < 30 ? 0 : 30;
-
-            now.setUTCMinutes(roundedMins, 0, 0);
-
-            return now.toISOString();
-        };
-
-        /*map.addSource('lightning1', {
-            type: 'raster',
-            maxzoom: 15,
-            tiles: [
-                //config.host + 'api/v1/lightning?key=' + config.apiKey() + '&x={x}&y={y}&z={z}&t=5'
-                //'https://tiles.lightningmaps.org/?x={x}&y={y}&z={z}&s=256&t=5'
-                'https://www.firewxavy.org/apis/lightning/5/{z}/{x}/{y}'
-                //'https://nowcoast.noaa.gov/geoserver/observations/lightning_detection/ows?request=GetMap&service=WMS&layers=ldn_lightning_strike_density&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=256&height=256&time=' + ltime() + '&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-            ],
-            tileSize: 256
-        });
-        
-        map.addLayer({
-            id: 'lightning1',
-            type: 'raster',
-            source: 'lightning1',
-            layout: {
-                visibility: settings.isEnabled('lightning1') || !settings.checkboxes() ? 'visible' : 'none'
-            }
-        });
-        
-        map.addSource('lightning24', {
-            type: 'raster',
-            maxzoom: 15,
-            tiles: [
-                //config.host + 'api/v1/lightning?key=' + config.apiKey() + '&x={x}&y={y}&z={z}&t=6'
-                //'https://tiles.lightningmaps.org/?x={x}&y={y}&z={z}&s=256&t=6'
-                'https://www.firewxavy.org/apis/lightning/6/{z}/{x}/{y}'
-            ],
-            tileSize: 256
-        });
-        
-        map.addLayer({
-            id: 'lightning24',
-            type: 'raster',
-            source: 'lightning24',
-            layout: {
-                visibility: settings.isEnabled('lightning24') || !settings.checkboxes() ? 'visible' : 'none'
-            }
-        });*/
-    }
-
-    async radarInit() {
-        await fetch('https://api.rainviewer.com/public/weather-maps.json').then(async (resp) => {
-            const imgs = await resp.json();
-
-            imgs.radar.past.forEach((e) => {
-                radarImgs.push(e.time);
-            });
-
-            let time = (n) => {
-                const d = new Date(radarImgs[n] * 1000),
-                    h = d.getHours(),
-                    m = d.getMinutes();
-
-                return (h > 12 ? h - 12 : (h == 12 ? 12 : h)) + ':' + (m < 10 ? '0' : '') + m + (h >= 12 ? 'p' : 'a') + 'm';
-            };
-
-            const rl = '<div class="radar"><div><span class="radarControl fas fa-pause" data-action="radar-control"></span><div class="time">' +
-                '<input type="range" steps="12" min="0" max="12" value="0">' +
-                '<div class="tr"><span>' + time(0) + '</span><span>' + time(6) + '</span><span>' + time(12) + '</span></div></div></div></div>';
-
-            document.body.insertAdjacentHTML('beforeend', rl);
-
-            this.radar();
-        });
-    }
-
-    radar() {
-        let counter = 0;
-
-        radarImgs.forEach((e, n) => {
-            map.addSource('radar-' + n, {
-                type: 'raster',
-                tiles: ['https://tilecache.rainviewer.com/v2/radar/' + e + '/256/{z}/{x}/{y}/4/0_1.png'],
-                tileSize: 256,
-                attribution: this.defaultAttr + '&copy; <a href="https://www.rainviewer.com">RainViewer</a>'
-            });
-
-            map.addLayer({
-                id: 'radar-layer-' + n,
-                type: 'raster',
-                source: 'radar-' + n,
-                layout: {
-                    visibility: 'none'
-                },
-                paint: {
-                    'raster-fade-duration': 0,
-                    'raster-opacity': 0.7
-                }
-            });
-        });
-
-        let ra = () => {
-            radarImgs.forEach((e, n) => {
-                map.setLayoutProperty('radar-layer-' + n, 'visibility', (n == counter ? 'visible' : 'none'));
-                document.querySelector('.radar input[type=range]').value = counter;
-            });
-
-            if (counter == radarImgs.length - 1) {
-                counter = 0;
-                clearInterval(radarAnim);
-
-                setTimeout(() => {
-                    radarAnim = setInterval(ra, RADAR_INT);
-                }, RADAR_INT);
-            } else {
-                counter++;
-            }
-        };
-
-        radarAnim = setInterval(ra, RADAR_INT);
-    }
-
-    async modis(w, update = false) {
-        const url = 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/Satellite_VIIRS_Thermal_Hotspots_and_Fire_Activity/FeatureServer/0/query',
-            n = (w == 1 ? '24' : (w == 2 ? '48' : '72')),
-            ts = (d) => {
-                const dt = new Date(Date.now() - d * 86400000),
-                    pad = (n) => n.toString().padStart(2, '0');
-                return `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-            },
-            start = ts(w),
-            end = w > 1 ? ts(w - 1) : null;
-
-        if (map.getZoom() >= config.modisZoomLevel) {
-            const data = await api(url, [
-                ['where', `acq_time >= DATE '${start}:00'${end ? ` AND acq_time < DATE '${end}:00'` : ''}`],
-                ['outFields', '*'],
-                ['geometry', getbbox()],
-                ['geometryPrecision', 6],
-                ['geometryType', 'esriGeometryEnvelope'],
-                ['spatialRel', 'esriSpatialRelIntersects'],
-                ['returnGeometry', true],
-                ['f', 'geojson']
-            ]);
-
-            if (update && data) {
-                map.getSource('modis' + n).setData(data);
-            } else {
-                if (!map.getSource('modis' + n)) {
-                    map.addSource('modis' + n, {
-                        type: 'geojson',
-                        data: data,
-                        cluster: true,
-                        clusterMaxZoom: window.innerWidth < 600 || window.outerWidth < 600 ? 8 : 9,
-                        clusterMinPoints: 4,
-                        clusterRadius: 20
-                    });
-                }
-
-                if (!map.getLayer('modis' + n)) {
-                    map.addLayer({
-                        id: 'modis' + n,
-                        type: 'symbol',
-                        source: 'modis' + n,
-                        layout: {
-                            'icon-image': 'modis' + w,
-                            'icon-size': 0.5,
-                            'icon-allow-overlap': true
-                        },
-                        paint: {
-                            'icon-opacity': [
-                                'interpolate',
-                                ['linear'],
-                                ['zoom'],
-                                0,
-                                0.5,
-                                10,
-                                0.5,
-                                13.5,
-                                1
-                            ]
-                        }
-                    });
-
-                    map.on('mouseenter', 'modis' + n, () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'modis' + n, () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
-                }
-            }
-        } else {
-            notify('info', 'You must be zoomed in more to see hotspots.');
-        }
-    }
-
-    async pnwVulnerability() {
-        const data = await api('https://services1.arcgis.com/gGHDlz6USftL5Pau/ArcGIS/rest/services/PNW_community_vulnerability_ranks_only/FeatureServer/0/query', [
-            ['where', '1=1'],
-            ['outFields', 'FID,City,State,Overall_Vu'],
-            ['returnGeometry', true],
-            ['resultType', 'tile'],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['f', 'geojson']
-        ]);
-
-        if (data && data.features.length > 0) {
-            if (!map.getSource('ev')) {
-                map.addSource('ev', {
-                    type: 'geojson',
-                    data: data
-                });
-            }
-
-            if (!map.getLayer('ev')) {
-                map.addLayer({
-                    id: 'ev',
-                    type: 'circle',
-                    source: 'ev',
-                    minzoom: 6.5,
-                    paint: {
-                        'circle-radius': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
-                            6,
-                            8,
-                            15,
-                            15
-                        ],
-                        'circle-color': [
-                            'case',
-                            ['<=', ['to-number', ['get', 'Overall_Vu']], 174],
-                            '#690207',
-                            [
-                                'all',
-                                ['>', ['to-number', ['get', 'Overall_Vu']], 174],
-                                ['<=', ['to-number', ['get', 'Overall_Vu']], 348],
-                            ],
-                            '#f6800b',
-                            [
-                                'all',
-                                ['>', ['to-number', ['get', 'Overall_Vu']], 348],
-                                ['<=', ['to-number', ['get', 'Overall_Vu']], 522],
-                            ],
-                            '#fef36d',
-                            '#a7dc83'
-                        ],
-                        'circle-opacity': 0.9,
-                        'circle-stroke-color': '#555',
-                        'circle-stroke-width': 1,
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-
-                map.on('mouseenter', 'ev', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'ev', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
-        }
-    }
-
-    async erc(update = false, toggle = false) {
-        const sel = document.querySelector('#erc_time'),
-            dy = sel ? sel.options[sel.selectedIndex].value : settings.special().erc(),
-            obs = [
-                'case',
-                ['<', ['to-number', ['get', 'avg_ec_percentile']], 60],
-                'rgb(56, 168, 0)',
-                [
-                    'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_percentile']], 60],
-                    ['<', ['to-number', ['get', 'avg_ec_percentile']], 80]
-                ],
-                'rgb(209, 255, 115)',
-                [
-                    'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_percentile']], 80],
-                    ['<', ['to-number', ['get', 'avg_ec_percentile']], 90]
-                ],
-                'rgb(255, 255, 190)',
-                [
-                    'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_percentile']], 90],
-                    ['<', ['to-number', ['get', 'avg_ec_percentile']], 97]
-                ],
-                'rgb(255, 170, 0)',
-                [
-                    'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_percentile']], 97],
-                    ['<', ['to-number', ['get', 'avg_ec_percentile']], 100]
-                ],
-                'rgb(255, 0, 0)',
-                ['>=', ['to-number', ['get', 'avg_ec_percentile']], 100],
-                'rgb(168, 0, 0)',
-                '#e1e1e1'
-            ],
-            fcst = [
-                'case',
-                ['<', ['to-number', ['get', 'avg_ec_fcast_percentile']], 60],
-                'rgb(56, 168, 0)',
-                [
-                    'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_fcast_percentile']], 60],
-                    ['<', ['to-number', ['get', 'avg_ec_fcast_percentile']], 80]
-                ],
-                'rgb(209, 255, 115)',
-                [
-                    'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_fcast_percentile']], 80],
-                    ['<', ['to-number', ['get', 'avg_ec_fcast_percentile']], 90]
-                ],
-                'rgb(255, 255, 190)',
-                [
-                    'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_fcast_percentile']], 90],
-                    ['<', ['to-number', ['get', 'avg_ec_fcast_percentile']], 97]
-                ],
-                'rgb(255, 170, 0)',
-                [
-                    'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_fcast_percentile']], 97],
-                    ['<', ['to-number', ['get', 'avg_ec_fcast_percentile']], 100]
-                ],
-                'rgb(255, 0, 0)',
-                ['>=', ['to-number', ['get', 'avg_ec_fcast_percentile']], 100],
-                'rgb(168, 0, 0)',
-                '#e1e1e1'
-            ];
-
-        if (toggle) {
-            map.setPaintProperty('erc_fill', 'fill-color', dy == 'obs' ? obs : fcst);
-        } else {
-            ////https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/DRAFT_NFDRS_v3_view/FeatureServer/1/query
-            const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/PSA_ERC_and_BI_Percentiles_and_Trends/FeatureServer/0/query', [
-                ['where', '1=1'],
-                ['outFields', 'OBJECTID,PSANAME,PSANationalCode,avg_erc,avg_erc_fcast_percentile,avg_erc_fcast_trend,avg_erc_percentile,avg_erc_trend,update_date,update_time,ERC_Chart_URL'],
-                //['outFields', 'PSANationalCode'],
-                ['returnGeometry', true],
-                ['inSR', 4326],
-                ['outSR', 4326],
-                ['resultType', 'tile'],
-                ['geometryPrecision', 6],
-                ['geometryType', 'esriGeometryEnvelope'],
-                ['spatialRel', 'esriSpatialRelIntersects'],
-                ['geometry', getbbox()],
-                ['f', 'geojson']
-            ]);
-
-            /* add ID to features for mapbox */
-            data.features.forEach((f, n) => {
-                data.features[n].id = f.properties.OBJECTID;
-            });
-
-            if (update) {
-                map.getSource('erc').setData(data);
-                map.setPaintProperty('erc_fill', 'fill-color', dy == 'obs' ? obs : fcst)
-            } else {
-                if (data && data.features.length > 0) {
-                    if (!map.getSource('erc')) {
-                        map.addSource('erc', {
-                            type: 'geojson',
-                            data: data
-                        });
-                    }
-
-                    if (!map.getLayer('erc_fill')) {
-                        map.addLayer({
-                            id: 'erc_fill',
-                            type: 'fill',
-                            source: 'erc',
-                            paint: {
-                                'fill-color': dy == 'obs' ? obs : fcst,
-                                'fill-opacity': 0.5
-                            },
-                            layout: {
-                                visibility: 'visible'
-                            }
-                        });
-                    }
-
-                    if (!map.getLayer('erc_outline')) {
-                        map.addLayer({
-                            id: 'erc_outline',
-                            type: 'line',
-                            source: 'erc',
-                            paint: {
-                                'line-color': [
-                                    'case',
-                                    ['boolean', ['feature-state', 'click'], false],
-                                    '#111',
-                                    '#555'
-                                ],
-                                'line-width': [
-                                    'case',
-                                    ['boolean', ['feature-state', 'click'], false],
-                                    3,
-                                    1
-                                ]
-                            },
-                            layout: {
-                                visibility: 'visible'
-                            }
-                        });
-                    }
-                }
-            }
-        }
-    }
-
-    /*nfdrs() {
-        if (!map.getSource('nfdrs')) {
-            map.addSource('nfdrs', {
-                'type': 'raster',
-                'tiles': [
-                    'https://fsapps.nwcg.gov/psp/arcgis/rest/services/npsg/Fire_Danger/MapServer/export?service=WMS&request=GetMap&layers=show:0&styles=&format=png32&transparent=true&version=1.1.1&id=National Fire Danger Rating System (NFDRS)&dpi=96&bboxSR=102100&imageSR=102100&size=256,256&f=image&width=1477&height=482&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-                ],
-                'tileSize': 256
-            });
-        }
- 
-        if (!map.getLayer('nfdrs')) {
-            map.addLayer({
-                id: 'nfdrs',
-                type: 'raster',
-                source: 'nfdrs',
-                paint: {
-                    'raster-opacity': 0.7
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }*/
-
-    sfp(update = false) {
-        const ss = document.querySelector('#sfpDateSelect'),
-            bkTime = ss ? ss.options[ss.selectedIndex].value : sfpTimes()[0].key,
-            time = settings.special().sfpDate() && new Date(settings.special().sfpDate()) >= new Date() ? settings.special().sfpDate() : bkTime,
-            url = 'https://fsapps.nwcg.gov/psp/arcgis/services/npsg/current_forecast/MapServer/WMSServer?service=WMS&request=GetMap&layers=0&styles=&format=image%2Fpng&transparent=true&version=1.1.1&Index=1&height=512&width=512&TIME=' + time + '&srs=EPSG%3A3857&bbox={bbox-epsg-3857}';
-
-        if (update) {
-            map.getSource('sfp').setTiles([
-                url
-            ]);
-        } else {
-            if (!map.getSource('sfp')) {
-                map.addSource('sfp', {
-                    type: 'raster',
-                    tiles: [
-                        url
-                    ],
-                    tileSize: 256
-                });
-            }
-
-            if (!map.getLayer('sfp')) {
-                map.addLayer({
-                    id: 'sfp',
-                    type: 'raster',
-                    source: 'sfp',
-                    paint: {
-                        'raster-opacity': 0.5
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-        }
-    }
-
-    async nri(update = false) {
-        const data = await api('https://services.arcgis.com/XG15cJAlne2vxtgt/ArcGIS/rest/services/National_Risk_Index_Counties/FeatureServer/0/query', [
-            ['where', '1=1'],
-            ['outFields', 'OBJECTID,NRI_ID,COUNTY,STATE,STATEABBRV,WFIR_RISKS,WFIR_RISKR,EAL_SPCTL,POPULATION,BUILDVALUE,AGRIVALUE,AREA'],
-            ['geometry', getbbox()],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['returnGeometry', true],
-            ['f', 'geojson']]);
-
-        if (update) {
-            map.getSource('nri').setData(data);
-        } else {
-            if (!map.getSource('nri')) {
-                map.addSource('nri', {
-                    type: 'geojson',
-                    data: data
-                });
-            }
-
-            if (!map.getLayer('nri_fill')) {
-                map.addLayer({
-                    id: 'nri_fill',
-                    type: 'fill',
-                    source: 'nri',
-                    paint: {
-                        'fill-color': [
-                            'case',
-                            ['==', ['get', 'WFIR_RISKR'], 'No Rating'], '#fff',
-                            ['==', ['get', 'WFIR_RISKR'], 'Very Low'], '#4d6dbd',
-                            ['==', ['get', 'WFIR_RISKR'], 'Relatively Low'], '#509bc7',
-                            ['==', ['get', 'WFIR_RISKR'], 'Relatively Moderate'], '#f0d55d',
-                            ['==', ['get', 'WFIR_RISKR'], 'Relatively High'], '#e07069',
-                            ['==', ['get', 'WFIR_RISKR'], 'Very High'], '#c7445d',
-                            '#9e9e9e'
-                        ],
-                        'fill-opacity': 0.5
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-
-            if (!map.getLayer('nri_outline')) {
-                map.addLayer({
-                    id: 'nri_outline',
-                    type: 'line',
-                    source: 'nri',
-                    paint: {
-                        'line-color': [
-                            'case',
-                            ['boolean', ['feature-state', 'click'], false],
-                            '#111',
-                            '#555'
-                        ],
-                        'line-width': [
-                            'case',
-                            ['boolean', ['feature-state', 'click'], false],
-                            3,
-                            1
-                        ]
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-        }
-    }
-
-    async power(update = false) {
-        const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/powerlines/FeatureServer/0/query', [
-            ['where', '1=1'],
-            ['outFields', '*'],
-            ['geometry', getbbox()],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['returnGeometry', true],
-            ['f', 'geojson']]);
-
-        if (update) {
-            map.getSource('power').setData(data);
-        } else {
-            if (!map.getSource('power')) {
-                map.addSource('power', {
-                    type: 'geojson',
-                    data: data
-                });
-            }
-
-            if (!map.getLayer('power')) {
-                map.addLayer({
-                    id: 'power',
-                    type: 'line',
-                    source: 'power',
-                    minzoom: 6,
-                    paint: {
-                        'line-color': '#9c27b0',
-                        'line-width': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
-                            6,
-                            2,
-                            16,
-                            6
-                        ]
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-        }
-    }
-
-    rth() {
-        if (!map.getSource('rth')) {
-            map.addSource('rth', {
-                type: 'raster',
-                tiles: [
-                    'https://imagery.geoplatform.gov/iipp/rest/services/Fire_Aviation/USFS_EDW_RMRS_WRC_RiskToPotentialStructures/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Risk%20to%20Homes&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-                ],
-                tileSize: 256
-            });
-        }
-
-        if (!map.getLayer('rth')) {
-            map.addLayer({
-                id: 'rth',
-                type: 'raster',
-                source: 'rth',
-                paint: {
-                    'raster-opacity': 0.6
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }
-
-    wet() {
-        if (!map.getSource('wet')) {
-            map.addSource('wet', {
-                type: 'raster',
-                tiles: [
-                    'https://imagery.geoplatform.gov/iipp/rest/services/Fire_Aviation/USFS_EDW_RMRS_WRC_ExposureType/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Risk%20to%20Homes&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-                ],
-                tileSize: 256
-            });
-        }
-
-        if (!map.getLayer('wet')) {
-            map.addLayer({
-                id: 'wet',
-                type: 'raster',
-                source: 'wet',
-                paint: {
-                    'raster-opacity': 0.6
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }
-
-    bp() {
-        if (!map.getSource('bp')) {
-            map.addSource('bp', {
-                type: 'raster',
-                tiles: [
-                    'https://imagery.geoplatform.gov/iipp/rest/services/Fire_Aviation/USFS_EDW_RMRS_WRC_BurnProbablility/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Risk%20to%20Homes&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-                ],
-                tileSize: 256
-            });
-        }
-
-        if (!map.getLayer('bp')) {
-            map.addLayer({
-                id: 'bp',
-                type: 'raster',
-                source: 'bp',
-                paint: {
-                    'raster-opacity': 0.6
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }
-
-    whp() {
-        if (!map.getSource('whp')) {
-            map.addSource('whp', {
-                type: 'raster',
-                tiles: [
-                    'https://imagery.geoplatform.gov/iipp/rest/services/Fire_Aviation/USFS_EDW_RMRS_WRC_WildfireHazardPotential/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Hazard%20Potential%20(2018)&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-                ],
-                tileSize: 256
-            });
-        }
-
-        if (!map.getLayer('whp')) {
-            map.addLayer({
-                id: 'whp',
-                type: 'raster',
-                source: 'whp',
-                paint: {
-                    'raster-opacity': 0.6
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }
-
-    async drought() {
-        if (!map.getSource('drought')) {
-            map.addSource('drought', {
-                type: 'raster',
-                tiles: [
-                    'https://ndmcgeodata.unl.edu/cgi-bin/mapserv.exe?map=/ms4w/apps/usdm/map/usdm_current_wms.map&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=usdm_current&WIDTH=256&HEIGHT=256&crs=EPSG:3857&styles=default&format=image/png&bbox={bbox-epsg-3857}'
-                ],
-                tileSize: 256
-            });
-        }
-
-        if (!map.getLayer('drought')) {
-            map.addLayer({
-                id: 'drought',
-                type: 'raster',
-                source: 'drought',
-                paint: {
-                    'raster-opacity': 0.6
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }
-
-    async fuels() {
-        if (config.fuelsData == null) {
-            const data = await api('https://lfps.usgs.gov/arcgis/rest/services/Landfire_LF250/US_250EVT/ImageServer/rasterAttributeTable', [['f', 'json'], ['renderingRule', '{"rasterFunction":"US_250EVT"}']]);
-
-            config.fuelsData = data.features;
-        }
-
-        if (!map.getSource('fuels')) {
-            map.addSource('fuels', {
-                type: 'raster',
-                tiles: [
-                    'https://dmsdata.cr.usgs.gov/geoserver/gwc/service/wms?REQUEST=GetMap&SERVICE=WMS&VERSION=1.3.0&FORMAT=image%2Fpng&STYLES=&TRANSPARENT=true&LAYERS=landfire%3ALC24_EVT_250&TILED=true&SRS=EPSG%3A3857&jsonLayerId=us_240%20Fuel%20Vegetation%20Type&WIDTH=256&HEIGHT=256&CRS=EPSG%3A3857&BBOX={bbox-epsg-3857}'
-                ],
-                tileSize: 256
-            });
-        }
-        if (!map.getSource('fuelsAK')) {
-            map.addSource('fuelsAK', {
-                type: 'raster',
-                tiles: [
-                    'https://dmsdata.cr.usgs.gov/geoserver/gwc/service/wms?REQUEST=GetMap&SERVICE=WMS&VERSION=1.3.0&FORMAT=image%2Fpng&STYLES=&TRANSPARENT=true&LAYERS=landfire%3ALA24_EVT_250&TILED=true&SRS=EPSG%3A3857&jsonLayerId=ak_240%20Existing%20Vegetation%20Type&WIDTH=256&HEIGHT=256&CRS=EPSG%3A3857&BBOX={bbox-epsg-3857}'
-                ],
-                tileSize: 256
-            });
-        }
-
-        if (!map.getLayer('fuels')) {
-            map.addLayer({
-                id: 'fuels',
-                type: 'raster',
-                source: 'fuels',
-                paint: {
-                    'raster-opacity': 0.6
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-
-        if (!map.getLayer('fuelsAK')) {
-            map.addLayer({
-                id: 'fuelsAK',
-                type: 'raster',
-                source: 'fuelsAK',
-                paint: {
-                    'raster-opacity': 0.6
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }
-
-    countyBounds() {
-        if (!map.getSource('countyBounds')) {
-            map.addSource('countyBounds', {
-                type: 'raster',
-                tiles: [
-                    'https://mapservices.weather.noaa.gov/static/rest/services/nws_reference_maps/nws_reference_map/MapServer/export?service=WMS&request=GetMap&layers=show%3A2&styles=&format=png32&transparent=true&version=1.1.1&id=Counties&size=256,256&bboxSR=102100&imageSR=102100&f=image&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-                ],
-                tileSize: 256
-            });
-        }
-
-        if (!map.getLayer('countyBounds')) {
-            map.addLayer({
-                id: 'countyBounds',
-                type: 'raster',
-                source: 'countyBounds',
-                paint: {
-                    'raster-opacity': 1
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }
-
-    nwsCWAs() {
-        if (!map.getSource('nwsCWAs')) {
-            map.addSource('nwsCWAs', {
-                type: 'raster',
-                tiles: [
-                    'https://mapservices.weather.noaa.gov/static/rest/services/nws_reference_maps/nws_reference_map/MapServer/export?service=WMS&request=GetMap&layers=show%3A1&styles=&format=png32&transparent=true&version=1.1.1&id=NWS%20CWAs&size=256,256&bboxSR=3857&imageSR=3857&f=image&dpi=90&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-                ],
-                tileSize: 256
-            });
-        }
-
-        if (!map.getLayer('nwsCWAs')) {
-            map.addLayer({
-                id: 'nwsCWAs',
-                type: 'raster',
-                source: 'nwsCWAs',
-                paint: {
-                    'raster-opacity': 1
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }
-
-    /*usfs() {
-        if (!map.getSource('usfs')) {
-            map.addSource('usfs', {
-                type: 'raster',
-                tiles: [
-                    'https://apps.fs.usda.gov/fsgisx05/rest/services/wo_nfs_gtac/EGIS_RecreationBasemap_01/MapServer/tile/{z}/{y}/{x}'
-                ],
-                tileSize: 256
-            });
-        }
- 
-        if (!map.getLayer('usfs')) {
-            map.addLayer({
-                id: 'usfs',
-                type: 'raster',
-                source: 'usfs',
-                minzoom: 0,
-                maxzoom: 19,        
-                paint: {
-                    'raster-opacity': 1
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }*/
-
-    roads() {
-        if (!map.getSource('roads')) {
-            map.addSource('roads', {
-                type: 'raster',
-                tiles: [
-                    'https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_RoadBasic_01/MapServer/export?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=USFS%20Road%20Network&bboxSR=102100&imageSR=102100&size=256,256&f=image&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-                ],
-                tileSize: 256
-            });
-        }
-
-        if (!map.getLayer('roads')) {
-            if (map.getZoom() > 11) {
-                map.addLayer({
-                    id: 'roads',
-                    type: 'raster',
-                    source: 'roads',
-                    paint: {
-                        'raster-opacity': 1
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            } else {
-                notify('info', 'You must be zoomed in more to see USFS roads.');
-            }
-        }
-    }
-
-    lands() {
-        if (!map.getSource('lands')) {
-            map.addSource('lands', {
-                type: 'raster',
-                tiles: [
-                    /*'https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_Cached_without_PriUnk/MapServer/export?service=WMS&request=GetMap&layers=show%3A17&styles=&format=png32&transparent=true&version=1.1.1&id=Federal%20Lands&dpi=96&bboxSR=102100&imageSR=102100&size=256,256&f=image&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'*/
-                    'https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_Cached_without_PriUnk/MapServer/tile/{z}/{y}/{x}'
-                ],
-                tileSize: 256
-            });
-        }
-
-        if (!map.getLayer('lands')) {
-            map.addLayer({
-                id: 'lands',
-                type: 'raster',
-                source: 'lands',
-                paint: {
-                    'raster-opacity': 0.6
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }
-
-    plss() {
-        if (!map.getSource('plss')) {
-            map.addSource('plss', {
-                type: 'raster',
-                tiles: [
-                    'https://gis.blm.gov/arcgis/rest/services/Cadastral/BLM_Natl_PLSS_CadNSDI/MapServer/export?service=WMS&request=GetMap&layers=show%3A1%2C2%2C3&styles=&format=png32&transparent=true&version=1.1.1&id=PLSS&dpi=96&bboxSR=102100&imageSR=102100&size=256,256&f=image&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-                ],
-                tileSize: 256
-            });
-        }
-
-        if (!map.getLayer('plss')) {
-            map.addLayer({
-                id: 'plss',
-                type: 'raster',
-                source: 'plss',
-                paint: {
-                    'raster-opacity': 1
-                },
-                layout: {
-                    visibility: 'visible'
-                }
-            });
-        }
-    }
-
-    async dispatch(update = false) {
-        const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/DMP_National_Dispatch_Boundaries_Public/FeatureServer/0/query', [
-            ['where', '1=1'],
-            ['outFields', 'OBJECTID,DispName,DispUnitID,DispLocation,ContactPhone'],
-            ['returnGeometry', true],
-            ['resultType', 'tile'],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['geometry', getbbox()],
-            ['f', 'geojson']
-        ]);
-
-        if (update) {
-            map.getSource('dispatch').setData(data);
-        } else {
-            if (data && data.features.length > 0) {
-                if (!map.getSource('dispatch')) {
-                    map.addSource('dispatch', {
-                        type: 'geojson',
-                        data: data
-                    });
-                }
-
-                if (!map.getLayer('dispatch_outline')) {
-                    map.addLayer({
-                        id: 'dispatch_outline',
-                        type: 'line',
-                        source: 'dispatch',
-                        paint: {
-                            'line-color': '#000',
-                            'line-width': 2
-                        },
-                        layout: {
-                            visibility: 'visible'
-                        }
-                    });
-                }
-
-                if (!map.getLayer('dispatch_title')) {
-                    map.addLayer({
-                        id: 'dispatch_title',
-                        type: 'symbol',
-                        source: 'dispatch',
-                        minzoom: 5.7,
-                        paint: {
-                            'text-color': '#000',
-                            'text-halo-color': '#fff',
-                            'text-halo-blur': 1,
-                            'text-halo-width': 1
-                        },
-                        layout: {
-                            'symbol-placement': 'point',
-                            'symbol-spacing': 450,
-                            'text-font': config.fonts.din(),
-                            'text-field': ['get', 'DispName'],
-                            'text-justify': 'auto',
-                            'text-size': 14,
-                            'text-max-width': 12,
-                            'text-anchor': 'bottom',
-                            'text-offset': [0, 1.3],
-                            'text-letter-spacing': 0.05
-                        }
-                    });
-                }
-            }
-        }
-    }
-
-    async gaccBounds(update = false) {
-        const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/DMP_NationalGACCBoundaries_Public/FeatureServer/0/query', [
-            ['where', '1=1'],
-            ['outFields', 'OBJECTID,GACCUnitID,GACCName,GACCLocation'],
-            ['returnGeometry', true],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['resultType', 'tile'],
-            ['geometry', getbbox()],
-            ['f', 'geojson']
-        ]);
-
-        if (update) {
-            map.getSource('gaccBounds').setData(data);
-        } else {
-            if (data && data.features.length > 0) {
-                if (!map.getSource('gaccBounds')) {
-                    map.addSource('gaccBounds', {
-                        type: 'geojson',
-                        data: data
-                    });
-                }
-
-                if (!map.getLayer('gaccBounds')) {
-                    map.addLayer({
-                        id: 'gaccBounds',
-                        type: 'line',
-                        source: 'gaccBounds',
-                        paint: {
-                            'line-color': '#000',
-                            'line-width': 2
-                        },
-                        layout: {
-                            visibility: 'visible'
-                        }
-                    });
-                }
-
-                if (!map.getLayer('gaccBounds_title')) {
-                    map.addLayer({
-                        id: 'gaccBounds_title',
-                        type: 'symbol',
-                        source: 'gaccBounds',
-                        minzoom: 5.7,
-                        paint: {
-                            'text-color': '#000',
-                            'text-halo-color': '#fff',
-                            'text-halo-blur': 1,
-                            'text-halo-width': 1
-                        },
-                        layout: {
-                            'symbol-placement': 'point',
-                            'symbol-spacing': 450,
-                            'text-font': config.fonts.din(),
-                            'text-field': ['get', 'GACCName'],
-                            'text-justify': 'auto',
-                            'text-size': 14,
-                            'text-max-width': 12,
-                            'text-anchor': 'bottom',
-                            'text-offset': [0, 1.3],
-                            'text-letter-spacing': 0.05
-                        }
-                    });
-                }
-            }
-        }
-    }
-
-    async hms(update = false) {
-        const data = await api('https://services2.arcgis.com/C8EMgrsFcRFL6LrL/arcgis/rest/services/NOAA_Satellite_Smoke_Detection_(v1)/FeatureServer/0/query', [
-            ['where', '1=1'],
-            ['outFields', '*'],
-            ['resultType', 'tile'],
-            ['geometry', getbbox()],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['returnGeometry', true],
-            ['f', 'geojson']
-        ]);
-
-        if (update && map.getSource('hms')) {
-            map.getSource('hms').setData(data);
-        } else {
-            if (!map.getSource('hms')) {
-                map.addSource('hms', {
-                    type: 'geojson',
-                    data: data
-                });
-            }
-
-            if (!map.getLayer('hms')) {
-                map.addLayer({
-                    id: 'hms',
-                    type: 'fill',
-                    source: 'hms',
-                    paint: {
-                        'fill-color': [
-                            'case',
-                            ['==', ['get', 'Density'], 'Light'], '#aaa',
-                            ['==', ['get', 'Density'], 'Light'], '#757575',
-                            '#666'
-                        ],
-                        'fill-opacity': 0.5
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-
-            if (!map.getSource('hms_title')) {
-                map.addLayer({
-                    id: 'hms_title',
-                    type: 'symbol',
-                    source: 'hms',
-                    minzoom: 5.8,
-                    paint: {
-                        'text-color': '#333',
-                        'text-halo-color': '#f9f9f9',
-                        'text-halo-blur': 1,
-                        'text-halo-width': 1
-                    },
-                    layout: {
-                        'symbol-placement': 'line',
-                        'symbol-spacing': 200,
-                        'text-font': config.fonts.din(),
-                        'text-field': ['concat', ['get', 'Density'], ' Smoke'],
-                        'text-size': 13,
-                        'text-max-angle': 30,
-                        'text-padding': 5,
-                        'text-pitch-alignment': 'viewport',
-                        'text-rotation-alignment': 'map',
-                        'text-offset': [0, 1]
-                    }
-                });
-            }
-        }
-    }
-
-    async smokeFcst(update = false) {
-        const start = gmtime(+3600).replace('T', ' '),
-            end = gmtime(+7200).replace('T', ' '),
-            rounds = ['0 - 3', '3 - 25', '25 - 63', '63 - 158', '158 - 1000'],
-            data = await api('https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NDGD_SmokeForecast_v1/FeatureServer/0/query', [
-                ['where', '1=1 AND todate > DATE \'' + start + '\' AND todate < DATE \'' + end + '\''],
-                ['outFields', '*'],
-                ['resultType', 'tile'],
-                ['geometry', getbbox()],
-                ['geometryPrecision', 6],
-                ['geometryType', 'esriGeometryEnvelope'],
-                ['spatialRel', 'esriSpatialRelIntersects'],
-                ['returnGeometry', true],
-                ['f', 'geojson']
-            ]);
-
-        // update the geojson so maplibre can parse the colors correctly
-        if (data.features && data.features.length > 0) {
-            for (let i = 0; i < data.features.length; i++) {
-                const txt = data.features[i].properties.smoke_classdesc.toString();
-
-                data.features[i].properties.class = txt;
-
-                for (let x = 0; x < rounds.length; x++) {
-                    if (txt.search(rounds[x]) >= 0) {
-                        data.features[i].properties.smoke_classdesc = x;
-                    }
-                }
-            }
-        }
-
-        if (update && map.getSource('smokeFcst')) {
-            map.getSource('smokeFcst').setData(data);
-        } else {
-            if (!map.getSource('smokeFcst')) {
-                map.addSource('smokeFcst', {
-                    type: 'geojson',
-                    data: data
-                });
-            }
-
-            if (!map.getLayer('smokeFcst')) {
-                map.addLayer({
-                    id: 'smokeFcst',
-                    type: 'fill',
-                    source: 'smokeFcst',
-                    paint: {
-                        'fill-color': [
-                            'case',
-                            ['==', ['to-string', ['get', 'smoke_classdesc']], '0'], '#ffffc0',
-                            ['==', ['to-string', ['get', 'smoke_classdesc']], '1'], '#fcdf8b',
-                            ['==', ['to-string', ['get', 'smoke_classdesc']], '2'], '#f6c26d',
-                            ['==', ['to-string', ['get', 'smoke_classdesc']], '3'], '#c5885c',
-                            ['==', ['to-string', ['get', 'smoke_classdesc']], '4'], '#974f4f',
-                            '#f8fde0'
-                        ],
-                        'fill-opacity': 0.6
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-        }
-    }
-
-    sfcSmoke(fcstHour = null) {
-        if (fcstHour == null) {
-            fcstHour = hrrrSmokeTime.fcst;
-
-            if (!map.getSource('sfcSmoke')) {
-                map.addSource('sfcSmoke', {
-                    type: 'raster',
-                    tiles: [
-                        'https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=sfc_smoke&x={x}&y={y}&z={z}&time=' + fcstHour + '&modelrun=' + hrrrSmokeTime.init + '&level=0'
-                    ],
-                    tileSize: 256
-                });
-            }
-
-            if (!map.getLayer('sfcSmoke')) {
-                map.addLayer({
-                    id: 'sfcSmoke',
-                    type: 'raster',
-                    source: 'sfcSmoke',
-                    paint: {
-                        'raster-opacity': 0.75
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-        } else {
-            map.getSource('sfcSmoke').setTiles([
-                'https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=sfc_smoke&x={x}&y={y}&z={z}&time=' + fcstHour + '&modelrun=' + hrrrSmokeTime.init + '&level=0'
-            ]);
-        }
-    }
-
-    viSmoke(fcstHour = null) {
-        if (fcstHour == null) {
-            fcstHour = hrrrSmokeTime.fcst;
-
-            if (!map.getSource('viSmoke')) {
-                map.addSource('viSmoke', {
-                    type: 'raster',
-                    tiles: [
-                        'https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=vi_smoke&x={x}&y={y}&z={z}&time=' + fcstHour + '&modelrun=' + hrrrSmokeTime.init + '&level=0'
-                    ],
-                    tileSize: 256
-                });
-            }
-
-            if (!map.getLayer('viSmoke')) {
-                map.addLayer({
-                    id: 'viSmoke',
-                    type: 'raster',
-                    source: 'viSmoke',
-                    paint: {
-                        'raster-opacity': 0.75
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-        } else {
-            map.getSource('viSmoke').setTiles([
-                'https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=vi_smoke&x={x}&y={y}&z={z}&time=' + fcstHour + '&modelrun=' + hrrrSmokeTime.init + '&level=0'
-            ]);
-        }
-    }
-
-    async odfFDR(update = false) {
-        const color = [
-            'case',
-            ['==', ['to-number', ['get', 'firedanger']], 1], '#8bc53f',
-            ['==', ['to-number', ['get', 'firedanger']], 2], '#fef100',
-            ['==', ['to-number', ['get', 'firedanger']], 3], '#ffa939',
-            ['==', ['to-number', ['get', 'firedanger']], 4], '#ec1c24',
-            '#fff'
-        ],
-            data = await api('https://gis.odf.oregon.gov/odfags/rest/services/Hosted/Fire_Danger_Level_View/FeatureServer/0/query', [
-                ['where', '1=1'],
-                ['outFields', '*'],
-                ['returnGeometry', true],
-                ['geometryPrecision', 12],
-                ['f', 'geojson']
-            ]);
-
-        if (update) {
-            map.getSource('odfFDR').setData(data);
-        } else {
-            if (data && data.features.length > 0) {
-                if (!map.getSource('odfFDR')) {
-                    map.addSource('odfFDR', {
-                        type: 'geojson',
-                        data: data
-                    });
-                }
-
-                if (!map.getLayer('odfFDR')) {
-                    map.addLayer({
-                        id: 'odfFDR',
-                        type: 'fill',
-                        source: 'odfFDR',
-                        paint: {
-                            'fill-color': color,
-                            'fill-opacity': 0.3
-                        },
-                        layout: {
-                            visibility: 'visible'
-                        }
-                    });
-
-                    map.on('mouseenter', 'odfFDR', () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'odfFDR', () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
-                }
-
-                if (!map.getLayer('odfFDR_outline')) {
-                    map.addLayer({
-                        id: 'odfFDR_outline',
-                        type: 'line',
-                        source: 'odfFDR',
-                        paint: {
-                            'line-color': color,
-                            'line-width': 2
-                        },
-                        layout: {
-                            visibility: 'visible'
-                        }
-                    });
-                }
-
-                if (!map.getLayer('odfFDR_title')) {
-                    map.addLayer({
-                        id: 'odfFDR_title',
-                        type: 'symbol',
-                        source: 'odfFDR',
-                        minzoom: 4,
-                        paint: {
-                            'text-color': '#000',
-                            'text-halo-color': '#ddd',
-                            'text-halo-blur': 1,
-                            'text-halo-width': 1
-                        },
-                        layout: {
-                            'symbol-placement': 'line',
-                            'symbol-spacing': 400,
-                            'text-font': config.fonts.din(),
-                            'text-field': [
-                                'concat',
-                                'ODF Fire Danger: ',
-                                [
-                                    'case',
-                                    ['==', ['to-number', ['get', 'firedanger']], 4],
-                                    'Extreme',
-                                    ['==', ['to-number', ['get', 'firedanger']], 3],
-                                    'High',
-                                    ['==', ['to-number', ['get', 'firedanger']], 2],
-                                    'Moderate',
-                                    ['==', ['to-number', ['get', 'firedanger']], 1],
-                                    'Low',
-                                    'N/A'
-                                ],
-                                ' (',
-                                ['get', 'regusearea'],
-                                ')'
-                            ],
-                            'text-justify': 'auto',
-                            'text-size': 16,
-                            'text-max-width': 12,
-                            'text-max-angle': 30,
-                            'text-transform': 'uppercase',
-                            'text-anchor': 'bottom',
-                            'text-offset': [0, 1.6],
-                            'text-letter-spacing': 0.05
-                        }
-                    });
-                }
-            }
-        }
-    }
-
-    async calfireUnits(update = false) {
-        const data = await api('https://services1.arcgis.com/jUJYIo9tSA7EHvfZ/arcgis/rest/services/cdfadmin19_1/FeatureServer/0/query', [
-            ['where', '1=1'],
-            ['outFields', 'UNIT,UNITCODE,REGION'],
-            ['returnGeometry', true],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['geometry', getbbox()],
-            ['resultType', 'tile'],
-            ['f', 'geojson']
-        ]);
-
-        if (update) {
-            map.getSource('calfireUnits').setData(data);
-        } else {
-            if (data && data.features.length > 0) {
-                if (!map.getSource('calfireUnits')) {
-                    map.addSource('calfireUnits', {
-                        type: 'geojson',
-                        data: data
-                    });
-                }
-
-                if (!map.getLayer('calfireUnits')) {
-                    map.addLayer({
-                        id: 'calfireUnits',
-                        type: 'line',
-                        source: 'calfireUnits',
-                        paint: {
-                            'line-color': '#177ca3',
-                            'line-width': 2
-                        },
-                        layout: {
-                            visibility: 'visible'
-                        }
-                    });
-                }
-
-                if (!map.getLayer('calfireUnits_title')) {
-                    map.addLayer({
-                        id: 'calfireUnits_title',
-                        type: 'symbol',
-                        source: 'calfireUnits',
-                        minzoom: 5.7,
-                        paint: {
-                            'text-color': '#177ca3',
-                            'text-halo-color': '#fff',
-                            'text-halo-blur': 1,
-                            'text-halo-width': 1
-                        },
-                        layout: {
-                            'symbol-placement': 'point',
-                            'symbol-spacing': 450,
-                            'text-font': config.fonts.din(),
-                            'text-field': ['get', 'UNIT'],
-                            'text-justify': 'auto',
-                            'text-size': 14,
-                            'text-max-width': 12,
-                            'text-anchor': 'bottom',
-                            'text-offset': [0, 1.3],
-                            'text-letter-spacing': 0.05
-                        }
-                    });
-                }
-            }
-        }
-    }
-
-    async cdfFHSZ(update = false) {
-        const data = await api('https://services1.arcgis.com/jUJYIo9tSA7EHvfZ/ArcGIS/rest/services/FHSZ_SRA_LRA_Combined/FeatureServer/0/query', [
-            ['where', '1=1'],
-            ['outFields', 'FHSZ'],
-            ['returnGeometry', true],
-            ['resultType', 'tile'],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['geometry', getbbox()],
-            ['f', 'geojson']
-        ]);
-
-        if (update) {
-            map.getSource('cdfFHSZ').setData(data);
-        } else {
-            if (data && data.features.length > 0) {
-                if (!map.getSource('cdfFHSZ')) {
-                    map.addSource('cdfFHSZ', {
-                        type: 'geojson',
-                        data: data
-                    });
-                }
-
-                if (!map.getLayer('cdfFHSZ')) {
-                    map.addLayer({
-                        id: 'cdfFHSZ',
-                        type: 'fill',
-                        source: 'cdfFHSZ',
-                        paint: {
-                            'fill-color': [
-                                'case',
-                                ['==', ['to-number', ['get', 'FHSZ']], 1], '#ffff00',
-                                ['==', ['to-number', ['get', 'FHSZ']], 2], '#ffaa00',
-                                '#ff0000'
-                            ],
-                            'fill-opacity': 0.75
-                        },
-                        layout: {
-                            visibility: 'visible'
-                        }
-                    });
-                }
-            }
-        }
-    }
-
-    async calfireAircraft(update = false) {
-        const data = await api('https://services1.arcgis.com/jUJYIo9tSA7EHvfZ/ArcGIS/rest/services/CAL_FIRE_Aircraft_Tracking_public_view/FeatureServer/0/query', [
-            ['where', '1=1'],
-            ['outFields', '*'],
-            ['geometryPrecision', 6],
-            ['returnGeometry', true],
-            ['f', 'geojson']
-        ]);
-
-        if (update) {
-            map.getSource('calfireAircraft').setData(data);
-        } else {
-            if (data && data.features.length > 0) {
-                if (!map.getSource('calfireAircraft')) {
-                    map.addSource('calfireAircraft', {
-                        type: 'geojson',
-                        data: data
-                    });
-                }
-
-                if (!map.getLayer('calfireAircraft')) {
-                    map.addLayer({
-                        id: 'calfireAircraft',
-                        type: 'symbol',
-                        minzoom: 5,
-                        source: 'calfireAircraft',
-                        layout: {
-                            'icon-image': [
-                                'case',
-                                ['==', ['get', 'organizationGroup'], 'Helicopter'], 'helicopter',
-                                ['==', ['get', 'organizationGroup'], 'Tactical'], 'plane_tactical',
-                                ['==', ['get', 'organizationGroup'], 'Tanker'], 'plane_large', 'plane_small'],
-                            'icon-size': 0.8,
-                            'icon-rotate': ['to-number', ['get', 'cog']],
-                            'icon-allow-overlap': true,
-                            visibility: 'visible'
-                        }
-                    });
-                }
-
-                if (!map.getLayer('calfireAircraft_title')) {
-                    map.addLayer({
-                        id: 'calfireAircraft_title',
-                        type: 'symbol',
-                        minzoom: 5.7,
-                        source: 'calfireAircraft',
-                        paint: {
-                            'text-color': '#444',
-                            'text-halo-color': '#fff',
-                            'text-halo-blur': 1,
-                            'text-halo-width': 2
-                        },
-                        layout: {
-                            'symbol-placement': 'point',
-                            'text-font': config.fonts.source(),
-                            'text-field': ['concat', ['get', 'unitId'], ' ', [
-                                'case',
-                                ['!=', ['to-string', ['get', 'tailNumber']], 'null'],
-                                ['concat', '(', ['get', 'tailNumber'], ')'],
-                                ''
-                            ], ['get', 'category']],
-                            'text-justify': 'center',
-                            'text-size': 12,
-                            'text-max-width': 8,
-                            'text-anchor': 'bottom',
-                            'text-offset': [0, 4.5],
-                            'text-letter-spacing': 0.05,
-                            visibility: 'visible'
-                        }
-                    });
-                }
-            }
-        }
-    }
-
-    async evacuations() {
-        if (!evacsLoaded) {
-            const data = await api(config.apiURL + 'evacuations'),
-                color = [
-                    'case',
-                    ['==', ['to-number', ['get', 'level']], 2], '#edd601',
-                    ['==', ['to-number', ['get', 'level']], 3], '#e60000',
-                    '#02823a'
-                ];
-
-            /* store active evacuations for use elsewhere within the map */
-            evacsLoaded = true;
-            if (data.features && data.features.length > 0) {
-                activeEvacuations = data.features;
-            }
-
-            if (!map.getSource('evac')) {
-                map.addSource('evac', {
-                    type: 'geojson',
-                    data: data
-                });
-            }
-
-            if (!map.getLayer('evac')) {
-                map.addLayer({
-                    id: 'evac',
-                    type: 'fill',
-                    source: 'evac',
-                    paint: {
-                        'fill-color': color,
-                        'fill-opacity': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
-                            4,
-                            0.6,
-                            8,
-                            0.3,
-                            11,
-                            0.25
-                        ]
-                    },
-                    layout: {
-                        visibility: settings.isEnabled('evac') ? 'visible' : 'none'
-                    }
-                });
-
-                map.on('mouseenter', 'evac', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'evac', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
-
-            if (!map.getLayer('evac_outline')) {
-                map.addLayer({
-                    id: 'evac_outline',
-                    type: 'line',
-                    source: 'evac',
-                    paint: {
-                        'line-color': '#333'/*[
-                                'case',
-                                ['boolean', ['feature-state', 'click'], false],
-                                '#00a6ed',
-                                '#222'
-                            ]*/,
-                        'line-width': [
-                            'case',
-                            ['boolean', ['feature-state', 'click'], false],
-                            3,
-                            1
-                        ]/*2,
-                            'line-dasharray': [0, 2, 3]*/
-                    },
-                    layout: {
-                        visibility: settings.isEnabled('evac') ? 'visible' : 'none'
-                    }
-                });
-            }
-
-            if (!map.getLayer('evac_title')) {
-                map.addLayer({
-                    id: 'evac_title',
-                    type: 'symbol',
-                    source: 'evac',
-                    minzoom: 9,
-                    paint: {
-                        'text-color': '#333',
-                        'text-halo-color': '#fff',
-                        'text-halo-blur': 1,
-                        'text-halo-width': 1
-                    },
-                    layout: {
-                        'symbol-placement': 'point',
-                        'symbol-spacing': 200,
-                        'text-font': config.fonts.roboto(),
-                        'text-field': [
-                            'case',
-                            ['==', ['to-number', ['get', 'level']], 2], 'Level 2: BE SET',
-                            ['==', ['to-number', ['get', 'level']], 3], 'Level 3: GO NOW',
-                            'Level 1: Be Ready'
-                        ],
-                        'text-justify': 'center',
-                        'text-size': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
-                            10,
-                            10,
-                            12,
-                            15
-                        ],
-                        'text-max-width': 8,
-                        'text-anchor': 'center',
-                        'text-offset': [0, 1],
-                        'text-letter-spacing': 0.05,
-                        visibility: settings.isEnabled('evac') ? 'visible' : 'none'
-                    }
-                });
-            }
-        }
-    }
-
-    async firemed(update = false) {
-        const types = ['hosp', 'ems', 'fire'],
-            baseURL = 'https://services2.arcgis.com/FiaPA4ga0iQKduv3/ArcGIS/rest/services/Structures_Medical_Emergency_Response_v1/FeatureServer/',
-            fields = [
-                ['where', '1=1'],
-                ['outFields', 'OBJECTID,NAME,ADDRESS,CITY,STATE,ZIPCODE'],
-                ['resultType', 'tile'],
-                ['geometry', getbbox()],
-                ['geometryPrecision', 6],
-                ['geometryType', 'esriGeometryEnvelope'],
-                ['spatialRel', 'esriSpatialRelIntersects'],
-                ['returnGeometry', true],
-                ['f', 'geojson']
-            ];
-
-        types.forEach(async (type) => {
-            const icon = type == 'fire' ? 'fire_dept' : type;
-            if (!map.hasImage(type)) {
-                const image = await map.loadImage(config.domain + 'assets/images/icons/fire/' + icon + '_icon.png');
-                map.addImage(type, image.data);
-            }
-        });
-
-        const results = await Promise.allSettled(types.map((_, i) => api(`${baseURL}${i}/query`, fields)));
-        const mergedFeatures = results.flatMap((res, i) => {
-            if (res.status !== 'fulfilled' || !res.value?.features) return [];
-
-            return res.value.features.map(f => {
-                f.properties.type = types[i];
-                return f;
-            });
-        });
-        const data = { type: 'FeatureCollection', features: mergedFeatures };
-
-        if (update && map.getSource('firemed')) {
-            map.getSource('firemed').setData(data);
-        } else {
-            if (!map.getSource('firemed')) {
-                map.addSource('firemed', {
-                    type: 'geojson',
-                    data: data,
-                    cluster: true,
-                    clusterMaxZoom: 11,
-                    clusterMinPoints: 3,
-                    clusterRadius: 20
-                });
-            }
-
-            if (!map.getLayer('firemed')) {
-                map.addLayer({
-                    id: 'firemed',
-                    type: 'symbol',
-                    source: 'firemed',
-                    minzoom: config.firemedZoomLevel,
-                    layout: {
-                        'icon-image': ['get', 'type'],
-                        'icon-size': 0.22,
-                        visibility: 'visible'
-                    }
-                });
-
-                map.on('mouseenter', 'firemed', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'firemed', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
-        }
-    }
-}
-
-class Search {
-    constructor(q) {
-        this.key = 'mapofire.search_history';
-        this.history = localStorage.getItem(this.key);
-        this.emptyHistory = this.history == null || this.history == '' || JSON.parse(this.history).length == 0 ? true : false;
-        this.query = q != null ? q.toLowerCase().replace('fire', '') : null;
-        this.results = searchResults;
-        this.standby = this.results.querySelector('li.standby');
-    }
-
-    /*clearData() {
-        if (!this.emptyHistory) {
-            const tmp = [];
-
-            JSON.parse(this.history).forEach((i) => {
-                if (new Date().getTime() - i.time < (60 * 60 * 24 * 14 * 1000)) {
-                    tmp.push(i);
-                }
-            });
-
-            localStorage.setItem(this.key, JSON.stringify(tmp));
-        }
-    }
-
-    storeSearches() {
-        this.clearData();
-
-        const srJson = {
-            query: this.query,
-            time: new Date().getTime()
-        };
-
-        if (this.history == null) {
-            localStorage.setItem(this.key, JSON.stringify([srJson]));
-        } else {
-            const searchArray = [];
-
-            JSON.parse(this.history).forEach((i) => {
-                searchArray.push(i);
-            });
-
-            searchArray.push(srJson);
-            localStorage.setItem(this.key, JSON.stringify(searchArray));
-        }
-    }
-
-    getSearchHistory() {
-        if (this.emptyHistory) {
-            return null;
-        } else {
-            const queryCounts = {},
-                json = JSON.parse(this.history);
-
-            json.forEach(item => {
-                queryCounts[item.query] = (queryCounts[item.query] || 0) + 1;
-            });
-
-            const latestEntriesMap = new Map();
-            json.forEach(item => {
-                const existingEntry = latestEntriesMap.get(item.query);
-
-                if (!existingEntry || item.time > existingEntry.time) {
-                    latestEntriesMap.set(item.query, item);
-                }
-            });
-
-            const results = Array.from(latestEntriesMap.values());
-
-            results.sort((a, b) => {
-                const countA = queryCounts[a.query],
-                    countB = queryCounts[b.query];
-
-                if (countA !== countB) {
-                    return countB - countA;
-                }
-
-                return b.time - a.time;
-            });
-
-            return results;
-        }
-    }*/
-
-    async do() {
-        Array.from(this.results.querySelectorAll('li:not(.standby)')).forEach(li => li.remove());
-
-        let count = 0,
-            apiStarted = false;
-
-        if (this.query.length > 0) {
-            const crds = (/([0-9]{2}\.[0-9]+),\s?(-[0-9]{3}.[0-9]+)/gm).exec(this.query);
-
-            // store user searches in local storage
-            //this.storeSearches();
-
-            if (crds != null) {
-                const lat = crds[1],
-                    lon = crds[2];
-
-                if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
-                    const h = map.getCenter(),
-                        dist = conversion.distance(h.lat, h.lng, lat, lon).toFixed(1),
-                        dms = String(conversion.convertToDms(lat, false) + '&nbsp;' + conversion.convertToDms(lon, true)).replace(/\s/g, '');
-
-                    const li = document.createElement('li');
-                    li.setAttribute('data-action', 'sr-onclick');
-                    li.setAttribute('data-type', 'coordinates');
-                    li.setAttribute('data-lat', lat);
-                    li.setAttribute('data-lon', lon);
-                    li.innerHTML = `<span class="icon fas fa-map-location"></span><h3>${parseFloat(lat).toFixed(6).replace(/[0]+$/, '')},&nbsp;${parseFloat(lon).toFixed(6).replace(/[0]+$/, '')} <span style="color:#788695">${dms}</span><span>${dist} mile${dist != 1 ? 's' : ''} away</span></h3>`;
-                    this.results.appendChild(li);
-
-                    count++;
-                }
-            } else {
-                activeIncidents.forEach((f) => {
-                    let use = false,
-                        p = f.properties,
-                        name = p.name,
-                        acresDisp = conversion.sizeFormat(p.acres),
-                        fstat = p.status,
-                        status = (p.time.year < config.curTime.getFullYear() ? 'out' : config.wildfire.getStatus(fstat, p.notes)),
-                        j = name.toLowerCase().split(' ');
-
-                    for (let i = 0; i < j.length; i++) {
-                        if (j[i].search(this.query) >= 0) {
-                            use = true;
-                            break;
-                        }
-                    }
-
-                    if (name.toLowerCase().search(this.query) >= 0) {
-                        use = true;
-                    }
-
-                    if (use) {
-                        const li = document.createElement('li');
-                        li.setAttribute('data-action', 'sr-onclick');
-                        li.setAttribute('data-type', 'incident');
-                        li.setAttribute('data-wfid', p.wfid);
-                        li.setAttribute('title', name);
-                        li.innerHTML = `<span class="icon fire fas fa-fire"></span><h3>${name}<span>${p.type} in ${stateLabels[p.state].v} &middot;
-                            <b>${acresDisp}</b> &middot; <span class="fstatus ${status}">${ucfirst(status)}</span></span></h3>`;
-                        this.results.appendChild(li);
-
-                        count++;
-                    }
-                });
-            }
-        }
-
-        if (count > 0) {
-            this.standby.style.display = 'none';
-        }
-
-        if (this.query.length > 3) {
-            apiStarted = true;
-
-            this.apiSearch().then(added => {
-                const finalCount = count + added;
-
-                if (finalCount > 0) {
-                    this.standby.style.display = 'none';
-                } else {
-                    this.standby.style.display = 'block';
-                    this.standby.querySelector('i').style.display = 'none';
-                    this.standby.querySelector('span').innerHTML = 'No results found';
-                }
-            });
-        }
-
-        if (this.query.length == 0 || (count === 0 && !apiStarted)) {
-            this.standby.style.display = 'block';
-            this.standby.querySelector('i').style.display = 'none';
-            this.standby.querySelector('span').innerHTML = this.query.length == 0 ? 'Ready to search? Type something...' : 'No results found';
-        }
-    }
-
-    async apiSearch() {
-        let count = 0;
-        const search = await api(config.apiURL + 'search', [['q', this.query], ['citiesonly', 1]]);
-
-        if (search.rs != null && search.rs.length > 0) {
-            search.rs.forEach((p) => {
-                const li = document.createElement('li');
-
-                if (p.type == 'State') {
-                    li.setAttribute('data-bbox', JSON.stringify(p.bbox));
-                } else {
-                    if (p.type == 'GIS') {
-                        li.setAttribute('data-geotype', p.geoType);
-                    }
-
-                    li.setAttribute('data-lat', p.lat);
-                    li.setAttribute('data-lon', p.lon);
-                }
-                li.setAttribute('data-action', 'sr-onclick');
-                li.setAttribute('data-name', p.name);
-                li.setAttribute('data-county', p.county ? p.county : '');
-                li.setAttribute('data-type', p.type.toLowerCase());
-                li.innerHTML = `<span class="icon fas fa-location-dot"></span><h3>${p.name}<span>${p.type == 'GIS' ? p.geoType + ' in ' : ''}${p.county ? p.county + ' County' : 'State'}</span></h3>`;
-                this.results.appendChild(li);
-
-                count++;
-            });
-        }
-
-        return count;
-    }
-}
-
 function toggleLayer(e) {
     const { id: layerId, checked } = e,
-        action = config.layerActions[layerId],
+        action = layerActions[layerId],
         getLayer = config.listOfLayers.find(layer => layer.id === layerId),
         layerPerms = getLayer ? getLayer.perms2 : false,
         executeToggle = (sourceId, action, checked) => {
@@ -6563,280 +1823,74 @@ function toggleLayer(e) {
     }
 }
 
-async function preload() {
-    config.wildfire = new Wildfires();
-    conversion = new Convert();
+async function getCounties() {
+    const ArcGISFeatureSource = window[""]["arcgis-featureserver"];
 
-    let usr = null,
-        set,
-        token = (/\btoken=(.*?)(?=;|$)/gm).exec(document.cookie),
-        versioning = () => {
-            const sv = localStorage.getItem('mapofire.version');
-
-            if (sv == null || sv != version) {
-                localStorage.setItem('mapofire.version', version);
-            }
-        };
-
-    versioning();
-
-    // create a list of layers
-    Object.entries(layers.categories).forEach(([id, t]) => {
-        layers.layers[id].forEach(each => config.listOfLayers.push(each));
+    new ArcGISFeatureSource('us_counties', map, {
+        url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_Counties_Generalized_Boundaries/FeatureServer/0',
+        precision: 6,
+        where: '1=1',
+        outFields: 'NAME,STATE_ABBR AS STATE,FIPS,POPULATION,SQMI'
     });
 
-    if (localStorage.getItem('mapofire.dispatch') == null || Date.now() - localStorage.getItem('mapofire.dispatch_time') > 60 * 60 * 24 * 1000) {
-        const dc = await api(config.apiURL + 'dispatch/all');
-        localStorage.setItem('mapofire.dispatch', JSON.stringify(dc.dispatch));
-        localStorage.setItem('mapofire.dispatch_time', Date.now());
-        dispatchCenters = dc.dispatch;
-    } else {
-        dispatchCenters = JSON.parse(localStorage.getItem('mapofire.dispatch'));
-    }
-
-    if (token != null) {
-        const a = document.querySelector('#account'),
-            get = await api(config.apiURL + 'user/get/mapofire', [['token', token[1]]]);
-        usr = get.user;
-
-        /* change menu button */
-        if (usr != null) {
-            a.querySelector('span').innerHTML = 'Account';
-        }
-    } else {
-        document.querySelector('#save').remove();
-        /*document.querySelector('#logout').remove();*/
-    }
-
-    // show the nav menu
-    document.querySelector('nav ul').style.display = 'flex';
-
-    if (window.innerWidth > 600) {
-        document.querySelector('#close-navbar').classList.add('show');
-    }
-
-    // create settings class based on user profile and settings
-    settings = new Settings(usr);
-
-    // if user is admin, load the tools functions
-    /*if (settings.hasPermissions(config.PERMISSION_LEVELS.ADMIN)) {
-        setTimeout(() => {
-            loadScript(config.specificURL + (debugMode ? 'v' + version + '/mf.tools.js' : 'src/js/mf.tools-' + version + '.js')).then(() => {
-                config.toolsInstance = new Tools();
-                config.toolsInstance.use();
-            });
-        }, 1500);
-    }*/
-
-    const li1 = document.createElement('li'),
-        li2 = document.createElement('li');
-
-    if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
-        li1.classList.add('disabled');
-        li2.classList.add('disabled');
-    }
-
-    li1.id = 'fwf';
-    li1.setAttribute('data-action', 'fwf');
-    li1.innerHTML = '<i class="far fa-cloud-bolt"></i><span>Fire WX</span>';
-
-    li2.setAttribute('data-action', 'archive');
-    li2.innerHTML = '<i class="far fa-calendars"></i><span>Historical</span>';
-
-    document.querySelector('#legend').insertAdjacentElement('afterend', li1);
-    document.querySelector('#refresh').insertAdjacentElement('afterend', li2);
-
-    /* get user's currently tracked wildfires */
-    config.wildfire.getTrackedFires();
-
-    /* initialize map */
-    init();
-    popstate();
-}
-
-function popstate() {
-    // if user is trying to view historical fires without a subscription
-    if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && window.location.href.match(/archive=([0-9]+)/g) != null) {
-        notify('info', 'You must upgrade to view historical fires. <a href="' + config.purchaseLink('archive_snackbar') + '">Get access</a>', 6);
-    }
-
-    if (/loggedOut=1/.test(window.location.href)) {
-        notify('success', 'You were successfully logged out.');
-    }
-
-    /* if URL is supposed to open an incident */
-    if (window.location.pathname.search('/fires') >= 0) {
-        let id = window.location.pathname.split('/')[2];
-        config.wildfire.incident(id, false);
-    }
-
-    /* if URL is supposed to open a weather alert */
-    if (window.location.pathname.search('/weather/alert') >= 0) {
-        const id = window.location.pathname.split('/')[3];
-        new NWS().readWWA(id, false);
-    }
-
-    /* if URL is supposed to open current weather conditions at a wx stn */
-    if (window.location.pathname.search('/weather/current') >= 0) {
-        const stnid = window.location.pathname.split('/')[3];
-        new Weather().findWXStn(stnid);
-    }
-
-    /* if URL is supposed to open a SPC outlook */
-    if (window.location.pathname.search('/weather/outlook') >= 0) {
-        const p = window.location.pathname.split('/'),
-            type = p[3],
-            day = p[4];
-
-        new NWS().getOutlookText(type, day, false);
-    }
-
-    /* if URL is supposed to open a fire weather forecast */
-    if (window.location.pathname.search('/weather/forecast') >= 0) {
-        const loc = window.location.pathname.split('/')[3].split(','),
-            lat = parseFloat(loc[0]),
-            lon = parseFloat(loc[1]),
-            isValid = (lat >= -90 && lat <= 90) && (lon >= -180 && lon <= 180);
-
-        // TODO: validate if lat lon are right
-        if (isValid && settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
-            new Weather(lat, lon).fireWxFcst();
-        } else {
-            unsetHeaders();
-        }
-    }
-
-    if (window.location.search && window.location.search.search('loggedOut') >= 0) {
-        window.history.pushState({
-            "pageTitle": document.title
-        }, '', window.location.href.replace(window.location.search, ''));
-    }
-}
-
-function complete() {
-    const q = document.querySelector('#q');
-
-    /* if the user is on an Android device, show the download app banner */
-    if (/android/.test(navigator.userAgent.toLowerCase())) {
-        //document.querySelector('.android-banner').style.display = 'flex';
-    }
-
-    impact.addEventListener('scroll', () => {
-        localStorage.setItem('mapofire.impactScroll', impact.scrollTop);
-    });
-
-    q.addEventListener('blur', () => {
-        trending = false;
-    });
-
-    q.addEventListener('focus', () => {
-        if (q.value == '' && !trending && searchResults.querySelectorAll('li.trending').length == 0) {
-            addTrending();
-        }
-    });
-}
-
-function marketing() {
-    const now = Date.now(),
-        lastShown = parseInt(localStorage.getItem('mapofire.marketing.last_shown') || '0', 10),
-        pick = Math.random() < 0.5 ? 'A' : 'B',
-        variants = {
-            A: {
-                title: 'Stay Safe. Stay Ahead.',
-                text: 'Wildfires don\'t wait and neither should you. Upgrade to gain access to satellite hotspots, smoke models, and wildfire risk overlays.',
-                primary: 'Start 7-Day Free Trial',
-                secondary: settings.user != null ? 'Continue for Free' : 'Continue with Free Plan'
+    if (!map.getLayer('us_counties')) {
+        map.addLayer({
+            id: 'us_counties',
+            source: 'us_counties',
+            type: 'fill',
+            paint: {
+                'fill-opacity': 0,
+                'fill-color': '#fff'
             },
-            B: {
-                title: 'Unlock Pro Insights.',
-                text: 'Get operational clarity with advanced fire mapping, exclusive premium layers, more basemaps, and offline maps (Android only).',
-                primary: 'Upgrade Now',
-                secondary: 'Keep Free Plan'
+            layout: {
+                visibility: 'visible'
             }
-        },
-        maxDismissals = 4;
-
-    let shouldShow = true,
-        dismissedCount = parseInt(localStorage.getItem('mapofire.marketing.dismiss_count') || '0', 10),
-        cooldownDays = parseInt(localStorage.getItem('mapofire.marketing.cooldown_days')) || 3;
-
-    // if already shown this session, don't show again
-    if (sessionStorage.getItem('modal_shown_this_session')) {
-        shouldShow = false;
-    }
-
-    // don't show if dismissed too many times
-    if (dismissedCount >= maxDismissals) {
-        shouldShow = false;
-    }
-
-    // don't show if cooldown not expired
-    if (now - lastShown < cooldownDays * 24 * 60 * 60 * 1000) {
-        shouldShow = false;
-    }
-
-    // don't show to admin users
-    if (settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN) {
-        shouldShow = false
-    }
-
-    if (shouldShow) {
-        const content = `<p style="text-align:center;margin:1.5em 0;font-size:18px;font-weight:400">${variants[pick].text}</p>
-            <div class="btn-group no-margin" style="width:100%;justify-content:space-between">
-            <input type="button" id="donate_cta" class="btn btn-red dn" value="${variants[pick].primary}" data-variant="${pick}" data-action="start-modal-checkout">
-            <input type="button" id="donate_dismiss" class="btn btn-gray dn" value="${variants[pick].secondary}" data-dismissedCount="${dismissedCount}" data-variant="${pick}" data-action="close-modal-checkout"></div>`;
-
-        const el = document.createElement('div');
-        el.classList.add('shadow');
-        document.body.appendChild(el);
-
-        createDataForm(variants[pick].title, content);
-        document.querySelector('#data-form').classList.add('bg');
-        document.querySelector('#data-form h1').style.textAlign = 'center';
-        document.querySelector('#data-form h1').insertAdjacentHTML('beforebegin', '<i class="fad fa-user-unlock" style="display:block;text-align:center;font-size:50px;color:#ffcd82;margin-bottom:0.5em"></i>');
-
-        // mark as shown
-        sessionStorage.setItem('modal_shown_this_session', '1');
-        localStorage.setItem('mapofire.marketing.last_shown', now.toString());
-
-        // postive CTA
-        document.querySelector('#donate_cta').addEventListener('click', () => {
-            gtag('event', 'subscription_cta_click', {
-                'event_category': 'Subscription',
-                'event_label': `Variant_${pick}`,
-                'source': 'modal',
-                'variant': pick
-            });
-
-            window.location.href = config.purchaseLink('popup');
-            new ClickListener().closeDataForm();
-        });
-
-        // dismiss CTA
-        document.querySelector('#donate_dismiss').addEventListener('click', () => {
-            dismissedCount++;
-            localStorage.setItem('mapofire.marketing.dismiss_count', dismissedCount);
-
-            if (dismissedCount >= maxDismissals) {
-                cooldownDays = cooldownDays * 2; // double cooldown
-                dismissedCount = 0; // reset dismissals
-                localStorage.setItem('mapofire.marketing.cooldown_days', cooldownDays);
-                localStorage.setItem('mapofire.marketing.dismiss_count', dismissedCount);
-            }
-
-            gtag('event', 'subscription_dismiss_click', {
-                'event_category': 'Subscription',
-                'event_label': `Variant_${pick}`,
-                'source': 'modal',
-                'variant': pick
-            });
-
-            new ClickListener().closeDataForm();
         });
     }
-}
 
-function getCounties() {
+    if (!map.getLayer('county-boundaries')) {
+        map.addLayer({
+            id: 'county-boundaries',
+            source: 'us_counties',
+            type: 'line',
+            minzoom: 6,
+            paint: {
+                'line-dasharray': [
+                    'step',
+                    ['zoom'],
+                    ['literal', [2, 0]],
+                    7,
+                    ['literal', [3, 4]],
+                    12,
+                    ['literal', [2, 3, 3, 4]]
+                ],
+                'line-opacity': [
+                    'step',
+                    ['zoom'],
+                    0,
+                    6.5,
+                    0.15,
+                    7,
+                    0.3,
+                    9.5,
+                    0.5,
+                    16,
+                    0.8
+                ],
+                'line-color': [
+                    'step',
+                    ['zoom'],
+                    '#484932',
+                    13,
+                    '#22221b',
+                    15,
+                    '#6e3066'
+                ],
+                'line-width': ['step', ['zoom'], 1, 12, 2, 16, 1.5]
+            }
+        });
+    }
+
     /*map.addSource('property_lines', {
         type: 'raster',
         minzoom: 15,
@@ -6852,171 +1906,20 @@ function getCounties() {
             'raster-opacity': 1
         }
     });*/
-
-    if (!map.getSource('us_counties')) {
-        map.addSource('us_counties', {
-            type: 'vector',
-            tiles: ['https://vectortileservices.arcgis.com/xOi1kZaI0eWDREZv/arcgis/rest/services/NTAD_Counties/VectorTileServer/tile/{z}/{y}/{x}.pbf'],
-            minzoom: 0,
-            maxzoom: 23
-        });
-    }
-
-    if (!map.getLayer('us_counties')) {
-        map.addLayer({
-            id: 'us_counties',
-            source: 'us_counties',
-            'source-layer': 'Counties',
-            type: 'fill',
-            paint: {
-                'fill-opacity': 0,
-                'fill-color': '#fff'
-            },
-            layout: {
-                visibility: 'visible'
-            }
-        });
-    }
-
-    if (!map.getLayer('county-boundaries')) {
-        map.addLayer({
-            id: 'county-boundaries',
-            type: 'line',
-            source: 'us_counties',
-            'source-layer': 'Counties',
-            minzoom: 6,
-            paint: {
-                'line-dasharray': [
-                    'step',
-                    ['zoom'],
-                    ['literal', [2, 0]],
-                    7,
-                    ['literal', [3, 4]],
-                    12,
-                    ['literal', [2, 3, 3, 4]]
-                ],
-                'line-opacity': [
-                    'step',
-                    ['zoom'],
-                    0,
-                    6.5,
-                    0.15,
-                    7,
-                    0.3,
-                    9.5,
-                    0.5,
-                    16,
-                    0.8
-                ],
-                'line-color': [
-                    'step',
-                    ['zoom'],
-                    '#484932',
-                    13,
-                    '#22221b',
-                    15,
-                    '#6e3066'
-                ],
-                'line-width': ['step', ['zoom'], 1, 12, 2, 16, 1.5]
-            }
-        });
-    }
-
-    /*if (!map.getSource('us_counties')) {
-        map.addSource('us_counties', {
-            type: 'vector',
-            tiles: ['https://api.mapbox.com/v4/mapollc.clz3a8hkg0m371sqgb0i5okkw-1pm0q/{z}/{x}/{y}.mvt?access_token=' + config.mapboxToken]
-        });
-    }
-
-    if (!map.getLayer('us_counties')) {
-        map.addLayer({
-            id: 'us_counties',
-            source: 'us_counties',
-            'source-layer': 'us_counties',
-            type: 'fill',
-            paint: {
-                'fill-opacity': 0,
-                'fill-color': '#fff'
-            }
-        });
-
-        map.addLayer({
-            id: 'county-boundaries',
-            type: 'line',
-            source: 'us_counties',
-            'source-layer': 'us_counties',
-            minzoom: 6,
-            paint: {
-                'line-dasharray': [
-                    'step',
-                    ['zoom'],
-                    ['literal', [2, 0]],
-                    7,
-                    ['literal', [3, 4]],
-                    12,
-                    ['literal', [2, 3, 3, 4]]
-                ],
-                'line-opacity': [
-                    'step',
-                    ['zoom'],
-                    0,
-                    6.5,
-                    0.15,
-                    7,
-                    0.3,
-                    9.5,
-                    0.5,
-                    16,
-                    0.8
-                ],
-                'line-color': [
-                    'step',
-                    ['zoom'],
-                    '#484932',
-                    13,
-                    '#22221b',
-                    15,
-                    '#6e3066'
-                ],
-                'line-width': ['step', ['zoom'], 1, 12, 2, 16, 1.5]
-            }
-        });
-
-        map.addLayer({
-            id: 'county-labels',
-            type: 'symbol',
-            source: 'us_counties',
-            'source-layer': 'us_counties',
-            minzoom: 12,
-            layout: {
-                'text-size': 11,
-                'symbol-avoid-edges': true,
-                'text-transform': 'uppercase',
-                'symbol-spacing': 400,
-                'text-font': config.fonts.source(),
-                'symbol-placement': 'line',
-                'text-offset': [0, 1],
-                'text-field': ['to-string', ['get', 'NAME']],
-                'text-letter-spacing': 0.05
-            },
-            'paint': {
-                'text-color': '#757575',
-                'text-halo-color': '#d9d9d9',
-                'text-halo-width': 1
-            }
-        });
-    }*/
 }
 
-function addMapControls(position = 'top-right') {
-    if (window.innerWidth <= 500) {
-        position = 'bottom-right';
-    }
+function addDynamicControls() {
+    const useBottom = window.innerWidth <= 500;
 
-    config.mapControls.forEach(control => {
-        if (map.hasControl(control)) map.removeControl(control);
-        map.addControl(control, position);
+    if (useBottom === controlsAtBottom) return;
+    controlsAtBottom = useBottom;
+
+    const list = useBottom ? [...mapControls].reverse() : mapControls;
+
+    mapControls.forEach(c => { if (map.hasControl(c)) map.removeControl(c); });
+
+    list.forEach(c => {
+        map.addControl(c, useBottom ? 'bottom-right' : 'top-right');
     });
 }
 
@@ -7037,10 +1940,32 @@ function init() {
     });
 
     /* add map controls */
-    map.once('load', () => {
+    map.once('load', async () => {
+        map.getCanvas().setAttribute('role', 'region');
+        map.getCanvas().ariaLabel = document.querySelector('meta[name=description]').content;
+        mapControls.push(new maplibregl.FullscreenControl({
+            container: document.body
+        }));
+        mapControls.push(new maplibregl.NavigationControl({
+            showCompass: true,
+            showZoom: true,
+            visualizePitch: true
+        }));
+        mapControls.push(new maplibregl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: true
+            },
+            fitBoundsOptions: {
+                maxZoom: 10.16
+            },
+            trackUserLocation: true,
+            showUserHeading: true
+        }));
+
         map.addControl(
-            new CustomAttributionControl({
-                compact: true
+            new (await loadUtils()).MFAttribControl({
+                compact: true,
+                collapseBelow: 920
             }),
             'bottom-right'
         );
@@ -7048,13 +1973,16 @@ function init() {
         map.addControl(
             new maplibregl.ScaleControl({
                 unit: 'imperial'
-            })
+            }),
+            'bottom-left'
         );
 
-        addMapControls();
+        addDynamicControls();
     });
 
     map.once('styledata', () => {
+        const loading = document.querySelector('.loading');
+
         /* preload sample images of the basemaps */
         tileConfig.forEach((item, index) => {
             const img = new Image();
@@ -7063,8 +1991,8 @@ function init() {
         });
 
         /* hide loading div once map is rendered */
-        if (document.querySelector('.loading')) {
-            document.querySelector('.loading').remove();
+        if (loading) {
+            loading.remove();
             document.querySelector('.filter-controls .search').style.display = 'inline-flex';
         }
     });
@@ -7081,33 +2009,27 @@ function init() {
 
         getCounties();
 
-        new Layers().add3D();
+        new (await loadUtils()).Layers().add3D();
 
         map.setSky(config.fog);
 
         /* add fire icons */
-        icons.forEach(async (icon) => {
-            icon = (icon ? '-' : '') + icon;
+        const loadMapIcons = () => {
+            const queue = [
+                ...icons.map(i => ({ id: `fire-icon${i ? '-' + i : ''}`, path: `fire/fire-icon${i ? '-' + i : ''}.png` })),
+                ...['helicopter', 'plane_tactical', 'plane_large', 'plane_small'].map(i => ({ id: i, path: `fire/${i}.png` })),
+                ...[1, 2, 3].map(i => ({ id: `modis${i}`, path: `fire/modis${i}.png` }))
+            ];
 
-            if (!map.hasImage('fire-icon' + icon)) {
-                const image = await map.loadImage(config.domain + 'assets/images/icons/fire/fire-icon' + icon + '.png');
-                map.addImage('fire-icon' + icon, image.data);
-            }
-        });
+            queue.forEach(async ({ id, path }) => {
+                if (!map.hasImage(id)) {
+                    const img = await map.loadImage(`${config.domain}assets/images/icons/${path}`);
+                    map.addImage(id, img.data);
+                }
+            });
+        };
 
-        /* add aircraft icons */
-        ['helicopter', 'plane_tactical', 'plane_large', 'plane_small'].forEach(async (icon) => {
-            if (!map.hasImage(icon)) {
-                const image = await map.loadImage(config.domain + 'assets/images/icons/fire/' + icon + '.png');
-                map.addImage(icon, image.data);
-            }
-        });
-
-        /* add modis icons */
-        for (let i = 1; i < 4; i++) {
-            const image = await map.loadImage(config.domain + 'assets/images/icons/fire/modis' + i + '.png');
-            map.addImage('modis' + i, image.data);
-        }
+        loadMapIcons();
 
         /* if user has settings saved, go to their saved location...not the mapbox hash location */
         if (window.location.hash) {
@@ -7124,15 +2046,15 @@ function init() {
 
         /* function to provide a popup soliciting donations, subscriptions, etc. */
         if (!settings.subscriptions().valid()) {
-            marketing();
+            (await loadUtils()).marketing();
         }
 
         /* if user wants a state map, zoom to that state */
         if (state) {
-            Object.keys(stateLabels).forEach((e) => {
-                if (stateLabels[e].v == state) {
+            Object.keys((await loadUtils()).stateLabels).forEach(async (e) => {
+                if ((await loadUtils()).stateLabels[e].name == state) {
                     map.easeTo({
-                        center: stateLabels[e].c,
+                        center: (await loadUtils()).stateLabels[e].center,
                         zoom: 5.8,
                         duration: 1000
                     });
@@ -7141,7 +2063,7 @@ function init() {
         }
 
         // attach the layers handler
-        config.layersHandler = new Layers();
+        config.layersHandler = new (await loadUtils()).Layers();
 
         /* processing layers on startup */
         config.layersHandler.init();
@@ -7159,17 +2081,6 @@ function init() {
         }
     });
 
-    /* handle on map load event */
-    /*map.on('load', () => {
-        // collapse the attribution div on load
-        const attrib = document.querySelector('.maplibregl-ctrl-attrib');
-
-        if (attrib != null) {
-            attrib.classList.remove('maplibregl-compact-show');
-            attrib.removeAttribute('open');
-        }
-    });*/
-
     /* handle on map error event */
     map.on('error', (e) => {
         if (e && e.error.status != 500) { }
@@ -7180,17 +2091,10 @@ function init() {
         // if a layer requires a minimum zoom, and the layers menu is open, toggle opacity
         if (impact.style.display != 'none') {
             impact.querySelectorAll('.content li').forEach(li => {
-                const minLayerZoom = li.getAttribute('data-min-zoom');
+                const isLow = map.getZoom() < li.dataset.minZoom;
 
-                if (minLayerZoom) {
-                    if (map.getZoom() >= minLayerZoom) {
-                        li.classList.remove('more-zoom');
-                        li.setAttribute('title', li.querySelector('label').innerHTML.toString());
-                    } else {
-                        li.classList.add('more-zoom');
-                        li.setAttribute('title', 'You must be zoomed in more');
-                    }
-                }
+                li.classList.toggle('more-zoom', isLow);
+                li.title = isLow ? 'You must be zoomed in more' : li.querySelector('label').innerText;
             });
         }
 
@@ -7235,72 +2139,7 @@ function init() {
 
     /* handle on map click events */
     map.on('click', async (e) => {
-        /* open new incident report form */
-        if (document.querySelector('li#report').dataset.active == 1) {
-            config.disableClicks = true;
-
-            map.panTo([e.lngLat.lng, e.lngLat.lat]);
-            createDataForm('Report an incident', `<form id="newReport" method="post">
-                <input type="hidden" name="platform" value="web">
-                <input type="hidden" name="authUser" value="0">
-                <input type="hidden" name="lat">
-                <input type="hidden" name="lon">
-                <input type="hidden" name="state">
-                <input type="hidden" name="version" value="${version}">
-                <input type="hidden" name="geolocation">
-                
-                <label>County</label>
-                <input type="text" id="gc" value="Loading..." disabled>
-                
-                <label>State</label>
-                <input type="text" id="gs" value="Loading..." disabled>
-                
-                <label>General Location</label>
-                <input type="text" id="gl" value="Loading..." disabled>
-                
-                <label>What type of incident is this?</label>
-                <select name="type">
-                    <option>- Choose -</option>
-                    <option value="Wildfire">Wildfire</option>
-                    <option value="Smoke Check">Smoke Check</option>
-                    <option value="Prescribed Burn">Prescribed Burn</option>
-                </select>
-
-                <label>How big is it?</label><input type="text" name="size" placeholder="eg: 10" style="display:inline-block;max-width:100px">
-                <div id="alab" style="display:inline-block;padding-left:5px">acres</div>
-                
-                <label>Brief description of incident:</label>
-                <textarea name="notes" placeholder="Anything else you can add..." style="min-height:100px;resize:none"></textarea>
-                
-                <div class="btn-group centered"><input type="submit" class="btn btn-blue" value="Submit Report">
-                    <a class="btn btn-gray" href="#" data-action="close-data-form" onclick="return false">Cancel</a>
-                </div>
-                <div class="disclaimer">Submitting this report only sends information to the ${config.productName} team&mdash;it does not send any information to emergency or governmental authorities. Please call 911 to report a new wildfire.</div>
-            </form>`);
-
-            map.getCanvas().style.cursor = 'auto';
-
-            const data = await api(config.apiURL.replace('v1', 'v2') + 'geocode/incident', [['lat', e.lngLat.lat], ['lon', e.lngLat.lng]]);
-
-            doReport(data, e.lngLat.lat, e.lngLat.lng);
-        }
-
-        /* get fire weather forecast */
-        if (document.querySelector('li#fwf')) {
-            if (document.querySelector('li#fwf').dataset.active == 1) {
-                config.disableClicks = true;
-                document.querySelector('li#fwf').setAttribute('data-active', '0');
-
-                map.getCanvas().style.cursor = 'auto';
-
-                new Weather(e.lngLat.lat, e.lngLat.lng).fireWxFcst();
-            }
-        }
-
-        /* click listener for when the user isn't submitting a report or getting a fwf */
-        if (!config.disableClicks) {
-            onMapClick(e);
-        }
+        (await loadUtils()).mapClick(e);
     });
 
     /* handle on start map move event */
@@ -7310,89 +2149,10 @@ function init() {
         startLon = map.getCenter().lng;
     });
 
-    const moveEnd = debounce(() => {
-        map.getCanvas().style.cursor = 'auto';
-
-        //settings.logMovement();
-
-        if (!settings.user || !settings.checkboxes() || settings.isEnabled('perimeters')) {
-            config.wildfire.perimeters(true);
-        }
-
-        if ((!settings.checkboxes() || settings.isEnabled('allFires')) && settings.archive != null) {
-            config.wildfire.getWildfires(true);
-        }
-
-        if (settings.isEnabled('firemed') && map.getZoom() >= config.firemedZoomLevel) {
-            config.layersHandler.firemed(true);
-        }
-
-        if (settings.isEnabled('modis24') && map.getZoom() >= config.modisZoomLevel) {
-            config.layersHandler.modis(1, true);
-        }
-
-        if (settings.isEnabled('modis48') && map.getZoom() >= config.modisZoomLevel) {
-            config.layersHandler.modis(2, true);
-        }
-
-        if (settings.isEnabled('modis72') && map.getZoom() >= config.modisZoomLevel) {
-            config.layersHandler.modis(3, true);
-        }
-
-        if (settings.isEnabled('wwas')) {
-            new NWS().get(true);
-        }
-
-        if (settings.isEnabled('stns')) {
-            const int = setInterval(() => {
-                if (Weather !== undefined) {
-                    new Weather().raws(true);
-                    clearInterval(int);
-                }
-            }, 500);
-        }
-
-        if (settings.isEnabled('erc')) {
-            config.layersHandler.erc(true);
-        }
-
-        if (settings.isEnabled('hms')) {
-            config.layersHandler.hms(true);
-        }
-
-        if (settings.isEnabled('smokeFcst')) {
-            config.layersHandler.smokeFcst(true);
-        }
-
-        if (settings.isEnabled('nri')) {
-            config.layersHandler.nri(true);
-        }
-
-        if (settings.isEnabled('power')) {
-            config.layersHandler.power(true);
-        }
-
-        if (settings.isEnabled('dispatch')) {
-            config.layersHandler.dispatch(true);
-        }
-
-        if (settings.isEnabled('gaccBounds')) {
-            config.layersHandler.gaccBounds(true);
-        }
-
-        if (settings.isEnabled('calfireUnits')) {
-            config.layersHandler.calfireUnits(true);
-        }
-
-        if (settings.isEnabled('cdfFHSZ')) {
-            config.layersHandler.cdfFHSZ(true);
-        }
-    }, 500);
-
     /* handle on end map move event */
-    map.on('moveend', () => {
+    map.on('moveend', async () => {
         map.getCanvas().style.cursor = 'auto';
-        moveEnd();
+        (await loadUtils()).moveEnd();
     });
 }
 
@@ -7409,65 +2169,179 @@ function upgrade() {
     });
 }
 
-function addTrending() {
-    const fragment = document.createDocumentFragment();
-    let count = 0;
-
-    trending = true;
-
-    searchResults.style.display = 'flex';
-    searchResults.querySelector('li.standby').innerHTML = '<h6 style="color:var(--box-border);font-size:18px;cursor:auto;user-select:none">Trending incidents...</h6>';
-
-    if (searchResults.querySelector('li.standby').style.display == 'none') {
-        searchResults.querySelector('li.standby').style.display = 'inline-flex';
+async function popstate() {
+    // if user is trying to view historical fires without a subscription
+    if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && window.location.href.match(/archive=([0-9]+)/g) != null) {
+        notify('info', 'You must upgrade to view historical fires. <a href="' + config.purchaseLink('archive_snackbar') + '">Get access</a>', 6);
     }
 
-    if (topFires != null && topFires.length > 0) {
-        /*const clicks = topFires.reduce((sum, fire) => {
-            return sum + fire.count;
-        }, 0);*/
+    if (/loggedOut=1/.test(window.location.href)) {
+        notify('success', 'You were successfully logged out.');
+    }
 
-        for (let i = 0; i < topFires.length; i++) {
-            const p = topFires[i].data,
-                fire = config.wildfire.findFire(p.wfid);
+    /* if URL is supposed to open an incident */
+    if (window.location.pathname.search('/fires') >= 0) {
+        let id = window.location.pathname.split('/')[2];
+        config.wildfire.incident(id, false);
+    }
 
-            if (fire) {
-                const fireName = fire.properties.name,
-                    acres = conversion.sizeFormat(fire.properties.acres),
-                    who = numberFormat(topFires[i].count, 0) + ' people are looking at the ' + fireName,
-                    li = document.createElement('li');
+    /* if URL is supposed to open a weather alert */
+    if (window.location.pathname.search('/weather/alert') >= 0) {
+        const id = window.location.pathname.split('/')[3];
+        new (await loadUtils()).NWS().readWWA(id, false);
+    }
 
-                li.classList.add('trending');
-                li.setAttribute('data-action', 'sr-onclick');
-                li.setAttribute('data-type', 'incident');
-                li.setAttribute('data-wfid', p.wfid);
-                li.setAttribute('title', who);
+    /* if URL is supposed to open current weather conditions at a wx stn */
+    if (window.location.pathname.search('/weather/current') >= 0) {
+        const stnid = window.location.pathname.split('/')[3];
+        new Weather().findWXStn(stnid);
+    }
 
-                li.innerHTML = '<div><span class="icon fire fas fa-fire"></span><h3>' + fireName +
-                    '<span>' + fire.properties.type + ' in ' + stateLabels[fire.properties.state].v + ' &middot; <b>' + acres + '</b></span></h3></div>' +
-                    (topFires[i].trending ? '<span class="trend fas fa-arrow-trend-up" style="color:var(--green)"></span>' : '');
+    /* if URL is supposed to open a SPC outlook */
+    if (window.location.pathname.search('/weather/outlook') >= 0) {
+        const p = window.location.pathname.split('/'),
+            type = p[3],
+            day = p[4];
 
-                fragment.appendChild(li);
+        new (await loadUtils()).NWS().getOutlookText(type, day, false);
+    }
 
-                count++;
-                /*if (count >= 5) {
-                    break;
-                }*/
-            }
+    /* if URL is supposed to open a fire weather forecast */
+    if (window.location.pathname.search('/weather/forecast') >= 0) {
+        const loc = window.location.pathname.split('/')[3].split(','),
+            lat = parseFloat(loc[0]),
+            lon = parseFloat(loc[1]),
+            isValid = (lat >= -90 && lat <= 90) && (lon >= -180 && lon <= 180);
+
+        if (isValid && settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
+            new Weather(lat, lon).fireWxFcst();
+        } else {
+            unsetHeaders();
         }
     }
 
-    if (count === 0) {
-        const li = document.createElement('li');
-        li.classList.add('standby');
-        li.innerHTML = '<span>No currently trending fires</span>';
-        fragment.appendChild(li);
+    if (window.location.search && window.location.search.search('loggedOut') >= 0) {
+        window.history.pushState({
+            "pageTitle": document.title
+        }, '', window.location.href.replace(window.location.search, ''));
     }
-
-    searchResults.appendChild(fragment);
 }
 
 document.onreadystatechange = async () => {
+    const preload = async () => {
+        conversion = new Convert();
+
+        let usr = null,
+            set,
+            token = (/\btoken=(.*?)(?=;|$)/gm).exec(document.cookie),
+            versioning = () => {
+                const sv = localStorage.getItem('mapofire.version');
+
+                if (sv == null || sv != version) {
+                    localStorage.setItem('mapofire.version', version);
+                }
+            };
+
+        versioning();
+
+        // create a list of layers
+        Object.entries(layers.categories).forEach(([id, t]) => {
+            layers.layers[id].forEach(each => config.listOfLayers.push(each));
+        });
+
+        if (token != null) {
+            const a = document.querySelector('#account'),
+                get = await api(config.apiURL + 'user/get/mapofire', [['token', token[1]]]);
+            usr = get.user;
+
+            /* change menu button */
+            if (usr != null) {
+                a.querySelector('span').innerHTML = 'Account';
+            }
+        } else {
+            document.querySelector('#save').remove();
+            /*document.querySelector('#logout').remove();*/
+        }
+
+        // show the nav menu
+        document.querySelector('nav ul').style.display = 'flex';
+
+        if (window.innerWidth > 600) {
+            document.querySelector('#close-navbar').classList.add('show');
+        }
+
+        // create settings class based on user profile and settings
+        settings = new (await loadUtils()).Settings(usr);
+
+        /* * * * 
+        // if user is admin, load the tools functions
+        if (settings.hasPermissions(config.PERMISSION_LEVELS.ADMIN)) {
+            setTimeout(() => {
+                (await loadUtils()).loadScript(config.specificURL + (debugMode ? 'v' + version + '/mf.tools.js' : 'src/js/mf.tools-' + version + '.js')).then(() => {
+                    config.toolsInstance = new Tools();
+                    config.toolsInstance.use();
+                });
+            }, 1500);
+        }
+        * * * */
+
+        const li1 = document.createElement('li'),
+            li2 = document.createElement('li');
+
+        if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
+            li1.classList.add('disabled');
+            li2.classList.add('disabled');
+        }
+
+        li1.id = 'fwf';
+        li1.setAttribute('data-action', 'fwf');
+        li1.innerHTML = '<i class="far fa-cloud-bolt"></i><span>Fire WX</span>';
+
+        li2.setAttribute('data-action', 'archive');
+        li2.innerHTML = '<i class="far fa-calendars"></i><span>Historical</span>';
+
+        document.querySelector('#legend').insertAdjacentElement('afterend', li1);
+        document.querySelector('#refresh').insertAdjacentElement('afterend', li2);
+
+        /* get user's currently tracked wildfires */
+        config.wildfire = new (await loadUtils()).Wildfires();
+        config.wildfire.getTrackedFires();
+
+        /* initialize map */
+        const idle = window.requestIdleCallback ? window.requestIdleCallback : (cb) => setTimeout(cb, 1);
+
+        idle(async () => {
+            if (typeof maplibregl === 'undefined') return;
+
+            (await loadUtils()).loadDispatchCenters();
+            init();
+            popstate();
+        }, { timeout: 3250 });
+    }
+
+    const complete = async () => {
+        const q = document.querySelector('#q');
+
+        /* if the user is on an Android device, show the download app banner */
+        if (/android/.test(navigator.userAgent.toLowerCase()) && !sessionStorage.getItem('recommend_google_play')) {
+            document.querySelector('.android-banner').style.display = 'flex';
+        }
+
+        impact.addEventListener('scroll', () => {
+            localStorage.setItem('mapofire.impactScroll', impact.scrollTop);
+        });
+
+        q.addEventListener('blur', () => {
+            trending = false;
+        });
+
+        q.addEventListener('focus', async () => {
+            if (q.value == '' && !trending && searchResults.querySelectorAll('li.trending').length == 0) {
+                (await loadUtils()).addTrending();
+            }
+        });
+    };
+
     if (document.readyState != 'complete') {
         preload();
     } else {
@@ -7485,9 +2359,11 @@ window.onload = async () => {
         saveSession(true, false);
 
         setInterval(() => {
-            saveSession(true, false);
+            if (document.visibilityState === 'visible') {
+                saveSession(true, false);
+            }
         }, settings.get().saveFreq());
-    }, 60 * 5 * 1000);
+    }, 90000);
 
     /* send fire click data to server for processing every 20 secs */
     setInterval(() => {
@@ -7530,6 +2406,7 @@ window.addEventListener('click', async (e) => {
         actionHandlers = {
             //'close-modal': () => clickListener.closeModal(),
             'tools': () => clickListener.tools(),
+            'close-android': () => clickListener.android(),
             'back-my-content': () => clickListener.myContent(),
             'close-historical': () => clickListener.closeArchive(),
             'close-popup': () => clickListener.closePopup(),
@@ -7541,9 +2418,9 @@ window.addEventListener('click', async (e) => {
             'clear-layer-search': () => clickListener.clearLayerSearch(),
             'dropdown-nav': () => document.querySelector('nav').classList.toggle('open'),
             'new-fires': () => clickListener.newFire(),
-            'readSPC': () => {
+            'readSPC': async () => {
                 const ds = target.dataset;
-                new NWS().getOutlookText(ds.type, ds.day);
+                new (await loadUtils()).NWS().getOutlookText(ds.type, ds.day);
             },
             'upgrade-subscription': () => {
                 gtag('event', 'subscription_cta_click', {
@@ -7560,11 +2437,10 @@ window.addEventListener('click', async (e) => {
             'sharer': () => clickListener.sharer(),
             'radar-control': () => clickListener.radarPausePlay(),
             'trackFire': () => clickListener.follow(),
-            'readWWA': () => new NWS().readWWA(target.getAttribute('data-id')),
+            'readWWA': async () => new (await loadUtils()).NWS().readWWA(target.getAttribute('data-id')),
             'my-fire-unfollow': () => clickListener.unfollow(),
             'account': () => clickListener.account(),
             'new_fires': () => newFiresReport(),
-            //'donate': () => window.open(config.donateLink + '?utm_campaign=Fundraising&utm_source=mapofire&utm_medium=nav_menu'),
             'basemap': () => clickListener.basemaps(),
             'layers': () => clickListener.showLayers(),
             'legend': () => clickListener.legend(),
@@ -7578,9 +2454,7 @@ window.addEventListener('click', async (e) => {
             'myfires': () => clickListener.myfires(),
             'refresh': () => location.reload(),
             'archive': () => {
-                if (!e.target.classList.contains('disabled')) {
-                    clickListener.archive()
-                }
+                if (!e.target.classList.contains('disabled')) clickListener.archive();
             },
             'report': () => {
                 document.querySelector('li#report').setAttribute('data-active', '1');
@@ -7588,8 +2462,7 @@ window.addEventListener('click', async (e) => {
                 notify('info', 'Click anywhere on the map to report a <b>NEW</b> fire incident.');
             },
             'measure': () => new Tools().startMeasure(),
-            'save': () => saveSession(false, true)/*,
-            'logout': () => window.location.href = config.specificURL + 'logout?service=' + config.platform() + '&next=' + encodeURIComponent(window.location.href)*/
+            'save': () => saveSession(false, true)
         };
 
     if (action != null && actionHandlers[action]) {
@@ -7635,7 +2508,7 @@ window.addEventListener('resize', () => {
         nb.classList.add('show');
     }
 
-    addMapControls(window.innerWidth <= 500 ? 'bottom-right' : 'top-right');
+    debounce(addDynamicControls(), 150);
 });
 
 window.addEventListener('keydown', (e) => {
@@ -7649,16 +2522,11 @@ window.addEventListener('keydown', (e) => {
 
     // if the user presses the esc key
     if (e.code == 'Escape') {
-        if (isVisible('#modal')) {
-            new ClickListener().closeModal();
-        }
+        if (isVisible('#modal')) new ClickListener().closeModal();
 
         if (isVisible('.popup')) {
-            if (marker) {
-                marker.remove();
-            }
-
-            document.querySelector('.popup').remove();
+            marker?.remove();
+            document.querySelector('.popup')?.remove();
         }
 
         // clear/close search features
@@ -7667,76 +2535,65 @@ window.addEventListener('keydown', (e) => {
             searchBox.blur();
             searchResults.style.display = 'none';
 
-            searchResults.querySelectorAll('li:not(.standby)').forEach(li => {
-                li.remove();
-            });
+            searchResults.querySelectorAll('li:not(.standby)').forEach(li => li.remove());
         }
     }
 
     // if the user pressed ctrl + f, focus the search box
     if (isFindShortcut) {
         e.preventDefault();
-
         searchBox.focus();
         return;
     }
 
     // onkeydown in the search box
-    if (e.target.id == 'q') {
+    if (e.target?.id == 'q') {
         if (/^(Arrow|Shift|Control|Alt|Tab|CapsLock|Escape)/.test(e.key)) return;
 
-        const standby = searchResults.querySelector('.standby');
+        const searchVisible = searchResults.style.display !== 'none' && searchResults.style.display !== '',
+            standby = searchResults.querySelector('.standby');
 
         if (isTypingKey || isPasteAction) {
             config.runSearch = true;
-
-            if (searchResults.style.display == '' || searchResults.style.display == 'none') {
-                searchResults.style.display = 'flex';
-            }
+            if (!searchVisible) searchResults.style.display = 'flex';
 
             standby.innerHTML = '<i class="fa-duotone fa-spinner-third"></i><span>Searching...</span>';
-
             if (standby.style.display != 'inline-flex') {
-                searchResults.querySelectorAll('li:not(.standby)').forEach(li => {
-                    li.remove();
-                });
-
+                searchResults.querySelectorAll('li:not(.standby)').forEach(li => li.remove());
                 standby.style.display = 'inline-flex';
             }
 
             standby.querySelector('i').style.display = 'block';
-            standby.querySelector('span').innerHTML = 'Searching...';
+            standby.querySelector('span').textContent = 'Searching...';
         }
     }
 });
 
 // user search fires cities etc
 window.addEventListener('keyup', debounce((e) => {
-    if (/^(Arrow|Shift|Control|Alt|Tab|CapsLock|Escape)/.test(e.key)) return;
+    (async () => {
+        if (/^(Arrow|Shift|Control|Alt|Tab|CapsLock|Escape)/.test(e.key)) return;
 
-    if (e.target.id == 'q' && config.runSearch) {
-        document.querySelector('#clearSearch').style.display = e.target.value == '' ? 'none' : 'block';
-        new Search(e.target.value).do();
+        if (e.target.id == 'q' && config.runSearch) {
+            document.querySelector('#clearSearch').style.display = e.target.value == '' ? 'none' : 'block';
+            new (await loadUtils()).Search(e.target.value).do();
 
-        config.runSearch = false;
-    }
-
-    if (e.target.id == 'layerSearch') {
-        const query = e.target.value.toLowerCase();
-
-        impact.querySelectorAll('.layers-list li.layer').forEach(layer => {
-            const matches = layer.dataset.id.toLowerCase().includes(query) ||
-                layer.title.toLowerCase().includes(query);
-
-            layer.style.display = matches || query == '' ? 'flex' : 'none';
-        });
-    }
-}), 1050);
-
-window.addEventListener('focus', (e) => {
-    if (e.target.id == 'q') {
-        if (searchResults.style.display == '' || searchResults.style.display == 'none') {
-            searchResults.style.display = 'flex';
+            config.runSearch = false;
         }
-    }
-});
+
+        if (e.target.id == 'layerSearch') {
+            const query = e.target.value.toLowerCase();
+
+            impact.querySelectorAll('.layers-list li.layer').forEach(layer => {
+                const matches = layer.dataset.id.toLowerCase().includes(query) ||
+                    layer.title.toLowerCase().includes(query);
+
+                layer.style.display = matches || query == '' ? 'flex' : 'none';
+            });
+        }
+    })();
+}, 500));
+
+window.addEventListener('popstate', () => popstate());
+
+window.addEventListener('focus', e => { if (e.target?.id == 'q') searchResults.style.display = 'flex'; });
