@@ -1,5 +1,5 @@
 :root {
-    --nav-width: 85px
+    --nav-width: 89px
         /*100px*/
     ;
     --mb-button-width: 35px;
@@ -20,7 +20,7 @@
     --box-border: #1e293b;
     --box-border-light: #334155;
     --box-text-color: #94a3b8;
-    --box-header-color: #92befb;
+    --box-header-color: #ed4d00/*#92befb*/;
     --box-orange: #f97316;
     --box-orange-hover: rgb(249 115 22 / 0.5);
 }
@@ -541,7 +541,14 @@ a.maplibregl-ctrl-logo {
 }*/
 
 .maplibregl-ctrl-scale {
-    margin: 0 0 var(--spacing) 0!important
+    font-family: var(--roboto);
+    border: 1px solid #333!important;
+    border-top: transparent!important;
+    padding: 1px 5px!important;
+    margin: 0 0 var(--spacing) 0!important;
+    font-weight: 500;
+    color: #202020;
+    background-color: rgb(245 245 245 / 50%)!important;
 }
 
 .maplibregl-ctrl-group button {

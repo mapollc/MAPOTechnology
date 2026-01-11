@@ -40,6 +40,7 @@ RewriteRule ^weather/outlook/([^/]*)/([^/]*)$ /index.php?type=$1&day=$2 [L,QSA]
 RewriteRule ^weather/fire/([^/]*)/([^/]*)$ /index.php?zone=$1&id=$2 [L,QSA]
 RewriteRule ^risk/([^/]*)$ /index.php?fips=$1 [L,QSA]
 RewriteRule ^archive/([^/]*)$ /index.php?archive=$1 [L,QSA]
+RewriteRule ^country/([^/]*)$ /index.php?country=$1 [L,QSA]
 RewriteRule ^state/([^/]*)$ /index.php?state=$1 [L,QSA]
 RewriteRule ^county/([^/]*)/([^/]*)$ /index.php?state=$1&county=$2 [L,QSA]
 

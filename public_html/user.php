@@ -21,6 +21,31 @@ if (!in_array($method, $validPages)) {
 require_once 'db.ini.php';
 require_once 'subs.inc.php';
 
+// set GUID if in query parameters
+if (isset($_GET['guid']) && !empty($_GET['guid'])) {
+    setcookie('guid', $_GET['guid'], time() + 60 * 60 * 24 * 365.25, '/', '.mapotechnology.com', true);
+} else {
+    if (!$_COOKIE['guid']) {
+        if (function_exists('com_create_guid')) {
+            return com_create_guid();
+        } else {
+            mt_srand((float)microtime() * 10000);
+            $charid = strtoupper(md5(uniqid(rand(), true)));
+            $hyphen = chr(45);
+            $uuid = chr(123)
+                . substr($charid, 0, 8) . $hyphen
+                . substr($charid, 8, 4) . $hyphen
+                . substr($charid, 12, 4) . $hyphen
+                . substr($charid, 16, 4) . $hyphen
+                . substr($charid, 20, 12)
+                . chr(125);
+            $guid = str_replace(['{', '}'], ['', ''], $uuid);
+    
+            setcookie('guid', $guid, time() + 60 * 60 * 24 * 365.25, '/', '.mapotechnology.com', true);
+        }
+    }
+}
+
 if ($_GET['fail'] == 3) {
     $_SESSION = array();
     session_destroy();
@@ -98,10 +123,10 @@ if ($_GET['fail']) {
             $msg = 'You must be logged in to view this content';
             break;
         case 2:
-            $msg = 'Your session has timed out. Please login again';
+            $msg = 'Your session expired. Please sign in again to continue';
             break;
         case 3:
-            $msg = 'Single sign-on authentication failed. Please login again';
+            $msg = 'Single sign-on authentication failed. Please sign in again';
             break;
     }
 }

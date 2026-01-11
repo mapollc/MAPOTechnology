@@ -1,11 +1,47 @@
 <?
-$title = ($county ? "$county County, " : '') . ($state ? "$state " : '') . ($_GET['archive'] ? $_GET['archive'] . ' Historical ' : '') . 'Wildfire Map: Track Live Fires, Smoke, & Lightning | Map of Fire';
+$fireType = $country == 'Austrailia' ? 'Bushfire' : ($country == 'Canada' ? 'Forest Fire' : 'Wildfire');
+$parts = [];
+
+if (!empty($country)) $parts[] = $country;
+if (!empty($county)) $parts[] = $county . ' County,';
+if (!empty($state)) $parts[] = $state;
+$titleParts = $parts;
+
+if (!empty($_GET['archive'])) $titleParts[] = $_GET['archive'] . ' Historical';
+
+$title = trim(implode(' ', $titleParts) . ' ' . $fireType . ' Map: Track Live Fires, Smoke, & Lightning | Map of Fire');
+
+if (!empty($_GET['archive'])) {
+    if (!empty($state)) {
+        $descLoc = (!empty($county) ? $county . ' County, ' : '') . $state;
+    } elseif (!empty($country)) {
+        $descLoc = $country;
+    } else {
+        $descLoc = 'the US';
+    }
+
+    $desc = 'Explore historical data on wildfires from ' . $_GET['archive'] . ' across ' . $descLoc . ' with Map of Fire. Discover past ' . strtolower($fireType) . ' occurrences, their locations, sizes, and impact.';
+} else {
+    if (!empty($state)) {
+        $descLoc = (!empty($county) ? $county . ' County, ' : '') . $state;
+
+        if (in_array(strtolower($state), $provinces)) $descLoc .= ', Canada';
+    } elseif (!empty($country)) {
+        $descLoc = $country;
+    } else {
+        $descLoc = 'the US';
+    }
+
+    $desc = 'Track ' . strtolower($fireType) . 's & smoke across ' . $descLoc . '. Monitor fire spread, intensity, and lightning strikes. Stay informed with real-time updates on Map of Fire.';
+}
+
+/*$title = ($country ? "$country " : '') . ($county ? "$county County, " : '') . ($state ? "$state " : '') . ($_GET['archive'] ? $_GET['archive'] . ' Historical ' : '') . $fireType . ' Map: Track Live Fires, Smoke, & Lightning | Map of Fire';
 
 if ($_GET['archive']) {
-    $desc = 'Explore historical data on wildfires from ' . $_GET['archive'] . ' across ' . ($state ? ($county ? $county . ' County, ' : '') . $state : 'the US') . ' with Map of Fire. Discover past wildfire occurrences, their locations, sizes, and impact.';
+    $desc = 'Explore historical data on wildfires from ' . $_GET['archive'] . ' across ' . ($state ? ($county ? $county . ' County, ' : '') . $state : ($country ? $country : 'the US')) . ' with Map of Fire. Discover past ' . strtolower($fireType) . ' occurrences, their locations, sizes, and impact.';
 } else {
-    $desc = 'Track wildfires & smoke across ' . ($state ? ($county ? $county . ' County, ' : '') . $state . (in_array(strtolower($state), $provinces) ? ', Canada' : '') : 'the US') . '. Monitor fire spread, intensity, and lightning strikes. Stay informed with real-time updates on Map of Fire.';
-}
+    $desc = 'Track ' . strtolower($fireType) . 's & smoke across ' . ($state ? ($county ? $county . ' County, ' : '') . $state . (in_array(strtolower($state), $provinces) ? ', Canada' : '') : ($country ? $country : 'the US')) . '. Monitor fire spread, intensity, and lightning strikes. Stay informed with real-time updates on Map of Fire.';
+}*/
 
 $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascript);
 ?>
@@ -88,6 +124,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
                 <span id="dd-close" data-action="dropdown-nav" class="far fa-xmark"></span>
                 <ul>
                     <li id="account" data-action="account"><i class="fas fa-user-circle"></i><span>Login</span></li>
+                    <li id="new_fires" style="display:none"><i class="fas fa-fire-flame"></i><span>New Fires</span></li>
                     <li data-action="basemap"><i class="far fa-grid"></i><span>Maps</span></li>
                     <li data-action="layers"><i class="far fa-layer-group"></i><span>Layers</span></li>
                     <li id="legend" data-action="legend"><i class="far fa-list"></i><span>Legend</span></li>

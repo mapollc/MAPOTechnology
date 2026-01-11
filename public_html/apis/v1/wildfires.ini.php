@@ -35,7 +35,7 @@ if ($category == 'incident') {
     $weeks1 = strtotime('-7 days');
     $weeks3 = strtotime('-3 weeks');
     $months6 = strtotime('-6 months');
-    $sql = "SELECT * FROM ca_wildfires WHERE (((date >= $weeks3 AND CAST(acres AS float) < 1000 AND status != 'Under control') OR (date >= $weeks1 AND CAST(acres AS float) < 1000 AND status = 'Under control')) OR (date >= $months6 AND CAST(acres AS float) >= 1000)) AND display = 1 ORDER BY ".($_REQUEST['order'] ? ($_REQUEST['order'] == 'acres' ? 'CAST(acres AS float)' : $_REQUEST['order']) : 'CAST(date AS float)')." DESC";
+    $sql = "SELECT * FROM ca_wildfires WHERE year = $year AND (((date >= $weeks3 AND CAST(acres AS float) < 1000 AND status != 'Under control') OR (date >= $weeks1 AND CAST(acres AS float) < 1000 AND status = 'Under control')) OR (date >= $months6 AND CAST(acres AS float) >= 1000)) AND display = 1 ORDER BY ".($_REQUEST['order'] ? ($_REQUEST['order'] == 'acres' ? 'CAST(acres AS float)' : $_REQUEST['order']) : 'CAST(date AS float)')." DESC";
 
     $result = mysqli_query($con, $sql);
 

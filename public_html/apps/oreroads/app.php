@@ -2,7 +2,7 @@
 date_default_timezone_set('America/Los_Angeles');
 session_start();
 
-$stableVersion = '1.4';
+$stableVersion = '1.5';
 
 /*if ($_SERVER['SCRIPT_URI'] == 'https://www.mapotechnology.com/oregonroads/app') {
     header('Location: https://apps.mapotechnology.com/oregonroads');
@@ -33,7 +33,7 @@ foreach ($files as $file) {
 }
 
 $build = date('Y-m-d\TH:i:sO', max($times));
-$mapboxVersion = '3.15.0';
+$mapboxVersion = '3.17.0';
 $version = isset($_GET['version']) ? $_GET['version'] : $stableVersion;
 ?>
 <!DOCTYPE html>

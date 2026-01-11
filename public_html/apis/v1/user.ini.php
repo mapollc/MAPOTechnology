@@ -64,7 +64,8 @@ class SSO
                 . substr($charid, 16, 4) . $hyphen
                 . substr($charid, 20, 12)
                 . chr(125);
-            return $uuid;
+            
+            return str_replace(['{','}'], ['',''], $uuid);
         }
     }
 
@@ -476,6 +477,7 @@ class SSO
 
         $out = array(
             'uid' => intval($row['uid']),
+            'guid' => $row['guid'],
             'first_name' => $row['first_name'],
             'last_name' => $row['last_name'],
             'name' => $row['first_name'] . ' ' . $row['last_name'],
@@ -581,7 +583,7 @@ class SSO
 
         $token = $this->fields['token'];
         //$row = prepareQuery('s', [$token], $this->sql(', token, expires' . $extra, "LEFT JOIN sessions AS s ON s.uid = u.uid$extra2 WHERE s.token = ?"));
-        $row = prepareQuery('s', [$token], "SELECT u.uid, first_name, last_name, u.email, u.phone, password, u.location, u.created, role, provider, last_active, token, expires$extra FROM users AS u LEFT JOIN sessions AS s ON s.uid = u.uid$extra2 WHERE s.token = ?");
+        $row = prepareQuery('s', [$token], "SELECT u.uid, s.guid, first_name, last_name, u.email, u.phone, password, u.location, u.created, role, provider, last_active, token, expires$extra FROM users AS u LEFT JOIN sessions AS s ON s.uid = u.uid$extra2 WHERE s.token = ?");
 
         if (isset($row['error'])) {
             return array('response' => 'error', 'code' => 500, 'msg' => 'Database error: ' . $row['message']);
@@ -661,7 +663,10 @@ class SSO
         $_SESSION['subscriptions'] = json_encode($subscribe);
 
         setcookie('token', $this->token, $expires, '/', '.mapotechnology.com', true);
-        setcookie('guid', $this->guid, time() + (60 * 60 * 24 * 365.25), '/', '.mapotechnology.com', true);
+
+        if (!$_COOKIE['guid']) {
+            setcookie('guid', $this->guid, time() + (60 * 60 * 24 * 365.25), '/', '.mapotechnology.com', true);
+        }
 
         logEvent('Logged in', false, $row['uid']);
 

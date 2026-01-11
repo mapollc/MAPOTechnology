@@ -879,7 +879,7 @@ if ($method == 'dms') {
     $cache = $memcache->get($cachefilename);
 
     if (!$cache || filemtime('roads.ini.php') > $memcache->get($cachefilename . '-time')) {
-        $json = json_decode(file_get_contents('https://emdss.pikalert.org/latest_vehicles?path=/latest_vehicles/&state=oregon&client_ip=unknown&_dc='.time().'&page=1&start=0&limit=50'));
+        $json = json_decode(file_get_contents('https://emdss.pikalert.org/latest_vehicles?path=/latest_vehicles/&state=oregon&client_ip=unknown&_dc='.time().'&page=1&start=0&limit=100'));
 
         if ($json->districts && count($json->districts) > 0) {
             for ($x = 0; $x < count($json->districts); $x++) {
@@ -887,28 +887,31 @@ if ($method == 'dms') {
                 if ($json->districts[$x] && count($json->districts[$x]->vehicles) > 0) {
                     for ($i = 0; $i < count($json->districts[$x]->vehicles); $i++) {
                         $plow = $json->districts[$x]->vehicles[$i];
+                        $lastSeen = intval($plow->obs_time);
 
-                        $vehicles[] = [
-                            'type' => 'Feature',
-                            'geometry' => [
-                                'type' => 'Point',
-                                'coordinates' => [
-                                    floatval($plow->lon),
-                                    floatval($plow->lat)
-                                ]
-                            ],
-                            'properties' => [
-                                'id' => $i + 1,
-                                'plowID' => $plow->id,
-                                'temp' => [
-                                    'air' => floatval($plow->temp_f),
-                                    'road' => floatval($plow->road_temp_f)
+                        if (time() - $lastSeen <= 3600) {
+                            $vehicles[] = [
+                                'type' => 'Feature',
+                                'geometry' => [
+                                    'type' => 'Point',
+                                    'coordinates' => [
+                                        floatval($plow->lon),
+                                        floatval($plow->lat)
+                                    ]
                                 ],
-                                'speed' => intval($plow->speed_mph),
-                                'heading' => $plow->heading_deg == -9999 ? null : getCompassDirection(floatval($plow->heading_deg)),
-                                'updated' => intval($plow->obs_time)
-                            ]
-                        ];
+                                'properties' => [
+                                    'id' => $i + 1,
+                                    'plowID' => $plow->id,
+                                    'temp' => [
+                                        'air' => floatval($plow->temp_f),
+                                        'road' => floatval($plow->road_temp_f)
+                                    ],
+                                    'speed' => intval($plow->speed_mph),
+                                    'heading' => $plow->heading_deg == -9999 ? null : getCompassDirection(floatval($plow->heading_deg)),
+                                    'updated' => $lastSeen
+                                ]
+                            ];
+                        }
                     }
                 }
             }

@@ -187,6 +187,7 @@ self.onmessage = (e) => {
     const spin = '<span id="spinner" style="width:18px;height:18px"></span>';
     let content = `<div class="container">
         <div class="incident">
+            ${fire.time.year < new Date().getFullYear() ? `<div class="archived"><i class="far fa-lock-keyhole"></i><span style="line-height:1.2">This ${type.toLowerCase()} is a historical incident and is no longer active.</span></div>` : ''}
             <header>
                 <div class="title">
                     <div class="tray">
@@ -210,7 +211,7 @@ self.onmessage = (e) => {
             <div class="grid cols-4 stats">
                 <div class="card">
                     <dt class="label">Status</dt>
-                    <span class="status ${object.status}" title="${ucfirst(object.status)}">${object.status}</span>
+                    <span class="status ${object.status}" style="min-width:123px" title="${ucfirst(object.status)}">${object.status}</span>
                 </div>
                 <div class="card">
                     <dt class="label">Size</dt>
@@ -219,8 +220,8 @@ self.onmessage = (e) => {
                 <div class="card">
                     <dt class="label">Containment</dt>
                     <div class="containment">
-                        <div class="contain-bar ${contain.replace('%', '') < 51 ? '' : 'progress'}">
-                            <div style="width:${contain}"></div>
+                        <div class="contain-bar ${contain.replace('%', '') < 50 ? '' : 'progress'}">
+                            <div style="width:${contain}${contain == '100%' ? ';border-radius:4px' : ''}"></div>
                             <h3>${contain}</h3>
                         </div>
                     </div>

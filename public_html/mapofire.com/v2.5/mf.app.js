@@ -45,6 +45,7 @@ const specificURL = window.location.origin + '/',
         longMonths: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
         days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
         curTime: new Date(),
+        daysInYear: (y = null) => { const year = y ?? config.curTime.getFullYear(); return (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 366 : 365; },
         runSearch: false,
         TIERS: {
             'ignite_monthly': 'PREMIUM',
@@ -136,7 +137,7 @@ const specificURL = window.location.origin + '/',
         'fuels': { layers: ['fuels', 'fuelsAK'], exe: () => { config.layersHandler.fuels(); } },
         'dispatch': { layers: ['dispatch_outline', 'dispatch_title'], exe: () => { config.layersHandler.dispatch(); } },
         'gaccBounds': { layers: ['gaccBounds', 'gaccBounds_title'], exe: () => { config.layersHandler.gaccBounds(); } },
-        'perimeters': { layers: ['perimeters_outline', 'perimeters_fill', 'perimeters_title', 'ca_perimeters_outline', 'ca_perimeters_fill', 'ca_perimeters_title'] },
+        'perimeters': { layers: ['perimeters_outline', 'perimeters_fill', 'perimeters_title', 'ca_perimeters_outline', 'ca_perimeters_fill', 'ca_perimeters_title', 'aus_perimeters_outline', 'aus_perimeters_fill', 'aus_perimeters_title'] },
         'nri': { layers: ['nri_outline', 'nri_fill'], exe: () => { config.layersHandler.nri(); } },
         'power': { layers: ['power'], exe: () => { config.layersHandler.power(); } },
         'modis24': { layers: ['modis24'], exe: () => { config.layersHandler.modis(1); } },
@@ -393,6 +394,8 @@ let map,
     },
     dispatchCenters,
     selected = {
+        caperim: null,
+        ausperim: null,
         perim: null,
         evac: null,
         nri: null,
@@ -697,8 +700,8 @@ class Convert {
         }
     }
 
-    sizeUnit(customUnit) {
-        return customUnit !== null ? customUnit : (settings.get().acres() ? settings.get().acres() : 'acres');
+    sizeUnit(customUnit = null) {
+        return customUnit != null ? customUnit : (settings.get().acres() ? settings.get().acres() : 'acres');
     }
 
     sizeFormat(size, returnSize = true, returnUnit = true, customUnit = null) {
@@ -709,7 +712,7 @@ class Convert {
             return returnSize ? '0' : (returnUnit ? unit : '');
         } else if (size !== null && size !== '') {
             let v = parseFloat(size);
-            
+
             switch (unit) {
                 case 'hectares':
                     v /= 2.471;
@@ -912,6 +915,15 @@ class ClickListener {
         modal.className = aClass || '';
         modal.querySelector('.content').innerHTML = '<div class="loading"><div class="s"></div></div>';
 
+        const onTransitionEnd = (e) => {
+            if (e.propertyName === 'top') {
+                modal.removeEventListener('transitionend', onTransitionEnd);
+        
+                const event = new CustomEvent('modalOpened', { detail: { top: openPosition } });
+                modal.dispatchEvent(event);
+            }
+        };
+
         const handle = modal.querySelector('.close'),
             viewportHeight = window.innerHeight,
             openPosition = viewportHeight * (viewportHeight > 600 ? 0.4 : 0.3), // 40vh or 30vh if window height is < 600px
@@ -962,6 +974,9 @@ class ClickListener {
         requestAnimationFrame(() => {
             modal.style.top = `${openPosition}px`;
         });
+
+        // add event listener for when modal has finished opening
+        modal.addEventListener('transitionend', onTransitionEnd);
 
         if (handle) {
             handle.addEventListener('dblclick', () => {
@@ -1051,8 +1066,8 @@ class ClickListener {
 
         unsetHeaders();
 
-        ['caperim', 'perim', 'evac', 'nri', 'erc'].forEach(key => {
-            const source = key === 'caperim' ? 'ca_perimeters' : key;
+        ['caperim', 'ausperim', 'perim', 'evac', 'nri', 'erc'].forEach(key => {
+            const source = key === 'caperim' ? 'ca_perimeters' : (key === 'ausperim' ? 'aus_perimeters' : key);
             if (selected[key] && map.getSource(source)) {
                 map.removeFeatureState({ source, id: selected[key] });
             }
@@ -1195,9 +1210,7 @@ class ClickListener {
                     };
 
                     if (isChecked) {
-                        filter.querySelectorAll('select').forEach(select => {
-                            select.disabled = false;
-                        });
+                        filter.querySelectorAll('select').forEach(select => select.disabled = false);
                     }
 
                     const filterLayer = adjust[layer.id];
@@ -1429,72 +1442,76 @@ class ClickListener {
     }
 
     account() {
-        if (settings.user == null) {
-            window.location.href = config.domain + 'secure/login?service=' + getPlatform() + '&next=' + encodeURIComponent(window.location.href);
-        } else {
-            let ms = '';
-            const userProfile = `<div class="content">
-                <div id="sync"><i class="fa-regular fa-arrow-down-to-line" aria-hidden="true"></i><span title="${dateTime(settings.getUser().synced(), true, true, true).toString()}">Account last synced ${timeAgo(settings.user.settings.synced)}</span></div>
-                <div class="btn-group centered"><a target="blank" class="btn btn-blue" style="width:100%" href="${config.domain}account/settings">Manage account</a></div>
-                <div id="settings">
-                    <div class="my-subs">
-                        <h2 style="margin:0">My Subscriptions</h2>
-                        <div id="subs"></div>
-                    </div>
-                    <h2>Map Settings</h2>
-                    ${this.acctSettings()}
-                    <div style="margin-top:5em;font-size:12px;text-align:center;color:var(--blue-gray);line-height:1.3">
-                        &copy; ${new Date().getFullYear()} ${config.company}<br>Version ${version}<br>
-                        <a class="footer-link" href="${config.specificURL}logout?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}">Logout</a>&nbsp;&middot;&nbsp;
-                        <a class="footer-link" href="https://mapofire.com/release-notes" target="blank">Change Log</a>&nbsp;&middot;&nbsp;
-                        <a class="footer-link" href="${config.domain}about/legal/terms" target="blank">Terms</a>&nbsp;&middot;&nbsp;
-                        <a class="footer-link" href="${config.domain}about/legal/privacy" target="blank">Privacy</a>
-                    </div>
+        if (!settings.user) {
+            const getGUID = RegExp(/guid=(.*)/g).exec(document.cookie),
+                guid = getGUID ? getGUID[1] : null;
+
+            window.location.href = config.domain + 'secure/login?service=' + getPlatform() + '&next=' + encodeURIComponent(window.location.href) + (guid ? '&guid=' + guid : '');
+
+            return;
+        }
+
+        let ms = '';
+        const userProfile = `<div class="content">
+            <div id="sync"><i class="fa-regular fa-arrow-down-to-line" aria-hidden="true"></i><span title="${dateTime(settings.getUser().synced(), true, true, true).toString()}">Account last synced ${timeAgo(settings.user.settings.synced)}</span></div>
+            <div class="btn-group centered"><a target="blank" class="btn btn-blue" style="width:100%" href="${config.domain}account/settings">Manage account</a></div>
+            <div id="settings">
+                <div class="my-subs">
+                    <h2 style="margin:0">My Subscriptions</h2>
+                    <div id="subs"></div>
                 </div>
-            </div>`;
+                <h2>Map Settings</h2>
+                ${this.acctSettings()}
+                <div style="margin-top:5em;font-size:12px;text-align:center;color:var(--blue-gray);line-height:1.3">
+                    &copy; ${new Date().getFullYear()} ${config.company}<br>Version ${version}<br>
+                    <a class="footer-link" href="${config.specificURL}logout?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}">Logout</a>&nbsp;&middot;&nbsp;
+                    <a class="footer-link" href="https://mapofire.com/release-notes" target="blank">Change Log</a>&nbsp;&middot;&nbsp;
+                    <a class="footer-link" href="${config.domain}about/legal/terms" target="blank">Terms</a>&nbsp;&middot;&nbsp;
+                    <a class="footer-link" href="${config.domain}about/legal/privacy" target="blank">Privacy</a>
+                </div>
+            </div>
+        </div>`;
 
-            impact.innerHTML = impactHeader + userProfile;
-            impact.style.display = 'flex';
-            impact.querySelector('#a').innerHTML = 'Hello, ' + settings.getUser().getName().first();
+        impact.innerHTML = impactHeader + userProfile;
+        impact.style.display = 'flex';
+        impact.querySelector('#a').innerHTML = 'Hello, ' + settings.getUser().getName().first();
 
-            const prefs = {
-                'saveFreq': settings.get().saveFreq(),
-                'perimColor': settings.perimeters().color() ?? 'default',
-                'perimTtip': settings.perimeters().ttip() ?? 1,
-                'perimZoom': settings.perimeters().zoom() ?? 1,
-                'coordsDisplay': settings.get().coordsDisplay() ?? 'dec',
-                'tempUnit': settings.weather().temp() ?? 'f',
-                'windSpeedUnit': settings.weather().wind() ?? 'mph',
-                'acresUnit': settings.get().acres() ?? 'acres',
-                'locallySave': settings.get().locallySave() ?? 'n'/*,
-                'fireDisplay': settings.get('fireDisplay') ?? 'map'*/
-            };
+        const prefs = {
+            'saveFreq': settings.get().saveFreq(),
+            'perimColor': settings.perimeters().color() ?? 'default',
+            'perimTtip': settings.perimeters().ttip() ?? 1,
+            'perimZoom': settings.perimeters().zoom() ? 1 : 0,
+            'coordsDisplay': settings.get().coordsDisplay() ?? 'dec',
+            'tempUnit': settings.weather().temp() ?? 'f',
+            'windSpeedUnit': settings.weather().wind() ?? 'mph',
+            'acresUnit': settings.get().acres() ?? 'acres',
+            'locallySave': settings.get().locallySave() ?? 'n'
+        };
 
-            Object.entries(prefs).forEach(([id, val]) => {
-                const el = document.querySelector(`select#${id}`);
-                if (el) el.value = val;
-            });
+        Object.entries(prefs).forEach(([id, val]) => {
+            const el = document.querySelector(`select#${id}`);
+            if (el) el.value = val;
+        });
 
-            if (!settings.subscriptions().valid()) {
-                ms = '<p style="color:#bdbdbd;font-size:15px">You don\'t have a subscription to Map of Fire. <a class="btn btn-green" style="width:100%;margin:1em 0 0 0" href="' + config.purchaseLink('account', encodeURIComponent(window.location.href)) + '">Try it out!</a>';
-            } else {
-                let theEnd = 'Your subscription will automatically renew';
+        if (!settings.subscriptions().valid()) {
+            ms = '<p style="color:#bdbdbd;font-size:15px">You don\'t have a subscription to Map of Fire. <a class="btn btn-green" style="width:100%;margin:1em 0 0 0" href="' + config.purchaseLink('account', encodeURIComponent(window.location.href)) + '">Try it out!</a>';
+        } else {
+            let theEnd = 'Your subscription will automatically renew';
 
-                if (settings.subscriptions().isTrial()) {
-                    theEnd = 'Your free trial ends ';
-                }
+            if (settings.subscriptions().isTrial()) {
+                theEnd = 'Your free trial ends ';
+            }
 
-                ms = `<div style="display:inline-flex;width:100%;justify-content:space-between;gap:1em">
+            ms = `<div style="display:inline-flex;width:100%;justify-content:space-between;gap:1em">
                         <div style="display:inline-flex;flex-direction:column;gap:0.45em">
                             <span>${settings.subscriptions().name()}</span>
                             <small style="line-height:1.1;color:#999">${theEnd} on ${settings.subscriptions().expires()}.</small>
                         </div>
                         <a class="btn btn-sm btn-black" style="margin:0;height:fit-content" target="blank" href="${config.domain}account/billing#cid=${settings.subscriptions().customerID()}">Manage</a>
                     </div>`;
-            }
-
-            document.querySelector('#subs').innerHTML = ms;
         }
+
+        document.querySelector('#subs').innerHTML = ms;
     }
 
     radarPausePlay() {
@@ -1723,6 +1740,7 @@ class ClickListener {
             const lat = p.dataset.lat,
                 lon = p.dataset.lon;
 
+            // zoom to a marker of a city location
             if (type == 'city') {
                 const name = p.dataset.name.split(', ');
 
@@ -1737,7 +1755,9 @@ class ClickListener {
                     center: new maplibregl.LngLat(lon, lat),
                     zoom: 10
                 });
-            } else if (type == 'gis') {
+            }
+            // zoom to marker of a GIS feature (POI)
+            else if (type == 'gis') {
                 const name = p.dataset.name.split(', '),
                     county = p.dataset.county,
                     geoType = p.dataset.geotype;
@@ -1752,7 +1772,9 @@ class ClickListener {
                     center: new maplibregl.LngLat(lon, lat),
                     zoom: 11.25
                 });
-            } else if (type == 'state') {
+            }
+            // zoom to boundaries of a state or a county
+            else if (type == 'state' || type == 'county') {
                 const bbox = JSON.parse(p.dataset.bbox);
 
                 map.fitBounds([
@@ -1761,7 +1783,9 @@ class ClickListener {
                 ], {
                     padding: 50
                 });
-            } else if (type == 'coordinates') {
+            }
+            // zoom in on coordinates
+            else if (type == 'coordinates') {
                 marker = new maplibregl.Marker()
                     .setLngLat([lon, lat])
                     .addTo(map);
@@ -1774,18 +1798,24 @@ class ClickListener {
                     center: [lon, lat],
                     zoom: 10
                 });
-            } else {
-                const r = config.wildfire.findFire(parseInt(p.getAttribute('data-wfid')));
+            }
+            // zoom to a wildfire
+            else {
+                const wfid = parseInt(p.getAttribute('data-wfid'));
+                if (config.wildfire.findFire(wfid)) config.wildfire.incident(wfid, true);
+                /*const r = config.wildfire.findFire(parseInt(p.getAttribute('data-wfid')));
 
                 map.easeTo({
                     center: r.geometry.coordinates,
                     zoom: 10
-                });
+                });*/
             }
         }
 
         this.sr.innerHTML = '<li class="standby" style="gap:.5em"><i class="fa-duotone fa-spinner-third" aria-hidden="true"></i><span>Searching...</span></li>';
         this.sr.style.display = 'none';
+
+        return this;
     }
 }
 
@@ -1802,9 +1832,7 @@ function toggleLayer(e) {
             else if (sourceId == 'wvSatellite') sourceId = 'satellite3';
 
             if (map.getSource(sourceId)) {
-                action.layers.forEach(id => {
-                    map.setLayoutProperty(id, 'visibility', visibility)
-                });
+                action.layers.forEach(id => map.setLayoutProperty(id, 'visibility', visibility));
             } else if (checked) {
                 action.exe();
             }
@@ -1886,7 +1914,15 @@ async function getCounties() {
                     15,
                     '#6e3066'
                 ],
-                'line-width': ['step', ['zoom'], 1, 12, 2, 16, 1.5]
+                'line-width': [
+                    'step',
+                    ['zoom'],
+                    1,
+                    12,
+                    2,
+                    16,
+                    1.5
+                ]
             }
         });
     }
@@ -1915,12 +1951,8 @@ function addDynamicControls() {
     controlsAtBottom = useBottom;
 
     const list = useBottom ? [...mapControls].reverse() : mapControls;
-
-    mapControls.forEach(c => { if (map.hasControl(c)) map.removeControl(c); });
-
-    list.forEach(c => {
-        map.addControl(c, useBottom ? 'bottom-right' : 'top-right');
-    });
+    mapControls.filter(c => map.hasControl(c)).forEach(c => map.removeControl(c));
+    list.forEach(c => map.addControl(c, useBottom ? 'bottom-right' : 'top-right'));
 }
 
 function init() {
@@ -2049,15 +2081,21 @@ function init() {
             (await loadUtils()).marketing();
         }
 
-        /* if user wants a state map, zoom to that state */
+        /* zoom to that country if URL contains country/{theCountry} */
+        if (country) {
+            const bounds = {
+                'austrailia': { c: [133.7751, -25.2744], z: 3.5 },
+                'canada': { c: [-106.3468, 56.1304], z: 4.2 }
+            }[country.toLowerCase()];
+
+            map.easeTo({ center: bounds.c, zoom: bounds.z, duration: 1000 });
+        }
+
+        /* zoom to that state if URL contains state/{theState} */
         if (state) {
             Object.keys((await loadUtils()).stateLabels).forEach(async (e) => {
                 if ((await loadUtils()).stateLabels[e].name == state) {
-                    map.easeTo({
-                        center: (await loadUtils()).stateLabels[e].center,
-                        zoom: 5.8,
-                        duration: 1000
-                    });
+                    map.easeTo({ center: (await loadUtils()).stateLabels[e].center, zoom: 5.8, duration: 1000 });
                 }
             });
         }
@@ -2070,14 +2108,12 @@ function init() {
         config.wildfire.getWildfires();
         config.wildfire.perimeters();
 
-        const dont = ['newFires', 'allFires', 'smokeChecks', 'rxBurns', 'perimeters'];
+        const excludeTheseLayers = ['newFires', 'allFires', 'smokeChecks', 'rxBurns', 'perimeters'];
 
         if (settings.checkboxes()) {
-            settings.checkboxes().forEach((c) => {
-                if (!dont.includes(c)) {
-                    toggleLayer({ id: c, checked: true });
-                }
-            });
+            settings.checkboxes()
+                .filter(c => !excludeTheseLayers.includes(c))
+                .forEach(c => toggleLayer({ id: c, checked: true }));
         }
     });
 
@@ -2100,37 +2136,18 @@ function init() {
 
         /* control whether FS roads show on the map based on the zoom level */
         if (settings.isEnabled('roads')) {
-            if (!map.getLayer('roads')) {
-                config.layersHandler.roads();
-            }
+            if (!map.getLayer('roads')) config.layersHandler.roads();
 
-            map.setLayoutProperty('roads', 'visibility', map.getZoom() <= 11 ? 'none' : (map.getLayer('roads') ? 'visible' : 'visible'));
+            if (map.getLayer('roads')) map.setLayoutProperty('roads', 'visibility', map.getZoom() <= 11 ? 'none' : 'visible');
         }
 
         /* control whether modis hotspots show on the map based on the zoom level */
-        const modis = [
-            {
-                n: '24',
-                w: 1
-            },
-            {
-                n: '48',
-                w: 2
-            },
-            {
-                n: '72',
-                w: 3
-            }
-        ];
-
-        modis.forEach((item) => {
+        [{ n: '24', w: 1 }, { n: '48', w: 2 }, { n: '72', w: 3 }].forEach(item => {
             const name = 'modis' + item.n,
                 vis = map.getLayer(name) ? 'visible' : 'visible';
 
             if (settings.isEnabled(name)) {
-                if (!map.getLayer(name)) {
-                    config.layersHandler.modis(item.w);
-                }
+                if (!map.getLayer(name)) config.layersHandler.modis(item.w);
 
                 map.setLayoutProperty(name, 'visibility', map.getZoom() < config.modisZoomLevel ? 'none' : vis);
             }
@@ -2157,9 +2174,9 @@ function init() {
 }
 
 function upgrade() {
-    const items = [/*'dark_mode', */'dispatch', 'dispatch_time', 'impactScroll', 'marketing', 'version', 'clicks', 'tracked'];
+    const items = ['dispatch', 'dispatch_time', 'impactScroll', 'marketing', 'version', 'clicks', 'tracked'];
 
-    items.forEach((item) => {
+    items.forEach(item => {
         const v = localStorage.getItem(item);
 
         if (v != null) {
@@ -2238,6 +2255,7 @@ document.onreadystatechange = async () => {
                 const sv = localStorage.getItem('mapofire.version');
 
                 if (sv == null || sv != version) {
+                    // TODO: if sv != null && sv != version, do something about user upgrading to the new map version
                     localStorage.setItem('mapofire.version', version);
                 }
             };
@@ -2245,30 +2263,27 @@ document.onreadystatechange = async () => {
         versioning();
 
         // create a list of layers
-        Object.entries(layers.categories).forEach(([id, t]) => {
+        Object.entries(layers.categories).forEach(([id, _]) => {
             layers.layers[id].forEach(each => config.listOfLayers.push(each));
         });
 
         if (token != null) {
-            const a = document.querySelector('#account'),
+            const acct = document.querySelector('#account'),
                 get = await api(config.apiURL + 'user/get/mapofire', [['token', token[1]]]);
+
             usr = get.user;
 
             /* change menu button */
-            if (usr != null) {
-                a.querySelector('span').innerHTML = 'Account';
-            }
+            if (usr != null) acct.querySelector('span').innerHTML = 'Account';
         } else {
             document.querySelector('#save').remove();
-            /*document.querySelector('#logout').remove();*/
         }
 
         // show the nav menu
         document.querySelector('nav ul').style.display = 'flex';
 
-        if (window.innerWidth > 600) {
-            document.querySelector('#close-navbar').classList.add('show');
-        }
+        // show the "close navbar" menu when screen width > 600px
+        if (window.innerWidth > 600) document.querySelector('#close-navbar').classList.add('show');
 
         // create settings class based on user profile and settings
         settings = new (await loadUtils()).Settings(usr);
@@ -2285,29 +2300,25 @@ document.onreadystatechange = async () => {
         }
         * * * */
 
-        const li1 = document.createElement('li'),
-            li2 = document.createElement('li');
+        // add fire weather and historical menu options (disabled them if user doesn't have correct perms)
+        const makeItem = (opts) => {
+            const el = document.createElement('li');
+            el.id = opts.id;
+            if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) el.classList.add('disabled');
+            el.dataset.action = opts.id;
+            el.innerHTML = '<i class="far fa-' + opts.icon + '"></i><span>' + opts.span + '</span>';
+            document.querySelector('#' + opts.insert).insertAdjacentElement('afterend', el);
+        };
 
-        if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
-            li1.classList.add('disabled');
-            li2.classList.add('disabled');
-        }
+        makeItem({ id: 'fwf', icon: 'cloud-bolt', span: 'Fire WX', insert: 'legend' });
+        makeItem({ id: 'archive', icon: 'calendars', span: 'Historical', insert: 'refresh' });
 
-        li1.id = 'fwf';
-        li1.setAttribute('data-action', 'fwf');
-        li1.innerHTML = '<i class="far fa-cloud-bolt"></i><span>Fire WX</span>';
-
-        li2.setAttribute('data-action', 'archive');
-        li2.innerHTML = '<i class="far fa-calendars"></i><span>Historical</span>';
-
-        document.querySelector('#legend').insertAdjacentElement('afterend', li1);
-        document.querySelector('#refresh').insertAdjacentElement('afterend', li2);
-
-        /* get user's currently tracked wildfires */
+        // 1) start a wildfire class 2) get user's currently tracked wildfires 3) get austrailian bush fires
         config.wildfire = new (await loadUtils()).Wildfires();
         config.wildfire.getTrackedFires();
+        config.wildfire.getBushfireNames();
 
-        /* initialize map */
+        // initialize map
         const idle = window.requestIdleCallback ? window.requestIdleCallback : (cb) => setTimeout(cb, 1);
 
         idle(async () => {
@@ -2390,9 +2401,7 @@ window.onload = async () => {
                     });
                 }
             })
-            .catch(error => {
-                console.error('Service worker registration failed:', error);
-            });
+            .catch(error => console.error('Service worker registration failed:', error));
     }
 };
 
@@ -2480,9 +2489,7 @@ window.addEventListener('click', async (e) => {
         searchResults.style.display = 'none';
         document.querySelector('#q').value = '';
 
-        searchResults.querySelectorAll('li:not(.standby)').forEach(li => {
-            li.remove();
-        });
+        searchResults.querySelectorAll('li:not(.standby)').forEach(li => li.remove());
     }
 
     /* hide impact panel if outside of container */

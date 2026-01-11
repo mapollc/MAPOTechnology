@@ -57,6 +57,7 @@ if ($_REQUEST['token']) {
             $redirectURL = 'https://www.mapotechnology.com/secure/login?fail=3'.($qs ? '&'.$qs : '');
         } else {
             $user = $json['user'];
+
             $_SESSION['uid'] = $user['uid'];
             $_SESSION['first_name'] = $user['first_name'];
             $_SESSION['last_name'] = $user['last_name'];
@@ -67,6 +68,10 @@ if ($_REQUEST['token']) {
             $_SESSION['subscriptions'] = json_encode($subscribe);
     
             setcookie('token', $user['token'], $user['expires'], '/', ".$domain", true);
+
+            if ($_COOKIE['guid'] != $user['guid']) {
+                setcookie('guid', $user['guid'], time() + (60 * 60 * 24 * 365.25), '/', ".$domain", true);
+            }
 
             $redirectURL = $next;
         }

@@ -176,7 +176,7 @@ if (!$cache || filemtime(root() . 'fire-info.ini.php') > $memcache->get($cachefi
             $contain = "$nc[1]%";
         }
 
-        $fire['properties']['containment'] = $contain;
+        $fire['properties']['containment'] = $status['Out'] ? '100%' : $contain;
 
         if ($_REQUEST['history']) {
             if ($history) {

@@ -147,6 +147,23 @@ strong {
     color: #fff;
 }
 
+.archived {
+    display: inline-flex;
+    gap: var(--spacing);
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: var(--spacing);
+    padding: var(--spacing);
+    color: #fdfdfd;
+    text-align: center;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background: rgb(219 81 58 / 60%);
+    border-radius: 3px;
+}
+
 .message {
     display: inline-flex;
     align-items: center;
@@ -1630,6 +1647,15 @@ text-align: left;
     line-height: 1.3;
 }
 
+#modal dd p {
+    padding-bottom: var(--spacing);
+}
+
+#modal dd p:only-child,
+#modal dd p:last-child {
+    padding-bottom: 0;
+}
+
 #modal .grid {
     display: grid;
     width: 100%;
@@ -2280,6 +2306,7 @@ span.air_quality {
     text-transform: uppercase;
     font-size: 15px;
     line-height: 1;
+    text-align: center;
     letter-spacing: 0.4px;
     user-select: none;
 }
@@ -2763,7 +2790,8 @@ span.status.out {
     text-align: center;
     font-size: 14px;
     font-weight: bold;
-    line-height: 1.25;
+    color: #111;
+    line-height: 1.5;
 }
 
 .legend .row .desc {

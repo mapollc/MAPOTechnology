@@ -1246,7 +1246,7 @@ class Data {
     }
 
     async loadAllData() {
-        const [rw, rwis, incidents, cameras, roadWork, dms] = await Promise.all([
+        const [rw, rwis, incidents, cameras, roadWork, dms, plows] = await Promise.all([
             this.getCachedData('rw', 'roads', 15, (data) => {
                 if (!data || data.rw == null) {
                     console.error('There was an error getting current road conditions.');
@@ -1266,8 +1266,9 @@ class Data {
             this.getCachedData('rwis', 'roads/rwis', 10, (data) => this.displayRWIS(data)),
             this.getCachedData('incidents', 'roads/incidents', 10, (data) => this.displayIncidents(data)),
             this.getCachedData('cameras', 'webcams?network=ODOT', 60, (data) => this.displayWebcams(data)),
-            this.getCachedData('construction', 'roads/incidents/construction', 30, (data) => this.displayConstruction(data)),
+            this.getCachedData('plows', 'roads/plows', 15, (data) => this.displayPlows(data)),
             this.getCachedData('dms', 'roads/dms', 10, (data) => this.displayDMS(data)),
+            this.getCachedData('construction', 'roads/incidents/construction', 30, (data) => this.displayConstruction(data))
         ]);
 
         rwRetrieved = rw != null;
@@ -1276,6 +1277,7 @@ class Data {
         incidentsRetrieved = incidents != null;
         roadWorkRetrieved = roadWork != null;
         dmsRetrieved = dms != null;
+        plowsRetrieved = plows != null;
     }
 
     defaultLayer(name) {
@@ -1942,6 +1944,46 @@ class Data {
         }
     }
 
+    displayPlows(json) {
+        if (!map.hasImage('plows')) {
+            map.loadImage(host + 'assets/images/oreroads/snow_plow_icon.png', (error, img) => {
+                if (error) throw error;
+                map.addImage('plow', img);
+
+                varMsgSigns = json;
+
+                if (!map.getSource('plows')) {
+                    map.addSource('plows', {
+                        type: 'geojson',
+                        data: json
+                    });
+                }
+
+                if (!map.getLayer('plows')) {
+                    map.addLayer({
+                        id: 'plows',
+                        type: 'symbol',
+                        source: 'plows',
+                        paint: {},
+                        layout: {
+                            'icon-image': 'plow',
+                            'icon-size': 0.2,
+                            'icon-allow-overlap': true,
+                            'symbol-placement': 'point',
+                            visibility: this.defaultLayer('plows')
+                        }
+                    }).on('mouseenter', 'plows', () => {
+                        map.getCanvas().style.cursor = 'pointer';
+                    }).on('mouseleave', 'plows', () => {
+                        map.getCanvas().style.cursor = 'auto';
+                    });
+                }
+
+                console.info(json.features.length + ' recently seen snow plows');
+            });
+        }
+    }
+
     getTraffic() {
         if (!map.getSource('traffic')) {
             map.addSource('traffic', {
@@ -2024,6 +2066,36 @@ function onMapClickListener(features, point) {
         if (layer == 'dms') {
             new Modal(properties, true).vms();
             return;
+        }
+
+        if (layer == 'plows') { console.log(properties);
+            createDialog('ODOT Snow Plow', '');
+            const spot = document.querySelector('.dialog .wrapper p'),
+                temp = JSON.parse(properties.temp),
+                theCity = [],
+                theDist = [],
+                theBear = [];
+
+            cities.list.forEach((c) => {
+                const dist = distance(c.lat, c.lon, feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
+                const bear = getBearing(c.lat, c.lon, feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
+                theCity.push(c.city);
+                theDist.push(dist);
+                theBear.push(bear);
+            });
+
+            const min = Math.min.apply(null, theDist);
+            const where = min.toFixed(1) + ' miles ' + theBear[theDist.indexOf(min)] + ' of ' + theCity[theDist.indexOf(min)] + ', OR';
+            
+            let content = '<div style="line-height:1.3">';
+
+            content += '<b>Speed</b><br>' + properties.speed + ' mph<br><b>Location</b><br>' + where + '<br><b>Air Temperature</b><br>' + 
+            temp.air + '&deg;<br><b>Road Temperature</b><br>' + 
+            temp.road + '&deg;<br><b>Last Seen</b><br>' + 
+            timeAgo(properties.updated) + '</div>';
+            
+            spot.insertAdjacentHTML('beforebegin', content);
+            spot.remove();
         }
 
         if (layer == 'roads') {

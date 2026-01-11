@@ -29,6 +29,7 @@ let map,
     incidentsRetrieved = false,
     roadWorkRetrieved = false,
     dmsRetrieved = false,
+    plowsRetrieved = false,
     wwasRetrieved = false,
     roadNetwork = [],
     nwsAlerts = [],
@@ -609,6 +610,12 @@ let map,
             'name': 'Incidents',
             'default': true,
             'desc': 'Current incidents and closures impacting highways'
+        },
+        {
+            'layer': 'plows',
+            'name': 'Snow Plows',
+            'default': summerMode ? false : true,
+            'desc': 'See where ODOT snow plows are working'
         },
         {
             'layer': 'vms',

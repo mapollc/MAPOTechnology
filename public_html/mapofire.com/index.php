@@ -24,7 +24,7 @@ header('Content-type: text/html');
 
 session_start();
 
-if (!$_COOKIE['uuid']) {
+if (!$_COOKIE['guid']) {
     if (function_exists('com_create_guid')) {
         return com_create_guid();
     } else {
@@ -38,9 +38,9 @@ if (!$_COOKIE['uuid']) {
             . substr($charid, 16, 4) . $hyphen
             . substr($charid, 20, 12)
             . chr(125);
-        $uuid = str_replace(['{', '}'], ['', ''], $uuid);
+        $guid = str_replace(['{', '}'], ['', ''], $uuid);
 
-        setcookie('uuid', $uuid, time() + 60 * 60 * 24 * 365.25, '/', '.mapofire.com', true);
+        setcookie('guid', $guid, time() + 60 * 60 * 24 * 365.25, '/', '.mapofire.com', true);
     }
 }
 
@@ -138,8 +138,16 @@ if (isset($_GET['wfid']) && !isset($_GET['firestate']) && isset($_GET['name'])) 
     exit();
 }
 
+// validate if the user is trying to pull up a state fire map that IS valid
 if (isset($_GET['state']) && in_array(str_replace('-', ' ', $_GET['state']), $provinces) && isset($_GET['county'])) {
     header("Location: $baseURL" . "state/$_GET[state]");
+    exit();
+}
+
+// redirect users if they're trying to view a country AND historical wildfire map
+if (isset($_GET['country']) && isset($_GET['archive'])) {
+    header("Location: $baseURL" . ltrim(rtrim(preg_replace('/archive=([0-9]+)&?/', '', $_SERVER['REQUEST_URI']), '?'), '/'));
+    exit();
 }
 
 // mapbox & maplibre sdk version
@@ -165,11 +173,12 @@ require_once $root . 'layers.inc.php';
 if (file_exists($root . 'v' . $version . '/app.php')) {
     //$dark_mode = $_COOKIE['dark_mode'] && $_COOKIE['dark_mode'] == 'true' ? true : false;
 
+    $country = ucwords(str_replace('-', ' ', $_GET['country']));
     $state = ucwords(str_replace('-', ' ', $_GET['state']));
     $county = ucwords(str_replace('-', ' ', $_GET['county']));
 
     if (!isset($_GET['version'])) {
-        $javascript = "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X03WWLX3BJ',{'user_id':'$_COOKIE[uuid]'});";
+        $javascript = "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X03WWLX3BJ',{'user_id':'$_COOKIE[guid]'});";
     } else {
         $javascript = "function gtag(){}";
     }
@@ -177,6 +186,7 @@ if (file_exists($root . 'v' . $version . '/app.php')) {
     $javascript .= "const version='$version',
     mbVersion='$maplibreVersion',
     buildDate='$buildDate',
+    country=" . ($country ? "'$country'" : 'null') . ",
     state=" . ($state ? "'$state'" : 'null') . ",
     county=" . ($county ? "'$county'" : 'null') . ",
     defaultTitle='{{title}}',

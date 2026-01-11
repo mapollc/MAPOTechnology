@@ -1,5 +1,6 @@
 export const stateLabels = {
     'AB': { name: 'Alberta', center: [-113.5, 54.5] },
+    'ACT': { name: 'Austrailian Capital Territory', center: [149.0014, -35.4900] },
     'AL': { name: 'Alabama', center: [-86.8295337, 33.2588817] },
     'AK': { name: 'Alaska', center: [-149.680909, 64.4459613] },
     'AZ': { name: 'Arizona', center: [-111.7632755, 34.395342] },
@@ -33,6 +34,7 @@ export const stateLabels = {
     'NE': { name: 'Nebraska', center: [-99.5873816, 41.7370229] },
     'NL': { name: 'Newfoundland', center: [-58.0, 53.0] },
     'NS': { name: 'Nova Scotia', center: [-63.5, 45.0] },
+    'NSW': { name: 'New South Wales', center: [147.0167, -32.1633] },
     'NV': { name: 'Nevada', center: [-116.8537227, 39.5158825] },
     'NH': { name: 'New Hampshire', center: [-71.6553992, 43.4849133] },
     'NJ': { name: 'New Jersey', center: [-74.4041622, 40.0757384] },
@@ -41,6 +43,7 @@ export const stateLabels = {
     'NC': { name: 'North Carolina', center: [-79.0392919, 35.6729639] },
     'ND': { name: 'North Dakota', center: [-100.540737, 47.6201461] },
     'NT': { name: 'Northwest Territories', center: [-117.0, 64.0] },
+    'NTT': { name: 'Northern Territory', center: [133.3578, -19.3833] },
     'NU': { name: 'Nunavut', center: [-90.0, 71.0] },
     'OH': { name: 'Ohio', center: [-82.6881395, 40.2253569] },
     'OK': { name: 'Oklahoma', center: [-97.2684063, 34.9550817] },
@@ -49,16 +52,21 @@ export const stateLabels = {
     'PA': { name: 'Pennsylvania', center: [-77.7278831, 40.9699889] },
     'PE': { name: 'Prince Edward Island', center: [-63.5, 46.3] },
     'QC': { name: 'Quebec', center: [-71.5, 52.0] },
+    'QLD': { name: 'Queensland', center: [144.4317, -22.4870] },
     'RI': { name: 'Rhode Island', center: [-71.5992372, 41.7962409] },
+    'SA': { name: 'South Austrailia', center: [135.7633, -30.0583] },
     'SC': { name: 'South Carolina', center: [-80.4363743, 33.6874388] },
     'SD': { name: 'South Dakota', center: [-100.348761, 44.6471761] },
     'SK': { name: 'Saskatchewan', center: [-106.0, 52.0] },
+    'TAS': { name: 'Tasmania', center: [146.5933, -42.0214] },
     'TN': { name: 'Tennessee', center: [-86.2820081, 35.7730076] },
     'TX': { name: 'Texas', center: [-99.5120986, 31.8160381] },
     'UT': { name: 'Utah', center: [-111.7143584, 39.4225192] },
+    'VIC': { name: 'Victoria', center: [144.2800, -36.8542] },
     'VT': { name: 'Vermont', center: [-72.5002608, 44.5990718] },
     'VA': { name: 'Virginia', center: [-78.4927721, 37.1232245] },
     'WA': { name: 'Washington', center: [-120.74014, 47.75107] },
+    'WAA': { name: 'Western Austrailia', center: [122.2983, -25.3281] },
     'WV': { name: 'West Virginia', center: [-80.8408415, 38.4758406] },
     'WI': { name: 'Wisconsin', center: [-89.6884637, 44.4308975] },
     'WY': { name: 'Wyoming', center: [-107.5685348, 43.1700264] },
@@ -68,6 +76,7 @@ export const stateLabels = {
 export const legend = {
     'categories': [
         { 'fire': 'Wildfires' },
+        { 'airQ': 'Air Quality' },
         { 'viirs': 'VIIRS Hotspots' },
         { 'smoke': 'Smoke Forecast' },
         { 'drought': 'Drought Conditions' },
@@ -98,17 +107,26 @@ export const legend = {
             ['icon', '<div class="fire-icon rx"><i class="fas fa-prescription"></i></div>', '', 'Prescribed Burn'],
             ['icon', '<div class="fire-icon smkchk"><i class="fas fa-badge-check"></i></div>', '', 'Smoke Check']
         ],
+        'airQ': [
+            ['color', '', '#00e400', 'Good (0-50)'],
+            ['color', '', '#ffff00', 'Moderate (51-100)'],
+            ['color', '', '#ff7e00', 'Unhealthy for Sensitive Groups (101-150)'],
+            ['color', '', '#ff0000', 'Unhealthy (151-200)'],
+            ['color', '', '#8f3f97', 'Very Unhealthy (201-300)'],
+            ['color', '', '#7e0023', 'Hazardous (301+)'],
+            ['color', '', '#d9d9d9', 'No Data'],
+        ],
         'viirs': [
-            ['icon', '<div class="viirs t24"></div>', '', 'Heat Detection (0-24 hrs)'],
-            ['icon', '<div class="viirs t48"></div>', '', 'Heat Detection (24-48 hrs)'],
-            ['icon', '<div class="viirs t72"></div>', '', 'Heat Detection (48-72 hrs)']
+            ['icon', '<div class="viirs t24"></div>', '', 'Heat Detection (0-24 hours old)'],
+            ['icon', '<div class="viirs t48"></div>', '', 'Heat Detection (24-48 hours old)'],
+            ['icon', '<div class="viirs t72"></div>', '', 'Heat Detection (48-72 hours old)']
         ],
         'smoke': [
-            ['color', '', '#ffffc0', '0-3 µg/m³'],
-            ['color', '', '#fcdf8b', '3-25 µg/m³'],
-            ['color', '', '#f6c26d', '25-63 µg/m³'],
-            ['color', '', '#c5885c', '63-158 µg/m³'],
-            ['color', '', '#974f4f', '158-1000 µg/m³'],
+            ['color', '', '#ffffc0', 'Very Clean (0-3 µg/m³)'],
+            ['color', '', '#fcdf8b', 'Light Smoke (3-25 µg/m³)'],
+            ['color', '', '#f6c26d', 'Moderate Smoke (25-63 µg/m³)'],
+            ['color', '', '#c5885c', 'Heavy Smoke (63-158 µg/m³)'],
+            ['color', '', '#974f4f', 'Very Heavy Smoke (158-1000 µg/m³)'],
             ['color', '', '#f8fed0', 'No Data']
         ],
         /*'nfdrs': [
@@ -190,15 +208,15 @@ export const legend = {
             ['color', '', '#ff3b54', 'Directly Exposed']
         ],
         'bp': [
-            ['color', '', '#fff0cf', 'Very Low'], // 0 to to 1-in-4,643
-            ['color', '', '#fdca94', 'Low'], // 1-in-4,643 to 1-in-2,154
-            ['color', '', '#fdb27b', 'Low'], // 1-in-2,154 to 1-in-1,000
-            ['color', '', '#fc8d59', 'Moderate'], // 1-in-1,000 to 1-in-464
-            ['color', '', '#f26d4b', 'Moderate'], // 1-in-464 to 1-in-215
-            ['color', '', '#e1452f', 'High'], // 1-in-215 to 1-in-100
-            ['color', '', '#c91d13', 'High'], // 1-in-100 to 1-in-46
-            ['color', '', '#a90000', 'Very High'], // 1-in-46 to 1-in-22
-            ['color', '', '#7f0000', 'Very High'] // 1-in-22+
+            ['color', '', '#fff0cf', 'Very Low (0 to 1-in-4,643)'],
+            ['color', '', '#fdca94', 'Low (1-in-4,643 to 1-in-2,154)'],
+            ['color', '', '#fdb27b', 'Low (1-in-2,154 to 1-in-1,000)'],
+            ['color', '', '#fc8d59', 'Moderate (1-in-1,000 to 1-in-464)'],
+            ['color', '', '#f26d4b', 'Moderate (1-in-464 to 1-in-215)'],
+            ['color', '', '#e1452f', 'High (1-in-215 to 1-in-100)'],
+            ['color', '', '#c91d13', 'High (1-in-100 to 1-in-46)'],
+            ['color', '', '#a90000', 'Very High (1-in-46 to 1-in-22)'],
+            ['color', '', '#7f0000', 'Very High (1-in-22+)']
         ],
         'whp': [
             ['color', '', '#38a800', 'Very Low'],
@@ -527,8 +545,9 @@ export class Search {
                     count++;
                 }
             } else {
-                activeIncidents.forEach((f) => {
-                    let use = false,
+                activeIncidents.forEach(f => {
+                    let use = false;
+                    const isAustrailia = f.isAustrailia ?? false,
                         p = f.properties,
                         name = p.name,
                         acresDisp = conversion.sizeFormat(p.acres),
@@ -543,9 +562,7 @@ export class Search {
                         }
                     }
 
-                    if (name.toLowerCase().search(this.query) >= 0) {
-                        use = true;
-                    }
+                    if (name.toLowerCase().search(this.query) >= 0) use = true;
 
                     if (use) {
                         const li = document.createElement('li');
@@ -553,8 +570,8 @@ export class Search {
                         li.setAttribute('data-type', 'incident');
                         li.setAttribute('data-wfid', p.wfid);
                         li.setAttribute('title', name);
-                        li.innerHTML = `<span class="icon fire fas fa-fire"></span><h3>${name}<span>${p.type} in ${stateLabels[p.state]?.name} &middot;
-                            <b>${acresDisp}</b> &middot; <span class="fstatus ${status}">${ucfirst(status)}</span></span></h3>`;
+                        li.innerHTML = `<span class="icon fire fas fa-fire"></span><h3>${name}<span>${p.type} in ${stateLabels[p.state]?.name}${isAustrailia ? ', Austrailia' : ''} &middot;
+                            <b>${acresDisp}</b>${status != '' ? ` &middot; <span class="fstatus ${status}">${ucfirst(status)}` : ''}</span></span></h3>`;
                         this.results.appendChild(li);
 
                         count++;
@@ -592,29 +609,49 @@ export class Search {
 
     async apiSearch() {
         let count = 0;
-        const search = await api(config.apiURL + 'search', [['q', this.query], ['citiesonly', 1]]);
+        const search = await api(config.apiURL.replace('v1', 'v2') + 'search', [['q', this.query]]);
 
-        if (search.rs != null && search.rs.length > 0) {
-            search.rs.forEach((p) => {
+        if (search.results != null && search.results.length > 0) {
+            search.results.forEach((p) => {
                 const li = document.createElement('li');
+                let pname;
 
-                if (p.type == 'State') {
-                    li.setAttribute('data-bbox', JSON.stringify(p.bbox));
+                if (p.type == 'county' || p.type == 'state') {
+                    const bbox = {
+                        x: {
+                            min: p.data.xmin,
+                            max: p.data.xmax
+                        },
+                        y: {
+                            min: p.data.ymin,
+                            max: p.data.ymax
+                        }
+                    };
+
+                    li.setAttribute('data-bbox', JSON.stringify(bbox));
+                }
+
+                if (p.type == 'state') {
+                    pname = p.data.name;
+                } else if (p.type == 'county') {
+                    pname = p.data.name + ' County, ' + p.data.state;
                 } else {
-                    if (p.type == 'GIS') {
-                        li.setAttribute('data-geotype', p.geoType);
+                    pname = p.data.city + ', ' + stateLabels[p.data.state].name + (p.isZip ? ' ' + p.data.zip : '');
+                    if (p.type == 'gis') {
+                        pname = p.data.name + ', ' + stateLabels[p.data.state].name;
+                        li.setAttribute('data-geotype', p.data.type);
                     }
 
                     li.setAttribute('data-lat', p.lat);
                     li.setAttribute('data-lon', p.lon);
                 }
                 li.setAttribute('data-action', 'sr-onclick');
-                li.setAttribute('data-name', p.name);
-                li.setAttribute('data-county', p.county ? p.county : '');
+                li.setAttribute('data-name', pname);
+                if (p.data.county) li.setAttribute('data-county', p.data.county);
                 li.setAttribute('data-type', p.type.toLowerCase());
                 li.innerHTML = `<span class="icon fas fa-location-dot"></span>
-                <h3>${p.name}
-                    <span>${p.type == 'GIS' ? p.geoType + ' in ' : ''}${p.county ? p.county + ' County' : 'State'}${p.type == 'City' && p.pop > 0 ? ` &middot; Population: ${numberFormat(p.pop)}` : ''}</span>
+                <h3>${pname}
+                    <span>${p.type == 'gis' ? p.data.type + ' in ' : ''}${p.data.county ? p.data.county + ' County' : (p.type == 'county' ? 'County' : 'State')}${p.type == 'city' && p.data.population > 0 ? ` &middot; Population: ${numberFormat(p.data.population)}` : ''}</span>
                 </h3>`;
                 this.results.appendChild(li);
 
@@ -861,7 +898,9 @@ export class Settings {
     perimeters() {
         return {
             zoom: () => {
-                return this.settings.perimeters?.zoom ?? 1;
+                const z = this.settings?.perimeters?.zoom;
+                if (z == null) return true;
+                return z === 1;
             },
             minSize: () => {
                 return Number(this.settings.perimeters?.minSize) ?? 500;
@@ -2903,6 +2942,10 @@ export class Wildfires {
             'California Department of Forestry & Fire Protection': 'CAL FIRE',
             'California Department of Forestry and Fire Protection': 'CAL FIRE'
         };
+        this.REGION_BBOX = {
+            ca: [-141.0, 41.7, -52.6, 83.1],        // Canada approx
+            aus: [112.0, -44.0, 154.0, -10.0]       // Australia approx
+        }
     }
 
     fireTextSize(t, which) {
@@ -3066,74 +3109,86 @@ export class Wildfires {
     }
 
     fireStats(history, incID = null) {
-        if (history.length < 2) {
-            return null;
-        }
+        if (history.length < 2) return null;
 
-        const year = Number(incID.split('-')[0]),
+        const year = Number(incID?.split('-')[0] ?? config.curTime.getFullYear()),
             last = history[0],
             first = history[history.length - 1],
             curAcres = parseFloat(first.acres),
             firstAcres = parseFloat(last.acres),
             totalMinutes = Math.round(Math.abs((first.updated - last.updated) / 60)),
-            days = totalMinutes / 60 / 24,
-            changes = [];
+            days = totalMinutes / 60 / 24;
 
-        let statSentence, avgValue, growthUnit, duration, totalAcres = 0, totalTimeDiff = 0, max;
+        let changes = [];
+        let totalAcres = 0, totalTimeDiff = 0;
 
-        for (let i = 0; i < history.length; i++) {
-            const item = history[i],
-                change = parseFloat(item.change);
-
+        // Compute consecutive changes
+        for (let i = 0; i < history.length - 1; i++) {
+            const change = parseFloat(history[i + 1].acres) - parseFloat(history[i].acres);
             changes.push(change);
             totalAcres += change;
-
-            if (i < history.length - 1) {
-                totalTimeDiff += history[i + 1].updated - item.updated;
-            }
+            totalTimeDiff += history[i + 1].updated - history[i].updated;
         }
 
         const diff = curAcres - firstAcres,
             overall = conversion.sizeFormat(diff);
 
-        if (days > 2) {
-            avgValue = (totalAcres / history.length) / days;
-            growthUnit = "day";
-        } else {
-            const hours = (totalTimeDiff / history.length) / 3600;
-            avgValue = (totalAcres / history.length) / hours;
-            growthUnit = "hour";
+        // Average growth per day/hour
+        let avgValue, growthUnit, growthSum = 0, growthTime = 0;
+
+        for (let i = 0; i < history.length - 1; i++) {
+            const change = parseFloat(history[i + 1].acres) - parseFloat(history[i].acres);
+            if (change > 0) {
+                growthSum += change;
+                growthTime += (history[i + 1].updated - history[i].updated); // in seconds
+            }
         }
 
-        const avgGrowth = conversion.sizeFormat(avgValue);
+        if (growthTime === 0) {
+            avgValue = 0;
+            growthUnit = "day"; // default
+        } else {
+            const growthHours = growthTime / 3600;
+            const growthDays = growthHours / 24;
 
+            if (growthDays > 2) {
+                avgValue = growthSum / growthDays;
+                growthUnit = "day";
+            } else {
+                avgValue = growthSum / growthHours;
+                growthUnit = "hour";
+            }
+        }
+
+        // Duration string
+        let duration;
         if (totalMinutes >= 40320) {
-            const d = Math.floor(totalMinutes / 10080);
-            duration = `${d} week${d !== 1 ? "s" : ""}`;
+            const w = Math.floor(totalMinutes / 10080);
+            duration = `${w} week${w !== 1 ? 's' : ''}`;
         } else if (totalMinutes >= 1440) {
             const d = Math.floor(totalMinutes / 1440);
-            duration = `${d} day${d !== 1 ? "s" : ""}`;
+            duration = `${d} day${d !== 1 ? 's' : ''}`;
         } else if (totalMinutes >= 60) {
             const h = Math.floor(totalMinutes / 60);
-            duration = `${h} hour${h !== 1 ? "s" : ""}`;
+            duration = `${h} hour${h !== 1 ? 's' : ''}`;
         } else {
-            duration = `${totalMinutes} minute${totalMinutes !== 1 ? "s" : ""}`;
+            duration = `${totalMinutes} minute${totalMinutes !== 1 ? 's' : ''}`;
         }
 
-        max = Math.max(...changes);
-        const whenGrew = this.largestGrowthTime(history[changes.indexOf(max)].updated),
-            howGrew = year == config.curTime.getFullYear() ? 'expanded by' : 'grew to';
+        // Largest positive growth only
+        const positiveChanges = changes.filter(c => c > 0);
+        const maxGrowth = positiveChanges.length ? Math.max(...positiveChanges) : 0;
+        const whenGrew = maxGrowth ? this.largestGrowthTime(history[changes.indexOf(maxGrowth) + 1].updated) : '';
 
+        let statSentence;
         if (diff > 0) {
-            statSentence = `Over ${duration}, this fire ${howGrew} ${overall}, averaging ${avgGrowth} of growth per ${growthUnit}.`;
+            const isCurrentYear = year === config.curTime.getFullYear();
+            statSentence = `Over ${duration}${!isCurrentYear ? ` in ${year}` : ''}, this fire grew ${isCurrentYear ? 'by' : 'to'} ${overall}, averaging ${conversion.sizeFormat(avgValue)} of growth per ${growthUnit} (when active).`;
         } else {
-            statSentence = `Incident reporting has decreased this fire in size by ${Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} acres.`;
-            max = max + diff;
+            statSentence = `Incident reporting has decreased this fire in size by ${Math.abs(diff).toFixed(2).replace(/\.?0+$/, '')} acres.`;
         }
 
-        const finalMaxSize = conversion.sizeFormat(max);
-
-        return `${statSentence} The largest single growth was ${finalMaxSize} ${whenGrew}.`;
+        return `${statSentence} The largest single growth was ${conversion.sizeFormat(maxGrowth)} ${whenGrew}.`;
     }
 
     createChart(fireName, incID, hist) {
@@ -3346,6 +3401,36 @@ export class Wildfires {
         }
 
         return this;
+    }
+
+    async getBushfireNames() {
+        const data = await api('https://services-ap1.arcgis.com/ypkPEy1AmwPKGNNv/arcgis/rest/services/Near_Real_Time_Bushfire_Boundaries_view/FeatureServer/3/query', [
+            ['where', '1=1 AND fire_name IS NOT NULL'],
+            ['outFields', 'fire_id,fire_name,state,area_ha,ignition_date'],
+            ['returnGeometry', false],
+            ['returnCentroid', true],
+            ['f', 'json']
+        ]);
+
+        if (!data || !data?.features?.length) return null;
+
+        data.features.forEach(fire => {
+            const discover = Math.round(fire.attributes.ignition_date / 1000),
+                json = {
+                    isAustrailia: true,
+                    geometry: { type: 'Point', coordinates: [fire.centroid.x, fire.centroid.y] },
+                    properties: {
+                        wfid: fire.attributes.fire_id,
+                        name: fire.attributes.fire_name,
+                        state: fire.attributes.state == 'WA' ? 'WAA' : (fire.attributes.state == 'NT' ? 'NTT' : fire.attributes.state),
+                        type: 'Bushfire',
+                        status: 'active',
+                        acres: fire.attributes.area_ha * 2.471,
+                        time: { year: new Date(discover * 1000).getFullYear(), discovered: discover }
+                    }
+                };
+            activeIncidents.set(parseInt(fire.attributes.fire_id, 10), json);
+        });
     }
 
     async canada() {
@@ -3585,7 +3670,7 @@ export class Wildfires {
                 const fires = await api(`${config.apiURL}wildfires/${type}`);
                 processFires(fires, type);
 
-                if (type === 'new' && newFires.length > 0 && !document.querySelector('#new_fires')) {
+                if (type === 'new' && newFires.length > 0) {
                     this.renderNewFiresUI(newFires.length);
                 }
 
@@ -3601,6 +3686,20 @@ export class Wildfires {
 
         if (qInput) qInput.disabled = false;
         return this;
+    }
+
+    renderNewFiresUI(count) {
+        const nf = document.querySelector('nav #new_fires'),
+            nfCount = document.createElement('div');
+
+        nf.dataset.action = 'new_fires';
+        nf.title = 'New Fires';
+        nf.style.display = 'inline-flex';
+
+        nfCount.classList.add('notify');
+        1
+        nfCount.innerHTML = count;
+        nf.appendChild(nfCount);
     }
 
     // display wildfires on the map
@@ -3784,23 +3883,39 @@ export class Wildfires {
 
     geoLocate(agency, type, fire) {
         let land = '';
-    
-        if (agency.logo == 'usfs') {
-            land = ` the ${agency.area}, `;
-        }
-    
-        return `<b>${type.toUpperCase()}</b> in ${land}${fire.geometry.geo.county} County, ${fire.geometry.state}`;
+        if (agency.logo == 'usfs') land = ` (${agency.area})`;
+
+        return `<b>${type.toUpperCase()}</b> in ${fire.geometry.geo.county} County, ${fire.geometry.state}${land}`;
     }
 
-    incident(wfid, click = true) {
+    zoomToIncident(lat, lon) {
+        /*const canvas = document.querySelector('#map canvas'),
+            mapHeight = canvas.height - (modal?.offsetHeight || 0),
+            targetPixels = map.project([lon, lat]),
+            visibleWidth = canvas.width,
+            offsetX = targetPixels.x - (visibleWidth / 2),
+            offsetY = targetPixels.y - (mapHeight / 2);
+
+        map.easeTo({
+            zoom: 10, center: map.unproject([
+                canvas.width / 2 + offsetX,
+                canvas.height / 2 + offsetY
+            ])
+        });*/
+        map.easeTo({
+            zoom: 10,
+            center: [lon, lat]
+        });
+    }
+
+    incident(wfid, zoomIn = true) {
+        const TWO_MONTHS = 60 * 60 * 24 * (config.daysInYear() / 6);
         new ClickListener().openModal('fire');
 
-        /*if (click) {
-            modal.classList.add('open');
-        }*/
-
-        /* get incident json from cache or API */
+        // get incident json from cache or API
         this.cacheIncident(wfid).then(async (incident) => {
+            if (zoomIn) this.zoomToIncident(incident.fire.geometry.lat, incident.fire.geometry.lon);
+
             const fire = incident.fire,
                 fireLat = fire.geometry.lat,
                 fireLon = fire.geometry.lon,
@@ -3812,17 +3927,7 @@ export class Wildfires {
                 acresHistory = prop.acres_history/*,
                 nearbyPerims = this.getAssociatedPerim(prop.fireName)*/;
 
-            /* zoom to fire on the map */
-            if (!click) {
-                map.easeTo({
-                    center: [fireLon, fireLat],
-                    zoom: 12,
-                    duration: 0
-                });
-            }
-
-            /* change the URL in the browser */
-            //if (window.location.pathname.search('/fires') >= 0) {
+            // change the URL in the browser
             setHeaders(fname + ' near ' + near.split(' of ')[1] + ' - Current Incident Information and Wildfire Map', prop.url,
                 'See current information on the ' + fname + ' near ' + near.split(' of ')[1] + '.');
 
@@ -3834,9 +3939,8 @@ export class Wildfires {
             if (fire.inciweb && fire.inciweb.photo) {
                 document.querySelector('meta[property="og:image:alt"]').setAttribute('content', fire.inciweb.photo.caption);
             }
-            //}
 
-            /* send data to service worker */
+            // send data to service worker
             config.workers.incident.postMessage({
                 fire: {
                     json: incident,
@@ -3854,7 +3958,7 @@ export class Wildfires {
                     acres: conversion.sizeFormat(prop.acres, true, false),
                     sizeUnit: conversion.sizeUnit(),
                     reported: timeAgo(fire.time.discovered),
-                    updated: timeAgo(fire.time.updated)
+                    updated: config.curTime.getTime() - fire.time.updated * 1000 > TWO_MONTHS ? dateTime(fire.time.updated, true) : timeAgo(fire.time.updated)
                 }
             });
 
@@ -3962,77 +4066,96 @@ export class Wildfires {
         return settings.archive == null ? ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#777', pc] : '#777';
     }
 
-    async caPerimeters(update = false) {
-        let vis = !settings.user || !settings.checkboxes() || settings.isEnabled('perimeters') ? 'visible' : 'none',
-            min = settings.perimeters().minSize(),
-            pc = this.perimeterColor(settings.perimeters().color());
+    async intlPerimeters(update = false) {
+        const vis = !settings.user || !settings.checkboxes() || settings.isEnabled('perimeters') ? 'visible' : 'none',
+            min = settings.perimeters().minSize() / 2.471,    // convert to hectres for the metric countries
+            pc = this.perimeterColor(settings.perimeters().color()),
+            b = map.getBounds(),
+            viewBBox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
+            intersects = (view, region) => {
+                return !(view[2] < region[0] || view[0] > region[2] || view[3] < region[1] || view[1] > region[3]);
+            },
+            loadPerimeter = async ({ id, url, where }) => {
+                const src = `${id}_perimeters`,
+                    outline = `${id}_perimeters_outline`,
+                    fill = `${id}_perimeters_fill`;
 
-        const data = await api('https://services.arcgis.com/wjcPoefzjpzCgffS/ArcGIS/rest/services/Active_Wildfire_Perimeters_in_Canada_View/FeatureServer/0/query', [
-            ['where', '1=1 AND AREA >= ' + min],
-            ['outFields', 'OBJECTID'],
-            ['resultType', 'tile'],
-            ['geometry', getbbox()],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['returnGeometry', true],
-            ['f', 'geojson']
+                // the map isn't over Canada or Austrailia so there's no need to fetch perimeters for those areas
+                if (!intersects(viewBBox, this.REGION_BBOX[id])) return null;
+
+                const data = await api(url, [
+                    ['where', where],
+                    ['outFields', '*'],
+                    ['resultType', 'tile'],
+                    ['geometry', getbbox()],
+                    ['geometryPrecision', 6],
+                    ['geometryType', 'esriGeometryEnvelope'],
+                    ['spatialRel', 'esriSpatialRelIntersects'],
+                    ['returnGeometry', true],
+                    ['f', 'geojson']
+                ]);
+
+                if (update && map.getSource(src)) {
+                    map.getSource(src).setData(data);
+                    return;
+                }
+
+                if (!map.getSource(src)) {
+                    map.addSource(src, { type: 'geojson', data });
+                }
+
+                if (!map.getLayer(outline)) {
+                    map.addLayer({
+                        id: outline,
+                        type: 'line',
+                        source: src,
+                        paint: {
+                            'line-width': [
+                                'case',
+                                ['boolean', ['feature-state', 'click'], false],
+                                3,
+                                1
+                            ],
+                            'line-color': pc
+                        },
+                        layout: { visibility: vis }
+                    });
+                }
+
+                if (!map.getLayer(fill)) {
+                    map.addLayer({
+                        id: fill,
+                        type: 'fill',
+                        source: src,
+                        paint: {
+                            'fill-opacity': 0.3,
+                            'fill-color': pc
+                        },
+                        layout: { visibility: vis }
+                    });
+
+                    map.on('mouseenter', fill, () => {
+                        map.getCanvas().style.cursor = 'pointer';
+                    });
+
+                    map.on('mouseleave', fill, () => {
+                        map.getCanvas().style.cursor = 'auto';
+                    });
+                }
+            };
+
+        await Promise.all([
+            loadPerimeter({
+                id: 'ca',
+                url: 'https://services.arcgis.com/wjcPoefzjpzCgffS/ArcGIS/rest/services/Active_Wildfire_Perimeters_in_Canada_View/FeatureServer/0/query',
+                where: '1=1 AND LASTDATE >= TIMESTAMP \'' + new Date().getFullYear() + '-01-01 00:00:00\' AND AREA >= ' + min
+            }),
+            loadPerimeter({
+                id: 'aus',
+                url: 'https://services-ap1.arcgis.com/ypkPEy1AmwPKGNNv/arcgis/rest/services/Near_Real_Time_Bushfire_Boundaries_view/FeatureServer/3/query',
+                where: '1=1 AND fire_name IS NOT NULL AND area_ha >= ' + min
+            })
         ]);
-
-        /* when the map moves, update the source data */
-        if (update && map.getSource('ca_perimeters')) {
-            map.getSource('ca_perimeters').setData(data);
-        } else {
-            if (!map.getSource('ca_perimeters')) {
-                map.addSource('ca_perimeters', {
-                    type: 'geojson',
-                    data: data
-                });
-            }
-
-            if (!map.getLayer('ca_perimeters_outline')) {
-                map.addLayer({
-                    id: 'ca_perimeters_outline',
-                    type: 'line',
-                    source: 'ca_perimeters',
-                    paint: {
-                        'line-width': [
-                            'case',
-                            ['boolean', ['feature-state', 'click'], false],
-                            3,
-                            1
-                        ],
-                        'line-color': pc
-                    },
-                    layout: {
-                        visibility: vis
-                    }
-                });
-            }
-
-            if (!map.getLayer('ca_perimeters_fill')) {
-                map.addLayer({
-                    id: 'ca_perimeters_fill',
-                    type: 'fill',
-                    source: 'ca_perimeters',
-                    paint: {
-                        'fill-opacity': 0.3,
-                        'fill-color': pc
-                    },
-                    layout: {
-                        visibility: vis
-                    }
-                });
-
-                map.on('mouseenter', 'ca_perimeters_fill', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'ca_perimeters_fill', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
-        }
 
         return this;
     }
@@ -4052,7 +4175,7 @@ export class Wildfires {
 
         /* get Canada wildfire perimeters if not in archive mode */
         if (!settings.archive) {
-            this.caPerimeters(update);
+            this.intlPerimeters(update);
         }
 
         const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0/query', [
@@ -4755,7 +4878,7 @@ export function addTrending() {
             if (fire) {
                 const fireName = fire.properties.name,
                     acres = conversion.sizeFormat(fire.properties.acres),
-                    who = numberFormat(topFires[i].count, 0) + ' people are looking at the ' + fireName,
+                    who = numberFormat(topFires[i].count, 0) + ' ' + (topFires[i].count == 1 ? 'person is' : 'people are') + ' looking at the ' + fireName,
                     li = document.createElement('li');
 
                 li.classList.add('trending');
@@ -4964,20 +5087,20 @@ export class MFAttribControl extends maplibregl.AttributionControl {
 
     _applyViewportRule = () => {
         if (!this._map || !this._container) return;
-    
+
         const width = this._map.getCanvasContainer().offsetWidth;
         const shouldShow = width > this._collapseBelow;
-    
+
         // Explicitly NOT compact → always open
         if (this.options?.compact === false) {
             this._container.classList.remove('maplibregl-compact', 'maplibregl-compact-show');
             this._container.setAttribute('open', '');
             return;
         }
-    
+
         // Compact mode is ON (default MapLibre behavior)
         this._container.classList.add('maplibregl-compact');
-    
+
         if (shouldShow) {
             // Expanded compact attribution
             this._container.classList.add('maplibregl-compact-show');
@@ -4992,8 +5115,8 @@ export class MFAttribControl extends maplibregl.AttributionControl {
     _updateAttributions() {
         ////super._updateAttributions();
         this._innerContainer.innerHTML = '<a target="blank" href="https://maplibre.org/">MapLibre</a> | ' +
-            '© <a target="blank" href="https://www.esri.com">Esri</a>, ' + 
-            '© <a target="blank" href="https://carto.com/about-carto/" rel="noopener">CARTO</a>, ' + 
+            '© <a target="blank" href="https://www.esri.com">Esri</a>, ' +
+            '© <a target="blank" href="https://carto.com/about-carto/" rel="noopener">CARTO</a>, ' +
             '© <a target="blank" href="http://www.openstreetmap.org/about/">OpenStreetMap</a> contributors';
     }
 }

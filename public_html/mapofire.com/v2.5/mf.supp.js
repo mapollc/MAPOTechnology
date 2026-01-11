@@ -666,11 +666,7 @@ class ChangeListener {
             const dont = ['newFires', 'allFires', 'smokeChecks', 'rxBurns', 'perimeters'];
 
             if (settings.checkboxes()) {
-                settings.checkboxes().forEach((c) => {
-                    if (!dont.includes(c)) {
-                        toggleLayer({ id: c, checked: true });
-                    }
-                });
+                settings.checkboxes().filter(c => !dont.includes(c)).forEach(c => toggleLayer({ id: c, checked: true }));
             }
         });
     }
@@ -816,6 +812,8 @@ function numberFormat(n, d = 2) {
 }
 
 function dateTime(it, time = false, timezone = false, longMonth = false) {
+    if (it == null || it === '') return '';
+
     let t = new Date(it.toString().length == 10 ? it * 1000 : it),
         h = (t.getHours() == 0 ? 12 : (t.getHours() > 12 ? t.getHours() - 12 : t.getHours())),
         m = (t.getMinutes() < 10 ? '0' : '') + t.getMinutes(),
@@ -1197,6 +1195,7 @@ async function onMapClick(e) {
         /* highlight specific features on the map when clicked on */
         Object.entries({
             ca_perimeters: 'caperim',
+            aus_perimeters: 'ausperim',
             perimeters: 'perim',
             evac: 'evac',
             nri: 'nri',
@@ -1263,7 +1262,7 @@ async function onMapClick(e) {
 
             if (feature.source == 'ca_fires') {
                 const name = feature.properties.name,
-                    state = (await loadUtils()).stateLabels[feature.properties.province].name,
+                    state = (await loadUtils()).stateLabels?.[feature.properties.province]?.name,
                     time = JSON.parse(feature.properties.time),
                     acres = feature.properties.acres,
                     status = feature.properties.status,
@@ -1284,7 +1283,7 @@ async function onMapClick(e) {
                 );
             }
 
-            /* on perimeter click */
+            /* on canada perimeter click */
             if (feature.source == 'ca_perimeters') {
                 selected.caperim = feature.id;
 
@@ -1295,7 +1294,41 @@ async function onMapClick(e) {
                     click: true
                 });
 
-                if (settings.perimeters().zoom() == '1') {
+                if (settings.perimeters().zoom()) {
+                    map.fitBounds(geojsonExtent(feature.geometry), {
+                        padding: 60
+                    });
+                }
+
+                break;
+            }
+
+            /* on austrailia perimeter click */
+            if (feature.source == 'aus_perimeters') {
+                const p = feature.properties,
+                    name = p.fire_name,
+                    size = conversion.sizeFormat(p.area_ha * 2.471),
+                    discovered = p.ignition_date ? dateTime(p.ignition_date, true, true) : 'Unknown',
+                    updated = timeAgo(p.capt_date),
+                    istate = p.state == 'WA' ? 'WAA' : (p.state == 'NT' ? 'NTT' : p.state),
+                    state = (await loadUtils()).stateLabels?.[istate]?.name ?? istate;
+
+                selected.ausperim = feature.id;
+
+                map.setFeatureState({
+                    source: 'aus_perimeters',
+                    id: selected.ausperim
+                }, {
+                    click: true
+                });
+
+                new Popup('Austrailia Bushfire', true).create('<div class="item"><div class="t">Incident Name</div><div class="v">' + name + '</div></div>' +
+                    '<div class="item"><div class="t">State</div><div class="v">' + state + '</div></div>' +
+                    '<div class="item"><div class="t">Discovered</div><div class="v">' + discovered + '</div></div>' +
+                    '<div class="item"><div class="t">Perimeter Size</div><div class="v">' + size + '</div></div>' +
+                    '<div class="item"><div class="t">Last Mapped</div><div class="v">' + updated + '</div></div>');
+
+                if (settings.perimeters().zoom()) {
                     map.fitBounds(geojsonExtent(feature.geometry), {
                         padding: 60
                     });
@@ -1323,7 +1356,7 @@ async function onMapClick(e) {
                     '<div class="item"><div class="t">Last Mapped</div><div class="v">' + ago + '</div></div>' +
                     '<div class="item"><div class="t">Perimeter Size</div><div class="v">' + size + '</div></div>');
 
-                if (settings.perimeters().zoom() == '1') {
+                if (settings.perimeters().zoom()) {
                     map.fitBounds(geojsonExtent(feature.geometry), {
                         padding: 60
                     });
