@@ -277,7 +277,7 @@ class Weather {
             <div class="item"><div class="t">Humidity</div><div class="v">${Math.round(rh)}%</div></div>
             <div class="item"><div class="t">Wind</div><div class="v">${(ws != null ? (ws == 0 ? 'Calm' : `${wd} at ${Math.round(ws)} ${wunit}`) : 'N/A')}</div></div>
             <div class="item"><div class="t">Last report</div><div class="v">${timeAgo(new Date(obs.air_temp_value_1.date_time).getTime())}</div></div>
-            ${(!hasPermissions ? `<a href="${config.purchaseLink('wx_stn')}" class="btn btn-sm btn-yellow" style="display:block;margin:0 auto">Upgrade to see more data</a>` : '')}`;
+            ${(!hasPermissions ? `<a href="#" data-action="marketing-cta" data-utm="wx_stn" onclick="return false" class="btn btn-sm btn-yellow" style="display:block;margin:0 auto">Upgrade to see more data</a>` : '')}`;
 
         popup.update(stnData, 'Current Conditions');
     }
@@ -382,7 +382,7 @@ class Weather {
                 if (!isFinite(val)) return '--';
                 const converted = wUnit !== 'mph' ? conversion.speed(Math.round(val), wUnit) : Math.round(val);
                 return `${converted} ${wUnit}`;
-            }
+            };
 
         try {
             const ap = await api(`https://api.weather.gov/points/${this.lat.toFixed(4)},${this.lon.toFixed(4)}`);
@@ -419,7 +419,7 @@ class Weather {
             const isPremium = settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM);
             const btnHtml = isPremium
                 ? `<a href="#" class="btn btn-orange btn-sm" style="margin:0" data-lat="${this.lat}" data-lon="${this.lon}" data-action="incident_wx-fwf" onclick="return false">View the full fire forecast</a>`
-                : `<a href="#" class="btn btn-sm btn-orange" style="margin:0" data-action="upgrade-subscription" data-medium="acres_history" onclick="return false"><i class="fas fa-lock"></i> Upgrade to view forecast</a>`;
+                : `<a href="#" class="btn btn-sm btn-orange" style="margin:0" data-action="marketing-cta" data-utm="acres_history" onclick="return false"><i class="fas fa-lock"></i> Upgrade to view forecast</a>`;
 
             q('.updated').insertAdjacentHTML('afterend', `<div class="btn-group centered" style="margin:0">${btnHtml}</div>`);
 
@@ -1367,13 +1367,13 @@ async function onMapClick(e) {
 
             if (feature.source == 'firemed') {
                 const cityState = `${feature.properties.CITY}, ${feature.properties.STATE} ${feature.properties.ZIPCODE}`,
-                    type = feature.properties.type == 'hosp' ? 'Hospital' : (feature.properties.type == 'ems' ? 'Emergency Medical Service' : 'Fire Department');
+                    type = feature.properties.type == 'hosp' ? 'Hospital' : (feature.properties.type == 'ems' ? 'Emergency Medical Services' : 'Fire Department');
 
                 new Popup('Emergency Response').create('<div class="item"><div class="t">Type</div><div class="v">' + type + '</div></div>' +
                     '<div class="item"><div class="t">Name</div><div class="v">' + feature.properties.NAME + '</div></div>' +
                     '<div class="item"><div class="t">Address</div><div class="v">' + feature.properties.ADDRESS + '</div></div>' +
                     '<div class="item"><div class="t">City/State</div><div class="v">' + cityState + '</div></div>'
-                )
+                );
 
                 break;
             }
@@ -1651,6 +1651,8 @@ window.addEventListener('submit', async (e) => {
                     fd = [],
                     ent = new URLSearchParams(new FormData(form).entries());
 
+                let type, state;
+
                 document.querySelector('li#report').setAttribute('data-active', '0');
                 sub.disabled = true;
                 sub.value = 'Submitting...';
@@ -1658,11 +1660,19 @@ window.addEventListener('submit', async (e) => {
 
                 for (const [key, value] of ent) {
                     fd.push([key, value]);
+                    if (key == 'type') type = value;
+                    if (key == 'state') state = value;
                 }
 
                 const send = await api(config.apiURL + 'newReport', fd);
 
                 if (send.success == 1) {
+                    gtag('event', 'submit_report', {
+                        type: type,
+                        state: state.split(' / ')[1],
+                        platform: 'web'
+                    });
+
                     setTimeout(() => {
                         document.querySelector('#data-form').remove();
                         notify('success', 'Your report was sent to us for review before it may be added to the map.');

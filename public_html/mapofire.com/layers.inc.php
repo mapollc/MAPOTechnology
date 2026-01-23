@@ -470,7 +470,8 @@ $layers = array(
         'smoke' => 'Smoke',
         'state' => 'State-Specific'
     ),
-    'layers' => $lay
+    'layers' => $lay,
+    'build' => date('Ymd', filemtime('./layers.inc.php'))
 );
 
 if (isset($_REQUEST['json'])) {

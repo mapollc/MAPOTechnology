@@ -708,7 +708,7 @@ class Convert {
         let displayUnit = 'acre';
         const unit = this.sizeUnit(customUnit);
 
-        if (size.toString().toLowerCase() === 'unknown') {
+        if (size.toString().toLowerCase() === 'unknown' || size.toString() == '') {
             return returnSize ? '0' : (returnUnit ? unit : '');
         } else if (size !== null && size !== '') {
             let v = parseFloat(size);
@@ -868,6 +868,17 @@ class ClickListener {
         config.toolsInstance.myContent();
     }
 
+    async mcta() {
+        const utm = this.target.dataset.utm;
+
+        (await loadUtils()).marketing(true, utm);
+    }
+
+    async copy() {
+        await navigator.clipboard.writeText(this.target.innerText);
+        notify('info', 'Coordinates copied to clipboard');
+    }
+
     closeDataForm() {
         const r = document.querySelector('li#report'),
             fw = document.querySelector('li#fwf');
@@ -918,7 +929,7 @@ class ClickListener {
         const onTransitionEnd = (e) => {
             if (e.propertyName === 'top') {
                 modal.removeEventListener('transitionend', onTransitionEnd);
-        
+
                 const event = new CustomEvent('modalOpened', { detail: { top: openPosition } });
                 modal.dispatchEvent(event);
             }
@@ -1180,7 +1191,7 @@ class ClickListener {
 
                 box.innerHTML = premFeature;
                 item.addEventListener('click', () => {
-                    notify('info', `This is a ${layer.perms2.includes('PREMIUM') ? 'premium' : 'pro'} layer. <a href="${config.purchaseLink('layers_snackbar')}">Get access</a>`, 4);
+                    notify('info', `This is a ${layer.perms2.includes('PREMIUM') ? 'premium' : 'pro'} layer. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="layers_snackbar">Get access</a>`, 4);
                 });
             } else {
                 if (filter) {
@@ -1341,7 +1352,7 @@ class ClickListener {
 
                 radioDiv.addEventListener('click', () => {
                     const tier = tile.permissions.includes('PREMIUM') ? 'premium' : 'pro';
-                    notify('info', `This is a ${tier} basemap. <a href="${config.purchaseLink('basemaps_snackbar')}">Get access</a>`, 4);
+                    notify('info', `This is a ${tier} basemap. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="basemaps_snackbar">Get access</a>`, 4);
                 });
             }
 
@@ -1503,12 +1514,12 @@ class ClickListener {
             }
 
             ms = `<div style="display:inline-flex;width:100%;justify-content:space-between;gap:1em">
-                        <div style="display:inline-flex;flex-direction:column;gap:0.45em">
-                            <span>${settings.subscriptions().name()}</span>
-                            <small style="line-height:1.1;color:#999">${theEnd} on ${settings.subscriptions().expires()}.</small>
-                        </div>
-                        <a class="btn btn-sm btn-black" style="margin:0;height:fit-content" target="blank" href="${config.domain}account/billing#cid=${settings.subscriptions().customerID()}">Manage</a>
-                    </div>`;
+                <div style="display:inline-flex;flex-direction:column;gap:0.45em">
+                    <span>${settings.subscriptions().name()}</span>
+                    <small style="line-height:1.1;color:#999">${theEnd} on ${settings.subscriptions().expires()}.</small>
+                </div>
+                <a class="btn btn-sm btn-black" style="margin:0;height:fit-content" target="blank" href="${config.domain}account/billing#cid=${settings.subscriptions().customerID()}">Manage</a>
+            </div>`;
         }
 
         document.querySelector('#subs').innerHTML = ms;
@@ -2078,7 +2089,7 @@ function init() {
 
         /* function to provide a popup soliciting donations, subscriptions, etc. */
         if (!settings.subscriptions().valid()) {
-            (await loadUtils()).marketing();
+            setTimeout(async () => { (await loadUtils()).marketing(); }, 3000);
         }
 
         /* zoom to that country if URL contains country/{theCountry} */
@@ -2189,7 +2200,7 @@ function upgrade() {
 async function popstate() {
     // if user is trying to view historical fires without a subscription
     if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && window.location.href.match(/archive=([0-9]+)/g) != null) {
-        notify('info', 'You must upgrade to view historical fires. <a href="' + config.purchaseLink('archive_snackbar') + '">Get access</a>', 6);
+        notify('info', 'You must upgrade to view historical fires. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="archive_snackbar">Get access</a>', 6);
     }
 
     if (/loggedOut=1/.test(window.location.href)) {
@@ -2252,12 +2263,11 @@ document.onreadystatechange = async () => {
             set,
             token = (/\btoken=(.*?)(?=;|$)/gm).exec(document.cookie),
             versioning = () => {
-                const sv = localStorage.getItem('mapofire.version');
+                const sv = localStorage.getItem('mapofire.version'),
+                    lv = localStorage.getItem('mapofire.version');
 
-                if (sv == null || sv != version) {
-                    // TODO: if sv != null && sv != version, do something about user upgrading to the new map version
-                    localStorage.setItem('mapofire.version', version);
-                }
+                if (sv == null || sv != version) localStorage.setItem('mapofire.version', version);
+                if (lv == null || lv != layers.build) localStorage.setItem('mapofire.layers_version', layers.build);
             };
 
         versioning();
@@ -2304,7 +2314,7 @@ document.onreadystatechange = async () => {
         const makeItem = (opts) => {
             const el = document.createElement('li');
             el.id = opts.id;
-            if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) el.classList.add('disabled');
+            //if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) el.classList.add('disabled');
             el.dataset.action = opts.id;
             el.innerHTML = '<i class="far fa-' + opts.icon + '"></i><span>' + opts.span + '</span>';
             document.querySelector('#' + opts.insert).insertAdjacentElement('afterend', el);
@@ -2328,7 +2338,7 @@ document.onreadystatechange = async () => {
             init();
             popstate();
         }, { timeout: 3250 });
-    }
+    };
 
     const complete = async () => {
         const q = document.querySelector('#q');
@@ -2382,7 +2392,7 @@ window.onload = async () => {
     }, 20000);
 
     upgrade();
-    localStorage.setItem('mapofire.refresh', new Date().getTime());
+    //localStorage.setItem('mapofire.refresh', new Date().getTime());
 
     /* reload the map automatically every 5 minutes */
     setInterval(() => {
@@ -2414,6 +2424,7 @@ window.addEventListener('click', async (e) => {
         clickListener = new ClickListener(target, searchResults),
         actionHandlers = {
             //'close-modal': () => clickListener.closeModal(),
+            'copy': () => clickListener.copy(),
             'tools': () => clickListener.tools(),
             'close-android': () => clickListener.android(),
             'back-my-content': () => clickListener.myContent(),
@@ -2431,7 +2442,8 @@ window.addEventListener('click', async (e) => {
                 const ds = target.dataset;
                 new (await loadUtils()).NWS().getOutlookText(ds.type, ds.day);
             },
-            'upgrade-subscription': () => {
+            'marketing-cta': () => clickListener.mcta(),
+            /*'upgrade-subscription': () => {
                 gtag('event', 'subscription_cta_click', {
                     'event_category': 'Subscription',
                     'event_label': e.target.dataset.medium,
@@ -2439,7 +2451,7 @@ window.addEventListener('click', async (e) => {
                 });
 
                 window.location.href = config.purchaseLink(e.target.dataset.medium);
-            },
+            },*/
             'incident_wx-fwf': () => {
                 new Weather(e.target.dataset.lat, e.target.dataset.lon).fireWxFcst();
             },
@@ -2453,8 +2465,10 @@ window.addEventListener('click', async (e) => {
             'basemap': () => clickListener.basemaps(),
             'layers': () => clickListener.showLayers(),
             'legend': () => clickListener.legend(),
-            'fwf': () => {
-                if (!e.target.classList.contains('disabled')) {
+            'fwf': async () => {
+                if (!settings.subscriptions().valid()) {
+                    (await loadUtils()).marketing(true, 'nav_fwf');
+                } else {
                     document.querySelector('li#fwf').setAttribute('data-active', '1');
                     map.getCanvas().style.cursor = 'crosshair';
                     notify('info', 'Click anywhere on get the fire weather forecast.');
@@ -2462,8 +2476,12 @@ window.addEventListener('click', async (e) => {
             },
             'myfires': () => clickListener.myfires(),
             'refresh': () => location.reload(),
-            'archive': () => {
-                if (!e.target.classList.contains('disabled')) clickListener.archive();
+            'archive': async () => {
+                if (!settings.subscriptions().valid()) {
+                    (await loadUtils()).marketing(true, 'nav_archive');                    
+                } else {
+                    clickListener.archive();
+                }
             },
             'report': () => {
                 document.querySelector('li#report').setAttribute('data-active', '1');

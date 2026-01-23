@@ -19,18 +19,53 @@ $oldevents = [];
 
     if ($json['features']) {
         for ($i = 0; $i < count($json['features']); $i++) {
-            if (!in_array($json['features'][$i]['properties']['id'], $oldevents)) {
-                $sent = $json['features'][$i]['properties']['sent'];
-                $end = ($json['features'][$i]['properties']['ends'] ? $json['features'][$i]['properties']['ends'] : $json['features'][$i]['properties']['expires']);
-                $wfo = substr($json['features'][$i]['properties']['senderName'], 0, -3) . ',' . substr($json['features'][$i]['properties']['senderName'], -3);
+            $prop = $json['features'][$i]['properties'];
 
-                if ($_REQUEST['app'] == 1) {
-                    $alerts[] = array('id' => $json['features'][$i]['properties']['id'], 'event' => $json['features'][$i]['properties']['event'], 'issued' => ago(strtotime($sent), null), 'expires' => date('g:i A T l', strtotime($end)), 'wfo' => $wfo);
-                } else {
-                    $alerts[] = array('id' => $json['features'][$i]['properties']['id'], 'event' => $json['features'][$i]['properties']['event'], 'headline' => $json['features'][$i]['properties']['headline'], 'area' => $json['features'][$i]['properties']['areaDesc'], 'expires' => date('g:i A T l', strtotime($end)));
+            if (!in_array($prop['id'], $oldevents)) {
+                $from = strtotime($prop['effective']);
+                $end = ($prop['ends'] ? $prop['ends'] : $prop['expires']);
+                $wfo = substr($prop['senderName'], 0, -3) . ',' . substr($prop['senderName'], -3);
+                
+                preg_match('/\s((P|M|C|E|)(S|D)T)\s/', $prop['headline'], $match);
+                if ($match[1]) {
+                    if ($match[2] == 'P') $tz = 'Los_Angeles';
+                    else if ($match[2] == 'M') $tz = 'Denver';
+                    else if ($match[2] == 'C') $tz = 'Chicago';
+                    else if ($match[2] == 'E') $tz = 'New_York';
+                    date_default_timezone_set("America/$tz");
                 }
 
-                $oldevents[] = $json['features'][$i]['properties']['id'];
+                $effective = date('g:i A T', $from);
+
+                if ($from < strtotime(date('n/j/Y').' 23:59:59')) {
+                    $effective .= ' Today';
+                } else {
+                    $effective .= date('l', $from);
+                }
+                    
+                $theAlert = [
+                    'id' => $prop['id'],
+                    'event' => $prop['event'],
+                    'headline' => $prop['headline'],
+                    'area' => $prop['areaDesc'],
+                    'effective' => $effective,
+                    'expires' => date('g:i A T l', strtotime($end))
+                ];
+
+                if ($_REQUEST['app'] == 1) {
+                    $theAlert['wfo'] = $wfo;
+                }/* else {
+                    $alerts[] = [
+                        'id' => $prop['id'],
+                        'event' => $prop['event'],
+                        'headline' => $prop['headline'],
+                        'area' => $prop['areaDesc'],
+                        'expires' => date('g:i A T l', strtotime($end))
+                    ];
+                }*/
+                $alerts[] = $theAlert;
+
+                $oldevents[] = $prop['id'];
             }
         }
     }

@@ -444,98 +444,102 @@ if (!$cache || filemtime(root() . 'getWWA.ini.php') > $memcache->get($cachefilen
         $p = get_data('https://api.weather.gov/alerts/' . $_REQUEST['id'])['properties'];
     }
 
-    preg_match('/-([0-9]+):/', $p['sent'], $match);
+    if ($p) {
+        preg_match('/-([0-9]+):/', $p['sent'], $match);
 
-    if ($match[1] == '08' && date('I') == 0 || $match[1] == '07' && date('I') == 1) {
-        $tz = 'Los_Angeles';
-    } else if ($match[1] == '07' && date('I') == 0 || $match[1] == '06' && date('I') == 1) {
-        $tz = 'Denver';
-    } else if ($match[1] == '06' && date('I') == 0 || $match[1] == '05' && date('I') == 1) {
-        $tz = 'Chicago';
-    } else if ($match[1] == '05' && date('I') == 0 || $match[1] == '04' && date('I') == 1) {
-        $tz = 'New_York';
-    }
+        if ($match[1] == '08' && date('I') == 0 || $match[1] == '07' && date('I') == 1) {
+            $tz = 'Los_Angeles';
+        } else if ($match[1] == '07' && date('I') == 0 || $match[1] == '06' && date('I') == 1) {
+            $tz = 'Denver';
+        } else if ($match[1] == '06' && date('I') == 0 || $match[1] == '05' && date('I') == 1) {
+            $tz = 'Chicago';
+        } else if ($match[1] == '05' && date('I') == 0 || $match[1] == '04' && date('I') == 1) {
+            $tz = 'New_York';
+        }
 
-    date_default_timezone_set('America/' . $tz);
+        date_default_timezone_set('America/' . $tz);
 
-    $title = $p['event'];
-    $headline = str_replace('... ...', '...', ($p['parameters']['NWSheadline'][0] ? $p['parameters']['NWSheadline'][0] : $p['headline']));
-    $area = $p['areaDesc'];
-    $wfo = substr($p['parameters']['AWIPSidentifier'][0], -3);
-    $office = substr(str_replace('NWS ', '', $p['senderName']), 0, -3) . ', ' . substr(str_replace('NWS ', '', $p['senderName']), -2);
-    $issued = strtotime($p['sent']);
-    $exp = strtotime($p['ends']);
-    $onset = strtotime($p['onset']);
-    $expires = date('g:i A T', $exp) . ' ';
-    $help = '<p>' . preg_replace('/\n/', ' ', preg_replace('/\n\n/', ' ', $p['instruction'])) . '</p>';
-    $parameters = [];
-
-    if ($_REQUEST['app'] == 1) {
-        $help = preg_replace('/<p>(.*?)<\/p>/', '$1', $help);
-    }
-
-    if ($title == 'Tornado Warning' || $title == 'Severe Thunderstorm Warning') {
-        $desc = text2($p['description']);
+        $title = $p['event'];
+        $headline = str_replace('... ...', '...', ($p['parameters']['NWSheadline'][0] ? $p['parameters']['NWSheadline'][0] : $p['headline']));
+        $area = $p['areaDesc'];
+        $wfo = substr($p['parameters']['AWIPSidentifier'][0], -3);
+        $office = substr(str_replace('NWS ', '', $p['senderName']), 0, -3) . ', ' . substr(str_replace('NWS ', '', $p['senderName']), -2);
+        $issued = strtotime($p['sent']);
+        $exp = strtotime($p['ends']);
+        $onset = strtotime($p['onset']);
+        $expires = date('g:i A T', $exp) . ' ';
+        $help = '<p>' . preg_replace('/\n/', ' ', preg_replace('/\n\n/', ' ', $p['instruction'])) . '</p>';
+        $parameters = [];
 
         if ($_REQUEST['app'] == 1) {
-            $desc = preg_replace('/<p>(.*?)<\/p>/', '$1', $desc);
+            $help = preg_replace('/<p>(.*?)<\/p>/', '$1', $help);
         }
 
-        $params = $p['parameters'];
+        if ($title == 'Tornado Warning' || $title == 'Severe Thunderstorm Warning') {
+            $desc = text2($p['description']);
 
-        if ($params['windThreat']) {
-            $parameters['windThreat'] = $params['windThreat'][0];
-        }
+            if ($_REQUEST['app'] == 1) {
+                $desc = preg_replace('/<p>(.*?)<\/p>/', '$1', $desc);
+            }
 
-        if ($params['maxWindGust']) {
-            $parameters['maxWindGust'] = $params['maxWindGust'][0];
-        }
+            $params = $p['parameters'];
 
-        if ($params['hailThreat']) {
-            $parameters['hailThreat'] = $params['hailThreat'][0];
-        }
+            if ($params['windThreat']) {
+                $parameters['windThreat'] = $params['windThreat'][0];
+            }
 
-        if ($params['maxHailSize']) {
-            $parameters['maxHailSize'] = $params['maxHailSize'][0];
-        }
+            if ($params['maxWindGust']) {
+                $parameters['maxWindGust'] = $params['maxWindGust'][0];
+            }
 
-        if ($params['thunderstormDamageThreat']) {
-            $parameters['thunderstormDamageThreat'] = $params['thunderstormDamageThreat'][0];
-        }
-    } else if ($title == 'Red Flag Warning' || $title == 'Fire Weather Watch') {
-        $desc = text4($p['description']);
-    } else {
-        $desc = $_REQUEST['app'] == 1 ? text3($p['description']) :  text($p['description']);
-    }
+            if ($params['hailThreat']) {
+                $parameters['hailThreat'] = $params['hailThreat'][0];
+            }
 
-    if (date('njY') == date('njY', $exp)) {
-        $expires .= 'Today';
-    } else if (date('njY', strtotime('+1 day')) == date('njY', $exp)) {
-        $expires .= 'Tomorrow';
-    } else {
-        $expires .= date('l', $exp);
-    }
+            if ($params['maxHailSize']) {
+                $parameters['maxHailSize'] = $params['maxHailSize'][0];
+            }
 
-    $wwa = array('title' => $title, 'headline' => $headline, 'area' => $area, 'issued' => ago($issued), 'expires' => $expires, 'wfo' => $wfo, 'office' => $office, 'text' => $desc, 'help' => $help, 'color' => '#' . color($title));
-
-    if (!empty($parameters)) {
-        $wwa['parameters'] = $parameters;
-    }
-
-    if ($onset > time()) {
-        $wwa['onset'] = date('g:i A T', $onset) . ' ';
-        if (date('njY') == date('njY', $onset)) {
-            $wwa['onset'] .= 'Today';
-        } else if (date('njY', strtotime('+1 day')) == date('njY', $onset)) {
-            $wwa['onset'] .= 'Tomorrow';
+            if ($params['thunderstormDamageThreat']) {
+                $parameters['thunderstormDamageThreat'] = $params['thunderstormDamageThreat'][0];
+            }
+        } else if ($title == 'Red Flag Warning' || $title == 'Fire Weather Watch') {
+            $desc = text4($p['description']);
         } else {
-            $wwa['onset'] .= date('l', $onset);
+            $desc = $_REQUEST['app'] == 1 ? text3($p['description']) :  text($p['description']);
         }
-    }
 
-    $returnJson = array('wwa' => $wwa);
-    $memcache->set($cachefilename, json_encode($returnJson), 900);
-    $memcache->set($cachefilename . '-time', time(), 900);
+        if (date('njY') == date('njY', $exp)) {
+            $expires .= 'Today';
+        } else if (date('njY', strtotime('+1 day')) == date('njY', $exp)) {
+            $expires .= 'Tomorrow';
+        } else {
+            $expires .= date('l', $exp);
+        }
+
+        $wwa = array('title' => $title, 'headline' => $headline, 'area' => $area, 'issued' => ago($issued), 'expires' => $expires, 'wfo' => $wfo, 'office' => $office, 'text' => $desc, 'help' => $help, 'color' => '#' . color($title));
+
+        if (!empty($parameters)) {
+            $wwa['parameters'] = $parameters;
+        }
+
+        if ($onset > time()) {
+            $wwa['onset'] = date('g:i A T', $onset) . ' ';
+            if (date('njY') == date('njY', $onset)) {
+                $wwa['onset'] .= 'Today';
+            } else if (date('njY', strtotime('+1 day')) == date('njY', $onset)) {
+                $wwa['onset'] .= 'Tomorrow';
+            } else {
+                $wwa['onset'] .= date('l', $onset);
+            }
+        }
+
+        $returnJson = array('wwa' => $wwa);
+        $memcache->set($cachefilename, json_encode($returnJson), 900);
+        $memcache->set($cachefilename . '-time', time(), 900);
+    } else {
+        $returnJson = ['response' => 'error', 'code' => 404, 'msg' => 'This weather alert is invalid or no longer exists.'];
+    }
 } else {
     $isCached = true;
     $cache = json_decode($cache);

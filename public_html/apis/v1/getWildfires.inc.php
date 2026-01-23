@@ -99,6 +99,7 @@ while ($row = mysqli_fetch_assoc($result)) {
             $fire = [
                 'wfid' => $row['wfid'],
                 'incidentId' => $row['incidentID'],
+                'county' => json_decode($row['near'])->county,
                 'state' => $row['state'],
                 'dispatch' => ($row['agency'] ? $row['agency'] : 'NWCG'),
                 'name' => $name,

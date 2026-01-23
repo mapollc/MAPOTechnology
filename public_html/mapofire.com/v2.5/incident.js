@@ -173,7 +173,7 @@ self.onmessage = (e) => {
     inciweb = fire.inciweb ? fire.inciweb : null;
 
     /* create inline variables for the template */
-    let coords = fire.geometry.lat.toFixed(4) + ', ' + fire.geometry.lon.toFixed(4),
+    let coords = fire.geometry.lat.toFixed(4).toString() + ', ' + fire.geometry.lon.toFixed(4).toString(),
         edit = role == 'ADMIN' ? '<a target="blank" href="' + domain + 'account/admin/wildfires/' + (dispatch == 'MAPO' ? 'modify' : 'edit') + '?wfid=' + wfid + '" style="display:inline-block;font-size:14px;color:var(--box-orange);margin-right:5px"><i class="far fa-pen-to-square"></i></a>' : '',
         jdesc = (!agency.agency && !agency.unit ? 'Unknown' : (agency.agency ? agency.agency + ' &mdash; ' : '') + (agency.area ? agency.area : '')),
         logo = '';
@@ -215,7 +215,7 @@ self.onmessage = (e) => {
                 </div>
                 <div class="card">
                     <dt class="label">Size</dt>
-                    <p class="fire-size"><span>${acres}</span>${sizeUnit}</p>
+                    <p class="fire-size" data-action="copy"><span>${acres}</span>${sizeUnit}</p>
                 </div>
                 <div class="card">
                     <dt class="label">Containment</dt>
@@ -228,7 +228,7 @@ self.onmessage = (e) => {
                 </div>
                 <div class="card">
                     <dt class="label">Coordinates</dt>
-                    <span class="coords" title="Coordinates for ${object.fireName}">${coords}</span>
+                    <span class="coords" data-action="copy" title="Coordinates for ${object.fireName}">${coords}</span>
                 </div>
             </div>
 

@@ -1,6 +1,6 @@
 export const stateLabels = {
     'AB': { name: 'Alberta', center: [-113.5, 54.5] },
-    'ACT': { name: 'Austrailian Capital Territory', center: [149.0014, -35.4900] },
+    'ACT': { name: 'Australian Capital Territory', center: [149.0014, -35.4900] },
     'AL': { name: 'Alabama', center: [-86.8295337, 33.2588817] },
     'AK': { name: 'Alaska', center: [-149.680909, 64.4459613] },
     'AZ': { name: 'Arizona', center: [-111.7632755, 34.395342] },
@@ -54,7 +54,7 @@ export const stateLabels = {
     'QC': { name: 'Quebec', center: [-71.5, 52.0] },
     'QLD': { name: 'Queensland', center: [144.4317, -22.4870] },
     'RI': { name: 'Rhode Island', center: [-71.5992372, 41.7962409] },
-    'SA': { name: 'South Austrailia', center: [135.7633, -30.0583] },
+    'SA': { name: 'South Australia', center: [135.7633, -30.0583] },
     'SC': { name: 'South Carolina', center: [-80.4363743, 33.6874388] },
     'SD': { name: 'South Dakota', center: [-100.348761, 44.6471761] },
     'SK': { name: 'Saskatchewan', center: [-106.0, 52.0] },
@@ -66,7 +66,7 @@ export const stateLabels = {
     'VT': { name: 'Vermont', center: [-72.5002608, 44.5990718] },
     'VA': { name: 'Virginia', center: [-78.4927721, 37.1232245] },
     'WA': { name: 'Washington', center: [-120.74014, 47.75107] },
-    'WAA': { name: 'Western Austrailia', center: [122.2983, -25.3281] },
+    'WAA': { name: 'Western Australia', center: [122.2983, -25.3281] },
     'WV': { name: 'West Virginia', center: [-80.8408415, 38.4758406] },
     'WI': { name: 'Wisconsin', center: [-89.6884637, 44.4308975] },
     'WY': { name: 'Wyoming', center: [-107.5685348, 43.1700264] },
@@ -76,8 +76,8 @@ export const stateLabels = {
 export const legend = {
     'categories': [
         { 'fire': 'Wildfires' },
-        { 'airQ': 'Air Quality' },
         { 'viirs': 'VIIRS Hotspots' },
+        { 'airQ': 'Air Quality' },
         { 'smoke': 'Smoke Forecast' },
         { 'drought': 'Drought Conditions' },
         //{ 'nfdrs': 'Fire Danger' },
@@ -149,12 +149,12 @@ export const legend = {
             ['color', 'B', '#ff0000', 'Burn Environment']
         ],
         'erc': [
-            ['color', '', 'rgb(56, 168, 0)', '<60% higher than normal'],
-            ['color', '', 'rgb(209, 255, 115)', '60-79.9% higher than normal'],
-            ['color', '', 'rgb(255, 255, 190)', '80-89.9% higher than normal'],
-            ['color', '', 'rgb(255, 170, 0)', '90-96.9% higher than normal'],
-            ['color', '', 'rgb(255, 0, 0)', '97-99.9% higher than normal'],
-            ['color', '', 'rgb(168, 0, 0)', '>=100% higher than normal'],
+            ['color', '', '#38a800', '<60% higher than normal'],
+            ['color', '', '#d1ff73', '60-79.9% higher than normal'],
+            ['color', '', '#ffffbe', '80-89.9% higher than normal'],
+            ['color', '', '#ffaa00', '90-96.9% higher than normal'],
+            ['color', '', '#ff0000', '97-99.9% higher than normal'],
+            ['color', '', '#a80000', '>=100% higher than normal'],
             ['color', '', '#e1e1e1', 'No data'],
         ],
         /*'burnProb': [
@@ -547,7 +547,7 @@ export class Search {
             } else {
                 activeIncidents.forEach(f => {
                     let use = false;
-                    const isAustrailia = f.isAustrailia ?? false,
+                    const isAustralia = f.isAustralia ?? false,
                         p = f.properties,
                         name = p.name,
                         acresDisp = conversion.sizeFormat(p.acres),
@@ -570,7 +570,7 @@ export class Search {
                         li.setAttribute('data-type', 'incident');
                         li.setAttribute('data-wfid', p.wfid);
                         li.setAttribute('title', name);
-                        li.innerHTML = `<span class="icon fire fas fa-fire"></span><h3>${name}<span>${p.type} in ${stateLabels[p.state]?.name}${isAustrailia ? ', Austrailia' : ''} &middot;
+                        li.innerHTML = `<span class="icon fire fas fa-fire"></span><h3>${name}<span>${p.type} in ${stateLabels[p.state]?.name}${isAustralia ? ', Australia' : ''} &middot;
                             <b>${acresDisp}</b>${status != '' ? ` &middot; <span class="fstatus ${status}">${ucfirst(status)}` : ''}</span></span></h3>`;
                         this.results.appendChild(li);
 
@@ -1404,65 +1404,65 @@ export class Layers {
             dy = sel ? sel.options[sel.selectedIndex].value : settings.special().erc(),
             obs = [
                 'case',
-                ['<', ['to-number', ['get', 'avg_ec_percentile']], 60],
+                ['<', ['to-number', ['get', 'avg_erc_percentile']], 60],
                 'rgb(56, 168, 0)',
                 [
                     'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_percentile']], 60],
-                    ['<', ['to-number', ['get', 'avg_ec_percentile']], 80]
+                    ['>=', ['to-number', ['get', 'avg_erc_percentile']], 60],
+                    ['<', ['to-number', ['get', 'avg_erc_percentile']], 80]
                 ],
                 'rgb(209, 255, 115)',
                 [
                     'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_percentile']], 80],
-                    ['<', ['to-number', ['get', 'avg_ec_percentile']], 90]
+                    ['>=', ['to-number', ['get', 'avg_erc_percentile']], 80],
+                    ['<', ['to-number', ['get', 'avg_erc_percentile']], 90]
                 ],
                 'rgb(255, 255, 190)',
                 [
                     'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_percentile']], 90],
-                    ['<', ['to-number', ['get', 'avg_ec_percentile']], 97]
+                    ['>=', ['to-number', ['get', 'avg_erc_percentile']], 90],
+                    ['<', ['to-number', ['get', 'avg_erc_percentile']], 97]
                 ],
                 'rgb(255, 170, 0)',
                 [
                     'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_percentile']], 97],
-                    ['<', ['to-number', ['get', 'avg_ec_percentile']], 100]
+                    ['>=', ['to-number', ['get', 'avg_erc_percentile']], 97],
+                    ['<', ['to-number', ['get', 'avg_erc_percentile']], 100]
                 ],
                 'rgb(255, 0, 0)',
-                ['>=', ['to-number', ['get', 'avg_ec_percentile']], 100],
+                ['>=', ['to-number', ['get', 'avg_erc_percentile']], 100],
                 'rgb(168, 0, 0)',
                 '#e1e1e1'
             ],
             fcst = [
                 'case',
-                ['<', ['to-number', ['get', 'avg_ec_fcast_percentile']], 60],
+                ['<', ['to-number', ['get', 'avg_erc_fcast_percentile']], 60],
                 'rgb(56, 168, 0)',
                 [
                     'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_fcast_percentile']], 60],
-                    ['<', ['to-number', ['get', 'avg_ec_fcast_percentile']], 80]
+                    ['>=', ['to-number', ['get', 'avg_erc_fcast_percentile']], 60],
+                    ['<', ['to-number', ['get', 'avg_erc_fcast_percentile']], 80]
                 ],
                 'rgb(209, 255, 115)',
                 [
                     'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_fcast_percentile']], 80],
-                    ['<', ['to-number', ['get', 'avg_ec_fcast_percentile']], 90]
+                    ['>=', ['to-number', ['get', 'avg_erc_fcast_percentile']], 80],
+                    ['<', ['to-number', ['get', 'avg_erc_fcast_percentile']], 90]
                 ],
                 'rgb(255, 255, 190)',
                 [
                     'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_fcast_percentile']], 90],
-                    ['<', ['to-number', ['get', 'avg_ec_fcast_percentile']], 97]
+                    ['>=', ['to-number', ['get', 'avg_erc_fcast_percentile']], 90],
+                    ['<', ['to-number', ['get', 'avg_erc_fcast_percentile']], 97]
                 ],
                 'rgb(255, 170, 0)',
                 [
                     'all',
-                    ['>=', ['to-number', ['get', 'avg_ec_fcast_percentile']], 97],
-                    ['<', ['to-number', ['get', 'avg_ec_fcast_percentile']], 100]
+                    ['>=', ['to-number', ['get', 'avg_erc_fcast_percentile']], 97],
+                    ['<', ['to-number', ['get', 'avg_erc_fcast_percentile']], 100]
                 ],
                 'rgb(255, 0, 0)',
-                ['>=', ['to-number', ['get', 'avg_ec_fcast_percentile']], 100],
+                ['>=', ['to-number', ['get', 'avg_erc_fcast_percentile']], 100],
                 'rgb(168, 0, 0)',
                 '#e1e1e1'
             ];
@@ -3048,7 +3048,8 @@ export class Wildfires {
         return this;
     }
 
-    getStatus(s, n) {
+    getStatus(s, n, t = 'Wildfire', ac = '0') {
+        let a = ac.toString().toLowerCase();
         if (!s && !n) return 'active';
 
         if (s) {
@@ -3061,6 +3062,10 @@ export class Wildfires {
         const notes = n?.toLowerCase() || '';
         if (notes.includes('contain')) return 'contained';
         if (notes.includes('control')) return 'controlled';
+
+        if (t == 'Smoke Check' && (a == '0' || a == 'unknown' || a == '')) {
+            return 'unknown';
+        }
 
         return 'active';
     }
@@ -3116,8 +3121,8 @@ export class Wildfires {
             first = history[history.length - 1],
             curAcres = parseFloat(first.acres),
             firstAcres = parseFloat(last.acres),
-            totalMinutes = Math.round(Math.abs((first.updated - last.updated) / 60)),
-            days = totalMinutes / 60 / 24;
+            totalMinutes = Math.round(Math.abs((first.updated - last.updated) / 60))/*,
+            days = totalMinutes / 60 / 24*/;
 
         let changes = [];
         let totalAcres = 0, totalTimeDiff = 0;
@@ -3417,7 +3422,7 @@ export class Wildfires {
         data.features.forEach(fire => {
             const discover = Math.round(fire.attributes.ignition_date / 1000),
                 json = {
-                    isAustrailia: true,
+                    isAustralia: true,
                     geometry: { type: 'Point', coordinates: [fire.centroid.x, fire.centroid.y] },
                     properties: {
                         wfid: fire.attributes.fire_id,
@@ -3697,7 +3702,6 @@ export class Wildfires {
         nf.style.display = 'inline-flex';
 
         nfCount.classList.add('notify');
-        1
         nfCount.innerHTML = count;
         nf.appendChild(nfCount);
     }
@@ -3946,7 +3950,7 @@ export class Wildfires {
                     json: incident,
                     fireName: fname,
                     geoLocate: this.geoLocate(fire.protection, prop.type, fire),
-                    status: config.wildfire.getStatus(prop.status, prop.notes)
+                    status: this.getStatus(prop.status, prop.notes, prop.type, prop.acres)
                 },
                 role: settings.getUser().role(),
                 hasPermissions: settings.hasPermissions(),
@@ -3965,6 +3969,9 @@ export class Wildfires {
             /* add content to modal after service worker finishes */
             config.workers.incident.onmessage = (event) => {
                 modal.querySelector('.content').innerHTML = event.data;
+
+                const acHis = modal.querySelector('#acres_history'),
+                scrd = modal.querySelector('span.coords');
 
                 /* if nearby evacuations exist, show them on the modal */
                 if (nearbyEvacs) {
@@ -4001,14 +4008,17 @@ export class Wildfires {
 
                 /* remove any features that require a user to be subscribed */
                 if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
-                    modal.querySelector('#acres_history').style.height = 'unset';
-                    modal.querySelector('#acres_history').innerHTML = '<a href="#" data-action="upgrade-subscription" data-medium="acres_history" class="btn btn-orange btn-lg" onclick="return false"><i class="fas fa-lock"></i>Upgrade to see growth history</a>';
+                    acHis.style.height = 'unset';
+                    acHis.innerHTML = '<a href="#" data-action="marketing-cta" data-utm="acres_history" class="btn btn-orange btn-lg" onclick="return false"><i class="fas fa-lock"></i>Upgrade to see growth history</a>';
                     /*document.querySelector('#acres_history').parentElement.parentElement.remove();*/
 
                     /* blur coordinates */
-                    modal.querySelector('span.coords').innerHTML = '0.0000 -0.0000';
-                    modal.querySelector('span.coords').classList.add('blur');
+                    scrd.innerHTML = '0.0000 -0.0000';
+                    scrd.style.cursor = 'default';
+                    scrd.classList.add('blur');
                 } else {
+                    scrd.style.cursor = 'pointer';
+
                     /* load the script for the chart, then create the acreage chart */
                     if (acresHistory != null) {
                         const c = this;
@@ -4080,7 +4090,7 @@ export class Wildfires {
                     outline = `${id}_perimeters_outline`,
                     fill = `${id}_perimeters_fill`;
 
-                // the map isn't over Canada or Austrailia so there's no need to fetch perimeters for those areas
+                // the map isn't over Canada or Australia so there's no need to fetch perimeters for those areas
                 if (!intersects(viewBBox, this.REGION_BBOX[id])) return null;
 
                 const data = await api(url, [
@@ -4730,10 +4740,9 @@ export class NWS {
     }
 }
 
-export function marketing() {
+export function marketing(override = false, utm = null) {
     const now = Date.now(),
         lastShown = parseInt(localStorage.getItem('mapofire.marketing.last_shown') || '0', 10),
-        pick = Math.random() < 0.5 ? 'A' : 'B',
         variants = {
             A: {
                 title: 'Stay Safe. Stay Ahead.',
@@ -4743,11 +4752,19 @@ export function marketing() {
             },
             B: {
                 title: 'Unlock Pro Insights.',
-                text: 'Get operational clarity with advanced fire mapping, exclusive premium layers, more basemaps, and offline maps (Android only).',
+                text: 'Make faster, smarter wildfire decisions with advanced fire mapping, premium layers, extra basemaps, and offline access on Android.',
                 primary: 'Upgrade Now',
                 secondary: 'Keep Free Plan'
+            },
+            C: {
+                title: 'Access Premium Wildfire Tools',
+                text: 'Gain access to historical wildfires, fire weather forecasts, premium layers, and additional basemaps. Upgrade now or start a free 7-day trial.',
+                primary: 'Start 7-Day Free Trial',
+                secondary: settings.user != null ? 'Continue for Free' : 'Continue with Free Plan'
             }
         },
+        pick = override ? 'C' : (Math.random() < 0.5 ? 'A' : 'B'),
+        option = variants[pick],
         maxDismissals = 4;
 
     let shouldShow = true,
@@ -4755,41 +4772,39 @@ export function marketing() {
         cooldownDays = parseInt(localStorage.getItem('mapofire.marketing.cooldown_days')) || 3;
 
     // if already shown this session, don't show again
-    if (sessionStorage.getItem('modal_shown_this_session')) {
-        shouldShow = false;
-    }
+    if (sessionStorage.getItem('modal_shown_this_session')) shouldShow = false;
 
     // don't show if dismissed too many times
-    if (dismissedCount >= maxDismissals) {
-        shouldShow = false;
-    }
+    if (dismissedCount >= maxDismissals) shouldShow = false;
 
     // don't show if dismissed too many times
-    if (!localStorage.getItem('mapofire.refresh')) {
+    /*if (!localStorage.getItem('mapofire.refresh')) {
         shouldShow = false;
-    }
+    }*/
 
     // don't show if cooldown not expired
-    if (now - lastShown < cooldownDays * 24 * 60 * 60 * 1000) {
-        shouldShow = false;
+    if (now - lastShown < cooldownDays * 24 * 60 * 60 * 1000) shouldShow = false;
+
+    if (override) {
+        shouldShow = true;
+        sessionStorage.removeItem('modal_shown_this_session');
     }
 
     // don't show to admin users
-    if (settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN) {
-        shouldShow = false
-    }
+    if (settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN) shouldShow = false;
 
     if (shouldShow) {
-        const content = `<p style="text-align:center;margin:1.5em 0;font-size:18px;font-weight:400">${variants[pick].text}</p>
+        const content = `<p style="text-align:center;margin:1.5em 0;font-size:18px;font-weight:400">${option.text}</p>
             <div class="btn-group no-margin" style="width:100%;justify-content:space-between">
-            <input type="button" id="donate_cta" class="btn btn-red dn" value="${variants[pick].primary}" data-variant="${pick}" data-action="start-modal-checkout">
-            <input type="button" id="donate_dismiss" class="btn btn-gray dn" value="${variants[pick].secondary}" data-dismissedCount="${dismissedCount}" data-variant="${pick}" data-action="close-modal-checkout"></div>`;
+                <input type="button" id="donate_cta" class="btn btn-red dn" value="${option.primary}" data-variant="${pick}" data-action="start-modal-checkout">
+                <input type="button" id="donate_dismiss" class="btn btn-gray dn" value="${option.secondary}" data-dismissedCount="${dismissedCount}" data-variant="${pick}" data-action="close-modal-checkout">
+            </div>`;
 
         const el = document.createElement('div');
         el.classList.add('shadow');
         document.body.appendChild(el);
 
-        createDataForm(variants[pick].title, content);
+        createDataForm(option.title, content);
         document.querySelector('#data-form').classList.add('bg');
         document.querySelector('#data-form h1').style.textAlign = 'center';
         document.querySelector('#data-form h1').insertAdjacentHTML('beforebegin', '<i class="fad fa-user-unlock" style="display:block;text-align:center;font-size:50px;color:#ffcd82;margin-bottom:0.5em"></i>');
@@ -4803,11 +4818,11 @@ export function marketing() {
             gtag('event', 'subscription_cta_click', {
                 'event_category': 'Subscription',
                 'event_label': `Variant_${pick}`,
-                'source': 'modal',
+                'source': override ? 'embed' : 'modal',
                 'variant': pick
             });
 
-            window.location.href = config.purchaseLink('popup');
+            window.location.href = config.purchaseLink(utm ? utm : 'popup');
             new ClickListener().closeDataForm();
         });
 
@@ -4826,7 +4841,7 @@ export function marketing() {
             gtag('event', 'subscription_dismiss_click', {
                 'event_category': 'Subscription',
                 'event_label': `Variant_${pick}`,
-                'source': 'modal',
+                'source': override ? 'embed' : 'modal',
                 'variant': pick
             });
 
@@ -4940,7 +4955,6 @@ export const mapClick = async (e) => {
                 <option>- Choose -</option>
                 <option value="Wildfire">Wildfire</option>
                 <option value="Smoke Check">Smoke Check</option>
-                <option value="Prescribed Burn">Prescribed Burn</option>
             </select>
 
             <label>How big is it?</label><input type="text" name="size" placeholder="eg: 10" style="display:inline-block;max-width:100px">

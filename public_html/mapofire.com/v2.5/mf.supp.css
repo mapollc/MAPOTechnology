@@ -1793,6 +1793,11 @@ text-align: left;
     color: var(--red) !important;
 }
 
+.incident .coords.blur {
+    filter: blur(3px);
+    user-select: none;
+}
+
 .incident .fire-size span {
     font-size: 24px;
 }

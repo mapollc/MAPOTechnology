@@ -60,7 +60,8 @@ const forecastLabels = [
             avg: [],
             min: [],
             max: []
-        }
+        },
+        vent: []
     },
     getCompassDirection = (bearing) => {
         const dir = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
@@ -68,11 +69,7 @@ const forecastLabels = [
     },
     average = (arr) => {
         let total = 0;
-
-        arr.forEach((v) => {
-            total += v;
-        });
-
+        arr.forEach(v => total += v);
         return Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(total / arr.length);
     },
     getLocation = (data) => {
@@ -82,7 +79,6 @@ const forecastLabels = [
         return dist + ' mile' + (dist == '1' ? '' : 's') + ' ' + getCompassDirection(data.bearing.value) + ' of ' + data.city + ', ' + data.state;
     },
     getNestedValue = (obj, path) => {
-        // Safely gets a nested value from an object using a dot-separated path string
         return path.split('.').reduce((acc, part) => acc && acc[part], obj);
     },
     temp = (v) => {
@@ -184,13 +180,17 @@ async function getWeather(json) {
 
         wx.elevation = Math.round(ob.elevation.value * 3.281);
 
-        ob.maxTemperature.values.forEach((t) => {
+        ob.maxTemperature.values.forEach(t => {
             wx.dates.push(new Date(t.validTime.split('/')[0]).getTime());
             wx.maxTemp.push(Math.round(((9 / 5) * t.value) + 32));
         });
 
-        ob.minTemperature.values.forEach((t) => {
+        ob.minTemperature.values.forEach(t => {
             wx.minTemp.push(Math.round(((9 / 5) * t.value) + 32));
+        });
+
+        ob.transportWindSpeed.values.forEach(t => {
+
         });
 
         wx.dates.forEach((day) => {
