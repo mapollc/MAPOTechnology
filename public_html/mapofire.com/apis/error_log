@@ -64207,3 +64207,21 @@ Stack trace:
 [10-Oct-2025 11:07:21 America/Los_Angeles] PHP Parse error:  Unclosed '[' in /home/mapo/public_html/apis/functions.inc.php on line 49
 [10-Oct-2025 11:07:22 America/Los_Angeles] PHP Parse error:  syntax error, unexpected token "break", expecting ";" in /home/mapo/public_html/apis/functions.inc.php on line 635
 [10-Oct-2025 11:07:22 America/Los_Angeles] PHP Parse error:  Unclosed '{' on line 745 in /home/mapo/public_html/apis/functions.inc.php on line 758
+[08-Nov-2025 02:40:15 America/Los_Angeles] PHP Fatal error:  Uncaught TypeError: mysqli_close(): Argument #1 ($mysql) must be of type mysqli, null given in /home/mapo/public_html/apis/index.php:302
+Stack trace:
+#0 /home/mapo/public_html/apis/index.php(302): mysqli_close(NULL)
+#1 /home/mapo/public_html/mapofire.com/apis/index.php(3): require_once('/home/mapo/publ...')
+#2 {main}
+  thrown in /home/mapo/public_html/apis/index.php on line 302
+[08-Nov-2025 02:40:16 America/Los_Angeles] PHP Fatal error:  Uncaught TypeError: mysqli_close(): Argument #1 ($mysql) must be of type mysqli, null given in /home/mapo/public_html/apis/index.php:302
+Stack trace:
+#0 /home/mapo/public_html/apis/index.php(302): mysqli_close(NULL)
+#1 /home/mapo/public_html/mapofire.com/apis/index.php(3): require_once('/home/mapo/publ...')
+#2 {main}
+  thrown in /home/mapo/public_html/apis/index.php on line 302
+[08-Nov-2025 02:40:16 America/Los_Angeles] PHP Fatal error:  Uncaught TypeError: mysqli_close(): Argument #1 ($mysql) must be of type mysqli, null given in /home/mapo/public_html/apis/index.php:302
+Stack trace:
+#0 /home/mapo/public_html/apis/index.php(302): mysqli_close(NULL)
+#1 /home/mapo/public_html/mapofire.com/apis/index.php(3): require_once('/home/mapo/publ...')
+#2 {main}
+  thrown in /home/mapo/public_html/apis/index.php on line 302

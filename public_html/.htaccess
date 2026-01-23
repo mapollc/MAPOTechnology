@@ -22,7 +22,7 @@ RewriteRule ^favicon.ico https://www.mapotechnology.com/assets/images/favicon.ic
 RewriteCond %{HTTPS} off [OR]
 RewriteCond %{HTTP_HOST} !^144\.208\.76\.132
 RewriteCond %{HTTP_HOST} !^www\. [NC]
-RewriteCond %{HTTP_HOST} !^(api|api-test|api.apps|apps|data|fiview|lagranderide|mapotrails|mapofire|wildfiremap|account|support|status)\.mapotechnology\.com$ [NC]
+RewriteCond %{HTTP_HOST} !^(api|api-test|api.apps|apps|data|fiview|lagranderide|mapotrails|mapofire|wildfiremap|account|support|secure|status)\.mapotechnology\.com$ [NC]
 RewriteRule (.*) https://www.mapotechnology.com%{REQUEST_URI} [R=301,L]
 
 # IMAGES, JS, and CSS
