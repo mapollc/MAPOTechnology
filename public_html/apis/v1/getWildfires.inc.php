@@ -1,7 +1,7 @@
 <?
 $dzones = json_decode(file_get_contents('../cron/dispatch_zones.json'));
 ////$sql = "SELECT w.*, i.data FROM wildfires AS w LEFT JOIN inciweb AS i ON i.state = w.state AND i.name = w.name AND i.year = w.year WHERE w.agency ".($category == 'canada' ? "= 'CIFFC'" : "!= 'CIFFC'")." AND ";
-$sql = "SELECT * FROM wildfires WHERE agency != 'CIFFC' AND ";
+$sql = "SELECT w.*, dc.gacc FROM wildfires AS w LEFT JOIN dispatch_centers AS dc ON dc.agency = w.agency WHERE w.agency != 'CIFFC' AND ";
 
 // if retrieving archived fires
 if ($_REQUEST['archive']) {
@@ -112,6 +112,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 'near' => $row['geo'],
                 'url' => $url,
                 'protection' => [
+                    'gacc' => $row['gacc'] ?? null,
                     'agency' => $zone->agency,
                     'area' => $zone->area,
                     'logo' => $zone->logo
@@ -124,21 +125,6 @@ while ($row = mysqli_fetch_assoc($result)) {
                     'timezone' => $row['timezone']
                 ]
             ];
-
-            /*if ($row['data']) {
-                $aa = unserialize($row['data']);
-
-                foreach ($aa['data']['Current Situation'] as $o) {
-                    if ($o['desc'] == 'Size (Acres)') {
-                        $bkacres = str_replace([' Acres',','], ['',''], $o['info']);
-                        break;
-                    }
-                }
-
-                if ($bkacres > $row['acres']) {
-                    $fire['acres'] = $bkacres;
-                }
-            }*/
 
             $features[] = [
                 'type' => 'Feature',
@@ -160,7 +146,8 @@ while ($row = mysqli_fetch_assoc($result)) {
 if ($inciweb) {
     $n = 0;
     foreach ($features as $a) {
-        if (in_array($a['properties']['state'].$a['properties']['name'], $inciweb) && $a['properties']['type'] != 'Complex' && $a['properties']['dispatch'] == 'NWCG') {
+        $prop = $a['properties'];
+        if (in_array($prop['state'].$prop['name'], $inciweb) && $prop['type'] != 'Complex' && $prop['dispatch'] == 'NWCG') {
             unset($features[$n]);
             $total -= 1;
         }
@@ -172,4 +159,4 @@ if ($features) {
     $features = array_values($features);
 }
 
-$returnJson = array('type' => 'FeatureCollection', 'features' => $features, 'totalFires' => $total);
+$returnJson = ['type' => 'FeatureCollection', 'features' => $features, 'totalFires' => $total];

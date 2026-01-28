@@ -29,7 +29,9 @@ function generateCacheKey($category) {
             ($_REQUEST['order'] ? '_'.$_REQUEST['order'] : '');
 }
 
-if ($category == 'incident') {
+if ($category == 'stats') {
+    require_once 'fire-stats.ini.php';
+} else if ($category == 'incident') {
     require_once 'fire-info.ini.php';
 } else if ($category == 'canada') {
     $weeks1 = strtotime('-7 days');
@@ -89,16 +91,18 @@ if ($category == 'incident') {
         $memcache->addServer('127.0.0.1', 11211); 
         $cache = $memcache->get($cachefilename);
         $cacheTime = $memcache->get("$cachefilename-time");
+        $apiUpdated = filemtime(root().'wildfires.ini.php') > $cacheTime;
+        $apiUpdated2 = filemtime(root().'getWildfires.inc.php') > $cacheTime;
     }
 
     // if a memcached object doesn't exist, the script was updated since last cached, or the memcached object is expired
     // otherwise use memcached data
-    if (!$cache || filemtime(root().'wildfires.ini.php') > $cacheTime || filemtime(root().'getWildfires.inc.php') > $cacheTime || time() - $cacheTime > $cacheExpires) {
+    if (!$cache || $apiUpdated || $apiUpdated2 || time() - $cacheTime > $cacheExpires) {
         $cacheResult = mysqli_fetch_assoc(mysqli_query($con, "SELECT cache_data, expires FROM wildfire_api_cache WHERE cache_key = '$cachefilename' LIMIT 1"));
 
         // if data is cached in database and not expired, use it and then set the memcached object
         // otherwise we need to query the database for fresh data
-        if ($cacheResult && $cacheResult['expires'] > time()) {
+        if ($cacheResult && $cacheResult['expires'] > time() && !$apiUpdated && !$apiUpdated2) {
             $isCached = true;
             $returnJson = json_decode($cacheResult['cache_data']);
 

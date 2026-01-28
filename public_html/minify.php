@@ -32,6 +32,10 @@ if (isset($version)) {
     }
 }
 
+/*if ($_GET['test'] == 1) {
+    echo $root;
+}*/
+
 if (file_exists($root)) {
     $filemod = filemtime($root);
 

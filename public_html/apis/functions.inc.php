@@ -975,7 +975,7 @@ function wildfireURL($wfid, $name, $state)
         )
     );
     $state = substr($state, 0, 2) == 'CA' && strlen($state) > 2 ? str_replace('CA', '', $state) : $state;
-    $url = 'wildfire/' . $wfid . '/' . strtolower(str_replace(' ', '-', convertState($state, 1))) . '/' . $name;
+    $url = 'fires/' . $wfid . '/' . strtolower(str_replace(' ', '-', convertState($state, 1))) . '/' . $name;
 
     return preg_replace('/\/-/', '/', $url);
 }

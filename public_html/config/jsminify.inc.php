@@ -16,6 +16,8 @@
  * @author     Robert Hafner <tedivm@tedivm.com>
  */
 
+// namespace JShrink;
+
 /**
  * Minifier
  *
@@ -129,7 +131,6 @@ class Minifier
      * @throws \Exception
      * @return bool|string
      */
-    
     public static function minify($js, $options = [])
     {
         try {
@@ -205,10 +206,12 @@ class Minifier
         '+' => true,
         '[' => true,
         '#' => true,
-        '@' => true];
+        '@' => true
+    ];
 
 
-    protected function echo($char) {
+    protected function echo($char)
+    {
         $this->output .= $char;
         $this->last_char = $char[-1];
     }
@@ -238,9 +241,9 @@ class Minifier
                         break;
                     }
 
-                // otherwise we treat the newline like a space
+                    // otherwise we treat the newline like a space
 
-                // no break
+                    // no break
                 case ' ':
                     if (static::isAlphaNumeric($this->b)) {
                         $this->echo($this->a);
@@ -270,7 +273,7 @@ class Minifier
                                 break;
                             }
 
-                        // no break
+                            // no break
                         default:
                             // check for some regex that breaks stuff
                             if ($this->a === '/' && ($this->b === '\'' || $this->b === '"')) {
@@ -482,7 +485,8 @@ class Minifier
 
             // Now we reinsert conditional comments and YUI-style licensing comments
             if (($this->options['flaggedComments'] && $thirdCommentString === '!')
-                || ($thirdCommentString === '@')) {
+                || ($thirdCommentString === '@')
+            ) {
 
                 // If conditional comments or flagged comments are not the first thing in the script
                 // we need to echo a and fill it with a space before moving on.
@@ -609,7 +613,7 @@ class Minifier
                 // Since we're not dealing with any special cases we simply
                 // output the character and continue our loop.
                 default:
-                $this->echo($this->a);
+                    $this->echo($this->a);
             }
         }
     }
@@ -627,10 +631,24 @@ class Minifier
         }
 
         $this->echo($this->b);
+        // Flag to make sure that we don't end the regex too early because of
+        // unescaped forward slashes inside a character class. e.g /[/]/
+        // In non-v-mode, The only characters that cannot appear literally are \, ], and -
+        // In v-mode more characters are reserved and forbidden from appearing literally
+        // including but not limited to [ ] \ /
+        $character_class = false;
+        $character_class_index = null;
 
         while (($this->a = $this->getChar()) !== false) {
-            if ($this->a === '/') {
+            if ($this->a === '/' && !$character_class) {
                 break;
+            }
+
+            if ($this->a === '[') {
+                $character_class = true;
+                $character_class_index = $this->index;
+            } elseif ($this->a === ']') {
+                $character_class = false;
             }
 
             if ($this->a === '\\') {
@@ -639,6 +657,9 @@ class Minifier
             }
 
             if ($this->a === "\n") {
+                if ($character_class) {
+                    throw new \RuntimeException('Unclosed character class at position: ' . $character_class_index);
+                }
                 throw new \RuntimeException('Unclosed regex pattern at position: ' . $this->index);
             }
 
@@ -658,21 +679,20 @@ class Minifier
         return preg_match('/^[\w\$\pL]$/', $char) === 1 || $char == '/';
     }
 
-    protected function endsInKeyword() {
+    protected function endsInKeyword()
+    {
 
         # When this function is called A is not yet assigned to output.
         # Regular expression only needs to check final part of output for keyword.
         $testOutput = substr($this->output . $this->a, -1 * ($this->max_keyword_len + 10));
 
-        foreach(static::$keywords as $keyword) {
-            if (preg_match('/[^\w]'.$keyword.'[ ]?$/i', $testOutput) === 1) {
+        foreach (static::$keywords as $keyword) {
+            if (preg_match('/[^\w]' . $keyword . '[ ]?$/i', $testOutput) === 1) {
                 return true;
             }
         }
         return false;
     }
-
-
 
     /**
      * Replace patterns in the given string and store the replacement

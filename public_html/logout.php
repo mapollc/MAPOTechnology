@@ -66,14 +66,14 @@ $goto = '';
 if (isset($_GET['expired'], $_GET['method']) && $_GET['expired'] == 1 && $_GET['method'] == 'login') {
     $service = urlencode($_GET['service'] ?? '');
     $next = urlencode($_GET['next'] ?? '');
-    $goto = "{$secureURL}fail=2" . (!empty($service) ? "&service=$service" : '') . (!empty($next) ? "&next=$next" : '');
+    $goto = $secureURL . "fail=2" . (!empty($service) ? "&service=$service" : '') . (!empty($next) ? "&next=$next" : '');
 } else if (isset($_GET['next'])) {
     $goto = nextURL($_GET['next']);
 } else if ($domain !== 'mapotechnology.com') {
     $sub = explode('.', $domain)[0];
-    $goto = "{$secureURL}" . !empty($sub) ? "service=$sub" : '';
+    $goto = $secureURL . (!empty($sub) ? "service=$sub" : '');
 } else {
-    $goto = "{$secureURL}{$isLoggedOut}";
+    $goto = $secureURL . $isLoggedOut;
 }
 
 #echo $goto;

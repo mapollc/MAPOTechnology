@@ -39,7 +39,7 @@ if (!$_COOKIE['guid']) {
             . substr($charid, 20, 12)
             . chr(125);
         $guid = str_replace(['{', '}'], ['', ''], $uuid);
-
+        
         setcookie('guid', $guid, time() + 60 * 60 * 24 * 365.25, '/', '.mapofire.com', true);
     }
 }

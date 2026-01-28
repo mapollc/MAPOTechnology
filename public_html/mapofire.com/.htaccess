@@ -27,6 +27,7 @@ RewriteRule ^favicon.ico https://www.mapotechnology.com/assets/images/favicon.ic
 
 # WILDFIRE MAP RULES
 RewriteRule ^list-of-wildfires$ /list.php [L,QSA]
+RewriteRule ^blazeboard$ /dashboard/index.php [L,QSA]
 RewriteRule ^(f|i)/([^/]*)$ /short.php?type=$1&wfid=$2 [L,QSA]
 RedirectMatch 301 ^/wildfire/(.*)$ /fires/$1
 #RewriteRule ^wildfire/([^/]*)/([^/]*)$ /incident.php?wfid=$1&name=$2 [L,QSA]
@@ -51,6 +52,7 @@ RewriteRule ^api/v([^/]*)/([^/]*)/([^/]*)/([^/]*)$ /apis/index.php?version=$1&ap
 
 # ASSETS REWRITES
 RewriteRule ^src/images/incident$ /image.php?path=$1 [L,QSA]
+RewriteRule ^src/([^/]*)/([^/]*)/([^/]*)$ /assets.php?type=$1&folder=$2&file=$3 [L,QSA]
 RewriteRule ^src/([^/]*)/([^/]*)-([^/]*)$ /assets.php?type=$1&file=$2&version=$3 [L,QSA]
 RewriteRule ^src/([^/]*)/([^/]*)$ /assets.php?type=$1&file=$2 [L,QSA]
 

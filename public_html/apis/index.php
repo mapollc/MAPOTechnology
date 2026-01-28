@@ -57,6 +57,7 @@ $allowedTokens = array(
     ['id' => 3, 'token' => 'cf707f0516e5c1226835bbf0eece4a0c', 'domain' => 'mapotrails.com'],
     ['id' => 4, 'token' => '97b9fb49574cc2e1ccd3f19bc5d94a8c', 'domain' => 'com.mapollc.main'],
     ['id' => 5, 'token' => 'bG9jYWxob3N0', 'domain' => 'localhost'],
+    ['id' => 5, 'token' => 'bG9jYWxob3N0', 'domain' => '127.0.0.1:5500'],
     ['id' => 6, 'token' => '97b9fb49574cc2e1ccd3f19bc5d94a8c', 'domain' => 'com.mapollc.oreroads'],
     ['id' => 7, 'token' => '85f58fa255efe0f779e0dfcd62d87e6d', 'domain' => 'wildfiremap.org'],
     ['id' => 8, 'token' => '191eab18c50c8f5653bdeba13f219bed', 'domain' => 'fireweatheravalanche.org']
@@ -70,7 +71,7 @@ foreach ($allowedTokens as $i) {
 }
 ////$t = mysqli_fetch_assoc(mysqli_query($con, "SELECT domain FROM apitokens WHERE token = '$_REQUEST[key]'"));
 
-preg_match('/\/([A-Za-z0-9.]+)\//', $_SERVER['HTTP_REFERER'], $output_array);
+preg_match('/\/([A-Za-z0-9\.:]+)\//', $_SERVER['HTTP_REFERER'], $output_array);
 $api = $_REQUEST['api'];
 $method = $_REQUEST['method'];
 $function = $_REQUEST['function'];

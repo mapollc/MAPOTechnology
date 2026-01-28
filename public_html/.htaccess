@@ -18,12 +18,14 @@ RewriteRule ^error/([^/]*)$ /error.php?error_code=$1 [L,QSA]
 
 RewriteRule ^favicon.ico https://www.mapotechnology.com/assets/images/favicon.ico [L]
 
-# Redirect to WWW unless a subdomain
-RewriteCond %{HTTPS} off [OR]
-RewriteCond %{HTTP_HOST} !^144\.208\.76\.132
-RewriteCond %{HTTP_HOST} !^www\. [NC]
-RewriteCond %{HTTP_HOST} !^(api|api-test|api.apps|apps|data|fiview|lagranderide|mapotrails|mapofire|wildfiremap|account|support|secure|status)\.mapotechnology\.com$ [NC]
-RewriteRule (.*) https://www.mapotechnology.com%{REQUEST_URI} [R=301,L]
+# Redirect to https unless a subdomain
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+#RewriteCond %{HTTPS} off [OR]
+#RewriteCond %{HTTP_HOST} !^144\.208\.76\.132
+#RewriteCond %{HTTP_HOST} !^www\. [NC]
+#RewriteCond %{HTTP_HOST} !^(api|api-test|api.apps|apps|data|fiview|lagranderide|mapotrails|mapofire|wildfiremap|account|support|status)\.mapotechnology\.com$ [NC]
+#RewriteRule (.*) https://www.mapotechnology.com%{REQUEST_URI} [R=301,L]
 
 # IMAGES, JS, and CSS
 RewriteRule ^assets/images/tiles/ofm/([^/]*)/([^/]*)/([^/]*).pbf$ /images/tiles/vect.php?z=$1&x=$2&y=$3 [L,QSA]
