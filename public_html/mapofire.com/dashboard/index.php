@@ -58,7 +58,7 @@ $desc = "BlazeBoard is Map of Fire's wildfire dashboard, displaying active fires
                 <h1>BlazeBoard</h1>
             </div>
             <div class="data">
-                <p><?= $isLoggedIn ? "Hi, $_SESSION[first_name]" : '<a style="color:#fff" href="//mapotechnology.com/secure/login?service=mapofire&next=' . urlencode($_SERVER['REQUEST_URI']) . '">Login</a>'?></p>
+                <p><?= $isLoggedIn ? "Hi, $_SESSION[first_name]" : '<a style="color:#fff" href="//mapotechnology.com/secure/login?service=mapofire&next=' . urlencode($_SERVER['REQUEST_URI']) . '">Login</a>' ?></p>
                 <span id="now"></span>
             </div>
             <i id="menuIcon" class="fas fa-ellipsis-vertical"></i>
@@ -284,7 +284,7 @@ $desc = "BlazeBoard is Map of Fire's wildfire dashboard, displaying active fires
 
     <!--<script async src="https://www.googletagmanager.com/gtag/js?id=G-X03WWLX3BJ"></script>-->
     <script src="../src/js/dashboard/main.js"></script>
-    <!--<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X03WWLX3BJ',{'user_id':'<?= $_COOKIE['guid']?>'});</script>-->
+    <!--<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X03WWLX3BJ'<?= isset($_COOKIE['guid']) ? ",{'user_id':'$_COOKIE[guid]'}" : '' ?>);</script>-->
 </body>
 
 </html>

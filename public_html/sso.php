@@ -22,7 +22,8 @@ if (isset($_GET['next'])) {
 }
 $next = $_REQUEST['next'];
 $redirectURL = '';
-$failURL = 'https://www.mapotechnology.com/secure/login';
+////$failURL = 'https://www.mapotechnology.com/secure/login';
+$failURL = 'https://auth.mapotechnology.com/login';
 
 // if the user is already logged in, just go to the next URL
 /*if (isset($_SESSION['uid']) && $_SESSION['expires'] > time()) {
@@ -54,7 +55,8 @@ if ($_REQUEST['token']) {
             session_regenerate_id();
             setcookie('token', '', time() - 60 * 60 * 24 * 30, '/', ".$domain", true);
     
-            $redirectURL = 'https://www.mapotechnology.com/secure/login?fail=3'.($qs ? '&'.$qs : '');
+            ////$redirectURL = 'https://www.mapotechnology.com/secure/login?fail=3'.($qs ? '&'.$qs : '');
+            $redirectURL = 'https://auth.mapotechnology.com/login?fail=3'.($qs ? '&'.$qs : '');
         } else {
             $user = $json['user'];
 
@@ -82,6 +84,6 @@ if ($_REQUEST['token']) {
     $redirectURL = "$failURL?fail=3$vars";
 }
 
-////echo $redirectURL;
+#echo $redirectURL;
 header("Location: $redirectURL");
 exit();

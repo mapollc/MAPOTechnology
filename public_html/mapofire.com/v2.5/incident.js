@@ -254,7 +254,7 @@ self.onmessage = (e) => {
                     <dd>${behavior == null ? 'Unknown' : behavior}</dd>
 
                     <dt class="label icon fa-circle-dollar">Estimated Costs</dt>
-                    <dd>${cost == null ? 'Unknown' : `$${numberFormat(cost)}`}</dd>
+                    <dd>${cost == null ? 'Not reported' : `$${numberFormat(cost)}`}</dd>
 
                     <dt class="label icon fa-cloud-question">Cause</dt>
                     <dd>${cause == null ? 'Unknown' : cause}</dd>

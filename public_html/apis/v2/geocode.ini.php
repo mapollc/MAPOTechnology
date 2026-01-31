@@ -138,22 +138,29 @@ if ($method == 'bbox') {
             return;
         }
 
-        // return the nearest city to the lat/lon
-        $g = json_decode(file_get_contents('../cron/timezones.json'))->features;
-
-        $state = getState($coords);
-
-        if ($state) {
+        if ($function == 'near') {
             $arr = [
                 'geocode' => [
-                    'near' => getLocation2($con, $coords, $_REQUEST['full'] ? true : false),
-                    'county' => getCounty($con, $coords),
-                    'state' => $state,
-                    'timezone' => getTimezone($coords, $con)
+                    'near' => getLocation2($con, $coords, $_REQUEST['full'] ? true : false)
                 ]
             ];
         } else {
-            $arr = ['response' => 'error', 'code' => 404, 'msg' => 'No location was found for this latitude & longitude'];
+            $g = json_decode(file_get_contents('../cron/timezones.json'))->features;
+
+            $state = getState($coords);
+
+            if ($state) {
+                $arr = [
+                    'geocode' => [
+                        'near' => getLocation2($con, $coords, $_REQUEST['full'] ? true : false),
+                        'county' => getCounty($con, $coords),
+                        'state' => $state,
+                        'timezone' => getTimezone($coords, $con)
+                    ]
+                ];
+            } else {
+                $arr = ['response' => 'error', 'code' => 404, 'msg' => 'No location was found for this latitude & longitude'];
+            }
         }
 
         $returnJson = $arr;

@@ -7,10 +7,10 @@
             </div>
             <div class="col-md-8 col-sm-12">
                 <ul class="nav footer-menu">
-                    <li><a href="https://www.facebook.com/mapotechnology"><i class="fab fa-facebook-f"></i></a></li>
+                    <?/*<li><a href="https://www.facebook.com/mapotechnology"><i class="fab fa-facebook-f"></i></a></li>*/?>
                     <li><a href="<?=$domain?>about">About</a></li>
                     <li><a href="<?=$domain?>about/contact">Contact</a></li>
-                    <?/*<li><a href="<?=$domain?>checkout?price_id=<?=$mapoSubscriptions['donate']['live']?>">Donate</a></li>*/?>
+                    <li><a href="<?=$domain?>purchase/mapofire?utm_campaign=mapofire&utm_medium=link&utm_source=footer">Pricing</a></li>
                     <li><a href="<?=$domain?>about/legal/terms">Terms</a></li>
                     <li><a href="<?=$domain?>about/legal/privacy">Privacy</a></li>
                 </ul>

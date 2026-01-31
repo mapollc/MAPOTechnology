@@ -1003,10 +1003,9 @@ function createDataForm(title, content, center = false) {
 }
 
 /* allow user to submit report to MAPO of a new wildfire incident */
-async function doReport(data, lat, lon) {
+async function createCSReport(data, lat, lon) {
     const form = document.querySelector('#newReport'),
         theState = (await loadUtils()).stateLabels[data.geocode.state];
-    form.querySelector('input[type=submit]').disabled = false;
 
     if (settings.user != null) {
         form.querySelector('input[name=authUser]').value = 1;
@@ -1017,9 +1016,9 @@ async function doReport(data, lat, lon) {
     form.querySelector('input[name=lon]').value = lon;
     form.querySelector('input[id=gc]').value = data.geocode.county.county ? data.geocode.county.county : 'Undetermined';
     form.querySelector('input[id=gl]').value = data.geocode.near;
-    form.querySelector('input[id=gs]').value = data.geocode.state ? theState.name : 'Undetermined';
+    form.querySelector('input[id=gs]').value = data.geocode.state ? theState?.name : 'Undetermined';
     form.querySelector('input[name=geolocation]').value = data.geocode.near;
-    form.querySelector('input[name=state]').value = data.geocode.state + ' / ' + theState.name;
+    form.querySelector('input[name=state]').value = data.geocode.state + ' / ' + theState?.name;
 
     form.querySelector('input[name=size]').addEventListener('keyup', (e) => {
         form.querySelector('#alab').innerHTML = 'acre' + (e.target.value != 1 ? 's' : '');

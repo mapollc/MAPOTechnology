@@ -1263,7 +1263,8 @@ select {
     }
 
     select:disabled {
-        color: #f1f1f1;
+        color: #919eab;
+        background: #242d3a;
     }
 }
 
@@ -1294,13 +1295,6 @@ select {
     cursor: default;
 }
 
-/*#perimeterSize,
-#models,
-#sfpDate,
-#otlks,
-#ercs,
-#sfcSmokes,
-#viSmokes*/
 .data-filter {
     display: inline-flex;
     gap: 0.75em;
@@ -1311,24 +1305,10 @@ select {
     border-radius: 4px;
 }
 
-/*#perimeterSize>i,
-#models>i,
-#sfpDate>i,
-#ercs>i,
-#sfcSmokes>i,
-#viSmokes>i*/
 .data-filter i {
     display: block;
-    /*margin-right: 10px*/
 }
 
-/*#perimeterSize>div,
-#models>div,
-#sfpDate>div,
-#otlks>div,
-#ercs>div,
-#sfcSmokes>div,
-#viSmokes>div*/
 .data-filter div {
     display: inline-flex;
     gap: 0.5em;
@@ -1462,24 +1442,6 @@ select {
     border-radius: 5px 5px 0 0;
 }
 
-/*.temp-legend { width: 400px; font-family: sans-serif; }
-
-.gradient-bar {
-  height: 15px;
-  margin: 0 auto;
-  width: calc(100% - 16px);
-}
-
-.labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-text-align: left;
-  color: #9caab3;
-  margin-top: 4px;
-}
-*/
-
 .my-fires {
     display: flex;
     flex-direction: column;
@@ -1491,9 +1453,7 @@ text-align: left;
 
 .my-fires li {
     display: block;
-    background-color: var(--box-color)
-        /*#f9f9f9*/
-    ;
+    background-color: var(--box-color);
     border: 1px solid var(--box-border);
     color: var(--box-text-color);
     border-radius: 6px;
@@ -1533,11 +1493,8 @@ text-align: left;
 .my-fires .state {
     display: block;
     margin: .5em 0 var(--spacing) 0;
-    /*max-width: 193px;*/
     font-size: 13px;
-    /*color: #555;*/
     text-transform: uppercase;
-    /*text-align: right;*/
     line-height: 1.3;
 }
 
@@ -1553,16 +1510,6 @@ text-align: left;
     font-size: 14px;
     padding: 4px 6px 3px 6px;
 }
-
-/*.updated {
-    font-size: 13px !important;
-    text-align: center;
-    line-height: 1.2;
-    font-weight: 300;
-    margin: 10px 0 0 0 !important;
-    padding: 0;
-    color: #a1a1a1;
-}*/
 
 #modal {
     position: fixed;
@@ -1583,11 +1530,6 @@ text-align: left;
     overflow: hidden;
     z-index: 9997;
 }
-
-/*#modal.opened {
-    top: 15vh;
-    transition: top .85s ease;
-}*/
 
 #modal .close {
     position: relative;
@@ -1685,7 +1627,7 @@ text-align: left;
 
 #modal a,
 #modal a:visited {
-    color: #20e5f9;
+    color: #8fbad9;
     overflow-wrap: wrap;
     word-break: break-all;
 }
@@ -2114,89 +2056,6 @@ p.updated {
     font-size: 12px;
 }
 
-/*#modal.closing {
-    top: 100%;
-    animation: closeModal 1s;
-}
-
-#modal.opened {
-    top: var(--modal-height);
-}
-
-#modal.open {
-    animation: openModal 1s;
-}
-
-#modal .close {
-    position: relative;
-    width: 100%;
-    padding: 1.5em 15px;
-    cursor: pointer;
-}
-
-#modal .close:before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: -0.5em;
-    transform: translate(-50%, -50%) rotate(315deg);
-    width: 25px;
-    border-bottom: 2px solid #646464;
-    transition: all .2s ease-in-out;
-}
-
-#modal .close:after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: -0.5em;
-    transform: translate(-50%, -50%) rotate(45deg);
-    width: 25px;
-    border-bottom: 2px solid var(--close-color);
-    transition: var(--color-transition);
-}
-
-#modal .close:hover:before,
-#modal .close:hover:after {
-    border-bottom: 2px solid var(--hover-close-color);
-}
-
-#modal .content {
-    padding: 0 15px 0 15px;
-    height: calc(100% - 50px);
-    overflow-x: hidden;
-    overflow-y: auto;
-    letter-spacing: .2px;
-}
-
-#modal .content .container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-#modal.wwa h1.title {
-    border-left-width: 4px;
-    border-left-style: solid;
-    padding: 0.3em 0 0.3em 0.5em;
-    margin-bottom: var(--spacing);
-    border-radius: 1px 0 0 1px;
-}
-
-#modal.wwa .help {
-    margin-top: var(--spacing);
-    color: #cf4a20;
-}
-
-#modal.wwa .row.geo {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing);
-    margin-bottom: var(--spacing);
-    color: #4c4c4c;
-    font-size: 18px;
-}*/
-
 #modal.wwa .graphics {
     display: flex;
     gap: 1em;
@@ -2214,14 +2073,6 @@ p.updated {
     max-width: 288px;
 }
 
-/*.wwa-details {
-    margin: 1.5em 0;
-    padding: var(--spacing);
-    background-color: #fdfdfd;
-    border-radius: 5px;
-    box-shadow: 0 0 2px rgb(10 10 10 / 20%);
-}*/
-
 .wwa-details p {
     margin-bottom: .75em;
     font-weight: 300;
@@ -2236,60 +2087,6 @@ p.updated {
 .wwa-details p:last-child {
     margin-bottom: 0;
 }
-
-/*#modal p {
-    font-size: 16px;
-    line-height: 1.3;
-}
-
-#modal p.fireStats {
-    display: inline-flex;
-    align-items: center;
-    gap: 1em;
-    color: var(--blue);
-    margin: 0.5em 0 0 0;
-    font-size: 17px;
-    padding: 0 0.5em;
-}
-
-#modal .text p,
-#modal .data-list p {
-    padding-bottom: var(--spacing);
-}
-
-#modal .text p:only-child,
-#modal .text p:last-child,
-#modal .data-list p:only-child,
-#modal .data-list p:last-child {
-    padding-bottom: 0;
-}
-
-#modal ul {
-    padding-bottom: var(--spacing);
-    padding-inline-start: 2em;
-}
-
-#modal ul li {
-    line-height: 1.3;
-}
-
-#modal ul li ul {
-    padding-bottom: 0;
-}
-
-#modal .spc p {
-    padding: .5em 0;
-}
-
-#modal .spc p:first-child {
-    padding: 0 0 .5em 0;
-}
-
-#modal .spc p:last-child {
-    padding: .5em 0 0 0;
-}
-
-#modal .disclaimer,*/
 
 #data-form .disclaimer {
     text-align: center;
@@ -2490,23 +2287,6 @@ span.status.out {
     min-width: 172px;
 }
 
-/*#data-form.bg {
-    color: #fff;
-    border: 0;
-}
-
-#data-form.bg:before {
-    position: absolute;
-    display: block;
-    width: 100%;
-    height: 100%;
-    content: '';
-    background: url(https://www.mapotechnology.com/images/bg%20image%201.jpeg) no-repeat #333;
-    background-size: 150% auto;
-    background-position: center center;
-    filter: brightness(0.7) opacity(0.9) grayscale(0.1);
-}*/
-
 #data-form p {
     line-height: 1.3;
 }
@@ -2529,7 +2309,6 @@ span.status.out {
 
 #data-form h1 {
     font-size: 2.2rem;
-    /*color: var(--blue);*/
     margin-bottom: 0.5em;
 }
 
@@ -2582,28 +2361,23 @@ span.status.out {
     margin-right: .5em;
 }
 
-/*@scope(.legend) {*/
 .legend .viirs {
     width: 15px;
     height: 15px;
     background-size: cover;
     background-repeat: no-repeat;
-    /*border-width: 2px;
-        border-style: solid;
-        border-color: transparent;
-        border-radius: 50%;*/
 }
 
 .legend .viirs.t24 {
-    background-image: url(https://www.mapotechnology.com/assets/images/icons/fire/modis1.png);
+    background-image: url(//mapotechnology.com/assets/images/icons/fire/modis1.png);
 }
 
 .legend .viirs.t48 {
-    background-image: url(https://www.mapotechnology.com/assets/images/icons/fire/modis2.png);
+    background-image: url(//mapotechnology.com/assets/images/icons/fire/modis2.png);
 }
 
 .legend .viirs.t72 {
-    background-image: url(https://www.mapotechnology.com/assets/images/icons/fire/modis3.png);
+    background-image: url(//mapotechnology.com/assets/images/icons/fire/modis3.png);
 }
 
 .legend .fire-icon {
@@ -3148,11 +2922,6 @@ span.status.out {
     background: #d9d9d9;
 }
 
-/*@media (min-width: 1200px) {
-    .incident .data-list {
-        gap: 1.5em;
-    }
-}*/
 @media (max-width: 1440px) {
     .banner {
         left: unset;
@@ -3205,12 +2974,6 @@ span.status.out {
         margin: 0 auto;
     }
 }
-
-/*@media (max-width: 550px) or ((min-width: 768px) and (max-width: 900px)) {
-    .incident .wx.p4 .elmt {
-        flex: 1 1 calc(50% - var(--spacing));
-    }
-}*/
 
 @media (max-width: 768px) {
     .banner {
@@ -3265,71 +3028,7 @@ span.status.out {
     #modal #cursit .grid {
         grid-template-columns: 1fr;
     }
-
-    /*.incident h2 {
-        text-align: center;
-    }
-
-    .incident .header {
-        justify-content: center;
-        text-align: center;
-    }
-
-    .incident .header>div {
-        width: 100%;
-        flex: unset;
-        max-width: unset;
-    }
-
-    .incident .header .juris {
-        flex-direction: unset;
-        width: auto;
-    }
-
-    .incident figure {
-        max-width: 550px;
-        margin: 0 auto;
-    }
-
-    .incident figure span {
-        text-align: center;
-    }
-
-    .incident .col.w25,
-    .incident .col.w50,
-    .incident .col.w75 {
-        flex: 1 1 100% !important;
-        max-width: 100%;
-    }
-
-    .incident .col.w50 {
-        text-align: center;
-    }
-
-    .incident .no-gap75 {
-        gap: 0.75em;
-    }
-
-    .incident .data-list .data .label,
-    .incident .data-list .field .label {
-        max-width: 200px;
-    }
-
-    .row.dispatch p {
-        text-align: center;
-    }
-
-    .incident .donate div {
-        width: 100%;
-        justify-content: space-between;
-    }*/
 }
-
-/*@media (max-width: 640px) {
-    .incident .stats .stat .v .cont {
-        text-align: center;
-    }
-}*/
 
 @media (max-width: 640px) {
     .grid.cols-3 {
@@ -3358,22 +3057,6 @@ span.status.out {
 }
 
 @media (max-width: 600px) {
-    /*.incident .stats {
-        width: min-content;
-        margin: 0 auto 2em auto;
-        gap: var(--spacing);
-        flex-direction: column-reverse;
-    }
-
-    .incident .stats .stat {
-        flex: 1 1 100%;
-        width: 100%;
-    }
-
-    .incident .stats .stat p {
-        text-align: right;
-    }*/
-
     .forecast-table-wrapper {
         overflow-x: scroll;
         -webkit-overflow-scrolling: touch;
@@ -3433,52 +3116,6 @@ span.status.out {
         text-align: center;
     }
 
-    /*.incident .header h1 {
-        font-size: 30px;
-    }
-
-    .incident .header .juris img {
-        max-width: 38px;
-    }
-
-    .incident .header .juris p {
-        font-size: 14px;
-    }
-
-    .incident .data {
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-        gap: 0.33em;
-    }
-
-    .incident .data-list .data .label {
-        max-width: fit-content;
-    }
-
-    .incident .data-list .data .value {
-        flex: 1 1 100%;
-        width: 100%;
-        text-align: center;
-    }
-
-    .incident .data-list .field {
-        flex-wrap: wrap;
-        flex-direction: column;
-    }
-
-    .incident .data-list .field .label,
-    .incident .data-list .field .desc {
-        max-width: 100%;
-        width: 100%;
-        text-align: center
-    }
-
-    #modal.wwa .times,
-    .incident .times {
-        text-align: center;
-    }*/
-
     .banner {
         font-size: 12px;
     }
@@ -3486,10 +3123,6 @@ span.status.out {
 
 @media (max-width: 500px) {
 
-    /*nav ul li:last-child {
-        justify-content: flex-start;
-        gap: 1em;
-    }*/
     .banner {
         left: var(--spacing);
         bottom: calc(var(--spacing) + 10px);
@@ -3505,35 +3138,10 @@ span.status.out {
 
 @media (max-width: 479px) {
 
-    /*#perimeterSize,
-    #models,
-    #sfpDate,
-    #otlks,
-    #ercs,
-    #sfcSmokes,
-    #viSmokes*/
     .data-filter select {
         justify-content: unset;
         gap: 0.5em;
     }
-}
-
-@media (max-width: 430px) {
-
-    /*#modal.wwa .times span,
-    .incident .times span {
-        display: inline-flex;
-        width: 100%;
-        flex-direction: column;
-        /*margin-bottom: 0.5em;
-        font-weight: 500;*/
-    /*
-    }
-
-    #modal.wwa .times span:after,
-    .incident .times span:after {
-        content: '\2014';
-    }*/
 }
 
 @media (max-width: 400px) {

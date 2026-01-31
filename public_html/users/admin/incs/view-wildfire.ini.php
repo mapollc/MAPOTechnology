@@ -171,8 +171,9 @@ $addtl = ($_GET['q'] != '' ? 'q=' . $_GET['q'] . '&' : '') . ($_GET['unit'] != '
                 if ($show_fire) {
                     //$crit = $row['state'].$row['name'] == $lastName && ($lastAcres || !$row['acres']) && $lastID == substr($row['incidentID'], -3) ? true : false;
                     $is_duplicate = is_duplicate_fire($row, $last_fire);
+                    $lineOps = !$function && $row['display'] != '1' ? ' style="text-decoration:line-through"' : ($function == 'duplicates' && $is_duplicate ? ' style="color:red"' : '');
             ?>
-                    <tr<?= !$function && $row['display'] != '1' ? ' style="color:red"' : ($function == 'duplicates' && $is_duplicate ? ' style="color:red"' : '') ?>>
+                    <tr<?= $lineOps ?>>
                         <td><?= $row['incidentID'] ?></td>
                         <td><?= $row['state'] ?></td>
                         <td><?= incidentName($row['name'], $row['incidentID'], $row['type']) . ($row['type'] != 'Smoke Check' ? ' Fire' : '') ?></td>

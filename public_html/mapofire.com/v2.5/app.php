@@ -60,17 +60,16 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
     <meta name="description" content="<?= $desc ?>" />
     <meta property="og:title" content="<?= $title ?>" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="//mapotechnology.com/assets/images/preview_mapofire.png">
+    <meta property="og:image" content="https://mapotechnology.com/assets/images/preview_mapofire.png">
     <meta property="og:image:alt" content="Map of Fire: Web App preview">
     <meta property="og:image:width" content="1920">
     <meta property="og:image:height" content="1080">
     <meta property="og:site_name" content="Map of Fire" />
     <meta property="og:url" content="https://<?= $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] ?>" />
-    <meta property="fb:app_id" content="100092541746116" />
     <meta property="og:description" content="<?= $desc ?>" />
     <meta name="twitter:title" content="<?= $title ?>">
     <meta name="twitter:description" content="<?= $desc ?>">
-    <meta name="twitter:image" content="//mapotechnology.com/assets/images/preview_mapofire.png">
+    <meta name="twitter:image" content="https://mapotechnology.com/assets/images/preview_mapofire.png">
     <script async src="//kit.fontawesome.com/aa68e0c9b6.js" crossorigin="anonymous"></script>
     <link rel="apple-touch-icon" sizes="114x114" href="https://www.mapotechnology.com/assets/images/mf-apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="https://www.mapotechnology.com/assets/images/mf-favicon-32x32.png">

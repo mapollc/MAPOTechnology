@@ -30,7 +30,8 @@ function nextURL($next)
 $time = time();
 $token = $_SESSION['token'] ?? $_COOKIE['token'] ?? null;
 $isLoggedOut = !isset($_GET['expired']) || $_GET['expired'] != 1 ? 'loggedOut=1' : '';
-$secureURL = 'https://www.mapotechnology.com/secure/login?';
+////$secureURL = 'https://www.mapotechnology.com/secure/login?';
+$secureURL = 'https://auth.mapotechnology.com/login?';
 
 if ($token) {
     $user = prepareQuery('s', [$token], "SELECT u.uid FROM sessions AS s LEFT JOIN users AS u ON u.uid = s.uid WHERE token = ? LIMIT 1");

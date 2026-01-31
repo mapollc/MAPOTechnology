@@ -1,2 +1,2 @@
 # MAPOTechnology.com
-(c) 2025 MAPO LLC
+(c) 2026 MAPO LLC

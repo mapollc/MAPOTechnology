@@ -5,10 +5,8 @@ Options +FollowSymlinks
 
 DirectoryIndex index.php index.html
 
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteRule ^(.+)$ /$1.php [L,QSA]
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
 ErrorDocument 500 /error.php?error=500
 ErrorDocument 404 /error.php?error=404
@@ -19,8 +17,8 @@ RewriteRule ^error/([^/]*)$ /error.php?error_code=$1 [L,QSA]
 RewriteRule ^favicon.ico https://www.mapotechnology.com/assets/images/favicon.ico [L]
 
 # Redirect to https unless a subdomain
-RewriteCond %{HTTPS} !=on
-RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+#RewriteCond %{HTTPS} !=on
+#RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 #RewriteCond %{HTTPS} off [OR]
 #RewriteCond %{HTTP_HOST} !^144\.208\.76\.132
 #RewriteCond %{HTTP_HOST} !^www\. [NC]
@@ -49,7 +47,8 @@ RewriteRule ^src/([^/]*)/([^/]*)-([^/]*)$ /asset.php?type=$1&file=$2&version=$3 
 RewriteRule ^app/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ /apps/oreroads/minify.php?app=$1&type=$2&version=$3&file=$4 [L,QSA]
 
 # USER ACCOUNT RULES
-RewriteRule ^secure/([^/]*)$ /user.php?method=$1 [L,QSA,UnsafeAllow3F]
+RewriteRule ^secure/([^/]+)$ https://auth.mapotechnology.com/$1 [R=301,L,QSA,UnsafeAllow3F]
+#RewriteRule ^secure/([^/]*)$ /user.php?method=$1 [L,QSA,UnsafeAllow3F]
 RewriteRule ^authenticate/([^/]*)$ /do.php?method=$1 [L,QSA]
 RewriteRule ^account/secure/apis/([^/]*)$ /users/admin/api.php?callback=$1 [L,QSA]
 RewriteRule ^account/secure/apis/([^/]*)/([^/]*)$ /users/admin/api.php?callback=$1&mode=$2 [L,QSA]
@@ -78,6 +77,12 @@ RewriteRule ^(.*)$ "https\:\/\/www\.mapotechnology\.com$1" [R=301,L]
 RewriteRule ^winter/dashboards/([^/]*)$ /winter/dashboard.php?dashboard=$1 [L,QSA]
 RewriteRule ^maposnow/map$ /maposnow/list.php [L,QSA]
 RewriteRule ^maposnow/dashboard/([^/]*)/([^/]*)$ /maposnow/index.php?state=$1&dashboard=$2 [L,QSA]
+
+# SHORT URL
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ /$1.php [L,QSA]
 
 <Files ~ "\.ini\.php$">
     Require all denied

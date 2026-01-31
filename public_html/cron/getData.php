@@ -214,7 +214,6 @@ foreach($newDispatchCenters as $center) {
                                     notes = CASE WHEN (notes IS NULL OR notes = '') AND VALUES(notes) <> '' THEN VALUES(notes) ELSE notes END,
                                     resources = CASE WHEN (resources IS NULL OR resources = '') AND VALUES(resources) <> '' THEN VALUES(resources) ELSE resources END,
                                     fuels = CASE WHEN (fuels IS NULL OR fuels = '') AND VALUES(fuels) <> '' THEN VALUES(fuels) ELSE fuels END,
-                                    captured = VALUES(captured),
                                     updated = '$time',
                                     timezone = VALUES(timezone),
                                     display = CASE WHEN display = 0 THEN 0 ELSE VALUES(display) END,

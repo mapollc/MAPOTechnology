@@ -609,7 +609,7 @@ export class Search {
 
     async apiSearch() {
         let count = 0;
-        const search = await api(config.apiURL.replace('v1', 'v2') + 'search', [['q', this.query]]);
+        const search = await api(config.apiURL + 'search', [['q', this.query]], true);
 
         if (search.results != null && search.results.length > 0) {
             search.results.forEach((p) => {
@@ -3971,7 +3971,7 @@ export class Wildfires {
                 modal.querySelector('.content').innerHTML = event.data;
 
                 const acHis = modal.querySelector('#acres_history'),
-                scrd = modal.querySelector('span.coords');
+                    scrd = modal.querySelector('span.coords');
 
                 /* if nearby evacuations exist, show them on the modal */
                 if (nearbyEvacs) {
@@ -4931,7 +4931,26 @@ export const mapClick = async (e) => {
     if (document.querySelector('li#report').dataset.active == 1) {
         config.disableClicks = true;
 
+        map.getCanvas().style.cursor = 'auto';
         map.panTo([e.lngLat.lng, e.lngLat.lat]);
+        
+        let data = null;
+
+        // query the map for the county and state first before requesting from the API
+        map.queryRenderedFeatures(e.point)?.forEach(feat => {
+            if (feat.layer.id == 'us_counties') {
+                data = { geocode: { county: { county: feat.properties.NAME.replace(' County', '') }, state: feat.properties.STATE } };
+            }
+        });
+
+        const geocode = await api(config.apiURL + 'geocode/incident' + (data != null ? '/near' : ''), [['lat', e.lngLat.lat], ['lon', e.lngLat.lng]], true);
+
+        if (data == null) {
+            data = geocode;
+        } else {
+            data.geocode['near'] = geocode?.geocode?.near ?? null;
+        }
+
         createDataForm('Report an incident', `<form id="newReport" method="post">
             <input type="hidden" name="platform" value="web">
             <input type="hidden" name="authUser" value="0">
@@ -4951,31 +4970,29 @@ export const mapClick = async (e) => {
             <input type="text" id="gl" value="Loading..." disabled>
             
             <label>What type of incident is this?</label>
-            <select name="type">
+            <select name="type" required>
                 <option>- Choose -</option>
                 <option value="Wildfire">Wildfire</option>
                 <option value="Smoke Check">Smoke Check</option>
             </select>
 
-            <label>How big is it?</label><input type="text" name="size" placeholder="eg: 10" style="display:inline-block;max-width:100px">
+            <label>How big is it?</label>
+            <input type="text" name="size" placeholder="eg: 10" style="display:inline-block;max-width:100px" required>
             <div id="alab" style="display:inline-block;padding-left:5px">acres</div>
             
             <label>Brief description of incident:</label>
-            <textarea name="notes" placeholder="Anything else you can add..." style="min-height:100px;resize:none"></textarea>
+            <textarea name="notes" placeholder="Anything else you can add..." style="min-height:100px;resize:none" required></textarea>
             
-            <div class="btn-group centered"><input type="submit" class="btn btn-green" value="Submit Report" disabled>
+            <div class="btn-group centered">
+                <input type="submit" class="btn btn-green" value="Submit Report">
                 <a class="btn btn-gray" href="#" data-action="close-data-form" onclick="return false">Cancel</a>
             </div>
             <div class="disclaimer">Submitting this report only sends information to the ${config.productName} team&mdash;it does not send
             any information to emergency or governmental authorities. Please call 911 to report a new wildfire. By submitting a report,
-            you agree to our <a target="blank" href="//mapotechnology.com/about/legal/terms">Terms</a>.</div>
+            you agree to our <a target="blank" href="//mapotechnology.com/about/legal/terms">Terms of Service</a>.</div>
         </form>`);
 
-        map.getCanvas().style.cursor = 'auto';
-
-        const data = await api(config.apiURL.replace('v1', 'v2') + 'geocode/incident', [['lat', e.lngLat.lat], ['lon', e.lngLat.lng]]);
-
-        doReport(data, e.lngLat.lat, e.lngLat.lng);
+        createCSReport(data, e.lngLat.lat, e.lngLat.lng);
     }
 
     /* get fire weather forecast */

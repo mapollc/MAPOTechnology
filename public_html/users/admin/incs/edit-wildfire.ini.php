@@ -2,178 +2,174 @@
 if (!$permission->fire()->edit()) {
     echo invalidPermissions();
 } else {
-    $row = mysqli_fetch_assoc(mysqli_query($con, "SELECT w.*, d.agency AS jurisdiction, d.area AS jurisdiction_unit, c.name AS center_name FROM wildfires AS w LEFT JOIN dispatch_centers AS c ON c.agency LIKE w.agency OR c.agency LIKE CONCAT(SUBSTRING(w.agency, 1, 2), '-', SUBSTRING(w.agency, 3, 5)) LEFT JOIN dispatch_zones AS d ON d.unit = SUBSTRING_INDEX(SUBSTRING_INDEX(incidentID, '-', -2), '-', 1) WHERE wfid = '$_GET[wfid]'"));
+    function getStatus($s, $n, $t = 'Wildfire', $ac = '0') {
+        $a = strtolower((string)$ac);
+        
+        if (!$s && !$n) return 'active';
+    
+        if ($s) {
+            if ($s['Out'] ?? false) return 'out';
+            if ($s['Control'] ?? false) return 'controlled';
+            if ($s['Contain'] ?? false) return 'contained';
+            if ((array)$s) return ''; // Checks if object has any properties
+        }
+    
+        $notes = strtolower($n ?? '');
+        if (str_contains($notes, 'contain')) return 'contained';
+        if (str_contains($notes, 'control')) return 'controlled';
+    
+        return ($t === 'Smoke Check' && in_array($a, ['0', 'unknown', ''])) 
+            ? 'unknown' 
+            : 'active';
+    }
+
+    function fireName($n, $t, $i) {
+        $parts = $i ? explode('-', $i) : [];
+    
+        return match ($t) {
+            'Prescribed Fire' => str_contains($n ?? '', 'RX') ? $n : "$n RX",
+            'Smoke Check' => "Smoke Check" . ($i ? " #{$parts[1]}-" . (int)$parts[2] : ""),
+            default => empty($n) ? "Incident #" . (int)($parts[2] ?? 0) : ucwords(strtolower(preg_replace('/^\d+(?=\D)\s?/', '', $n))) . " Fire"
+        };
+    }
+
+    function formatTime($t) {
+        if (time() - $t > 86400) return date('l, F j, Y - g:i A T', $t);
+        else return ago($t);
+    }
+
+    function tz($tz) {
+        return match($tz) {
+            'America/Los_Angeles' => 'Pacific',
+            'America/Denver' => 'Mountain',
+            'America/Chicago' => 'Central',
+            'America/New_York' => 'Eastern',
+            default => $tz
+        };
+    }
+
+    $row = mysqli_fetch_assoc(mysqli_query($con, "SELECT w.*, ws.fuels AS fuelGroup, ws.causes, ws.behavior, d.agency AS jurisdiction, d.area AS jurisdiction_unit, c.name AS center_name FROM wildfires AS w LEFT JOIN dispatch_centers AS c ON c.agency LIKE w.agency OR c.agency LIKE CONCAT(SUBSTRING(w.agency, 1, 2), '-', SUBSTRING(w.agency, 3, 5)) LEFT JOIN wildfiresSupp AS ws ON ws.incidentID = w.incidentID LEFT JOIN dispatch_zones AS d ON d.unit = SUBSTRING_INDEX(SUBSTRING_INDEX(w.incidentID, '-', -2), '-', 1) WHERE wfid = $_GET[wfid]"));
 
     if (!$row) {
         echo errorCode('Wildfire Not Found', 'The wildfire incident you are searching for does not exist.');
     } else {
+        date_default_timezone_set($row['timezone']);
+        $type = $row['type'];
+        $geocode = json_decode($row['near']);
+        $acres = $row['acres'];
+        $status = getStatus(unserialize($row['status']), $row['notes'], $type, $acres);
 ?>
-        <h1 class="category">Edit Incident: <?= incidentName($row['name'], $row['incidentID'], $row['type']) . ' (' . $row['incidentID']  . ')' ?></h1>
 
         <form action="" method="post">
             <input type="hidden" name="wfid" value="<?= $row['wfid'] ?>">
 
-            <table class="table" style="min-width:unset">
-                <tbody>
-                    <?
-                    $count = 0;
-                    foreach ($row as $k => $v) {
-                        if ($k != 'jurisdiction_unit' && $k != 'jursidiction' && $k != 'geo' && $k != 'center_name' && $k != 'display' && $k != 'lon' && $k != 'incidentNumOnly') {
-                            $label = ucfirst($k);
-                            $value = $v;
+            <div class="cad-card">
+                <div class="header">
+                    <div style="flex:0 1 auto">
+                        <div class="title">
+                            <h1 style="margin:0;color:#e0e0e0"><?= strtoupper(fireName($row['name'], $type, $row['incidentID'])) ?></h1>
+                            <span style="font-size:20px;color:#888">#<?= $row['incidentID'] ?></span>
+                        </div>
+                    </div>
+                    <div class="details">
+                        <span class="status-badge <?= $status ?>"><?= strtoupper($status) ?></span>
+                        <div style="margin-top:5px">WFID #: 68926923</div>
+                    </div>
+                </div>
 
-                            if ($k == 'incidentID') {
-                                $label = 'Incident ID';
-                            } else if ($k == 'wfid') {
-                                $label = 'WFID';
-                            } else if ($k == 'lat') {
-                                $label = 'Coordinates';
-                            }
+                <div class="grid">
+                    <div class="item">
+                        <div class="label">Fire Year</div>
+                        <span><?= $row['year'] ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Incident Type</div>
+                        <span><?= $type ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">State</div>
+                        <span><?= convertState($row['state'], 1) . " ($row[state])" ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">County</div>
+                        <span><?= "$geocode->county County" ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Nearest Location</div>
+                        <span><?= $geocode->near ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Coordinates</div>
+                        <span><a href="https://www.mapofire.com/#13/<?= "$row[lat]/$row[lon]" ?>"><?= "$row[lat], $row[lon]" ?></a></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Last Updated</div>
+                        <span><?= formatTime($row['updated']) ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Discovered</div>
+                        <span><?= formatTime($row['date']) ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Dispatch</div>
+                        <span><?= ($row['center_name'] ? $row['center_name'] : '') . " (<a href=\"../dispatch/edit?agency=$row[agency]\">$row[agency]</a>)" ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Jurisdiction</div>
+                        <span><?= ($row['jurisdiction'] ? $row['jurisdiction'] . ($row['jurisdiction_unit'] ? ' &mdash; ' . $row['jurisdiction_unit'] : '') : 'None') . " ($row[unit])" ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Size</div>
+                        <input type="number" name="acres" step="0.02" placeholder="0" value="<?= $acres ?>" <?= $status == 'out' ? ' disabled' : '' ?>>
+                    </div>
+                    <div class="item">
+                        <div class="label">Behavior</div>
+                        <span><?= $row['behavior'] && $row['behavior'] != '[]' ? implode(', ', json_decode($row['behavior'])) : 'N/A' ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Cause</div>
+                        <span><?= $row['causes'] && $row['causes'] != '[]' ? implode(' - ', array_unique(json_decode($row['causes']))) : 'N/A' ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Fuels</div>
+                        <span><?= $row['fuelGroup'] && $row['fuelGroup'] != '[]' ? implode(', ', json_decode($row['fuelGroup'])) : ($row['fuels'] ? $row['fuels'] : 'N/A') ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Notes</div>
+                        <span><?= $row['notes'] ? $row['notes'] : 'N/A' ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Data Source</div>
+                        <span><?= $row['owner'] ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Incident Timezone</div>
+                        <span><?= tz($row['timezone']) ?> Time</span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Captured</div>
+                        <span><?= formatTime($row['captured']) ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Display on Map</div>
+                        <div class="radio" style="margin:0">
+                            <input type="radio" id="d1" name="display" value="1" <?= $row['display'] == 1 ? ' checked' : '' ?>>
+                            <label for="d1" style="color:#e9e9e9">Yes</label>
+                        </div>
+                        <div class="radio" style="margin:0">
+                            <input type="radio" id="d2" name="display" value="0" <?= $row['display'] != 1 ? ' checked' : '' ?>>
+                            <label for="d2" style="color:#e9e9e9">No</label>
+                        </div>
+                    </div>
+                </div>
 
-                            if ($k == 'date' || $k == 'captured' || $k == 'updated') {
-                                $value = date('l, F j, Y g:i A T', $v);
-                            } else if ($k == 'unit') {
-                                $label = 'Responsible Agency';
-                                $juris = $row['jurisdiction'] ? $row['jurisdiction'] . ($row['jurisdiction_unit'] ? ' &mdash; ' . $row['jurisdiction_unit'] : '') : 'N/A';
-                                $value = $juris . " ($v)";
-                            } else if ($k == 'near') {
-                                $label = 'Geocode';
-                                $near = json_decode($v);
-                                $value = '<b>County:</b> ' . $near->county.'<br><b>Near:</b> ' . $near->near . '<br><b>FIPS:</b> '.str_pad($near->fips, 5, '0', STR_PAD_LEFT);
-                            } else if ($k == 'state') {
-                                $value = convertState($v, 1);
-                            } else if ($k === 'agency') {
-                                $value = '<a href="../dispatch/edit?agency=' . $row['agency'] . '">' . $row['agency'] . '</a>' . ($row['center_name'] ? ' &mdash; ' . $row['center_name'] : '');
-                            } else if ($k == 'status') {
-                                $status = '';
-
-                                if ($v != '') {
-                                    $stat = unserialize($v);
-
-                                    foreach ($stat as $n => $t) {
-                                        $status .= $n . ': ' . date('n/j/Y H:i', $t) . '<br>';
-                                    }
-
-                                    $value = substr($status, 0, -4);
-                                } else {
-                                    $value = '';
-                                }
-                            } else if ($k == 'acres') {
-                                $value = '<input type="text" class="field" style="display:inline-block;max-width:94px" name="acres" placeholder="0" value="' . size($row['acres']) . '"> acres';
-                            } else if ($k == 'lat') {
-                                $value = '<a target="blank" href="https://www.mapofire.com/#6/' . $row['lat'] . '/' . $row['lon'] . '">' . $row['lat'] . ', ' . $row['lon'] . '</a>';
-                            }
-
-                            if ($value) {
-                                echo '<tr><td style="font-weight:bold' . ($count == 0 ? ';border-top:1px solid #ededed' : '') . '">' . $label . '</td>' .
-                                    '<td style="' . ($count == 0 ? 'border-top:1px solid #ededed' : '') . '">' . $value . '</td></tr>';
-                                $count++;
-                            }
-                        }
-                    } ?>
-                    <tr>
-                        <td style="font-weight:bold">Display on Map</td>
-                        <td>
-                            <div class="radio" style="margin:0">
-                                <input type="radio" id="d1" name="display" value="1" <?= ($row['display'] == 1 ? ' checked' : '') ?>><label for="d1">Yes</label>
-                            </div>
-                            <div class="radio" style="margin:0">
-                                <input type="radio" id="d2" name="display" value="0" <?= ($row['display'] != 1 ? ' checked' : '') ?>><label for="d2">No</label>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <!--<div class="rows">
-                <div class="row align-center">
-                    <div class="col w17 label">WFID</div>
-                    <div class="col w83"><?= $row['wfid'] ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Year</div>
-                    <div class="col w83"><?= $row['year'] ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Incident ID</div>
-                    <div class="col w83"><?= $row['incidentID'] ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">State</div>
-                    <div class="col w83"><?= convertState($row['state'], 1) ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Type</div>
-                    <div class="col w83"><?= $row['type'] ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Name</div>
-                    <div class="col w83"><?= $row['name'] ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Discovered</div>
-                    <div class="col w83"><?= date('l, F j, Y g:i A T', $row['date']) ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Dispatch</div>
-                    <div class="col w83"><a href="../dispatch/edit?agency=<?= $row['agency'] ?>"><?= $row['agency'] ?></a><?= $row['center_name'] ? ' &mdash; ' . $row['center_name'] : '' ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Jurisdiction</div>
-                    <div class="col w83"><?= ($row['jurisdiction'] ? $row['jurisdiction'] . ($row['jurisdiction_unit'] ? ' &mdash; ' . $row['jurisdiction_unit'] : '') : '') ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Coordinates</div>
-                    <div class="col w83"><a target="blank" href="https://www.mapofire.com/#13/<?= $row['lat'] . '/' . $row['lon'] ?>"><?= $row['lat'] . ', ' . $row['lon'] ?></a></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Location</div>
-                    <div class="col w83"><?= $row['geo'] ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Size</div>
-                    <div class="col w83"><input type="text" class="field" style="display:inline-block;max-width:94px" name="acres" placeholder="0" value="<?= ($row['acres'] != '' && $row['acres'] != 'Unknown' ? number_format($row['acres']) : 'Unknown') ?>"> acres</div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Notes</div>
-                    <div class="col w83"><?= $row['notes'] ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Resources</div>
-                    <div class="col w83"><?= $row['resources'] ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Fuels</div>
-                    <div class="col w83"><?= $row['fuels'] ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Updated</div>
-                    <div class="col w83"><?= ago($row['updated']) ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Captured</div>
-                    <div class="col w83"><?= date('l, F j, Y g:i A T', $row['captured']) ?></div>
-                </div>
-                <div class="row align-center">
-                    <div class="col w17 label">Timezone</div>
-                    <div class="col w83"><?= $row['timezone'] ?></div>
+                <div class="btn-group">
+                    <input type="submit" class="btn btn-green" name="action" value="Save Changes">
+                    <input type="button" class="btn" value="Go Back" onclick="window.location.href='../wildfires'">
                 </div>
             </div>
 
-            <label style="margin-top:15px">Display on Map</label>
-            <div class="radio">
-                <input type="radio" id="d1" name="display" value="1" <?= ($row['display'] == 1 ? ' checked' : '') ?>><label for="d1">Yes</label>
-            </div>
-            <div class="radio">
-                <input type="radio" id="d2" name="display" value="0" <?= ($row['display'] != 1 ? ' checked' : '') ?>><label for="d2">No</label>
-            </div>
-            <div class="clear"></div>-->
-
-            <div class="btn-group">
-                <input type="submit" class="btn btn-green" name="action" value="Save Changes">
-                <input type="button" class="btn" value="Go Back" onclick="window.location.href='../wildfires'">
-            </div>
         </form>
-        </div>
-<? }
+<?
+    }
 } ?>

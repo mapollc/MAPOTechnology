@@ -4,6 +4,7 @@ let host = 'https://www.mapotechnology.com/',
     apiURL = 'https://api.mapotechnology.com/v1/',
     usersAPI = 'account/secure/apis/',
     apiKey = 'c196d0958608ad2b7d4af2be078ecc54',
+    WILDFIRE_NEARBY_DIST = 50,
     calc,
     map,
     kw,
@@ -11,7 +12,6 @@ let host = 'https://www.mapotechnology.com/',
     wildfires = [],
     keywordResults,
     centerMarker,
-    WILDFIRE_NEARBY_DIST = 50,
     stateLabels = {
         'AL': 'Alabama',
         'AK': 'Alaska',
@@ -72,31 +72,31 @@ let host = 'https://www.mapotechnology.com/',
         'Caution', 'Fishing', 'Hike', 'Info', 'Lake', 'Media',
         'Mountain Bike', 'Parking', 'Redneck', 'Restroom', 'River', 'Sledding', 'Summit', 'Swimming'];
 
-async function api(url, fields = null) {
-    let result,
-        ops = {
-            method: url.search('weather.gov') >= 0 ? 'GET' : 'POST',
-        },
-        fd = new FormData();
-
-    if (url.search(apiURL) >= 0 || url.search(apiURL.replace('v1', 'v2')) >= 0 || url.search('mapofire.com') >= 0) {
-        fd.append('key', apiKey);
-    }
-
-    if (fields != null) {
-        fields.forEach((v) => {
-            fd.append(v[0], v[1]);
-        });
-    }
-
-    if (url.search('weather.gov') < 0) {
-        ops['body'] = fd;
-    }
-
+async function api(uri, fields = null, v2 = false) {
     if (!navigator.onLine) {
         console.error('You are not connected to the internet');
         return null;
     }
+
+    let result,
+        url = v2 ? uri.replace('v1', 'v2') : uri;
+
+    const isExternal = url.includes('weather.gov') || url.includes('unl.edu'),
+        isInternal = url.includes(apiURL) || url.includes(apiURL.replace('v1', 'v2')) || url.includes(host),
+        ops = {
+            method: isExternal ? 'GET' : 'POST'
+        },
+        fd = new FormData();
+
+    if (isInternal) fd.append('key', apiKey);
+
+    if (fields && Array.isArray(fields)) {
+        for (const [k, v] of fields) {
+            fd.append(k, v);
+        }
+    }
+
+    if (!isExternal) ops['body'] = fd;
 
     try {
         const resp = await fetch(url, ops);
@@ -112,7 +112,7 @@ async function api(url, fields = null) {
         result = await resp.json();
     } catch (e) {
         console.error(`Fetch or JSON parsing error for URL: ${url}`, e.message);
-        result = null
+        result = null;
     }
 
     return result;
@@ -145,132 +145,98 @@ function ucfirst(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function plural(v) {
-    return (v > 1 ? 's' : '');
-}
-
-function matheq(d, s, r) {
-    return Math.floor(((d / s) - Math.floor(d / s)) * r);
+function ucwords(s) {
+    const smallWords = new Set(['a', 'an', 'the', 'is', 'of', 'and', 'or', 'for', 'to', 'in', 'on', 'at', 'by', 'with']);
+    return s.split(' ').map((word, i) => i === 0 || !smallWords.has(word.toLowerCase()) ? word.charAt(0).toUpperCase() + word.slice(1) : word.toLowerCase()).join(' ');
 }
 
 function timeAgo(t, w, c) {
-    var val,
-        d = (c ? c : Math.round(new Date().getTime() / 1000)) - t;
+    const plural = (v) => { return v > 1 ? 's' : ''; },
+        subUnit = (d, s, r) => { return Math.floor(((d / s) - Math.floor(d / s)) * r); },
+        now = c ?? Date.now(),
+        timestamp = t.toString().length === 10 ? t * 1000 : t,
+        d = Math.round((now - timestamp) / 1000);
 
-    if (d < 10) {
-        val = 'Just now';
-    } else if (d >= 10 && d < 60) {
-        val = d + ' sec' + plural(d);
-    } else if (d >= 60 && d < 3600) {
-        val = Math.floor(d / 60) + ' min' + plural(Math.floor(d / 60)) + ((matheq(d, 60, 60) !== 0) ? ',&nbsp;' + matheq(d, 60, 60) + ' sec' + plural(matheq(d, 60, 60)) : '');
-    } else if (d >= 3600 && d < 86400) {
-        val = Math.floor(d / 3600) + ' hour' + plural(Math.floor(d / 3600)) + ((matheq(d, 3600, 60) !== 0) ? ',&nbsp;' + matheq(d, 3600, 60) + ' min' + plural(matheq(d, 3600, 60)) : '');
-    } else if (d >= 86400 && d < 172800) {
-        val = Math.floor(d / 86400) + ' day' + plural(Math.floor(d / 86400)) + ((matheq(d, 86400, 24) !== 0) ? ',&nbsp;' + matheq(d, 86400, 24) + ' hour' + plural(matheq(d, 86400, 24)) : '');
-    } else if (d >= 172800 && d < 604800) {
-        val = Math.floor(d / 86400) + ' day' + plural(Math.floor(d / 86400));
-    } else if (d >= 604800 && d < 2419200) {
-        val = Math.floor(d / 604800) + ' week' + plural(Math.floor(d / 604800));
-    } else if (d >= 2419200 && d < 31536000) {
-        val = Math.floor(d / 2419200) + ' month' + plural(Math.floor(d / 2419200));
-    } else if (d >= 31536000) {
-        val = Math.floor(d / 31536000) + ' year' + plural(Math.floor(d / 31536000));
+    if (d < 10) return 'Just now';
+
+    const ranges = [
+        { limit: 60, unit: 'sec', div: 1, sub: null },
+        { limit: 3600, unit: 'min', div: 60, sub: { div: 60, unit: 'sec' } },
+        { limit: 86400, unit: 'hour', div: 3600, sub: { div: 60, unit: 'min' } },
+        { limit: 172800, unit: 'day', div: 86400, sub: { div: 24, unit: 'hour' } },
+        { limit: 604800, unit: 'day', div: 86400 },
+        { limit: 2419200, unit: 'week', div: 604800 },
+        { limit: 31536000, unit: 'month', div: 2419200 },
+        { limit: Infinity, unit: 'year', div: 31536000 }
+    ];
+
+    const range = ranges.find(r => d < r.limit);
+    let val = Math.floor(d / range.div) + ' ' + range.unit + plural(Math.floor(d / range.div));
+
+    if (range.sub) {
+        const subVal = subUnit(d, range.div, range.sub.div);
+        if (subVal !== 0) {
+            val += `,&nbsp;${subVal} ${range.sub.unit}${plural(subVal)}`;
+        }
     }
 
-    if (w == 1) {
-        val = val.split(', ')[0];
-    }
+    if (w === 1) val = val.split(',')[0];
 
-    if (val == 'Just now') {
-        return val;
-    } else {
-        return val === undefined ? 'unknown' : val + ' ago';
-    }
+    return val + ' ago';
 }
 
 function formatPhoneNumber(phoneNumber) {
     const cleaned = phoneNumber.replace(/\D/g, '');
 
-    if (cleaned.length < 4) {
-        return cleaned;
-    }
+    if (cleaned.length < 4) return cleaned;
 
     const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-        return `${match[1]}-${match[2]}-${match[3]}`;
-    }
+    if (match) return `${match[1]}-${match[2]}-${match[3]}`;
 
     return cleaned;
 }
 
 function validateEmail(email) {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-    return emailRegex.test(email);
+    return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
 }
 
 class Calculate {
-    distance(lat1, lon1, lat2, lon2) {
-        var R = 6371;
-        var dLat = this.toRadians(lat2 - lat1);
-        var dLon = this.toRadians(lon2 - lon1);
-        var lat1 = this.toRadians(lat1);
-        var lat2 = this.toRadians(lat2);
+    distance(lat1, lon1, lat2, lon2, metric = false) {
+        var R = 6371,
+            dLat = this.deg2rad(lat2 - lat1),
+            dLon = this.deg2rad(lon2 - lon1),
+            a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2),
+            c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
+            km = R * c,
+            dist = metric ? km : km / 1.60934;
 
-        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        var d = R * c;
-
-        return (d / 1.609).toFixed(1);
+        return dist;
     }
 
     bearing(startLat, startLng, destLat, destLng) {
-        startLat = this.toRadians(startLat);
-        startLng = this.toRadians(startLng);
-        destLat = this.toRadians(destLat);
-        destLng = this.toRadians(destLng);
+        startLat = this.deg2rad(startLat);
+        startLng = this.deg2rad(startLng);
+        destLat = this.deg2rad(destLat);
+        destLng = this.deg2rad(destLng);
 
         let y = Math.sin(destLng - startLng) * Math.cos(destLat),
             x = Math.cos(startLat) * Math.sin(destLat) - Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng),
             brng = Math.atan2(y, x);
 
-        brng = this.toDegrees(brng);
-
-        return this.getCompassDirection((brng + 360) % 360);
+        return this.getCompassDirection((this.rad2deg(brng) + 360) % 360);
     }
 
     getCompassDirection(bearing) {
-        let direction = '',
-            tmp = Math.round(bearing / 22.5);
-
-        switch (tmp) {
-            case 1: direction = "NNE"; break;
-            case 2: direction = "NE"; break;
-            case 3: direction = "ENE"; break;
-            case 4: direction = "East"; break;
-            case 5: direction = "ESE"; break;
-            case 6: direction = "SE"; break;
-            case 7: direction = "SSE"; break;
-            case 8: direction = "South"; break;
-            case 9: direction = "SSW"; break;
-            case 10: direction = "SW"; break;
-            case 11: direction = "WSW"; break;
-            case 12: direction = "West"; break;
-            case 13: direction = "WNW"; break;
-            case 14: direction = "NW"; break;
-            case 15: direction = "NNW"; break;
-            default: direction = "North";
-        }
-
-        return direction;
+        const dir = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+        return dir[Math.round(bearing / 22.5) % 16];
     }
 
-    toRadians(degrees) {
-        return degrees * Math.PI / 180;
+    deg2rad(d) {
+        return d * Math.PI / 180;
     }
 
-    toDegrees(radians) {
-        return radians * 180 / Math.PI;
+    rad2deg(r) {
+        return r * 180 / Math.PI;
     }
 }
 
@@ -278,6 +244,10 @@ function numberFormat(n, d = 2) {
     return Intl.NumberFormat('en-US', {
         maximumFractionDigits: d
     }).format(n);
+}
+
+function getUserToken() {
+    return document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null;
 }
 
 async function getFires() {
@@ -288,7 +258,7 @@ async function getFires() {
     if (userLocation) {
         let content = '';
 
-        resp.features.forEach((f) => {
+        resp.features.forEach(f => {
             const lat = f.geometry.coordinates[1],
                 lon = f.geometry.coordinates[0],
                 dist = calc.distance(lat, lon, userLocation.lat, userLocation.lon);
@@ -299,8 +269,8 @@ async function getFires() {
                     url = f.properties.url.replace('wildfire/', 'fires/'),
                     bear = calc.bearing(lat, lon, userLocation.lat, userLocation.lon);
 
-                content += '<div class="data-item"><div class="item"><a target="blank" href="https://www.mapofire.com/' + url + '">' + name + (type != 'Smoke Check' ? ' Fire' : '') + '</a>' +
-                    '<span class="data">' + dist + ' miles ' + bear + ' of you</span></div></div>'
+                content += '<div class="data-item"><div class="item"><a target="blank" href="https://www.mapofire.com/' + url + '">' + 
+                    name + (type != 'Smoke Check' ? ' Fire' : '') + '</a><span class="data">' + dist + ' miles ' + bear + ' of you</span></div></div>';
             }
         });
 
@@ -314,19 +284,14 @@ function getMyLoc(target) {
             const resp = await api(apiURL.replace('v1', 'v2') + 'geocode/reverse', [
                 ['lat', position.coords.latitude],
                 ['lon', position.coords.longitude]
-            ]),
-                a = resp.geocode.city,
+            ]);
+
+            const a = resp.geocode.city,
                 b = resp.geocode.state_name,
                 c = resp.geocode.zip_code,
                 lat = resp.geocode.lat,
                 lon = resp.geocode.lon,
-                d = {
-                    city: a,
-                    state: b,
-                    zip: c,
-                    lat: lat,
-                    lon: lon
-                };
+                d = { city: a, state: b, zip: c, lat: lat, lon: lon };
 
             document.querySelector('input[name=city]').value = a;
             document.querySelector('input[name=state]').value = b;
@@ -341,22 +306,30 @@ function getMyLoc(target) {
 }
 
 function findFire(wfid) {
-    wildfires.forEach((f) => {
-        if (f.properties.wfid == wfid) {
-            return f;
-        }
-    });
-
-    return null;
+    return wildfires.find(f => f.properties.wfid == wfid) ?? null;
 }
 
-function getStatus(s, n) {
-    if (s == '' && n == '') {
-        return 'active';
-    } else {
-        return (s == null ? (n.search('contain') >= 0 ? 'contained' : (n.search('control') >= 0 ? 'controlled' : 'active')) : (s.Out ? 'out' : (s.Control ? 'controlled' : (s.Contain ? 'contained' : ''))));
+/*function getStatus(s, n, t = 'Wildfire', ac = '0') {
+    let a = ac.toString().toLowerCase();
+    if (!s && !n) return 'active';
+
+    if (s) {
+        if (s.Out) return 'out';
+        if (s.Control) return 'controlled';
+        if (s.Contain) return 'contained';
+        if (Object.keys(s).length > 0) return '';
     }
-}
+
+    const notes = n?.toLowerCase() || '';
+    if (notes.includes('contain')) return 'contained';
+    if (notes.includes('control')) return 'controlled';
+
+    if (t == 'Smoke Check' && (a == '0' || a == 'unknown' || a == '')) {
+        return 'unknown';
+    }
+
+    return 'active';
+}*/
 
 async function downloadUserData() {
     try {
@@ -386,24 +359,58 @@ async function downloadUserData() {
     }
 }
 
+function downloadFile(name, url) {
+    const link = document.createElement('a');
+    link.href = 'https://cdn.mapotrails.com/userGIS/' + url;
+    link.download = name;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    return true;
+}
+
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+
+    const sizes = ['bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+
+    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 async function getFavoriteFires() {
-    let content = '';
-    const resp = await api('https://www.mapofire.com/api/v1/trackFires/list', [
+    return await api('https://www.mapofire.com/api/v1/trackFires/list', [
         ['token', token],
         ['meta', 1]
     ]);
+}
+
+function displayFavFires(resp) {
+    let content = '',
+        anyValid = false;
 
     if (resp.fires && resp.fires.length > 0) {
-        resp.fires.forEach((f) => {
-            let name = f.name,
-                type = f.type,
-                geo = f.geo,
-                url = f.url;
+        resp.fires.forEach(f => {
+            const isValid = findFire(f.wfid) == null ? false : true;
 
-            content += '<div class="data-item" data-wfid="' + f.wfid + '"><div class="item"><a target="blank" href="https://www.mapofire.com/' + url + '">' + name + (type != 'Smoke Check' ? ' Fire' : '') + '</a>' +
-                '<span class="data">' + geo + '</span></div><div class="item ctrl"><div id="unfollow" style="margin-left:0.5em" data-wfid="' + f.wfid + '" title="Unfollow this incident" class="far fa-ellipsis-vertical control"></div></div></div></div>'
+            if (isValid) {
+                const name = f.name,
+                    type = f.type,
+                    geo = f.geo,
+                    url = f.url;
+
+                content += '<div class="data-item" data-wfid="' + f.wfid + '"><div class="item"><a target="blank" href="https://www.mapofire.com/' + url + '">' + name + (type != 'Smoke Check' ? ' Fire' : '') + '</a>' +
+                    '<span class="data">' + geo + '</span></div><div class="item ctrl"><div id="unfollow" style="margin-left:0.5em" data-wfid="' + f.wfid + '" title="Unfollow this incident" class="far fa-ellipsis-vertical control"></div></div></div></div>';
+                anyValid = true;
+            }
         });
     } else {
+        content = '<div class="message info">You are not currently following any wildfires.</div>';
+    }
+
+    if (!anyValid) {
         content = '<div class="message info">You are not currently following any wildfires.</div>';
     }
 
@@ -412,7 +419,7 @@ async function getFavoriteFires() {
 
 async function getFavoriteTrails() {
     let content = '';
-    const resp = await api(host + usersAPI + 'favtrails');
+    const resp = await api(host + usersAPI + 'favtrails', [['token', token]]);
 
     if (resp.response && resp.response.length > 0) {
         resp.response.forEach((f) => {
@@ -430,43 +437,21 @@ async function getFavoriteTrails() {
     document.querySelector('#favtrails').innerHTML = content;
 }
 
-function formatBytes(bytes) {
-    if (bytes === 0) {
-        return '0 Bytes';
-    }
-
-    const sizes = ['bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-
-    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-function downloadFile(name, url) {
-    const link = document.createElement('a');
-    link.href = 'https://cdn.mapotrails.com/userGIS/' + url;
-    link.download = name;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    return true;
-}
-
 async function getUploads() {
     let content = '';
-    const resp = await api(host + usersAPI + 'userUploads');
+    const resp = await api(host + usersAPI + 'userUploads', [['token', token]]);
 
     if (resp.response && resp.response.length > 0) {
         content += '<div class="table-responsive"><table class="table small"><thead><tr><th>Name</th><th>Type</th><th>Size</th><th>Created</th></tr></thead><tbody>';
 
         resp.response.forEach((f) => {
-            content += '<tr><td><a href="#" onclick="downloadFile(\'' + f.fileName + '\', \'' + f.file + '\')">' + f.fileName + '</a></td><td>' + f.type + '</td><td>' + formatBytes(f.size) + '</td><td>' + timeAgo(f.created) + '</td></tr>';
+            content += '<tr><td><a href="#" onclick="downloadFile(\'' + f.fileName + '\', \'' + f.file + '\')">' + f.fileName + '</a></td><td>' +
+                f.type + '</td><td>' + formatBytes(f.size) + '</td><td>' + timeAgo(f.created) + '</td></tr>';
         });
 
         content += '</tbody></table></div>';
     } else {
-        content = '<div class="message info">You haven\'t uploaded any content to Map of Trails.</div>'
+        content = '<div class="message info">You haven\'t uploaded any content to Map of Trails.</div>';
     }
 
     document.querySelector('#uploads').innerHTML = content;
@@ -480,24 +465,20 @@ async function geocode(a, b) {
     document.querySelector('input[id=geoc]').value = json.geocode.near;
 
     document.querySelectorAll('select[name=state] option').forEach((e) => {
-        if (e.value == json.geocode.state) {
-            e.selected = true;
-        }
+        if (e.value == json.geocode.state) e.selected = true;
     });
 
     document.querySelector('select[name=state]').disabled = false;
 }
 
 function closeDialog() {
+    const dialog = document.querySelector('#dialog'),
+        popup = document.querySelector('#popup');
+
     document.querySelector('#shadow').style.display = 'none';
 
-    if (document.querySelector('#dialog')) {
-        document.querySelector('#dialog').remove();
-    }
-
-    if (document.querySelector('.popup')) {
-        document.querySelector('.popup').remove();
-    }
+    if (dialog) dialog.remove();
+    if (popup) popup.remove();
 }
 
 function createDialog(title, text, affirm = 'Yes', func) {
@@ -513,7 +494,7 @@ function createDialog(title, text, affirm = 'Yes', func) {
     document.body.appendChild(popup);
     shadow.style.display = 'block';
 
-    document.querySelector('#close-popup').addEventListener('click', (e) => {
+    document.querySelector('#close-popup').addEventListener('click', () => {
         document.querySelector('.popup').remove();
         shadow.style.display = 'none';
     });
@@ -527,9 +508,7 @@ async function unfollow(wfid) {
         closeDialog();
 
         document.querySelectorAll('#favfires .data-item').forEach((f) => {
-            if (f.getAttribute('data-wfid') == wfid) {
-                f.remove();
-            }
+            if (f.getAttribute('data-wfid') == wfid) f.remove();
         });
 
         if (total - 1 == 0) {
@@ -546,9 +525,7 @@ async function unfavorite(tid) {
         closeDialog();
 
         document.querySelectorAll('#favtrails .row').forEach((f) => {
-            if (f.getAttribute('data-tid') == tid) {
-                f.remove();
-            }
+            if (f.getAttribute('data-tid') == tid) f.remove();
         });
 
         if (total - 1 == 0) {
@@ -601,7 +578,7 @@ function addGPX() {
         n = document.querySelectorAll('ul#files li').length,
         modes = ['ATV Track', 'Gravel', 'Road', 'Single Track', 'Ski Line', 'Snowmobile', 'Tour'];
 
-    modes.forEach(function (e) {
+    modes.forEach(e => {
         ops += '<option value="' + e + '">' + e + '</option>';
     });
 
@@ -678,6 +655,7 @@ function billing() {
         shadow = document.querySelector('#shadow'),
         rs = document.querySelector('#resume'),
         cancels = document.querySelector('#cancels'),
+        popup = document.querySelector('.popup'),
         hash = window.location.hash,
         forcedUpgrade = hash.match(/upgrade=true/) != null;
 
@@ -707,18 +685,17 @@ function billing() {
             shadow.style.display = 'block';
 
             document.querySelector('#close-popup').addEventListener('click', (e) => {
-                document.querySelector('.popup').remove();
+                popup.remove();
                 shadow.style.display = 'none';
             });
 
             document.querySelector('#nvm').addEventListener('click', (e) => {
-                document.querySelector('.popup').remove();
+                popup.remove();
                 shadow.style.display = 'none';
             });
 
             document.querySelector('#modify-now').addEventListener('click', async (e) => {
-                const popup = document.querySelector('.popup'),
-                    shadow = document.querySelector('#shadow');
+                const shadow = document.querySelector('#shadow');
 
                 if (popup) {
                     popup.remove();
@@ -747,9 +724,7 @@ function billing() {
         });
 
         if (hash != '') {
-            if (forcedUpgrade) {
-                modify.click();
-            }
+            if (forcedUpgrade) modify.click();
         }
     }
 
@@ -859,20 +834,18 @@ async function doSearch(q) {
     if (q.length > 0) {
         const resp = await api(apiURL + 'search', [['citiesonly', 1], ['q', q]]);
 
-        resp.rs.forEach((s) => {
+        resp.rs.forEach(s => {
             results += '<div class="result" data-name="' + s.name + '" data-lat="' + s.lat + '" data-lon="' + s.lon + '">' + s.name + '</div>';
         });
 
-        if (results) {
-            document.querySelector('.search-results').innerHTML = results;
-        }
+        if (results) document.querySelector('.search-results').innerHTML = results;
     }
 }
 
 document.onreadystatechange = async () => {
     if (document.readyState != 'complete') {
         calc = new Calculate();
-        token = (/\btoken=(.*?)(?=;|$)/gm).exec(document.cookie)[1];
+        token = getUserToken();
     } else {
         if (document.querySelector('table thead.sortable') != null) {
             document.querySelectorAll('thead.sortable th').forEach((e) => {
@@ -892,19 +865,18 @@ document.onreadystatechange = async () => {
                             }
 
                             e.appendChild(c);
-                        }/* else {
-                            c.classList.add('fas', 'fa-sort');
-                        }*/
-                    }/* else {
-                        c.classList.add('fas', 'fa-sort');
-                    }*/
+                        }
+                    }
                 }
             });
         }
 
         if (pageName == 'home') {
-            getFires();
-            getFavoriteFires();
+            await Promise.all([
+                getFires(),
+                getFavoriteFires().then(response => { displayFavFires(response); })
+            ]);
+
             getFavoriteTrails();
             getUploads();
         }
@@ -914,7 +886,7 @@ document.onreadystatechange = async () => {
         }
 
         if (pageName == 'settings/location') {
-            document.querySelector('#q').addEventListener('focus', (e) => {
+            document.querySelector('#q').addEventListener('focus', () => {
                 const sr = document.querySelector('.search-results');
 
                 sr.style.display = 'block';
@@ -927,64 +899,40 @@ document.onreadystatechange = async () => {
         }
 
         if (pageName == 'settings/password') {
-            document.querySelector('input[name=pass]').addEventListener('focus', () => {
-                document.querySelector('.req').style.display = 'block';
+            const passInput = document.querySelector('input[name="pass"]'),
+                confirmInput = document.querySelector('input[name="confirm_pass"]'),
+                reqBox = document.querySelector('.req'),
+                meets = document.querySelector('#meets'),
+                rules = [
+                    { id: 'p1', test: v => v.length >= 8 },
+                    { id: 'p2', test: v => (/[0-9]/).test(v) },
+                    { id: 'p3', test: v => (/[a-z]/).test(v) },
+                    { id: 'p4', test: v => (/[A-Z]/).test(v) },
+                    { id: 'p5', test: v => (/[#$%^&@&*()+=\-\[\]';,.\/{}|":<>?~\\]/).test(v) }
+                ];
+
+            const show = el => el && (el.style.display = 'block'),
+                hide = el => el && (el.style.display = 'none');
+
+            passInput.addEventListener('focus', () => show(reqBox));
+            passInput.addEventListener('blur', () => hide(reqBox));
+
+            passInput.addEventListener('keyup', () => {
+                const value = passInput.value;
+
+                rules.forEach(rule => {
+                    document.querySelector(`#${rule.id}`).classList.toggle('met', rule.test(value));
+                });
             });
 
-            document.querySelector('input[name=pass]').addEventListener('blur', () => {
-                document.querySelector('.req').style.display = 'none';
-            });
+            confirmInput.addEventListener('focus', () => show(meets));
+            confirmInput.addEventListener('blur', () => hide(meets));
 
-            document.querySelector('input[name=pass').addEventListener('keyup', () => {
-                const pa = document.querySelector('input[name=pass]').value;
+            confirmInput.addEventListener('keyup', () => {
+                const match = confirmInput.value === passInput.value;
 
-                if (pa.length >= 8) {
-                    document.querySelector('span#p1').classList.add('met');
-                } else {
-                    document.querySelector('span#p1').classList.remove('met');
-                }
-
-                if (pa.match(/[A-Z]/gm) != null) {
-                    document.querySelector('span#p4').classList.add('met');
-                } else {
-                    document.querySelector('span#p4').classList.remove('met');
-                }
-
-                if (pa.match(/[a-z]/gm) != null) {
-                    document.querySelector('span#p3').classList.add('met');
-                } else {
-                    document.querySelector('span#p3').classList.remove('met');
-                }
-
-                if (pa.match(/[0-9]/gm) != null) {
-                    document.querySelector('span#p2').classList.add('met');
-                } else {
-                    document.querySelector('span#p2').classList.remove('met');
-                }
-
-                if (pa.match(/[#$%^&@&*()+=\-\[\]\';,.\/{}|":<>?~\\\\]/gm) != null) {
-                    document.querySelector('span#p5').classList.add('met');
-                } else {
-                    document.querySelector('span#p5').classList.remove('met');
-                }
-            });
-
-            document.querySelector('input[name=confirm_pass]').addEventListener('focus', () => {
-                document.querySelector('#meets').style.display = 'block';
-            });
-
-            document.querySelector('input[name=confirm_pass]').addEventListener('blur', () => {
-                document.querySelector('#meets').style.display = 'none';
-            });
-
-            document.querySelector('input[name=confirm_pass]').addEventListener('keyup', (e) => {
-                if (e.target.value == document.querySelector('input[name=pass]').value) {
-                    document.querySelector('#meets').style.color = 'var(--green)';
-                    document.querySelector('#meets').innerHTML = 'Your passwords match';
-                } else {
-                    document.querySelector('#meets').style.color = 'var(--red)';
-                    document.querySelector('#meets').innerHTML = 'Your passwords don\'t match';
-                }
+                meets.style.color = match ? 'var(--green)' : 'var(--red)';
+                meets.textContent = match ? 'Your passwords match' : 'Your passwords don’t match';
             });
         }
 
@@ -1011,7 +959,7 @@ document.onreadystatechange = async () => {
                     if (o.value == e.target.getZoom()) {
                         document.querySelector('select[name=zoom]').options.selectedIndex = n;
                     }
-                })
+                });
             }).setView(settings.center, settings.zoom)
                 .addLayer(terrain);
 
@@ -1199,16 +1147,16 @@ newMarker.setLatLng(L.latLng(lat, lon));
 });
 
 /* on popup save button *//*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       /* get values from popup and store them in hidden input fields *//*
-                                    wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
-                                    wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
-                                    wrap.querySelector('input[name="waypoint[name][]"]').value = name;
-                                    wrap.querySelector('input[name="waypoint[note][]"]').value = notes;
-                                    wrap.querySelector('input[name="waypoint[icon][]"]').value = icon;
-                                    
-                                    map.closePopup();
-                                    });
-                                    
-                                    /* on popup delete button *//*
+                                                                                                                        wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
+                                                                                                                        wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
+                                                                                                                        wrap.querySelector('input[name="waypoint[name][]"]').value = name;
+                                                                                                                        wrap.querySelector('input[name="waypoint[note][]"]').value = notes;
+                                                                                                                        wrap.querySelector('input[name="waypoint[icon][]"]').value = icon;
+                                                                                                                        
+                                                                                                                        map.closePopup();
+                                                                                                                        });
+                                                                                                                        
+                                                                                                                        /* on popup delete button *//*
 const markerDataContainer = document.createElement('div');
 markerDataContainer.id = 'waypoint-' + markerCounter;
  

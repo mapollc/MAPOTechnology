@@ -592,13 +592,13 @@ span.data {
     padding-right: 0.5em;
 }
 
-.message a {
+/*.message a {
     color: #eee;
 }
 
 .message a:hover {
     color: #fff;
-}
+}*/
 
 .card .message {
     padding: 0.5em;
@@ -779,7 +779,9 @@ label {
     display: none;
     /*margin-top: calc(-1em - 1px);*/
     width: 100%;
-    max-width: unset/*450px*/;
+    max-width: unset
+        /*450px*/
+    ;
     max-height: 200px;
     border-radius: 5px;
     border: 1px solid #e7e7e7;
@@ -975,11 +977,11 @@ form label+.input {
 .controls .btn-group {
     display: flex;
     gap: 0.5em;
-    margin: 0;
+    margin: 0 !important;
 }
 
 .controls .btn {
-    margin: 0;
+    margin: 0 !important;
     padding: 0.6em;
     font-size: 14px;
     line-height: 1;
@@ -1107,6 +1109,128 @@ form label+.input {
     transition: all .2s ease-in-out;
     background-color: #f3f3f3;
 }*/
+
+.cad-card {
+    display: block;
+    width: 100%;
+    border: 1px solid #333;
+    border-top: 4px solid #f44336;
+    background: #1e1e1e;
+    padding: 15px;
+    color: #e0e0e0;
+}
+
+.cad-card .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1em;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.cad-card .header .title {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.cad-card .header .details {
+    flex: 1 0 auto;
+    text-align: right;
+}
+
+.cad-card .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+    justify-items: flex-start;
+    align-items: center;
+    gap: 15px;
+}
+
+.cad-card .item div.label {
+    display: block;
+    margin-bottom: 5px;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cad-card .item input[type="number"] {
+    max-width: 106px;
+    padding: 4px 6px;
+    font-family: 'Roboto';
+    font-size: 16px;
+    background-color: #bfbfbf;
+    color: #000;
+    border: 0;
+    border-radius: 2px;
+    outline: none;
+}
+
+.cad-card .item input:disabled {
+    background-color: #aaa;
+    color: #333;
+    cursor: not-allowed;
+}
+
+.cad-card .item span {
+    display: block;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: #e9e9e9;
+}
+
+.cad-card .item span a:hover,
+.cad-card .item span a:visited:hover {
+    color: #92c3db;
+}
+
+.cad-card .item span small {
+    display: inline-block;
+    vertical-align: middle;
+    color: #cfb184;
+}
+
+.cad-card .coord {
+    color: #4dabf7 !important;
+    font-family: monospace;
+}
+
+.cad-card .status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 16px;
+}
+
+.cad-card .status-badge.active {
+    background-color: #ca1010;
+}
+
+.cad-card .status-badge.unknown {
+    background-color: #a91990;
+}
+
+.cad-card .status-badge.contained {
+    background-color: #fd8c22;
+    color: #fff;
+}
+
+.cad-card .status-badge.controlled {
+    background-color: #61a720;
+    color: #fff;
+}
+
+.cad-card .status-badge.out {
+    background-color: #444;
+}
 
 #files,
 #waypoints {
@@ -1470,6 +1594,10 @@ ul.settings li p.help {
     .table tbody td {
         min-width: 110px;
     }
+
+    .cad-card .grid {
+        grid-template-columns: repeat(1, minmax(200px, 1fr));
+    }
 }
 
 @media (max-width: 525px) {
@@ -1486,12 +1614,24 @@ ul.settings li p.help {
     .sub {
         text-align: center;
     }
+
+    .cad-card .header {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .cad-card .title {
+        justify-content: center;
+    }
+
+    .cad-card .header .details {
+        text-align: center;
+    }
 }
 
 footer .row {
     flex-direction: column;
     align-items: center;
-}
 }
 
 @media (max-width: 425px) {

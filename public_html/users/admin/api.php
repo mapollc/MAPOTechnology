@@ -1,24 +1,32 @@
 <?
 ////ini_set('display_errors', 1);
 ////error_reporting(E_ALL);
+ini_set('session.cookie_domain', '.mapotechnology.com');
 
 $allowed_origins = [
     "https://mapotechnology.com",
     "https://www.mapotechnology.com"
 ];
 
-header('Content-type: application/json');
 if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowed_origins)) {
     header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
 }
+header('Content-type: application/json');
 session_start();
-
-//echo json_encode(['test' => null]);
-//exit();
 
 require_once '/home/mapo/public_html/vendor/autoload.php';
 
 use UAParser\Parser;
+
+function getUserID() {
+    global $con;
+    global $_REQUEST;
+
+    if ($_REQUEST['token'] == 'null') return '';
+
+    $user = mysqli_fetch_assoc(mysqli_query($con, "SELECT uid FROM sessions WHERE token = '$_REQUEST[token]' LIMIT 1"));
+    return $user['uid'];
+}
 
 function deleteMapboxFeature($id)
 {
@@ -115,7 +123,8 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
 
         $out = \Stripe\Charge::retrieve($_REQUEST['charge'], []);
     } else if ($callback == 'userUploads') {
-        $sql = mysqli_query($con2, "SELECT * FROM userMapUploads WHERE uid = $_SESSION[uid] ORDER BY modified DESC");
+        $uid = getUserID();
+        $sql = mysqli_query($con2, "SELECT u.* FROM userMapUploads AS u WHERE uid = $uid ORDER BY u.modified DESC");
 
         while ($row = mysqli_fetch_assoc($sql)) {
             $out[] = $row;
@@ -150,12 +159,14 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
             $out = 'success';
         }
     } else if ($callback == 'favtrails') {
+        $uid = getUserID();
+
         if ($_REQUEST['method'] == 'remove') {
-            mysqli_query($con2, "DELETE FROM track_trails WHERE tid = '$_REQUEST[tid]' AND uid = '$_SESSION[uid]'");
+            mysqli_query($con2, "DELETE FROM track_trails WHERE tid = '$_REQUEST[tid]' AND uid = '$uid'");
 
             $out = array('success' => 1);
         } else {
-            $sql = mysqli_query($con2, "SELECT t.id, f.tid, t.type, title, stats FROM track_trails AS f LEFT JOIN trails AS t ON t.id = f.tid LEFT JOIN stats AS s ON s.trail_id = f.tid WHERE uid = $_SESSION[uid] ORDER BY time DESC");
+            $sql = mysqli_query($con2, "SELECT t.id, f.tid, t.type, title, stats FROM track_trails AS f LEFT JOIN trails AS t ON t.id = f.tid LEFT JOIN stats AS s ON s.trail_id = f.tid WHERE uid = $uid ORDER BY f.time DESC");
 
             while ($row = mysqli_fetch_assoc($sql)) {
                 $trails[] = array('id' => $row['id'], 'title' => $row['title'], 'url' => guideUrl($row['title'], $row['type'], $row['tid']), 'stats' => unserialize($row['stats']));

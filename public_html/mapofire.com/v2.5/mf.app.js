@@ -516,13 +516,14 @@ function debounce(fn, wait) {
     };
 }
 
-async function api(url, fields = null) {
+async function api(uri, fields = null, v2 = false) {
     if (!navigator.onLine) {
         console.error('You are not connected to the internet');
         return null;
     }
 
-    let result;
+    let result,
+        url = v2 ? uri.replace('v1', 'v2') : uri;
 
     const isExternal = url.includes('weather.gov') || url.includes('unl.edu'),
         isInternal = url.includes(config.apiURL) || url.includes(config.apiURL.replace('v1', 'v2')) || url.includes(config.host),
@@ -681,12 +682,12 @@ class Convert {
         return deg + "&deg; " + min + "' " + sec + '" ' + dir;
     }
 
-    rad2deg(rad) {
-        return rad / (Math.PI * 180);
+    rad2deg(r) {
+        return r / (Math.PI * 180);
     }
 
-    deg2rad(deg) {
-        return deg * (Math.PI / 180);
+    deg2rad(d) {
+        return d * (Math.PI / 180);
     }
 
     speed(spd, u) {
@@ -1454,11 +1455,10 @@ class ClickListener {
 
     account() {
         if (!settings.user) {
-            const getGUID = RegExp(/guid=(.*)/g).exec(document.cookie),
-                guid = getGUID ? getGUID[1] : null;
-
-            window.location.href = config.domain + 'secure/login?service=' + getPlatform() + '&next=' + encodeURIComponent(window.location.href) + (guid ? '&guid=' + guid : '');
-
+            const guid = document.cookie.split('; ').find(row => row.startsWith('guid='))?.split('=')[1] || null,
+            url = config.domain.replace('www', 'auth') + 'login?service=' + getPlatform() + '&next=' + encodeURIComponent(window.location.href) + (guid ? '&guid=' + guid : '');
+            ////console.log(url);
+            window.location.href = url;
             return;
         }
 

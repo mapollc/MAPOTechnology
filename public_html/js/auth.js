@@ -1,6 +1,9 @@
-let apiURL = 'https://api.mapotechnology.com/v1/',
+const apiURL = 'https://api.mapotechnology.com/v1/',
     apiKey = 'c196d0958608ad2b7d4af2be078ecc54',
     submitBtn = document.querySelector('input[type=submit]'),
+    city = document.querySelector('#city'),
+    userLocation = document.querySelector('input[name=location]'),
+    cityResults = document.querySelector('#cityResults'),
     stateLabels = {
         'AL': 'Alabama',
         'AK': 'Alaska',
@@ -53,11 +56,29 @@ let apiURL = 'https://api.mapotechnology.com/v1/',
         'WV': 'West Virginia',
         'WI': 'Wisconsin',
         'WY': 'Wyoming'
+    },
+    ucwords = (s) => {
+        const smallWords = new Set(['a', 'an', 'the', 'is', 'of', 'and', 'or', 'for', 'to', 'in', 'on', 'at', 'by', 'with']);
+        return s.split(' ').map((word, i) => i === 0 || !smallWords.has(word.toLowerCase()) ? word.charAt(0).toUpperCase() + word.slice(1) : word.toLowerCase()).join(' ');
+    },
+    createError = (msg) => {
+        removeErrors();
+        document.querySelector('form').insertAdjacentHTML('beforebegin', '<div id="loginerrors" class="message error">' + msg + '</div>');
+    },
+    removeErrors = () => {
+        const e = document.querySelector('#loginerrors');
+        if (e) e.remove();
+    },
+    nameValidation = (field) => {
+        if (field.value == '') return;
+
+        field.value = ucwords(field.value.toLowerCase()).replace(/\bMc([a-z])/g, (match, letter) => {
+            return 'Mc' + letter.toUpperCase();
+        });
     };
 
 class SSO {
     async request(data, method = null) {
-        let resp;
         data.append('key', apiKey);
 
         return await fetch(apiURL + 'user' + (method ? '/' + method : ''), {
@@ -67,44 +88,12 @@ class SSO {
         });
     }
 
-    uniqueDID(s) {
+    /*uniqueDID(s) {
         return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s))
             .then(h => {
                 return Array.from(new Uint8Array(h)).map(byte => byte.toString(16).padStart(2, '0')).join('');
             });
-    }
-
-    loginWithGoogle(r) {
-        removeErrors();
-
-        submitBtn.value = 'Signing you in...';
-        submitBtn.disabled = true;
-
-        const fd = new FormData();
-        fd.append('google', 1);
-        fd.append('token', r);
-
-        document.querySelector('input[name=email]').disabled = true;
-        document.querySelector('input[name=pass]').disabled = true;
-
-        if (document.querySelector('input[name=service]')) {
-            fd.append('service', document.querySelector('input[name=service]').value);
-        }
-
-        if (document.querySelector('input[name=next]')) {
-            fd.append('next', document.querySelector('input[name=next]').value);
-        }
-
-        if (document.querySelector('input[name=subscribe]')) {
-            fd.append('subscribe', document.querySelector('input[name=subscribe]').value);
-        }
-
-        if (document.querySelector('input[name=price_id]')) {
-            fd.append('price_id', document.querySelector('input[name=price_id]').value);
-        }
-
-        this.doLogin(fd);
-    }
+    }*/
 
     doLogin(fd) {
         this.request(fd, 'login').then(async (resp) => {
@@ -114,22 +103,36 @@ class SSO {
                 submitBtn.value = submitBtn.getAttribute('data-o');
                 submitBtn.disabled = false;
                 createError(api.msg);
+                return;
             }
 
-            if (api.auth) {
-                window.location.href = api.next;
-            }
+            if (api.auth) window.location.href = api.next;
         });
+    }
+
+    loginWithGoogle(r) {
+        removeErrors();
+
+        if (submitBtn) submitBtn.value = 'Signing you in...';
+        if (submitBtn) submitBtn.disabled = true;
+
+        const fd = new FormData();
+        fd.append('google', 1);
+        fd.append('token', r);
+
+        ['service', 'next', 'subscribe', 'price_id'].forEach((n) => {
+            const el = document.querySelector(`input[name=${n}]`);
+            if (el) fd.append(n, el.value);
+        });
+
+        this.doLogin(fd);
     }
 
     login() {
         removeErrors();
+
         const fd = new FormData();
-
-        document.querySelectorAll('#login input').forEach((e) => {
-            fd.append(e.getAttribute('name'), e.value);
-        });
-
+        document.querySelectorAll('#login input').forEach((e) => fd.append(e.getAttribute('name'), e.value));
         this.doLogin(fd);
     }
 
@@ -146,10 +149,14 @@ class SSO {
                 submitBtn.value = submitBtn.getAttribute('data-o');
                 submitBtn.disabled = false;
                 createError(api.msg);
-            } else {
-                document.querySelector('.wrapper h1').insertAdjacentHTML('afterend', '<p style="font-size:18px;font-weight:100;text-align:center;line-height:1.5;margin:25px 0">Your password was successfully reset. Please check your email for a link to reset your password.</p>');
-                document.querySelector('#forgot').style.display = 'none';
+                return;
             }
+
+            document.querySelector('.wrapper h1').insertAdjacentHTML(
+                'afterend',
+                '<p style="font-size:18px;font-weight:100;text-align:center;line-height:1.5;margin:25px 0">Your password was successfully reset. Please check your email for a link to reset your password.</p>'
+            );
+            document.querySelector('#forgot').style.display = 'none';
         });
     }
 
@@ -157,11 +164,10 @@ class SSO {
         removeErrors();
         const fd = new FormData();
 
-        fd.append('verify', document.querySelector('input[name=verify]').value);
-        fd.append('email', document.querySelector('input[name=email]').value);
-        fd.append('oauth_token', document.querySelector('input[name=oauth_token]').value);
-        fd.append('pass', document.querySelector('input[name=pass]').value);
-        fd.append('confirm_pass', document.querySelector('input[name=confirm_pass]').value);
+        ['verify', 'email', 'oauth_token', 'pass', 'confirm_pass'].forEach((n) => {
+            const el = document.querySelector(`input[name=${n}]`);
+            if (el) fd.append(n, el.value);
+        });
 
         this.request(fd, 'reset').then(async (resp) => {
             const api = await resp.json();
@@ -170,23 +176,21 @@ class SSO {
                 submitBtn.value = submitBtn.getAttribute('data-o');
                 submitBtn.disabled = false;
                 createError(api.msg);
-            } else if (api.response == 'success') {
-                window.location.href = 'login?reset=1';
+                return;
             }
+
+            window.location.href = 'login?reset=1';
         });
     }
 
     invitation() {
         const fd = new FormData();
 
-        fd.append('ip', document.querySelector('input[name=ip]').value);
-        fd.append('invite_code', document.querySelector('input[name=invite_code]').value);
-        fd.append('org_key', document.querySelector('input[name=org_key]').value);
-        fd.append('email', document.querySelector('input[name=email]').value);
-        fd.append('first_name', document.querySelector('input[name=first_name]').value);
-        fd.append('last_name', document.querySelector('input[name=last_name]').value);
-        fd.append('pass', document.querySelector('input[name=pass]').value);
-        fd.append('confirm_pass', document.querySelector('input[name=confirm_pass]').value);
+        ['ip', 'invite_code', 'org_key', 'email', 'first_name', 'last_name', 'pass', 'confirm_pass']
+            .forEach((n) => {
+                const el = document.querySelector(`input[name=${n}]`);
+                if (el) fd.append(n, el.value)
+            });
 
         this.request(fd, 'invitation').then(async (resp) => {
             const api = await resp.json();
@@ -196,22 +200,21 @@ class SSO {
                 submitBtn.disabled = false;
 
                 createError(api.msg);
-            } else {
-
+                return;
             }
         });
     }
 
     confirmation() {
-        const fd = new FormData();
+        const fd = new FormData(),
+            sub = document.querySelector('input[name=subscriber]');
 
-        fd.append('ip', document.querySelector('input[name=ip]').value);
-        fd.append('oauth_token', document.querySelector('input[name=oauth_token]').value);
-        fd.append('email', document.querySelector('input[name=email]').value);
+        ['ip', 'oauth_token', 'email'].forEach((n) => {
+            const el = document.querySelector(`input[name=${n}]`);
+            if (el) fd.append(n, el.value);
+        });
 
-        if (document.querySelector('input[name=subscriber]')) {
-            fd.append('subscriber', document.querySelector('input[name=subscriber]').value);
-        }
+        if (sub) fd.append('subscriber', sub.value);
 
         this.request(fd, 'confirmation').then(async (resp) => {
             const api = await resp.json();
@@ -219,15 +222,14 @@ class SSO {
             if (api.response == 'error') {
                 submitBtn.value = submitBtn.getAttribute('data-o');
 
-                if (api.code != 2) {
-                    submitBtn.disabled = false;
-                }
-
+                if (api.code != 2) submitBtn.disabled = false;
                 createError(api.msg);
-            } else {
-                if (api.response == 'success') {
-                    window.location.href = './login?confirm=1&valid=1' + (api.subscribed ? '&src=mapofire&subscriber=1&next=' + encodeURIComponent('https://mapofire.com?ref=new_subscriber=1') : '');
-                }
+                return;
+            }
+
+            if (api.response == 'success') {
+                window.location.href = './login?confirm=1&valid=1' + (api.subscribed ? '&src=mapofire&subscriber=1&next=' +
+                    encodeURIComponent('https://mapofire.com?ref=new_subscriber=1') : '');
             }
         });
     }
@@ -236,29 +238,20 @@ class SSO {
         removeErrors();
         const fd = new FormData();
 
-        fd.append('ip', document.querySelector('input[name=ip]').value);
-        fd.append('location', document.querySelector('input[name=location]').value);
-        fd.append('first_name', document.querySelector('input[name=first_name]').value);
-        fd.append('last_name', document.querySelector('input[name=last_name]').value);
-        fd.append('email', document.querySelector('input[name=email]').value);
-        fd.append('phone', document.querySelector('input[name=phone]').value);
-        fd.append('pass', document.querySelector('input[name=pass]').value);
-        fd.append('confirm_pass', document.querySelector('input[name=confirm_pass]').value);
+        ['ip', 'location', 'first_name', 'last_name', 'email', 'phone', 'pass', 'confirm_pass']
+            .forEach((n) => {
+                const el = document.querySelector(`input[name=${n}]`);
+                if (el) fd.append(n, el.value)
+            });
+
         fd.append('tos', document.querySelector('input[name=tos]').checked ? 1 : 0);
 
         if (document.querySelector('input[name=subscribe]')) {
-            fd.append('subscribe', document.querySelector('input[name=subscribe]').value);
-            fd.append('price_id', document.querySelector('input[name=price_id]').value);
-
-            if (document.querySelector('input[name=product_key]')) {
-                fd.append('product_key', document.querySelector('input[name=product_key]').value);
-            }
-
-            if (document.querySelector('input[name=trial]')) {
-                fd.append('trial', document.querySelector('input[name=trial]').value);
-            }
+            ['subscribe', 'price_id', 'product_key', 'trial'].forEach((n) => {
+                const el = document.querySelector(`input[name=${n}]`);
+                if (el) fd.append(n, el.value);
+            });
         }
-
 
         this.request(fd, 'register?1').then(async (resp) => {
             const api = await resp.json();
@@ -267,7 +260,10 @@ class SSO {
                 submitBtn.value = submitBtn.getAttribute('data-o');
                 submitBtn.disabled = false;
                 createError(api.msg);
-            } else if (api.response == 'success') {
+                return;
+            }
+
+            if (api.response == 'success') {
                 if (api.subscribe) {
                     window.location.href = api.next;
                 } else {
@@ -277,9 +273,8 @@ class SSO {
                         yayMsg = 'Thank you for subscribing! Your account was succesfully created. Please check your email for a confirmation link to verify your account.';
                     }
 
-                    if (document.querySelector('#crfas')) {
-                        document.querySelector('#crfas').remove();
-                    }
+                    const crfas = document.querySelector('#crfas');
+                    if (crfas) crfas.remove();
 
                     document.querySelector('.wrapper h1').insertAdjacentHTML('afterend', '<p style="font-size:18px;font-weight:100;text-align:center;line-height:1.5;margin:25px 0">' + yayMsg + '</p>');
                     document.querySelector('#register').style.display = 'none';
@@ -289,50 +284,36 @@ class SSO {
     }
 }
 
-function createError(msg) {
-    removeErrors();
-    document.querySelector('form').insertAdjacentHTML('beforebegin', '<div id="loginerrors" class="message error">' + msg + '</div>');
-}
-
-function removeErrors() {
-    const e = document.querySelector('#loginerrors');
-
-    if (e) {
-        e.remove();
-    }
-}
-
 function loginWithGoogle() {
     new SSO().loginWithGoogle(gtoken);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (typeof gtoken !== 'undefined') setTimeout(loginWithGoogle, 250);
     const sso = new SSO();
 
-    if (document.querySelector('#confirmation')) {
-        document.querySelector('#confirmation').addEventListener('submit', (e) => {
+    const confirmation = document.querySelector('#confirmation'),
+        invitation = document.querySelector('#invitation'),
+        login = document.querySelector('#login'),
+        register = document.querySelector('#register'),
+        forgot = document.querySelector('#forgot');
+
+    const addSubmitListener = (form, fn, submitText = 'Loading...') => {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-
-            sso.confirmation();
-
-            submitBtn.value = 'Verifying...';
+            fn();
+            submitBtn.value = submitText;
             submitBtn.disabled = true;
         });
-    }
+    };
 
-    if (document.querySelector('#invitation')) {
-        document.querySelector('#invitation').addEventListener('submit', (e) => {
-            e.preventDefault();
+    if (confirmation) addSubmitListener(confirmation, () => sso.confirmation(), 'Verifying...');
+    if (invitation) addSubmitListener(invitation, () => sso.invitation());
+    if (login) addSubmitListener(login, () => sso.login());
+    if (forgot) addSubmitListener(forgot, () => qs('input[name=verify]') ? sso.reset() : sso.forgot());
+    if (register) addSubmitListener(register, () => sso.register());
 
-            sso.invitation();
-
-            //submitBtn.value = 'Verifying...';
-            //submitBtn.disabled = true;
-        });
-    }
-
-    if (document.querySelector('#login')) {
-        /*const unique = {
+    /*const unique = {
             'user-agent': navigator.userAgent,
             'ip-address': ipaddr,
             'language': navigator.language,
@@ -345,247 +326,147 @@ document.addEventListener('DOMContentLoaded', () => {
         sso.uniqueDID(unique).then(hash => {
             document.querySelector('input[name=uniqueDID]').value = hash;
         });*/
-        if (typeof gtoken !== 'undefined') {
-            loginWithGoogle();
-        }
 
-        document.querySelector('#login').addEventListener('submit', (e) => {
-            e.preventDefault();
+    if (register) {
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            try {
+                const resp = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude + '&format=json&addressdetails=1'),
+                    nom = await resp.json(),
+                    a = nom.address.city || nom.address.town || nom.address.village || nom.address.hamlet || nom.address.county,
+                    b = nom.address.state,
+                    c = nom.address.postcode,
+                    d = { city: a, state: b, zip: c, lat: nom.lat, lon: nom.lon };
 
-            sso.login();
-
-            submitBtn.value = 'Loading...';
-            submitBtn.disabled = true;
-        });
-    } else if (document.querySelector('#forgot')) {
-        document.querySelector('#forgot').addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            if (document.querySelector('input[name=verify]')) {
-                sso.reset();
-            } else {
-                sso.forgot();
+                city.value = a + ', ' + b + (c ? ' ' + c : '');
+                userLocation.value = JSON.stringify(d);
+            } catch (error) {
+                console.error(error);
+                city.value = 'Unable to get your location';
+                userLocation.value = '';
             }
-
-            submitBtn.value = 'Loading...';
-            submitBtn.disabled = true;
+        }, (error) => {
+            city.value = 'Unable to get your location';
+            userLocation.value = '';
+            console.error('Geolocation error:' + error.message);
         });
-    } else if (document.querySelector('#register')) {
-        document.querySelector('#register').addEventListener('submit', (e) => {
-            e.preventDefault();
 
-            sso.register();
-
-            submitBtn.value = 'Loading...';
-            submitBtn.disabled = true;
-        });
-    }
-
-    if (document.querySelector('#register')) {
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + position.coords.latitude + '&lon=' + position.coords.longitude + '&format=json&addressdetails=1')
-                    .then(async (resp) => {
-                        const nom = await resp.json();
-                        let a = (nom.address.city ? nom.address.city : (nom.address.town ? nom.address.town : (nom.address.village ? nom.address.village : (nom.address.hamlet ? nom.address.hamlet : nom.address.county)))),
-                            b = nom.address.state,
-                            c = nom.address.postcode,
-                            d = {
-                                city: a,
-                                state: b,
-                                zip: c,
-                                lat: nom.lat,
-                                lon: nom.lon
-                            };
-
-                        document.querySelector('#city').value = a + ', ' + b + (c ? ' ' + c : '');
-                        document.querySelector('input[name=location]').value = JSON.stringify(d);
-                    })
-                    .catch((error) => {
-                        console.error(error);
-
-                        document.querySelector('#city').value = 'Unable to get your location';
-                        document.querySelector('input[name=location]').value = '';
-                    });
-            }, (error) => {
-                document.querySelector('#city').value = 'Unable to get your location';
-                document.querySelector('input[name=location]').value = '';
-                console.error('Geolocation error:' + error.message);
-            });
-
-        document.querySelector('#wrong').addEventListener('click', (e) => {
-            const city = document.querySelector('#city');
-
-            city.setAttribute('placeholder', 'Search for a city...');
+        document.querySelector('#wrong').addEventListener('click', () => {
             city.value = '';
             city.disabled = false;
+            city.setAttribute('placeholder', 'Search for a city...');
             city.focus();
         });
 
+        document.querySelector('input[name="first_name"]').addEventListener('blur', (e) => nameValidation(e.target));
+        document.querySelector('input[name="last_name"]').addEventListener('blur', (e) => nameValidation(e.target));
         document.querySelector('input[type=tel]').addEventListener('keyup', (e) => {
-            const t = e.target.value;
+            let t = e.target.value;
+            if (!t) return;
+            if (/[^$,.\d-]/.test(t)) e.target.value = '';
+            else if (t.length < 12 && t.includes('-')) e.target.value = t.replaceAll('-', '');
+            else e.target.value = t.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+        });
 
-            if (t != '') {
-                if (t.match(/[^$,.\d-]/)) {
-                    e.target.value = '';
-                } else {
-                    if (t.length < 12 && t.search('-') >= 0) {
-                        e.target.value = t.replaceAll('-', '');
-                    } else {
-                        e.target.value = t.replace(/(\d\d\d)(\d\d\d)(\d\d\d\d)/, '$1-$2-$3');
-                    }
-                }
+        city.addEventListener('focus', () => {
+            cityResults.innerHTML = '<p style="padding:10px">Searching...</p>';
+            cityResults.style.display = 'block';
+        });
+
+        city.addEventListener('keyup', async (e) => {
+            const v = e.target.value;
+
+            if (!v) {
+                cityResults.innerHTML = '<p style="padding:10px">Searching...</p>';
+                cityResults.style.display = 'block';
+                return;
             }
-        });
 
-        document.querySelector('#city').addEventListener('focus', () => {
-            document.querySelector('#cityResults').innerHTML = '<p style="padding:10px">Searching...</p>';
-            document.querySelector('#cityResults').style.display = 'block';
-        });
-
-        document.querySelector('#city').addEventListener('keyup', async (e) => {
-            const results = document.querySelector('#cityResults'),
-                v = e.target.value;
-
-            if (v == '') {
-                results.innerHTML = '<p style="padding:10px">Searching...</p>';
-                results.style.display = 'block';
-            } else {
+            try {
                 const fd = new FormData();
                 fd.append('key', apiKey);
                 fd.append('citiesonly', 1);
                 fd.append('q', v);
 
-                await fetch(apiURL + 'search', {
-                    method: 'POST',
-                    body: fd
-                }).then(async (resp) => {
-                    const r = await resp.json();
+                const resp = await fetch(apiURL + 'search', { method: 'POST', body: fd }),
+                    r = await resp.json();
 
-                    if (r.rs) {
-                        let res = '';
-                        for (var i = 0; i < r.rs.length; i++) {
-                            res += '<div class="result" data-lat="' + r.rs[i].lat + '" data-lon="' + r.rs[i].lon + '" data-name="' + r.rs[i].name + '">' + r.rs[i].name + '</div>';
-                        }
-
-                        results.innerHTML = res;
-                    } else {
-                        results.innerHTML = '<p style="padding:10px">No results found...</p>';
-                    }
-                }).catch((error) => {
-                    console.error(error);
-                });
+                if (r.rs) {
+                    results.innerHTML = r.rs.map(r => `<div class="result" data-lat="${r.lat}" data-lon="${r.lon}" data-name="${r.name}">${r.name}</div>`).join('');
+                } else {
+                    cityResults.innerHTML = '<p style="padding:10px">No results found...</p>';
+                }
+            } catch (error) {
+                console.error(error);
             }
         });
 
         document.querySelector('input[name=tos]').addEventListener('click', (e) => {
             submitBtn.classList.toggle('dis');
-
-            if (e.target.checked) {
-                submitBtn.disabled = false;
-            } else {
-                submitBtn.disabled = true;
-            }
+            submitBtn.disabled = !e.target.checked;
         });
     }
 
-    if (document.querySelector('#showpwd')) {
-        document.querySelector('#showpwd').addEventListener('click', (e) => {
-            if (e.target.getAttribute('data-d') == 'true') {
-                e.target.innerHTML = 'hide';
-                e.target.setAttribute('data-d', 'false');
-                document.querySelector('input[name=pass]').setAttribute('type', 'text');
-            } else {
-                e.target.innerHTML = 'show';
-                e.target.setAttribute('data-d', 'true');
-                document.querySelector('input[name=pass]').setAttribute('type', 'password');
-            }
+    const showPWD = document.querySelector('#showpwd'),
+        pass = document.querySelector('input[name=pass]');
+
+    if (showPWD) {
+        showPWD.addEventListener('click', (e) => {
+            const isShown = e.target.dataset.d === 'true';
+            e.target.innerHTML = isShown ? 'hide' : 'show';
+            e.target.dataset.d = isShown ? 'false' : 'true';
+            pass.type = isShown ? 'text' : 'password';
         });
     }
 
-    if (document.querySelector('#register') || document.querySelector('#invitation') || (document.querySelector('#forgot') && document.querySelector('input[name=verify]'))) {
-        document.querySelector('input[name=pass]').addEventListener('focus', () => {
-            document.querySelector('.req').style.display = 'block';
+    if (register || invitation || (forgot && document.querySelector('input[name=verify]'))) {
+        const confirmPass = document.querySelector('input[name=confirm_pass]');
+
+        pass.addEventListener('focus', () => document.querySelector('.req').style.display = 'block');
+        pass.addEventListener('blur', () => document.querySelector('.req').style.display = 'none');
+        pass.addEventListener('keyup', (e) => {
+            const pa = e.target.value,
+                conds = [
+                    ['#p1', pa.length >= 8],
+                    ['#p4', /[A-Z]/.test(pa)],
+                    ['#p3', /[a-z]/.test(pa)],
+                    ['#p2', /\d/.test(pa)],
+                    ['#p5', /[#$%^&@&*()+=\-\[\]\';,.\/{}|":<>?~\\]/.test(pa)]
+                ];
+
+            conds.forEach(([id, met]) => {
+                const el = document.querySelector(id);
+                if (el) el.classList.toggle('met', met);
+            });
         });
 
-        document.querySelector('input[name=pass]').addEventListener('blur', () => {
-            document.querySelector('.req').style.display = 'none';
-        });
-
-        document.querySelector('input[name=pass]').addEventListener('keyup', (e) => {
-            const pa = e.target.value;
-
-            if (pa.length >= 8) {
-                document.querySelector('span#p1').classList.add('met');
-            } else {
-                document.querySelector('span#p1').classList.remove('met');
-            }
-
-            if (pa.match(/[A-Z]/gm) != null) {
-                document.querySelector('span#p4').classList.add('met');
-            } else {
-                document.querySelector('span#p4').classList.remove('met');
-            }
-
-            if (pa.match(/[a-z]/gm) != null) {
-                document.querySelector('span#p3').classList.add('met');
-            } else {
-                document.querySelector('span#p3').classList.remove('met');
-            }
-
-            if (pa.match(/[0-9]/gm) != null) {
-                document.querySelector('span#p2').classList.add('met');
-            } else {
-                document.querySelector('span#p2').classList.remove('met');
-            }
-
-            if (pa.match(/[#$%^&@&*()+=\-\[\]\';,.\/{}|":<>?~\\\\]/gm) != null) {
-                document.querySelector('span#p5').classList.add('met');
-            } else {
-                document.querySelector('span#p5').classList.remove('met');
-            }
-        });
-
-        document.querySelector('input[name=confirm_pass]').addEventListener('focus', () => {
-            document.querySelector('#meets').style.dislay = 'block';
-        });
-
-        document.querySelector('input[name=confirm_pass]').addEventListener('blur', () => {
-            document.querySelector('#meets').style.display = 'none';
-        });
-
-        document.querySelector('input[name=confirm_pass]').addEventListener('keyup', (e) => {
-            if (e.target.value == document.querySelector('input[name=pass]').value) {
-                document.querySelector('#meets').style.color = 'var(--green)';
-                document.querySelector('#meets').innerHTML = 'Your passwords match';
-            } else {
-                document.querySelector('#meets').style.color = 'var(--red)';
-                document.querySelector('#meets').innerHTML = 'Your passwords don\'t match';
-            }
+        confirmPass.addEventListener('focus', () => document.querySelector('#meets').style.dislay = 'block');
+        confirmPass.addEventListener('blur', () => document.querySelector('#meets').style.display = 'none');
+        confirmPass.addEventListener('keyup', (e) => {
+            const match = e.target.value === pass.value;
+            meets.style.color = match ? 'var(--green)' : 'var(--red)';
+            meets.innerHTML = match ? 'Your passwords match' : 'Your passwords don\'t match';
         });
     }
 });
 
 document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('result')) {
-        let n = e.target.getAttribute('data-name'),
-            c = n.match(/(.*?),/gm),
-            s = n.match(/[A-Z][A-Z]/gm),
-            z = n.match(/[0-9]+/gm);
+    if (!e.target.classList.contains('result')) return;
 
-        document.querySelector('#city').value = n;
-        document.querySelector('#city').disabled = true;
-        document.querySelector('#cityResults').style.display = 'none';
-        document.querySelector('#cityResults').innerHTML = '';
+    let n = e.target.dataset.name,
+        c = n.match(/(.*?),/gm),
+        s = n.match(/[A-Z]{2}/gm),
+        z = n.match(/\d+/gm);
 
-        var json = {
-            "city": c[0],
-            "state": stateLabels[s[0]],
-            "zip": z[0],
-            "lat": e.target.getAttribute('data-lat'),
-            "lon": e.target.getAttribute('data-lon')
-        };
+    city.value = n;
+    city.disabled = true;
+    cityResults.style.display = 'none';
+    cityResults.innerHTML = '';
 
-        document.querySelector('input[name=location]').value = JSON.stringify(json);
-    }
+    userLocation.value = JSON.stringify({
+        "city": c?.[0],
+        "state": stateLabels[s?.[0]],
+        "zip": z?.[0],
+        "lat": e.target.dataset.lat,
+        "lon": e.target.dataset.lon
+    });
 });

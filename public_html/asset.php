@@ -10,8 +10,9 @@ function rep($t) {
     return str_replace(['.js', '.css'], ['', ''], $t);
 }
 
-#ini_set('display_errors', 1);
-#error_reporting(E_ALL);
+////ini_set('display_errors', 1);
+////error_reporting(E_ALL);
+
 header('Cache-Control: must-revalidate, public, max-age=604800');
 header('Expires: '.gmdate('D, d M Y H:i:s \G\M\T', time() + 604800));
 header('Pragma: cache');
