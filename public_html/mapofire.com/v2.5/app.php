@@ -91,7 +91,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
         <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@200;400;500;600;700&display=swap">
         <? if (isset($_GET['version'])) { ?>
             <link rel="stylesheet" href="<?= $baseURL ?>v<?= $version ?>/mf.supp.css" media="print" onload="this.media='all'">
-        <?} else { ?>
+        <? } else { ?>
             <link rel="stylesheet" href="<?= $baseURL ?>src/css/mf.supp-<?= $version ?>.css" media="print" onload="this.media='all'">
         <? } ?>
     </noscript>

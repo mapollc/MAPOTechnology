@@ -128,6 +128,9 @@ if ($_SERVER['REQUEST_URI'] == '/') {
                         case 'crowdsource':
                             $file = 'crowdsource';
                             break;
+                        case 'climo':
+                            $file = 'fireclimo';
+                            break;
                         case 'dispatch':
                             $file = 'dispatch';
                             break;

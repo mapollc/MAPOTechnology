@@ -1,6 +1,6 @@
 RewriteEngine On
 RewriteBase /
-Options -Indexes
+Options +Indexes
 #Options +FollowSymlinks
 
 DirectoryIndex index.php index.html

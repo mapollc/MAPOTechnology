@@ -86,6 +86,7 @@ export const legend = {
         /*{ 'burnProb': 'Burn Probability' },*/
         { 'fhsz': 'CAL FIRE Hazard Severity Zones' },
         { 'lands': 'Land Ownership' },
+        { 'spc': 'SPC Fire Climatology' },
         { 'rth': 'Wildfire Risk to Homes' },
         { 'wet': 'Wildfire Exposure Type' },
         { 'bp': 'Wildfire Likelihood' },
@@ -147,6 +148,18 @@ export const legend = {
             ['color', 'L', '#ff0000', 'Lightning'],
             ['color', 'R', '#ff0000', 'Recreation'],
             ['color', 'B', '#ff0000', 'Burn Environment']
+        ],
+        'spc': [
+            ['color', '', '#fff', '2-5%'],
+            ['color', '', '#ffdfbf', '5-10%'],
+            ['color', '', '#ffab57', '10-15%'],
+            ['color', '', '#ff7500', '15-20%'],
+            ['color', '', '#ee3f00', '20-25%'],
+            ['color', '', '#c80b00', '25-30%'],
+            ['color', '', '#9f0000', '30-35%'],
+            ['color', '', '#760000', '35-40%'],
+            ['color', '', '#500000', '40-45%'],
+            ['color', '', '#270000', '45-50%']
         ],
         'erc': [
             ['color', '', '#38a800', '<60% higher than normal'],
@@ -1002,6 +1015,10 @@ class Subscription {
 }
 
 export class Layers {
+    constructor() {
+        this.spcClimoDate = Date.parse('1/1/2026');
+    }
+
     init() {
         /* add lightning layers to the map */
         this.lightning();
@@ -1604,6 +1621,137 @@ export class Layers {
                     },
                     layout: {
                         visibility: 'visible'
+                    }
+                });
+            }
+        }
+    }
+
+    async spcClimo(day = 0, update = false, absolute = false) {
+        let dateObj = new Date(this.spcClimoDate);
+        const monthLengths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+        if (absolute) {
+            let dayCounter = 0;
+            for (let m = 0; m < 12; m++) {
+                if (day < dayCounter + monthLengths[m]) {
+                    dateObj.setMonth(m);
+                    dateObj.setDate(day - dayCounter + 1);
+                    break;
+                }
+                dayCounter += monthLengths[m];
+            }
+            this.spcClimoDate = dateObj.getTime();
+        } else if (day !== 0) {
+            this.spcClimoDate += day * 86400 * 1000;
+            dateObj = new Date(this.spcClimoDate);
+        }
+
+        const dayOfYear = (d) => {
+            let doy = 0;
+            for (let i = 0; i < d.getMonth(); i++) doy += monthLengths[i];
+            return doy + d.getDate() - 1;
+        };
+
+        const doy = dayOfYear(dateObj),
+            control = document.querySelector('.spcTimeline');
+
+        if (!control) {
+            const options = () => {
+                let ops = '';
+                const start = new Date('1/1/2026').getTime();
+                for (let i = 0; i < 365; i++) {
+                    const date = new Date(start + (86400 * 1000 * i));
+                    ops += `<option value="${i}">${config.longMonths[date.getMonth()]} ${date.getDate()}</option>`;
+                }
+                return ops;
+            }
+
+            const el = document.createElement('div');
+            el.classList.add('spcTimeline');
+            el.style.maxWidth = '225px';
+            el.innerHTML = `
+                <div style="justify-content:space-evenly">
+                    <span id="tlb" data-action="spc-climo" data-dir="back" class="fas fa-backward-step tlcontrol disabled"></span>
+                    <select id="spcDates" data-action="spcDates">${options()}</select>
+                    <span id="tlf" data-action="spc-climo" data-dir="next" class="fas fa-forward-step tlcontrol"></span>
+                </div>`;
+            document.querySelector('.app-wrapper').appendChild(el);
+        } else {
+            const select = control.querySelector('#spcDates');
+            select.selectedIndex = day;
+
+            control.querySelector('#tlb').setAttribute('data-date', doy - 1);
+            control.querySelector('#tlf').setAttribute('data-date', doy + 1);
+
+            control.querySelector('#tlb').classList.toggle('disabled', doy === 0);
+            control.querySelector('#tlf').classList.toggle('disabled', doy === 364);
+        }
+
+        // Fetch geojson using day of year
+        const name = 'spc_climo',
+            geojson = await api(config.host + 'api/v1/climo', [['day', doy]]);
+
+        if (update) {
+            map.getSource(name).setData(geojson);
+        } else {
+            if (!map.getSource(name)) {
+                map.addSource(name, {
+                    type: 'geojson',
+                    data: geojson
+                });
+            }
+
+            if (!map.getLayer(name + '_outline')) {
+                map.addLayer({
+                    id: name + '_outline',
+                    type: 'line',
+                    source: name,
+                    paint: {
+                        'line-color': ['get', 'fill'],
+                        'line-width': 1,
+                        'line-opacity': 0.75
+                    },
+                    layout: { visibility: 'visible' }
+                });
+            }
+
+            if (!map.getLayer(name + '_fill')) {
+                map.addLayer({
+                    id: name + '_fill',
+                    type: 'fill',
+                    source: name,
+                    paint: {
+                        'fill-color': ['get', 'fill'],
+                        'fill-opacity': 0.7
+                    },
+                    layout: { visibility: 'visible' }
+                });
+            }
+
+            if (!map.getSource(name + '_prob')) {
+                map.addLayer({
+                    id: name + '_prob',
+                    type: 'symbol',
+                    source: name,
+                    minzoom: 6.75,
+                    paint: {
+                        'text-color': '#333',
+                        'text-halo-color': '#f9f9f9',
+                        'text-halo-blur': 1,
+                        'text-halo-width': 1
+                    },
+                    layout: {
+                        'symbol-placement': 'line',
+                        'symbol-spacing': 400,
+                        'text-font': config.fonts.din(),
+                        'text-field': ['concat', '>=100 acre probability: ', ['to-string', ['to-number', ['get', 'title']]], '%'],
+                        'text-size': 13,
+                        'text-max-angle': 30,
+                        'text-padding': 5,
+                        'text-pitch-alignment': 'viewport',
+                        'text-rotation-alignment': 'map',
+                        'text-offset': [0, 1]
                     }
                 });
             }
@@ -3370,7 +3518,7 @@ export class Wildfires {
     }
 
     findFire(id) {
-        return activeIncidents.get(id) ?? null;
+        return activeIncidents.get(parseInt(id)) ?? null;
     }
 
     async getTrackedFires() {
@@ -3775,7 +3923,7 @@ export class Wildfires {
                         'text-max-width': 10,
                         'text-anchor': 'top',
                         'text-offset': this.fireTextSize(type, 'offset'),
-                        'text-allow-overlap': false,
+                        'text-allow-overlap': true,
                         'text-letter-spacing': 0.05,
                         visibility: vis
                     }
@@ -3870,12 +4018,7 @@ export class Wildfires {
 
             // if user has in-app caching enabled
             if (settings.fire().cache()) {
-                await cache.put(wfid, new Response(
-                    JSON.stringify({
-                        data: data,
-                        timestamp: Date.now()
-                    })
-                ));
+                await cache.put(wfid, new Response(JSON.stringify({ data: data, timestamp: Date.now() })));
             }
 
             return data;
@@ -3892,155 +4035,147 @@ export class Wildfires {
         return `<b>${type.toUpperCase()}</b> in ${fire.geometry.geo.county} County, ${fire.geometry.state}${land}`;
     }
 
-    zoomToIncident(lat, lon) {
-        /*const canvas = document.querySelector('#map canvas'),
-            mapHeight = canvas.height - (modal?.offsetHeight || 0),
-            targetPixels = map.project([lon, lat]),
-            visibleWidth = canvas.width,
-            offsetX = targetPixels.x - (visibleWidth / 2),
-            offsetY = targetPixels.y - (mapHeight / 2);
-
-        map.easeTo({
-            zoom: 10, center: map.unproject([
-                canvas.width / 2 + offsetX,
-                canvas.height / 2 + offsetY
-            ])
-        });*/
-        map.easeTo({
-            zoom: 10,
-            center: [lon, lat]
-        });
-    }
-
-    incident(wfid, zoomIn = true) {
+    async incident(wfid, zoomIn = true) {
         const TWO_MONTHS = 60 * 60 * 24 * (config.daysInYear() / 6);
+
+        //modal.addEventListener('modalOpened', () => {
+        if (zoomIn) {
+            const coords = this.findFire(wfid);
+            if (coords) {
+                map.easeTo({
+                    zoom: 10,
+                    center: coords.geometry.coordinates,
+                    duration: 1500,
+                    easing: t => t * (2 - t),
+                    essential: true
+                });
+            }
+        }
+        //});
+
         new ClickListener().openModal('fire');
 
         // get incident json from cache or API
-        this.cacheIncident(wfid).then(async (incident) => {
-            if (zoomIn) this.zoomToIncident(incident.fire.geometry.lat, incident.fire.geometry.lon);
+        const incident = await this.cacheIncident(wfid),
+            fire = incident.fire,
+            fireLat = fire.geometry.lat,
+            fireLon = fire.geometry.lon,
+            prop = fire.properties,
+            nearbyEvacs = await new NearbyEvacuations(fireLat, fireLon).get(),
+            fname = this.fireName(prop.fireName, prop.type, prop.incidentId),
+            near = fire.geometry.near,
+            acresHistory = prop.acres_history/*,
+            nearbyPerims = this.getAssociatedPerim(prop.fireName)*/;
 
-            const fire = incident.fire,
-                fireLat = fire.geometry.lat,
-                fireLon = fire.geometry.lon,
-                prop = fire.properties,
-                nearbyEvacs = await new NearbyEvacuations(fireLat, fireLon).get();
+        // change the URL in the browser
+        setHeaders(fname + ' near ' + near.split(' of ')[1] + ' - Current Incident Information and Wildfire Map', prop.url,
+            'See current information on the ' + fname + ' near ' + near.split(' of ')[1] + '.');
 
-            const fname = this.fireName(prop.fireName, prop.type, prop.incidentId),
-                near = fire.geometry.near,
-                acresHistory = prop.acres_history/*,
-                nearbyPerims = this.getAssociatedPerim(prop.fireName)*/;
+        if (fire.inciweb && fire.inciweb.photo) {
+            document.querySelector('meta[property="og:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
+            document.querySelector('meta[name="twitter:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
+        }
 
-            // change the URL in the browser
-            setHeaders(fname + ' near ' + near.split(' of ')[1] + ' - Current Incident Information and Wildfire Map', prop.url,
-                'See current information on the ' + fname + ' near ' + near.split(' of ')[1] + '.');
+        if (fire.inciweb && fire.inciweb.photo) {
+            document.querySelector('meta[property="og:image:alt"]').setAttribute('content', fire.inciweb.photo.caption);
+        }
 
-            if (fire.inciweb && fire.inciweb.photo) {
-                document.querySelector('meta[property="og:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
-                document.querySelector('meta[name="twitter:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
+        // send data to service worker
+        config.workers.incident.postMessage({
+            fire: {
+                json: incident,
+                fireName: fname,
+                geoLocate: this.geoLocate(fire.protection, prop.type, fire),
+                status: this.getStatus(prop.status, prop.notes, prop.type, prop.acres)
+            },
+            role: settings.getUser().role(),
+            hasPermissions: settings.hasPermissions(),
+            vars: {
+                domain: config.domain,
+                center: this.getDispatchCenter(fire.protection.dispatch),
+                agencies: this.agencies,
+                tracked: tracked,
+                acres: conversion.sizeFormat(prop.acres, true, false),
+                sizeUnit: conversion.sizeUnit(),
+                reported: timeAgo(fire.time.discovered),
+                updated: config.curTime.getTime() - fire.time.updated * 1000 > TWO_MONTHS ? dateTime(fire.time.updated, true) : timeAgo(fire.time.updated)
             }
-
-            if (fire.inciweb && fire.inciweb.photo) {
-                document.querySelector('meta[property="og:image:alt"]').setAttribute('content', fire.inciweb.photo.caption);
-            }
-
-            // send data to service worker
-            config.workers.incident.postMessage({
-                fire: {
-                    json: incident,
-                    fireName: fname,
-                    geoLocate: this.geoLocate(fire.protection, prop.type, fire),
-                    status: this.getStatus(prop.status, prop.notes, prop.type, prop.acres)
-                },
-                role: settings.getUser().role(),
-                hasPermissions: settings.hasPermissions(),
-                vars: {
-                    domain: config.domain,
-                    center: this.getDispatchCenter(fire.protection.dispatch),
-                    agencies: this.agencies,
-                    tracked: tracked,
-                    acres: conversion.sizeFormat(prop.acres, true, false),
-                    sizeUnit: conversion.sizeUnit(),
-                    reported: timeAgo(fire.time.discovered),
-                    updated: config.curTime.getTime() - fire.time.updated * 1000 > TWO_MONTHS ? dateTime(fire.time.updated, true) : timeAgo(fire.time.updated)
-                }
-            });
-
-            /* add content to modal after service worker finishes */
-            config.workers.incident.onmessage = (event) => {
-                modal.querySelector('.content').innerHTML = event.data;
-
-                const acHis = modal.querySelector('#acres_history'),
-                    scrd = modal.querySelector('span.coords');
-
-                /* if nearby evacuations exist, show them on the modal */
-                if (nearbyEvacs) {
-                    let theEvacs = '';
-                    const formatArray = (arr) => {
-                        if (arr.length === 2) {
-                            return arr.join(' & ');
-                        } else if (arr.length >= 3) {
-                            const lastTwo = arr.slice(-2).join(' & '),
-                                firstPart = arr.slice(0, -2);
-                            return firstPart.join(', ') + ', ' + lastTwo;
-                        } else if (arr.length === 1) {
-                            return arr[0];
-                        } else {
-                            return '';
-                        }
-                    };
-
-                    if (nearbyEvacs.length > 0) {
-                        nearbyEvacs.reverse().forEach((z) => {
-                            const nomen = (z.level == 1 ? 'Be Ready' : (z.level == 2 ? 'Be Set' : 'Leave Immediately'));
-
-                            theEvacs += '<div class="evac level' + z.level + '"><h3><span class="evac-circ l' + z.level + '"></span>Level ' + z.level + ': ' + nomen + '</h3><details><summary>' +
-                                formatArray(z.counties) + ' Count' + (z.counties.length == 1 ? 'y' : 'ies') +
-                                '</summary><span style="font-size:15px">' + z.notes.join(', ') + '</span></details></div>';
-                        });
-
-                        document.querySelector('.incident #incWX').insertAdjacentHTML('beforebegin', '<div class="evacs">' + theEvacs + '</div>');
-                    }
-                }
-
-                /* get incident weather */
-                this.doWeather([fireLon, fireLat]);
-
-                /* remove any features that require a user to be subscribed */
-                if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
-                    acHis.style.height = 'unset';
-                    acHis.innerHTML = '<a href="#" data-action="marketing-cta" data-utm="acres_history" class="btn btn-orange btn-lg" onclick="return false"><i class="fas fa-lock"></i>Upgrade to see growth history</a>';
-                    /*document.querySelector('#acres_history').parentElement.parentElement.remove();*/
-
-                    /* blur coordinates */
-                    scrd.innerHTML = '0.0000 -0.0000';
-                    scrd.style.cursor = 'default';
-                    scrd.classList.add('blur');
-                } else {
-                    scrd.style.cursor = 'pointer';
-
-                    /* load the script for the chart, then create the acreage chart */
-                    if (acresHistory != null) {
-                        const c = this;
-
-                        if (!highchartsLoad) {
-                            loadScript('https://code.highcharts.com/highcharts.js')
-                                .then(() => {
-                                    highchartsLoad = true;
-
-                                    loadScript('https://code.highcharts.com/modules/exporting.js').then(() => {
-                                        c.createChart(fname, prop.incidentId, acresHistory);
-                                    });
-                                });
-                        } else {
-                            c.createChart(fname, prop.incidentId, acresHistory);
-                        }
-                    } else {
-                        modal.querySelector('#acres_history_wrapper').remove();
-                    }
-                }
-            };
         });
+
+        /* add content to modal after service worker finishes */
+        config.workers.incident.onmessage = (event) => {
+            modal.querySelector('.content').innerHTML = event.data;
+
+            const acHis = modal.querySelector('#acres_history'),
+                scrd = modal.querySelector('span.coords');
+
+            /* if nearby evacuations exist, show them on the modal */
+            if (nearbyEvacs) {
+                let theEvacs = '';
+                const formatArray = (arr) => {
+                    if (arr.length === 2) {
+                        return arr.join(' & ');
+                    } else if (arr.length >= 3) {
+                        const lastTwo = arr.slice(-2).join(' & '),
+                            firstPart = arr.slice(0, -2);
+                        return firstPart.join(', ') + ', ' + lastTwo;
+                    } else if (arr.length === 1) {
+                        return arr[0];
+                    } else {
+                        return '';
+                    }
+                };
+
+                if (nearbyEvacs.length > 0) {
+                    nearbyEvacs.reverse().forEach((z) => {
+                        const nomen = (z.level == 1 ? 'Be Ready' : (z.level == 2 ? 'Be Set' : 'Leave Immediately'));
+
+                        theEvacs += '<div class="evac level' + z.level + '"><h3><span class="evac-circ l' + z.level + '"></span>Level ' + z.level + ': ' + nomen + '</h3><details><summary>' +
+                            formatArray(z.counties) + ' Count' + (z.counties.length == 1 ? 'y' : 'ies') +
+                            '</summary><span style="font-size:15px">' + z.notes.join(', ') + '</span></details></div>';
+                    });
+
+                    document.querySelector('.incident #incWX').insertAdjacentHTML('beforebegin', '<div class="evacs">' + theEvacs + '</div>');
+                }
+            }
+
+            /* get incident weather */
+            this.doWeather([fireLon, fireLat]);
+
+            /* remove any features that require a user to be subscribed */
+            if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
+                acHis.style.height = 'unset';
+                acHis.innerHTML = '<a href="#" data-action="marketing-cta" data-utm="acres_history" class="btn btn-orange btn-lg" onclick="return false"><i class="fas fa-lock"></i>Upgrade to see growth history</a>';
+                /*document.querySelector('#acres_history').parentElement.parentElement.remove();*/
+
+                /* blur coordinates */
+                scrd.innerHTML = '0.0000 -0.0000';
+                scrd.style.cursor = 'default';
+                scrd.classList.add('blur');
+            } else {
+                scrd.style.cursor = 'pointer';
+
+                /* load the script for the chart, then create the acreage chart */
+                if (acresHistory != null) {
+                    const c = this;
+
+                    if (!highchartsLoad) {
+                        loadScript('https://code.highcharts.com/highcharts.js')
+                            .then(() => {
+                                highchartsLoad = true;
+
+                                loadScript('https://code.highcharts.com/modules/exporting.js').then(() => {
+                                    c.createChart(fname, prop.incidentId, acresHistory);
+                                });
+                            });
+                    } else {
+                        c.createChart(fname, prop.incidentId, acresHistory);
+                    }
+                } else {
+                    modal.querySelector('#acres_history_wrapper').remove();
+                }
+            }
+        };
 
         return this;
     }
@@ -4933,7 +5068,7 @@ export const mapClick = async (e) => {
 
         map.getCanvas().style.cursor = 'auto';
         map.panTo([e.lngLat.lng, e.lngLat.lat]);
-        
+
         let data = null;
 
         // query the map for the county and state first before requesting from the API

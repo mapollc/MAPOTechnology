@@ -1,10 +1,10 @@
 <?
-/*if ($_SESSION['uid'] == 1) {
+if ($_REQUEST['devel'] == 1) {
     $stripeLive = false;
-}*/
+}
 
-require_once '/home/mapo/public_html/subs.inc.php';
 require_once '/home/mapo/stripe/init.php';
+require_once '/home/mapo/public_html/subs.inc.php';
 
 $stripe = new \Stripe\StripeClient($stripeSecretKey);
 
@@ -88,11 +88,11 @@ if (isset($_GET['checkout_id'])) {
                     if (str_contains($plan->getPriceName(), 'ignite')) {
                         $upgrade = true;
                         $newName = $plan->allPlans()[2]['name'];
-                        $newPlan = $plan->allPlans()[2]['price_id'][1]['id'];
+                        $newPlan = $plan->allPlans()[2]['price_id'][1][$_GET['devel'] == 1 ? 'id2' : 'id'];
                     } else {
                         $downgrade = true;
                         $newName = $plan->allPlans()[1]['name'];
-                        $newPlan = $plan->allPlans()[1]['price_id'][0]['id'];
+                        $newPlan = $plan->allPlans()[1]['price_id'][0][$_GET['devel'] == 1 ? 'id2' : 'id'];
                     }
 
                     try {

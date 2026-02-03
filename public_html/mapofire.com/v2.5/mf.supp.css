@@ -2153,7 +2153,8 @@ span.status.out {
     color: #444 !important;
 }
 
-.radar {
+.radar,
+.spcTimeline {
     position: absolute;
     left: 50%;
     bottom: var(--spacing);
@@ -2166,7 +2167,8 @@ span.status.out {
     box-shadow: 0 0 10px rgb(15 15 15 / 20%);
 }
 
-.radar .radarControl {
+.radar .radarControl,
+.spcTimeline .tlcontrol {
     min-width: 16px;
     font-size: 21px;
     cursor: pointer;
@@ -2174,11 +2176,25 @@ span.status.out {
     transition: all .15s ease-in-out;
 }
 
-.radar .radarControl:hover {
+.radar .radarControl:hover,
+.spcTimeline .tlcontrol:hover {
     color: #111;
 }
 
-.radar>div {
+.spcTimeline .tlcontrol.disabled {
+    color: #c9c9c9;
+    cursor: not-allowed;
+}
+
+.spcTimeline select {
+    font-size: 16px;
+    max-width: 130px;
+    padding: 0;
+    text-align: center;
+}
+
+.radar>div,
+.spcTimeline>div {
     display: flex;
     align-items: center;
     gap: var(--spacing);

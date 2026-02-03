@@ -91,12 +91,12 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
             // query for a specific user by name or email
             $where = '';
             if (isset($_GET['q'])) {
-                $where = "WHERE first_name LIKE '%" . $_GET['q'] . "%' OR last_name LIKE '%" . $_GET['q'] . "%' OR email LIKE '%" . $_GET['q'] . "%' OR phone LIKE '%" . $_GET['q'] . "%'";
+                $where = "WHERE first_name LIKE '%" . $_GET['q'] . "%' OR last_name LIKE '%" . $_GET['q'] . "%' OR u.email LIKE '%" . $_GET['q'] . "%' OR phone LIKE '%" . $_GET['q'] . "%'";
             }
             $order = ($_GET['sort'] != '' ? $_GET['sort'] : 'uid') . ' ' . ($_GET['order'] != '' ? $_GET['order'] : 'DESC');
 
             $rowsPerPage = 50;
-            $totalRows = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) AS totalRows FROM users $where"))['totalRows'];
+            $totalRows = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) AS totalRows FROM users AS u $where"))['totalRows'];
             $totalPages = ceil($totalRows / $rowsPerPage);
 
             $currentPage = isset($_GET['results']) ? $_GET['results'] : 1;

@@ -1,6 +1,6 @@
 <?
-ini_set('display_errors', 1);
-error_reporting(E_ERROR && E_PARSE);
+ini_set('display_errors', 0);
+error_reporting(E_ERROR || E_PARSE);
 ini_set('session.cookie_domain', '.mapotechnology.com');
 
 if (function_exists('opcache_invalidate')) {

@@ -748,6 +748,11 @@ class ChangeListener {
             win.href = config.host + 'archive/' + s + (win.search ? win.search : '') + (win.hash ? win.hash : '');
         }
     }
+
+    spcClimo() {
+        const offset = parseInt(this.target.value, 10);
+        config.layersHandler.spcClimo(offset, true, true);
+    }
 }
 
 function isVisible(div) {
@@ -1716,6 +1721,7 @@ window.addEventListener('change', (e) => {
                 settings.updateSpecial();
                 new (await loadUtils()).NWS().ndfd(true, target.id);
             },
+            'spcDates': () => changeListener.spcClimo(),
             'sfp-date': () => {
                 settings.updateSpecial();
                 config.layersHandler.sfp(true);

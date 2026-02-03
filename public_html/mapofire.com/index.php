@@ -168,6 +168,11 @@ $buildDate = date('Y-m-d\TH:i:sO', max($times));
 
 // load the php config file of all map layers
 require_once $root . 'layers.inc.php';
+$jsLayers = json_encode($layers);
+
+if ($version == '2.5') {
+    $jsLayers = str_replace('perms2', 'perms', preg_replace('/(,"perms":(true|false))/', '', $jsLayers));
+}
 
 // load the current index.php file for the version
 if (file_exists($root . 'v' . $version . '/app.php')) {
@@ -192,7 +197,7 @@ if (file_exists($root . 'v' . $version . '/app.php')) {
     defaultTitle='{{title}}',
     defaultDesc='{{desc}}'," .
     ($_GET['archive'] ? "historical='$_GET[archive]'," : '') .
-    "layers=" . json_encode($layers) . ";";
+    "layers=" . $jsLayers . ";";
 
     $javascript = preg_replace('/(\n|\r|\s{2,})/', '', $javascript);
 

@@ -116,69 +116,85 @@ const specificURL = window.location.origin + '/',
         'allFires': { layers: ['all_fires_layer', 'all_fire_title', 'ca_fires', 'ca_fire_title'] },
         'smokeChecks': { layers: ['smk_fires_layer', 'smk_fire_title'] },
         'rxBurns': { layers: ['rx_fires_layer', 'rx_fire_title'] },
+        'perimeters': {
+            layers: ['perimeters_outline', 'perimeters_fill', 'perimeters_title', 'ca_perimeters_outline',
+                'ca_perimeters_fill', 'ca_perimeters_title', 'aus_perimeters_outline', 'aus_perimeters_fill', 'aus_perimeters_title']
+        },
+        'modis24': { layers: ['modis24'], exe: () => { config.layersHandler.modis(1); } },
+        'modis48': { layers: ['modis48'], exe: () => { config.layersHandler.modis(2); } },
+        'modis72': { layers: ['modis72'], exe: () => { config.layersHandler.modis(3); } },
+
+        'evac': { layers: ['evac', 'evac_outline', 'evac_title'] },
+        'firemed': { layers: ['firemed'], exe: () => { config.layersHandler.firemed(); } },
+
         'lightning1': { layers: ['lightning1'] },
         'lightning24': { layers: ['lightning24'] },
-        //'nfdrs': { layers: ['nfdrs'], exe: () => { config.layersHandler.nfdrs(); } },
+        'wwas': { layers: ['wwas_fill', 'wwas_outline', 'wwas_title'], exe: async () => { new (await loadUtils()).NWS().get(); } },
+        'stns': { layers: ['stns', 'stns_text'], exe: () => { new Weather().raws(); } },
+        'visSatellite': { layers: ['satellite1'], exe: async () => { new (await loadUtils()).NWS().satellite(1); } },
+        'irSatellite': { layers: ['satellite2'], exe: async () => { new (await loadUtils()).NWS().satellite(2); } },
+        'wvSatellite': { layers: ['satellite3'], exe: async () => { new (await loadUtils()).NWS().satellite(3); } },
+
+        'ev': { layers: ['ev'], exe: () => { config.layersHandler.pnwVulnerability(); } },
+        'spcClimo': {
+            run: (checked) => {
+                if (checked) {
+                    config.layersHandler.spcClimo();
+                } else {
+                    map.removeLayer('spc_climo_fill');
+                    map.removeLayer('spc_climo_outline');
+                    map.removeLayer('spc_climo_prob');
+                    map.removeSource('spc_climo');
+                    document.querySelector('.spcTimeline').remove();
+                }
+            }
+        },
+        'nri': { layers: ['nri_outline', 'nri_fill'], exe: () => { config.layersHandler.nri(); } },
+        'rth': { layers: ['rth'], exe: () => { config.layersHandler.rth(); } },
+        'bp': { layers: ['bp'], exe: () => { config.layersHandler.bp(); } },
+        'whp': { layers: ['whp'], exe: () => { config.layersHandler.whp(); } },
+        'wet': { layers: ['wet'], exe: () => { config.layersHandler.wet(); } },
+        'drought': { layers: ['drought'], exe: () => { config.layersHandler.drought(); } },
+        'power': { layers: ['power'], exe: () => { config.layersHandler.power(); } },
+        'fuels': { layers: ['fuels', 'fuelsAK'], exe: () => { config.layersHandler.fuels(); } },
+
+        'nwsCWAs': { layers: ['nwsCWAs'], exe: () => { config.layersHandler.nwsCWAs(); } },
         'roads': { layers: ['roads'], exe: () => { config.layersHandler.roads(); } },
         'lands': { layers: ['lands'], exe: () => { config.layersHandler.lands(); } },
         'plss': { layers: ['plss'], exe: () => { config.layersHandler.plss(); } },
-        'countyBounds': { layers: ['countyBounds'], exe: () => { config.layersHandler.countyBounds(); } },
-        'nwsCWAs': { layers: ['nwsCWAs'], exe: () => { config.layersHandler.nwsCWAs(); } },
-        'evac': { layers: ['evac', 'evac_outline', 'evac_title'] },
-        'firemed': { layers: ['firemed'], exe: () => { config.layersHandler.firemed(); } },
-        'odfFDR': { layers: ['odfFDR', 'odfFDR_outline', 'odfFDR_title'], exe: () => { config.layersHandler.odfFDR(); } },
-        'calfireUnits': { layers: ['calfireUnits', 'calfireUnits_title'], exe: () => { config.layersHandler.calfireUnits(); } },
-        'cdfFHSZ': { layers: ['cdfFHSZ', 'cdfFHSZ_title'], exe: () => { config.layersHandler.cdfFHSZ(); } },
-        'calfireAircraft': { layers: ['calfireAircraft', 'calfireAircraft_title'], exe: () => { config.layersHandler.calfireAircraft(); } },
+        'dispatch': { layers: ['dispatch_outline', 'dispatch_title'], exe: () => { config.layersHandler.dispatch(); } },
+        'gaccBounds': { layers: ['gaccBounds', 'gaccBounds_title'], exe: () => { config.layersHandler.gaccBounds(); } },
+
         'hms': { layers: ['hms', 'hms_title'], exe: () => { config.layersHandler.hms(); } },
         'smokeFcst': { layers: ['smokeFcst'], exe: () => { config.layersHandler.smokeFcst(); } },
         'sfcSmoke': { layers: ['sfcSmoke'], exe: () => { config.layersHandler.sfcSmoke(); } },
         'viSmoke': { layers: ['viSmoke'], exe: () => { config.layersHandler.viSmoke(); } },
-        'fuels': { layers: ['fuels', 'fuelsAK'], exe: () => { config.layersHandler.fuels(); } },
-        'dispatch': { layers: ['dispatch_outline', 'dispatch_title'], exe: () => { config.layersHandler.dispatch(); } },
-        'gaccBounds': { layers: ['gaccBounds', 'gaccBounds_title'], exe: () => { config.layersHandler.gaccBounds(); } },
-        'perimeters': { layers: ['perimeters_outline', 'perimeters_fill', 'perimeters_title', 'ca_perimeters_outline', 'ca_perimeters_fill', 'ca_perimeters_title', 'aus_perimeters_outline', 'aus_perimeters_fill', 'aus_perimeters_title'] },
-        'nri': { layers: ['nri_outline', 'nri_fill'], exe: () => { config.layersHandler.nri(); } },
-        'power': { layers: ['power'], exe: () => { config.layersHandler.power(); } },
-        'modis24': { layers: ['modis24'], exe: () => { config.layersHandler.modis(1); } },
-        'modis48': { layers: ['modis48'], exe: () => { config.layersHandler.modis(2); } },
-        'modis72': { layers: ['modis72'], exe: () => { config.layersHandler.modis(3); } },
-        'ev': { layers: ['ev'], exe: () => { config.layersHandler.pnwVulnerability(); } },
-        'rth': { layers: ['rth'], exe: () => { config.layersHandler.rth(); } },
-        'wet': { layers: ['wet'], exe: () => { config.layersHandler.wet(); } },
-        'bp': { layers: ['bp'], exe: () => { config.layersHandler.bp(); } },
-        'whp': { layers: ['whp'], exe: () => { config.layersHandler.whp(); } },
-        'drought': { layers: ['drought'], exe: () => { config.layersHandler.drought(); } },
-        'visSatellite': { layers: ['satellite1'], exe: async () => { new (await loadUtils()).NWS().satellite(1); } },
-        'irSatellite': { layers: ['satellite2'], exe: async () => { new (await loadUtils()).NWS().satellite(2); } },
-        'wvSatellite': { layers: ['satellite3'], exe: async () => { new (await loadUtils()).NWS().satellite(3); } },
-        'wwas': { layers: ['wwas_fill', 'wwas_outline', 'wwas_title'], exe: async () => { new (await loadUtils()).NWS().get(); } },
-        'stns': { layers: ['stns', 'stns_text'], exe: () => { new Weather().raws(); } },
+
+        'countyBounds': { layers: ['countyBounds'], exe: () => { config.layersHandler.countyBounds(); } },
+        'odfFDR': { layers: ['odfFDR', 'odfFDR_outline', 'odfFDR_title'], exe: () => { config.layersHandler.odfFDR(); } },
+        'calfireUnits': { layers: ['calfireUnits', 'calfireUnits_title'], exe: () => { config.layersHandler.calfireUnits(); } },
+        'cdfFHSZ': { layers: ['cdfFHSZ', 'cdfFHSZ_title'], exe: () => { config.layersHandler.cdfFHSZ(); } },
+        'calfireAircraft': { layers: ['calfireAircraft', 'calfireAircraft_title'], exe: () => { config.layersHandler.calfireAircraft(); } },
+
         'airq': {
             run: (checked) => {
                 const i = setInterval(() => {
                     if (map.getSource('airq')) {
                         clearInterval(i);
-                        const visibility = checked ? 'visible' : 'none';
-                        map.setLayoutProperty('airQuality', 'visibility', visibility)
-                            .setLayoutProperty('airQuality_text', 'visibility', visibility);
+                        ['airQuality', 'airQuality_text'].forEach(n => map.setLayoutProperty(n, 'visibility', checked ? 'visible' : 'none'));
                     }
                 }, 500);
             }
         },
         'spc': {
             run: async (checked) => {
-                const visibility = checked ? 'visible' : 'none';
-
                 if (impact.style.display == 'flex' && impact.getAttribute('data-content') == 'layers') {
                     document.querySelector('#otlkType').disabled = !checked;
                     document.querySelector('#otlkDay').disabled = !checked;
                 }
 
                 if (map.getSource('outlook')) {
-                    map.setLayoutProperty('outlook_fill', 'visibility', visibility)
-                        .setLayoutProperty('outlook_outline', 'visibility', visibility)
-                        .setLayoutProperty('outlook_title', 'visibility', visibility);
+                    ['outlook_fill', 'outlook_outline', 'outlook_title'].forEach(n => map.setLayoutProperty(n, 'visibility', checked ? 'visible' : 'none'));
                 } else if (checked) {
                     new (await loadUtils()).NWS().spc();
                 }
@@ -212,9 +228,7 @@ const specificURL = window.location.origin + '/',
                 if (map.getSource('ndfd')) {
                     map.setLayoutProperty('ndfd', 'visibility', visibility);
 
-                    if (!checked) {
-                        document.querySelector('.ndfdLegend')?.remove();
-                    }
+                    if (!checked) document.querySelector('.ndfdLegend')?.remove();
                 } else if (checked) {
                     new (await loadUtils()).NWS().ndfd();
                 }
@@ -222,15 +236,10 @@ const specificURL = window.location.origin + '/',
         },
         'erc': {
             run: (checked) => {
-                const visibility = checked ? 'visible' : 'none';
-
-                if (impact.style.display == 'flex') {
-                    document.querySelector('#erc_time').disabled = !checked;
-                }
+                if (impact.style.display == 'flex') document.querySelector('#erc_time').disabled = !checked;
 
                 if (map.getSource('erc')) {
-                    map.setLayoutProperty('erc_fill', 'visibility', visibility);
-                    map.setLayoutProperty('erc_outline', 'visibility', visibility);
+                    ['erc_fill', 'erc_outline'].forEach(n => map.setLayoutProperty(n, 'visibility', checked ? 'visible' : 'none'));
                 } else if (checked) {
                     config.layersHandler.erc();
                 }
@@ -238,9 +247,7 @@ const specificURL = window.location.origin + '/',
         },
         'sfp': {
             run: (checked) => {
-                if (impact.style.display == 'flex') {
-                    document.querySelector('#sfpDateSelect').disabled = !checked;
-                }
+                if (impact.style.display == 'flex') document.querySelector('#sfpDateSelect').disabled = !checked;
 
                 if (map.getSource('sfp')) {
                     map.setLayoutProperty('sfp', 'visibility', checked ? 'visible' : 'none');
@@ -344,9 +351,6 @@ const specificURL = window.location.origin + '/',
             maxzoom: 16
         }]
     },
-    /*outdoors = {
-
-    },*/
     activeIncidents = new Map(),
     modal = document.querySelector('#modal'),
     impact = document.querySelector('#impact'),
@@ -487,25 +491,20 @@ config.tiles = {
 
 function notify(t, m, time = null) {
     const timing = (time == null ? (((m.split(' ').length / 5) + 0.5) * 1000) + 500 : time * 1000),
-        el = document.createElement('div');
+        el = document.createElement('div'),
+        icon = t == 'success' ? 'fa-check' : (t == 'info' ? 'fa-circle-info' : 'fa-circle-exclamation');
 
-    if (document.querySelector('div.alert')) {
-        document.querySelector('div.alert').remove();
-    }
+    document.querySelector('div.alert')?.remove();
 
     el.classList.add('alert', t);
 
-    if (modal.classList.contains('open')) {
-        el.classList.add('mo');
-    }
+    if (modal.classList.contains('open')) el.classList.add('mo');
 
     el.style.display = 'flex';
-    el.innerHTML = '<i class="fas ' + (t == 'success' ? 'fa-check' : (t == 'info' ? 'fa-circle-info' : 'fa-circle-exclamation')) + '"></i><p>' + m + '</p>';
+    el.innerHTML = '<i class="fas ' + icon + '"></i><p>' + m + '</p>';
     document.body.append(el);
 
-    setTimeout(() => {
-        el.remove();
-    }, timing);
+    setTimeout(() => { el.remove(); }, timing);
 }
 
 function debounce(fn, wait) {
@@ -563,11 +562,14 @@ async function api(uri, fields = null, v2 = false) {
 }
 
 function gmtime(s) {
-    var d = new Date(new Date().getTime() + (s * 1000)),
-        m = d.getUTCMonth() + 1,
-        t = d.getUTCFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (d.getUTCDate() < 10 ? '0' : '') + d.getUTCDate() + 'T' + (d.getUTCHours() < 10 ? '0' : '') + d.getUTCHours() + ':00:00';
+    const d = new Date(Date.now() + s * 1000),
+        pad = (n) => n.toString().padStart(2, '0'),
+        year = d.getUTCFullYear(),
+        month = pad(d.getUTCMonth() + 1),
+        day = pad(d.getUTCDate()),
+        hours = pad(d.getUTCHours());
 
-    return t;
+    return `${year}-${month}-${day}T${hours}:00:00`;
 }
 
 function sfpTimes() {
@@ -669,9 +671,7 @@ class Convert {
     }
 
     convertToDms(dd, isLng) {
-        var dir = dd < 0
-            ? isLng ? 'W' : 'S'
-            : isLng ? 'E' : 'N';
+        var dir = dd < 0 ? isLng ? 'W' : 'S' : isLng ? 'E' : 'N';
 
         var absDd = Math.abs(dd),
             deg = absDd | 0,
@@ -938,7 +938,7 @@ class ClickListener {
 
         const handle = modal.querySelector('.close'),
             viewportHeight = window.innerHeight,
-            openPosition = viewportHeight * (viewportHeight > 600 ? 0.4 : 0.3), // 40vh or 30vh if window height is < 600px
+            openPosition = viewportHeight * 0.3,    // 30 vh from top
             minTop = viewportHeight * 0.1,       // 10vh
             closedPosition = viewportHeight,     // 100%
             snapVelocity = 0.25,                 // px/ms
@@ -983,12 +983,12 @@ class ClickListener {
         modal.style.top = `${closedPosition}px`;
         modal.style.transition = 'top 0.85s ease';
 
+        // add event listener for when modal has finished opening
+        modal.addEventListener('transitionend', onTransitionEnd);
+
         requestAnimationFrame(() => {
             modal.style.top = `${openPosition}px`;
         });
-
-        // add event listener for when modal has finished opening
-        modal.addEventListener('transitionend', onTransitionEnd);
 
         if (handle) {
             handle.addEventListener('dblclick', () => {
@@ -1159,15 +1159,13 @@ class ClickListener {
     showLayers() {
         const scrollPosition = localStorage.getItem('mapofire.impactScroll');
 
-        if (config.layersMenu == null) {
-            this.createLayers();
-        }
+        if (config.layersMenu == null) this.createLayers();
 
         impact.innerHTML = impactHeader + config.layersMenu;
         impact.querySelector('#a').innerHTML = 'Layers';
 
         config.listOfLayers.filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
-            const hasPermissions = settings.hasPermissions(layer.perms2),
+            const hasPermissions = settings.hasPermissions(layer.perms),
                 isChecked = (layer.default && !settings.checkboxes()) || (settings.checkboxes() && settings.isEnabled(layer.id)),
                 item = impact.querySelector('li.layer[data-id="' + layer.id + '"]'),
                 filter = item.querySelector('.data-filter'),
@@ -1192,7 +1190,7 @@ class ClickListener {
 
                 box.innerHTML = premFeature;
                 item.addEventListener('click', () => {
-                    notify('info', `This is a ${layer.perms2.includes('PREMIUM') ? 'premium' : 'pro'} layer. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="layers_snackbar">Get access</a>`, 4);
+                    notify('info', `This is a ${layer.perms.includes('PREMIUM') ? 'premium' : 'pro'} layer. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="layers_snackbar">Get access</a>`, 4);
                 });
             } else {
                 if (filter) {
@@ -1221,9 +1219,7 @@ class ClickListener {
                         }]
                     };
 
-                    if (isChecked) {
-                        filter.querySelectorAll('select').forEach(select => select.disabled = false);
-                    }
+                    if (isChecked) filter.querySelectorAll('select').forEach(select => select.disabled = false);
 
                     const filterLayer = adjust[layer.id];
 
@@ -1245,6 +1241,7 @@ class ClickListener {
         if (scrollPosition !== null && scrollPosition !== '0') impact.scrollTop = scrollPosition;
     }
 
+    // creates dropdowns for some layers
     layerExtras(l) {
         const spec = settings.special?.() || {},
             icon = (cls) => `<i class="${cls}" style="color:#9caab3"></i>`,
@@ -1456,7 +1453,7 @@ class ClickListener {
     account() {
         if (!settings.user) {
             const guid = document.cookie.split('; ').find(row => row.startsWith('guid='))?.split('=')[1] || null,
-            url = config.domain.replace('www', 'auth') + 'login?service=' + getPlatform() + '&next=' + encodeURIComponent(window.location.href) + (guid ? '&guid=' + guid : '');
+                url = config.domain.replace('www', 'auth') + 'login?service=' + getPlatform() + '&next=' + encodeURIComponent(window.location.href) + (guid ? '&guid=' + guid : '');
             ////console.log(url);
             window.location.href = url;
             return;
@@ -1464,8 +1461,13 @@ class ClickListener {
 
         let ms = '';
         const userProfile = `<div class="content">
-            <div id="sync"><i class="fa-regular fa-arrow-down-to-line" aria-hidden="true"></i><span title="${dateTime(settings.getUser().synced(), true, true, true).toString()}">Account last synced ${timeAgo(settings.user.settings.synced)}</span></div>
-            <div class="btn-group centered"><a target="blank" class="btn btn-blue" style="width:100%" href="${config.domain}account/settings">Manage account</a></div>
+            <div id="sync">
+                <i class="fa-regular fa-arrow-down-to-line" aria-hidden="true"></i>
+                <span title="${dateTime(settings.getUser().synced(), true, true, true).toString()}">Account last synced ${timeAgo(settings.user.settings.synced)}</span>
+            </div>
+            <div class="btn-group centered">
+                <a target="blank" class="btn btn-blue" style="width:100%" href="${config.domain}account/settings">Manage account</a>
+            </div>
             <div id="settings">
                 <div class="my-subs">
                     <h2 style="margin:0">My Subscriptions</h2>
@@ -1476,7 +1478,7 @@ class ClickListener {
                 <div style="margin-top:5em;font-size:12px;text-align:center;color:var(--blue-gray);line-height:1.3">
                     &copy; ${new Date().getFullYear()} ${config.company}<br>Version ${version}<br>
                     <a class="footer-link" href="${config.specificURL}logout?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}">Logout</a>&nbsp;&middot;&nbsp;
-                    <a class="footer-link" href="https://mapofire.com/release-notes" target="blank">Change Log</a>&nbsp;&middot;&nbsp;
+                    <a class="footer-link" href="${config.host}release-notes" target="blank">Change Log</a>&nbsp;&middot;&nbsp;
                     <a class="footer-link" href="${config.domain}about/legal/terms" target="blank">Terms</a>&nbsp;&middot;&nbsp;
                     <a class="footer-link" href="${config.domain}about/legal/privacy" target="blank">Privacy</a>
                 </div>
@@ -1563,23 +1565,32 @@ class ClickListener {
         }
     }
 
+    spcClimo() {
+        if (this.target.classList.contains('disabled')) return;
+
+        const select = document.querySelector('.spcTimeline #spcDates');
+        let newIndex = select.selectedIndex;
+
+        if (this.target.dataset.dir === 'back') newIndex -= 1;
+        if (this.target.dataset.dir === 'next') newIndex += 1;
+
+        newIndex = Math.max(0, Math.min(364, newIndex));
+
+        config.layersHandler.spcClimo(newIndex, true, true);
+    }
+
     async follow() {
         let id = parseInt(this.target.getAttribute('data-id')),
             fire = config.wildfire.findFire(id),
-            name = fire.properties.name.replace(' Fire', '') + (fire.properties.type != 'Smoke Check' ? ' Fire' : ''),
-            m;
+            name = fire.properties.name.replace(' Fire', '') + (fire.properties.type != 'Smoke Check' ? ' Fire' : '');
 
         if (fire != null) {
-            const tf = document.querySelector('#trackFire');
+            const isRemove = this.target.getAttribute('data-mode') == 'unfollow' && tracked.includes(id),
+            tf = document.querySelector('#trackFire');
 
-            /* remove, otherwise add */
-            if (this.target.getAttribute('data-mode') == 'unfollow' && tracked.includes(id)) {
-                m = 'remove';
-                tracked.splice(tracked.indexOf(id), 1);
-            } else {
-                m = 'add';
-                tracked.push(id);
-            }
+            // remove, otherwise add
+            const m = isRemove ? 'remove' : 'add';
+            if (isRemove) tracked.splice(tracked.indexOf(id), 1); else tracked.push(id);
 
             if (m == 'add') {
                 tf.setAttribute('data-mode', 'unfollow');
@@ -1608,7 +1619,8 @@ class ClickListener {
 
     async unfollow() {
         const id = this.target.getAttribute('data-wfid'),
-            name = this.target.getAttribute('data-name');
+            name = this.target.getAttribute('data-name'),
+            myf = document.querySelector('ul.my-fires');
 
         this.target.parentElement.parentElement.remove();
 
@@ -1623,9 +1635,7 @@ class ClickListener {
 
         tracked.splice(tracked.indexOf(id), 1);
 
-        if (document.querySelectorAll('ul.my-fires li').length == 0) {
-            document.querySelector('ul.my-fires').parentElement.innerHTML = noneTracked;
-        }
+        if (myf.querySelectorAll('li').length == 0) myf.parentElement.innerHTML = noneTracked;
 
         notify('success', 'You\'re no longer following the ' + name + '.');
     }
@@ -1814,12 +1824,6 @@ class ClickListener {
             else {
                 const wfid = parseInt(p.getAttribute('data-wfid'));
                 if (config.wildfire.findFire(wfid)) config.wildfire.incident(wfid, true);
-                /*const r = config.wildfire.findFire(parseInt(p.getAttribute('data-wfid')));
-
-                map.easeTo({
-                    center: r.geometry.coordinates,
-                    zoom: 10
-                });*/
             }
         }
 
@@ -1834,7 +1838,7 @@ function toggleLayer(e) {
     const { id: layerId, checked } = e,
         action = layerActions[layerId],
         getLayer = config.listOfLayers.find(layer => layer.id === layerId),
-        layerPerms = getLayer ? getLayer.perms2 : false,
+        layerPerms = getLayer ? getLayer.perms : false,
         executeToggle = (sourceId, action, checked) => {
             const visibility = checked ? 'visible' : 'none';
 
@@ -2465,6 +2469,8 @@ window.addEventListener('click', async (e) => {
             'basemap': () => clickListener.basemaps(),
             'layers': () => clickListener.showLayers(),
             'legend': () => clickListener.legend(),
+            'spc-climo': () => clickListener.spcClimo(),
+            'changeSPCDate': () => clickListener.changeSPCDate(),
             'fwf': async () => {
                 if (!settings.subscriptions().valid()) {
                     (await loadUtils()).marketing(true, 'nav_fwf');
@@ -2478,7 +2484,7 @@ window.addEventListener('click', async (e) => {
             'refresh': () => location.reload(),
             'archive': async () => {
                 if (!settings.subscriptions().valid()) {
-                    (await loadUtils()).marketing(true, 'nav_archive');                    
+                    (await loadUtils()).marketing(true, 'nav_archive');
                 } else {
                     clickListener.archive();
                 }

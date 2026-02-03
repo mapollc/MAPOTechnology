@@ -203,6 +203,15 @@ $lay = array(
             'app' => true
         ],
         [
+            'id' => 'spcClimo',
+            'name' => 'SPC Fire Climatology',
+            'perms' => true,
+            'perms2' => ['PREMIUM', 'PRO'],
+            'default' => false,
+            'app' => false,
+            'testing' => true
+        ],
+        [
             'id' => 'nri',
             'name' => 'Wildfire Risk Index',
             'perms' => true,
@@ -422,6 +431,7 @@ $layerDesc = array(
         'View observed and forecasted energy release component (ERC) values for fire danger',
         'View evacuation vulnerabilities from the PNW\'s most rural areas',
         'Show significant fire potential outlooks',
+        'Daily probability of a wildfire >100 acres using SPC climatology',
         'See each county\'s wildfire risk based on annual loss, vulnerability & resilience',
         'Overlay wildfire risk to homes model',
         'Overlay wildfire likelihood (burn probability) model',

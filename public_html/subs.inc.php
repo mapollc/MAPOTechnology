@@ -2,12 +2,14 @@
 //$stripeLive = $stripeLive ? $stripeLive : false;
 $trialPeriod = 7;
 
-class ManageSubs {
+class ManageSubs
+{
     public $plan;
     public $name;
     public $selected;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->name = null;
         $this->selected = null;
         $this->plan = [
@@ -62,11 +64,13 @@ class ManageSubs {
         ];
     }
 
-    public function allPlans() {
+    public function allPlans()
+    {
         return $this->plan;
     }
 
-    public function isPlan($id) {
+    public function isPlan($id)
+    {
         foreach ($this->plan as $plans) {
             foreach ($plans['price_id'] as $pid) {
                 $ids[] = $pid['id'];
@@ -76,7 +80,8 @@ class ManageSubs {
         return in_array($id, $ids);
     }
 
-    public function setPlan($name, $id = null) {
+    public function setPlan($name, $id = null)
+    {
         if ($id == null) {
             $this->name = $name;
             $this->selected = $this->getPlan();
@@ -87,7 +92,8 @@ class ManageSubs {
         return $this;
     }
 
-    private function getPlanByID($id) {
+    private function getPlanByID($id)
+    {
         foreach ($this->plan as $item) {
             foreach ($item['price_id'] as $prices) {
                 if ($prices['id'] == $id) {
@@ -107,7 +113,8 @@ class ManageSubs {
         return null;
     }
 
-    private function getPlan() {
+    private function getPlan()
+    {
         foreach ($this->plan as $item) {
             foreach ($item['price_id'] as $prices) {
                 if ($prices['name'] == $this->name) {
@@ -125,33 +132,39 @@ class ManageSubs {
         return null;
     }
 
-    public function getPriceID() {
-        //global $_GET;
+    public function getPriceID()
+    {
+        global $_GET;
 
         /*if ($_GET['devel'] == 1) {
             return $this->selected['pricing']['id2'];
         } else {*/
-            return $this->selected['pricing']['id'];
+        return $this->selected['pricing'][$_GET['devel'] == 1 ? 'id2' : 'id'];
         //}
     }
 
-    public function getPrice() {
+    public function getPrice()
+    {
         return $this->selected['details']['price'];
     }
 
-    public function getTotalPrice() {
+    public function getTotalPrice()
+    {
         return number_format($this->selected['details']['price'] * $this->selected['pricing']['term'], 2);
     }
 
-    public function getName() {
+    public function getName()
+    {
         return $this->selected['details']['name'];
     }
 
-    public function getTerm() {
+    public function getTerm()
+    {
         return $this->selected['pricing']['term'] == 1 ? 'month' : 'year';
     }
 
-    public function getPriceName() {
+    public function getPriceName()
+    {
         return $this->selected['pricing']['name'];
     }
 }
@@ -206,7 +219,7 @@ $mapoSubscriptions = array(
             'Access to pavement/road temperatures</li>',
             'Access to road surface friction (grip)',
             'Get notified of road closures nearby to you',
-            'Report road hazards for all app users to see (future product)'  
+            'Report road hazards for all app users to see (future product)'
         ],
         'price' => 6.99,
         'term' => 'mo'

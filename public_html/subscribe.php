@@ -1,6 +1,7 @@
 <?
-ini_set('display_errors', 0);
-error_reporting(E_PARSE & E_ERROR);
+ini_set('display_errors', 1);
+error_reporting(E_PARSE || E_ERROR);
+
 ini_set('session.cookie_domain', '.mapotechnology.com');
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
@@ -34,25 +35,21 @@ if (isset($_POST) && isset($_POST['price'])) {
     if ($_REQUEST['ref'] == 'com.mapollc.mapofire' && !isset($_REQUEST['authenticated'])) {
         $goto = 'https://www.mapotechnology.com/purchase/' . $product . '/complete?price=' . $_POST['price'] . ($_POST['trial'] ? '&trial=1' : '') .
             (isset($_REQUEST['customer_email']) ? '&customer_email=' . $_REQUEST['customer_email'] : '') .
-            ($_REQUEST['ref'] ? '&ref=' . $_REQUEST['ref'] : '') . ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
+            ($_REQUEST['ref'] ? '&ref=' . $_REQUEST['ref'] : '') .
+            ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
     } else {
         if ($_SESSION && $_SESSION['uid'] || $_SESSION['customer_email'] || $_REQUEST['customer_email']) {
             $email = $_SESSION['customer_email'] ? $_SESSION['customer_email'] : ($_REQUEST['customer_email'] ? $_REQUEST['customer_email'] : null);
             $custID = null;
 
-            if (isset($_POST['cid'])) {
-                $custID = $_POST['cid'];
-            }
+            if (isset($_POST['cid'])) $custID = $_POST['cid'];
 
             $user = prepareQuery('i', [$_SESSION['uid']], "SELECT email FROM users WHERE uid = ?");
 
-            if (!empty($user)) {
-                $email = $user['email'];
-            }
+            if (!empty($user)) $email = $user['email'];
 
             if ($custID == null) {
                 $getCust = prepareQuery('s', [$email], "SELECT cid FROM billing WHERE email = ? ORDER BY status ASC, created DESC LIMIT 1");
-
                 $custID = $getCust['cid'];
             }
 
@@ -62,7 +59,10 @@ if (isset($_POST) && isset($_POST['price'])) {
                 ($_REQUEST['ref'] ? '&ref=' . $_REQUEST['ref'] : '') .
                 ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
         } else {
-            $goto = 'https://www.mapotechnology.com/secure/register?service=mapofire&subscribe=1&product_key=' . $product . '&price_id=' . $_POST['price'] . ($_POST['trial'] ? '&trial=1' : '');
+            $goto = 'https://www.mapotechnology.com/secure/register?service=mapofire&subscribe=1&product_key=' . $product .
+                '&price_id=' . $_POST['price'] .
+                ($_POST['trial'] ? '&trial=1' : '') .
+                ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
         }
     }
 
@@ -72,7 +72,7 @@ if (isset($_POST) && isset($_POST['price'])) {
 }
 
 // if status query parameter is complete, we're ready to start charging for the subscription
-if ($_GET['status'] == 'complete') { 
+if ($_GET['status'] == 'complete') {
     $priceId = preg_match('/^price_[a-zA-Z0-9]+$/', $_GET['price']) ? $_GET['price'] : null;
     $trialRequested = isset($_REQUEST['trial']) && $_REQUEST['trial'] == 1;
 
@@ -83,15 +83,30 @@ if ($_GET['status'] == 'complete') {
             \Stripe\Stripe::setApiKey($stripeSecretKey);
 
             if (isset($_GET['ref']) && $_GET['ref'] == 'com.mapollc.mapofire') {
-                $returnURL = 'https://www.mapofire.com/confirmation?checkout_id={CHECKOUT_SESSION_ID}' . (isset($_SESSION['customer_email']) ? '&newUser=1' : '');
-                $cancelURL = 'https://www.mapofire.com/confirmation?failed=1';
+                $returnURL = 'https://www.mapofire.com/confirmation?checkout_id={CHECKOUT_SESSION_ID}' .
+                    (isset($_SESSION['customer_email']) ? '&newUser=1' : '') .
+                    ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
+                $cancelURL = 'https://www.mapofire.com/confirmation?failed=1' .
+                    ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
             } else {
-                $cancelURL = 'https://www.mapotechnology.com/purchase/' . $product . '/failed?reason=cancel' . (isset($_REQUEST['customer_id']) ? '&cid=' . $_REQUEST['customer_id'] : '') . (isset($_REQUEST['newUser']) ? '&newUser=1' : '') . (isset($_REQUEST['ref']) ? '&ref=' . $_REQUEST['ref'] : '');
+                $cancelURL = 'https://www.mapotechnology.com/purchase/' . $product . '/failed?reason=cancel' .
+                    (isset($_REQUEST['customer_id']) ? '&cid=' . $_REQUEST['customer_id'] : '') .
+                    (isset($_REQUEST['customer_email']) ? '&customer_email=' . $_REQUEST['customer_email'] : '') .
+                    (isset($_REQUEST['newUser']) ? '&newUser=1' : '') .
+                    (isset($_REQUEST['ref']) ? '&ref=' . $_REQUEST['ref'] : '') .
+                    ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
 
                 if ($_SESSION['uid']) {
-                    $returnURL = 'https://www.mapotechnology.com/account/billing?checkout_id={CHECKOUT_SESSION_ID}' . ($trialRequested ? '&isTrial=1' : '') . (isset($_REQUEST['ref']) ? '&ref=' . $_REQUEST['ref'] : '');
+                    $returnURL = 'https://www.mapotechnology.com/account/billing?checkout_id={CHECKOUT_SESSION_ID}' .
+                        ($trialRequested ? '&isTrial=1' : '') .
+                        (isset($_REQUEST['ref']) ? '&ref=' . $_REQUEST['ref'] : '') .
+                        ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
                 } else {
-                    $returnURL = 'https://www.mapotechnology.com/purchase/' . $product . '/success?checkout_id={CHECKOUT_SESSION_ID}' . ($trialRequested ? '&isTrial=1' : '') . (isset($_SESSION['customer_email']) ? '&newUser=1' : '') . (isset($_REQUEST['ref']) ? '&ref=' . $_REQUEST['ref'] : '');
+                    $returnURL = 'https://www.mapotechnology.com/purchase/' . $product . '/success?checkout_id={CHECKOUT_SESSION_ID}' .
+                        ($trialRequested ? '&isTrial=1' : '') .
+                        (isset($_SESSION['customer_email']) ? '&newUser=1' : '') .
+                        (isset($_REQUEST['ref']) ? '&ref=' . $_REQUEST['ref'] : '') .
+                        ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
                 }
             }
 
