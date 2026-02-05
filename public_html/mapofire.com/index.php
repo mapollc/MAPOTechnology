@@ -151,8 +151,8 @@ if (isset($_GET['country']) && isset($_GET['archive'])) {
 }
 
 // mapbox & maplibre sdk version
-$mapboxVersion = '3.17.0';
-$maplibreVersion = '5.15.0';
+$mapboxVersion = '3.18.1';
+$maplibreVersion = '5.17.0';
 
 //ga4 ID
 $ga_id = /*$host == 'wildfiremap.org' ? 'G-2DNCL70GJF' : */ 'G-X03WWLX3BJ';

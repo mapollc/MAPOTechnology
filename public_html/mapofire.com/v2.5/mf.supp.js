@@ -314,7 +314,11 @@ class Weather {
     }
 
     async incidentWX() {
-        const holder = document.querySelector('#curwx');
+        const holder = document.querySelector('#curwx'),
+            onError = (error) => {
+                console.error('There is an error getting current conditions', error);
+                if (holder != null) holder.innerHTML = '<h2>Nearby Weather Conditions</h2><div class="message error">No current weather conditions are available near this incident.</div>';
+            };
 
         try {
             const wx = await api(config.apiURL + 'weather/nearby', [['radius', this.lat + ',' + this.lon + ',30'], ['latest', 1]]);
@@ -357,18 +361,10 @@ class Weather {
                     up.innerHTML = `Last report ${u}${settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? ' @ ' + name : ''}`;
                 }
             } else {
-                console.error('There is an error getting current conditions', error);
-
-                if (holder != null) {
-                    holder.innerHTML = '<h2>Nearby Weather Conditions</h2><div class="message error">No current weather conditions are available near this incident.</div>';
-                }
+                onError(null);
             }
-        } catch (error) {
-            console.error('There is an error getting current conditions', error);
-
-            if (holder != null) {
-                holder.innerHTML = '<h2>Nearby Weather Conditions</h2><div class="message error">No current weather conditions are available near this incident.</div>';
-            }
+        } catch (err) {
+            onError(err);
         }
     }
 
@@ -407,7 +403,6 @@ class Weather {
                 displayAvgW = formatWind(avgW),
                 displayMaxW = formatWind(maxW);
 
-            // 5. Update DOM
             const q = (sel) => modal.querySelector(`#fcstwx ${sel}`);
             q('#a h4').innerHTML = displayT;
             q('#b h4').innerHTML = `${minRH}%`;
@@ -424,8 +419,9 @@ class Weather {
             q('.updated').insertAdjacentHTML('afterend', `<div class="btn-group centered" style="margin:0">${btnHtml}</div>`);
 
         } catch (error) {
-            console.error('Incident weather error:', error);
-            if (holder) {
+            console.error('Incident weather error', error);
+
+            if (holder != null) {
                 holder.innerHTML = `<h3>Incident Weather Concerns</h3><div class="message error">The 24-hour fire forecast is unavailable at this time.</div>`;
             }
         }
@@ -433,10 +429,9 @@ class Weather {
     }
 
     updateRAWSUnits() {
-        const isF = settings.weather()?.temp() === 'f';
-
-        const newBg = this.buildExpression(this.scale.map(s => [s[0], s[1], s[2]]));
-        const newText = this.buildExpression(this.scale.map(s => [s[0], s[1], s[3]]), false);
+        const isF = settings.weather()?.temp() === 'f',
+            newBg = this.buildExpression(this.scale.map(s => [s[0], s[1], s[2]])),
+            newText = this.buildExpression(this.scale.map(s => [s[0], s[1], s[3]]), false);
 
         // 2. Apply directly to map layers
         if (map.getLayer('stns')) {
@@ -446,9 +441,7 @@ class Weather {
             ]);
         }
 
-        if (map.getLayer('stns_text')) {
-            map.setPaintProperty('stns_text', 'text-color', newText);
-        }
+        if (map.getLayer('stns_text')) map.setPaintProperty('stns_text', 'text-color', newText);
 
         this.raws(true);
     }
@@ -531,6 +524,14 @@ class Weather {
                             ]
                         }
                     });
+
+                    map.on('mouseenter', 'stns', () => {
+                        map.getCanvas().style.cursor = 'pointer';
+                    });
+
+                    map.on('mouseleave', 'stns', () => {
+                        map.getCanvas().style.cursor = 'auto';
+                    });
                 }
 
                 if (!map.getLayer('stns_text')) {
@@ -555,14 +556,6 @@ class Weather {
                             'text-size': 12,
                             'text-offset': [0, 0]
                         }
-                    });
-
-                    map.on('mouseenter', 'stns', () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'stns', () => {
-                        map.getCanvas().style.cursor = 'auto';
                     });
 
                     map.on('mouseenter', 'stns_text', () => {
@@ -607,7 +600,7 @@ class Weather {
         return { quality: range.label, desc: range.desc };
     }
 
-    nearbyAQ() {
+    /*nearbyAQ() {
         const g = setInterval(() => {
             if (airQualityStns.features) {
                 clearInterval(g);
@@ -639,10 +632,10 @@ class Weather {
                     aqh.remove();
                 }
             }
-        }, 500);
+        }, 200);
 
         return this;
-    }
+    }*/
 }
 
 class ChangeListener {
@@ -651,14 +644,14 @@ class ChangeListener {
     }
 
     changeBasemap(tile = null) {
-        if (tile == null) tile = this.target.getAttribute('data-tile');
+        if (tile == null) tile = this.target.dataset.tile;
 
         settings.settings.tile = tile;
 
         map.setStyle(config.tiles[tile]);
 
         map.once('styledata', () => {
-            config.layersHandler.add3D();
+            config.layersHandler.addTerrain();
             config.layersHandler.init();
             config.wildfire.getWildfires();
             config.wildfire.perimeters();
@@ -677,12 +670,10 @@ class ChangeListener {
         settings.updatePSize(v);
         document.querySelector('#pSize').innerHTML = v + ' acres';
 
-        map.removeLayer('perimeters_outline')
-            .removeLayer('perimeters_fill')
-            .removeLayer('perimeters_title')
-            .removeSource('perimeters');
+        ['perimeters_outline', 'perimeters_fill', 'perimeters_title'].forEach(lay => map.removeLayer(lay));
+        map.removeSource('perimeters');
 
-        new Wildfires().perimeters();
+        config.wildfire.perimeters();
     }
 
     toggle() {
@@ -701,13 +692,8 @@ class ChangeListener {
     }
 
     smoke(sfc) {
-        const selected = this.target.options[this.target.selectedIndex].value;
-
-        if (sfc) {
-            config.layersHandler.sfcSmoke(selected);
-        } else {
-            config.layersHandler.viSmoke(selected);
-        }
+        const handler = sfc ? config.layersHandler.sfcSmoke : config.layersHandler.viSmoke;
+        handler(this.target.options[this.target.selectedIndex].value);
     }
 
     async spc() {
@@ -744,9 +730,7 @@ class ChangeListener {
             s = ay.options[ay.selectedIndex].value,
             win = window.location;
 
-        if (s != '- Choose a year -') {
-            win.href = config.host + 'archive/' + s + (win.search ? win.search : '') + (win.hash ? win.hash : '');
-        }
+        if (s != '- Choose a year -') win.href = config.host + 'archive/' + s + (win.search ? win.search : '') + (win.hash ? win.hash : '');
     }
 
     spcClimo() {
@@ -856,35 +840,32 @@ function socialShare(se) {
     }
 }
 
-function ndfdTime(add = null) {
-    const a = new Date(),
-        e = a.toString().split(' GMT')[0],
-        b = (a.getMonth() + 1) + '/' + a.getDate() + '/' + a.getFullYear(),
-        c = e.match(/([0-9:]{8,})/gm)[0].split(':');
-    let h = parseInt(c[0]);
+function ndfdTime(add = 0) {
+    const now = new Date(),
+        dateStr = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}`,
+        [hours, minutes] = now.toTimeString().split(':');
 
-    if (c[1] > 0) h += 1;
+    let h = parseInt(hours, 10);
+    if (parseInt(minutes, 10) > 0) h += 1;
 
-    const t = b + ' ' + h + ':00:00';
-
-    return new Date(t).getTime() + (add ? (add * 3600 * 1000) : 0);
+    const t = `${dateStr} ${h}:00:00`;
+    return new Date(t).getTime() + add * 3600 * 1000;
 }
 
 function initNDFDTimes() {
     const options = [];
+    const fcstTime = settings.special().fcstTime();
+    let selectedApplied = false;
 
     for (let i = 0; i < 24; i++) {
         const t = new Date(ndfdTime(i)),
-            y = t.getUTCFullYear(),
-            m = String(t.getUTCMonth() + 1).padStart(2, '0'),
-            d = String(t.getUTCDate()).padStart(2, '0'),
-            hUTC = String(t.getUTCHours()).padStart(2, '0'),
-            ts = `${y}-${m}-${d}T${hUTC}:00:00.000Z`;
-        hours = t.getHours(),
-            period = hours >= 12 ? 'PM' : 'AM',
-            lh = hours % 12 || 12;
+            ts = t.toISOString().replace(/:\d{2}\.\d{3}Z$/, ':00.000Z');
 
-        const selected = settings.special().fcstTime() === ts ? 'selected ' : '';
+        const selected = !selectedApplied && (fcstTime >= ts || (i === 0 && fcstTime < ts)) ? (selectedApplied = true, 'selected ') : '',
+            hours = t.getHours(),
+            lh = hours % 12 || 12,
+            period = hours >= 12 ? 'PM' : 'AM';
+
         options.push(`<option ${selected}value="${ts}">${lh}:00 ${period}</option>`);
     }
 
@@ -892,8 +873,8 @@ function initNDFDTimes() {
 }
 
 function setHeaders(title, urlPath, description) {
-    const fullUrl = `${config.specificURL}${urlPath.replace(/incident\/|wildfire\//g, 'fires/')}${window.location.search}${window.location.hash}`;
-    const pageTitle = `${title} | ${config.productName}`;
+    const fullUrl = `${config.specificURL}${urlPath.replace(/incident\/|wildfire\//g, 'fires/')}${window.location.search}${window.location.hash}`,
+        pageTitle = `${title} | ${config.productName}`;
 
     // Use a single line to decide which history method to use
     (modal.classList.contains('open') ? window.history.replaceState : window.history.pushState).call(window.history, {
@@ -902,16 +883,18 @@ function setHeaders(title, urlPath, description) {
 
     // Update document metadata
     document.title = pageTitle;
-    const metaTags = [{
-        property: 'og:title',
-        name: 'twitter:title',
-        content: pageTitle
-    }, {
-        name: 'description',
-        property: 'og:description',
-        name: 'twitter:description',
-        content: description
-    }];
+    const metaTags = [
+        {
+            property: 'og:title',
+            name: 'twitter:title',
+            content: pageTitle
+        }, {
+            name: 'description',
+            property: 'og:description',
+            name: 'twitter:description',
+            content: description
+        }
+    ];
 
     metaTags.forEach(tag => {
         if (tag.property) document.querySelector(`meta[property="${tag.property}"]`).setAttribute('content', tag.content);
@@ -937,7 +920,7 @@ function unsetHeaders() {
 }
 
 async function saveSession(method = true) {
-    if (!navigator.onLine) return notify('error', 'Unable to sync due to no internet.');
+    if (!navigator.onLine) return (await loadUtils()).notify('error', 'Unable to sync due to no internet.');
 
     const sy = document.querySelector('li#save span'),
         syncStatus = impact.querySelector('#sync span'),
@@ -959,15 +942,16 @@ async function saveSession(method = true) {
 
     const data = await api(config.host + 'api/v1/session', send);
 
-    // Optional chaining (?.) prevents the "null" crash if the API fails
     if (data?.success === 1) {
         if (settings.user) settings.user.settings.synced = Date.now();
         if (sy) sy.innerHTML = 'Sync';
         if (syncStatus) syncStatus.innerHTML = 'Account synced just now';
-        notify('success', 'Your settings were successfully synced.');
+
+        (await loadUtils()).notify('success', 'Your settings were successfully synced.');
     } else {
         if (sy) sy.innerHTML = 'Sync Error';
-        notify('error', 'Sync failed. Server might be down.');
+
+        (await loadUtils()).notify('error', 'Sync failed. Server might be down.');
     }
 }
 
@@ -993,10 +977,10 @@ function newFiresReport() {
 }
 
 function createDataForm(title, content, center = false) {
-    if (document.querySelector('#data-form')) {
-        document.querySelector('#data-form').classList.remove('bg');
-        document.querySelector('#data-form').remove();
-    }
+    const df = document.querySelector('#data-form');
+
+    df?.classList.remove('bg');
+    df?.remove();
 
     const el = document.createElement('div');
     el.id = 'data-form';
@@ -1034,15 +1018,17 @@ async function createCSReport(data, lat, lon) {
 
 async function onRasterLayerClick(e) {
     const coords = e.lngLat,
-        fuels = map.getStyle().layers.find(l => l.id === 'fuels'),
-        drought = map.getStyle().layers.find(l => l.id === 'drought'),
-        bp = map.getStyle().layers.find(l => l.id === 'bp'),
-        rth = map.getStyle().layers.find(l => l.id === 'rth'),
-        whp = map.getStyle().layers.find(l => l.id === 'whp'),
+        getLayer = (name) => map.getStyle().layers.find(l => l.id === name),
+        fuels = getLayer('fuels'),
+        bp = getLayer('bp'),
+        rth = getLayer('rth'),
+        whp = getLayer('whp'),
+        wet = getLayer('wet'),
         wildfireRiskLayer = [
             { ref: rth, id: 'rth', key: 'rps', title: 'Wildfire Risk', label: 'Risk to Homes' },
             { ref: bp, id: 'bp', key: 'bp', title: 'Wildfire Likelihood', label: 'Wildfire Likelihood' }
-        ].find(l => l.ref?.layout?.visibility === 'visible');
+        ].find(l => l.ref?.layout?.visibility === 'visible'),
+        { legend } = await loadUtils();
 
     if (fuels && fuels.layout.visibility.toString() == 'visible') {
         const popup = new Popup('', true).create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>'),
@@ -1075,61 +1061,20 @@ async function onRasterLayerClick(e) {
         if (fuels.processedValues && fuels.processedValues[0]) {
             const found = config.fuelsData.find(fuel => fuel.attributes.Value == fuels.processedValues[0]);
 
-            if (found) {
-                fuelType = found.attributes.EVT_NAME;
-            }
+            if (found) fuelType = found.attributes.EVT_NAME;
 
             popup.update(`<div class="item"><div class="t">Existing Vegetation Type</div><div class="v">${fuelType}</div></div>
                 <div class="item"><div class="t">Model</div><div class="v">${where == 'US' ? 'United States' : 'Alaska'}</div></div>
                 <div class="item"><div class="t">Data Year</div><div class="v">20${year}</div></div>`, 'Fuels Type');
         } else {
             popup.close();
-            notify('error', 'Unable to get fuels information. Try again.');
+            (await loadUtils()).notify('error', 'Unable to get fuels information. Try again.');
         }
     }
 
-    if (drought && drought.layout.visibility.toString() == 'visible') {
-        const popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>'),
-            geo = encodeURIComponent(`{"x":${coords.lng},"y":${coords.lat},"spatialReference":{"latestWkid":4326}}`);
-
-        //https://rhvpkkiftonktxq3.svcs9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/US_Drought_Intensity_v1/FeatureServer/1/query?where=admin_fips+%3D+41061+AND+period+%3D+20250916&objectIds=&resultType=none&outFields=name%2Cstate_abbr%2Cd0%2Cd1%2Cd2%2Cd3%2Cd4&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&collation=&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=html&token=
-        await fetch(`https://rhvpkkiftonktxq3.svcs9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/US_Drought_Intensity_v1/FeatureServer/3/query?where=1%3D1&geometry=${geo}&geometryType=esriGeometryPoint&inSR=4326&outFields=dm,ddate&returnGeometry=false&f=json`)
-            .then(async (resp) => {
-                let level = 'No Drought',
-                    upd = 'N/A',
-                    data = await resp.json();
-
-                if (data.features.length > 0) {
-                    const p = data.features[0].attributes;
-                    upd = timeAgo(p.ddate);
-
-                    switch (p.dm) {
-                        case 0:
-                            level = 'Abnormally Dry';
-                            break;
-                        case 1:
-                            level = 'Moderate Drought';
-                            break;
-                        case 2:
-                            level = 'Severe Drought';
-                            break;
-                        case 3:
-                            level = 'Extreme Drought';
-                            break;
-                        case 4:
-                            level = 'Exceptional Drought';
-                            break;
-                    }
-                }
-
-                popup.update(`<div class="item"><div class="t">Drought Level</div><div class="v">${level}</div></div>
-                <div class="item"><div class="t">Last Updated</div><div class="v">${upd}</div></div>`, 'Drought Monitor');
-            });
-    }
-
     if (wildfireRiskLayer && map.getZoom() >= 6) {
-        const { id, key, title, label } = wildfireRiskLayer,
-            popup = new Popup(title, true).create('<div id="spinner" class="sm" style="display:block;margin:0 auto"></div>');
+        const { id, key, title, label } = wildfireRiskLayer;
+        const popup = new Popup(title, true).create('<div id="spinner" class="sm" style="display:block;margin:0 auto"></div>');
 
         const [respRes, pcRes] = await Promise.allSettled([
             api(`${config.apiURL}risk`, [['lat', coords.lat], ['lon', coords.lng]]),
@@ -1169,12 +1114,23 @@ async function onRasterLayerClick(e) {
             val = legend.items.whp.find(i => i[2] === pc);
 
         if (val) {
-            const desc = `There is a ${val[3].toLowerCase()} potential for a wildfire that may be difficult to manage`;
+            const desc = `There is a ${val[3].toLowerCase()} potential for a wildfire that may be difficult to manage.`;
 
-            popup.update(`<div class="item"><div class="t">Difficulty</div><div class="v">${desc}</div></div>`);
+            popup.update(`<div class="item"><div class="t">Difficulty</div><div class="v">${val[3]}</div></div>
+                <div class="item"><div class="t">Description</div><div class="v">${desc}</div></div>`);
         } else {
             popup.update('<p>Unable to retrieve wildfire hazard potential data.</p>');
         }
+    }
+
+    if (wet && wet.layout.visibility == 'visible') {
+        const popup = new Popup('Wildfire Hazard Potential', true).create('<div id="spinner" class="sm" style="display:block;margin:0 auto"></div>');
+
+        const pc = await new Convert().getRasterColor(e.lngLat, 'wet'),
+            val = legend.items.wet.find(i => i[2] === pc),
+            desc = `A home at this location is ${val[3].toLowerCase()} to wildfire from adjacent vegetation or indirect sources (such as embers).`;
+
+        popup.update(val ? `<div class="item"><div class="t">Exposure</div><div class="v">${desc}</div></div>` : '<p>Unable to retrieve wildfire hazard potential data.</p>');
     }
 }
 
@@ -1553,12 +1509,12 @@ async function onMapClick(e) {
                     default: danger = 'N/A'; break;
                 }
 
-                new Popup('ODF Fire Danger').create(
-                    '<div class="item"><div class="t">District</div><div class="v">' + (await loadUtils()).ODF_DISTRICT_NAMES[feature.properties.regusearea] + '</div></div>' +
-                    '<div class="item"><div class="t">Reg. Use Area</div><div class="v">' + feature.properties.regusearea + '</div></div>' +
-                    '<div class="item"><div class="t">Fire Danger</div><div class="v">' + danger + '</div></div>' +
-                    '<div class="item"><div class="t">IFPL</div><div class="v">' + ifpl + '</div></div>'
-                );
+                new Popup('ODF Fire Danger').create(`
+                    <div class="item"><div class="t">District</div><div class="v">${(await loadUtils()).ODF_DISTRICT_NAMES[feature.properties.regusearea]}</div></div>
+                    <div class="item"><div class="t">Reg. Use Area</div><div class="v">${feature.properties.regusearea}</div></div>
+                    <div class="item"><div class="t">Fire Danger</div><div class="v">${danger}</div></div>
+                    <div class="item"><div class="t">IFPL</div><div class="v">${ifpl}</div></div>
+                `);
 
                 break;
             }
@@ -1569,17 +1525,43 @@ async function onMapClick(e) {
                     desc = level == 1 ? 'Moderate' : (level == 2 ? 'High' : 'Very High');
 
                 new Popup('Fire Hazard Severity Zone').create(
-                    (clickedCounty != null ? '<div class="item"><div class="t">County</div><div class="v">' + clickedCounty + '</div></div>' : '') +
-                    '<div class="item"><div class="t">FHSZ</div><div class="v">' + desc + '</div></div>'
+                    (clickedCounty != null ? `<div class="item"><div class="t">County</div><div class="v">${clickedCounty}</div></div>` : '') +
+                    `<div class="item"><div class="t">FHSZ</div><div class="v">${desc}</div></div>`
                 );
 
                 break;
             }
 
+            /* on drought click */
+            if (feature.source == 'drought') {
+                let level;
+                switch (feature.properties.dm) {
+                    case 0:
+                        level = 'Abnormally Dry';
+                        break;
+                    case 1:
+                        level = 'Moderate Drought';
+                        break;
+                    case 2:
+                        level = 'Severe Drought';
+                        break;
+                    case 3:
+                        level = 'Extreme Drought';
+                        break;
+                    case 4:
+                        level = 'Exceptional Drought';
+                        break;
+                }
+
+                new Popup('Drought Monitor').create(`
+                    <div class="item"><div class="t">Drought Level</div><div class="v">${level}</div></div>
+                    <div class="item"><div class="t">Last Updated</div><div class="v">${timeAgo(feature.properties.ddate)}</div></div>
+                `);
+            }
+
             /* on weather stations click */
             if (feature.source == 'stns') {
                 new Weather().currentConds(feature.properties);
-
                 break;
             }
 
@@ -1677,16 +1659,16 @@ window.addEventListener('submit', async (e) => {
                         platform: 'web'
                     });
 
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         document.querySelector('#data-form').remove();
-                        notify('success', 'Your report was sent to us for review before it may be added to the map.');
+                        (await loadUtils()).notify('success', 'Your report was sent to us for review before it may be added to the map.');
                     }, 500);
                 } else {
                     sub.disabled = false;
                     sub.value = 'Submit Report';
                     canc.style.display = 'block';
 
-                    notify('error', 'There was an error submitting your report. Please try again.');
+                    (await loadUtils()).notify('error', 'There was an error submitting your report. Please try again.');
                 }
             }
         }

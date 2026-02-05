@@ -132,7 +132,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
                     <li id="report" data-action="report" data-active="0"><i class="far fa-location-plus"></i><span>Report</span></li>
                     <li id="save" data-action="save"><i class="far fa-cloud-arrow-up"></i><span>Sync</span></li>
                 </ul>
-                <i class="fas fa-chevron-left" title="Toggle navigation" id="close-navbar" data-action="close-navbar" data-open="1"></i>
+                <i class="fas fa-chevron-left" title="Toggle navigation" id="close-navbar" data-action="close-navbar" data-open="true"></i>
             </div>
         </nav>
 
@@ -175,6 +175,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@<?= $maplibreVersion ?>/dist/maplibre-gl.min.js"></script>
+    <script async defer src="https://unpkg.com/maplibre-contour@0.1.0/dist/index.min.js"></script>
     <? if (!isset($_GET['version'])) { ?>
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-X03WWLX3BJ"></script>
     <? } ?>

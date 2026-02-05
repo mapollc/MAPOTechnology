@@ -5,7 +5,7 @@ const config = {
     apiURL: 'https://api.mapotechnology.com/v1/',
     productName: 'Wi-Fire',
     company: 'MAPO LLC',
-    apiKey: () => { return 'bG9jYWxob3N0';/*'50e2c43f8f63ff0ed20127ee2487f15e'*/ },
+    apiKey: () => { return '50e2c43f8f63ff0ed20127ee2487f15e' },
     incidents: new Map(),
     REFRESH_IN: 5,
     HOURS_NEW: 12
@@ -210,17 +210,16 @@ function saveSettings() {
         sizeFilter = document.querySelector('#sizeFilter'),
         gacc = document.querySelector('#gacc'),
         landowner = document.querySelector('#landowners'),
-        lastUpdatedFire = stats.allItems.reduce((maxItem, item) => {
-            return !maxItem || item.properties.time.updated > maxItem.properties.time.updated ? item : maxItem;
-        }, null);
+        tabs = document.querySelector('ul.tabs li.active');
 
     const settings = {
+        tab: tabs?.dataset.tab || null,
         gacc: gacc.options[gacc.selectedIndex].value,
         landowner: landowner.options[landowner.selectedIndex].value,
         size: sizeFilter.options[sizeFilter.selectedIndex].value,
         types: Array.from(typeFilter.selectedOptions).map(opt => opt.value),
         saved: new Date().getTime(),
-        dataSync: lastUpdatedFire.properties.time.updated * 1000
+        dataSync: stats.lastUpdatedFire
     };
 
     localStorage.setItem('mapofire.dashboard.settings', JSON.stringify(settings));
@@ -269,6 +268,7 @@ function updated() {
         const minutes = Math.floor(timeLeft / 60),
             seconds = timeLeft % 60;
 
+        if (window.getComputedStyle(el).display == 'none') el.style.display = 'block';
         el.textContent = 'Next update in ' + String(minutes).padStart(1, '0') + ':' + String(seconds).padStart(2, '0');
 
         if (timeLeft === 0) {
@@ -276,12 +276,14 @@ function updated() {
             document.querySelectorAll('p.stat').forEach(item => {
                 item.innerHTML = '<span class="loading"></span>';
             });
+            document.querySelector('#fetchTime').textContent = '';
             document.querySelector('#wildfireList').innerHTML = '<span class="loading"></span>';
-    
+            document.querySelector('#newFiresList').innerHTML = '<span class="loading"></span>';
+
             config.incidents.clear('all');
             config.incidents.clear('smk');
             config.incidents.clear('rx');
-    
+
             getFireData();
         }
 
@@ -304,10 +306,12 @@ async function getFireData() {
 
         const types = ['all', 'new', 'smk', 'rx'];
 
-        await Promise.all(types.map(async (type, i) => {
+        await Promise.all(types.map(async (type, _) => {
             const fires = await api(`${config.apiURL}wildfires/${type}`);
             processFires(fires, type);
         }));
+
+        updated();
 
         const outStats = '%5B%7B"onStatisticField"%3A"TotalIncidentPersonnel"%2C"outStatisticFieldName"%3A"PEOPLE"%2C"statisticType"%3A"sum"%7D%2C%7B"onStatisticField"%3A"EstimatedCostToDate"%2C"outStatisticFieldName"%3A"COST"%2C"statisticType"%3A"sum"%7D%2C%7B"onStatisticField"%3A"FireCause"%2C"outStatisticFieldName"%3A"CAUSE"%2C"statisticType"%3A"count"%7D%2C%7B"onStatisticField"%3A"CASE+WHEN+FinalAcres+>%3D+IncidentSize+AND+FinalAcres+>%3D+DiscoveryAcres+THEN+FinalAcres+WHEN+IncidentSize+>%3D+DiscoveryAcres+THEN+IncidentSize+ELSE+DiscoveryAcres+END"%2C"outStatisticFieldName"%3A"ACRES"%2C"statisticType"%3A"sum"%7D%5D',
             outStats2 = '%5B%7B"onStatisticField"%3A"PrimaryFuelModel"%2C"outStatisticFieldName"%3A"COUNT"%2C"statisticType"%3A"count"%7D%5D';
@@ -315,7 +319,6 @@ async function getFireData() {
         stats.supp = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_YearToDate/FeatureServer/0/query?where=FireOutDateTime+IS+NULL+AND+IncidentTypeCategory+%3D+%27WF%27&&outFields=*&returnGeometry=false&returnCountOnly=false&groupByFieldsForStatistics=FireCause&outStatistics=' + outStats + '&f=json');
         stats.fuels = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_YearToDate/FeatureServer/0/query?where=FireOutDateTime+IS+NULL+AND+IncidentTypeCategory+%3D+%27WF%27&&outFields=*&returnGeometry=false&returnCountOnly=false&groupByFieldsForStatistics=PrimaryFuelModel&outStatistics=' + outStats2 + '&f=json');
 
-        updated();
         stats.init();
     } catch (e) {
         console.error(e);
@@ -330,6 +333,8 @@ class Stats {
         this.supp = null;
         this.fuels = null;
         this.allItems = null;
+        this.lastUpdatedFire = null;
+        this.newDataAvailable = true;
 
         this.totalIncidents = 0;
         this.totalNew = 0;
@@ -386,6 +391,8 @@ class Stats {
         this.gaccAcresCount = document.querySelector('#gaccAcresCount');
         this.landownerCount = document.querySelector('#landownerCount');
         this.wildfireList = document.querySelector('#wildfireList');
+        this.newFiresTitle = document.querySelector('#newFiresTitle');
+        this.newFiresList = document.querySelector('#newFiresList');
         this.filterGACCs = document.querySelector('select#gacc');
         this.filterLandowners = document.querySelector('select#landowners');
         this.sizeFilter = document.querySelector('#sizeFilter');
@@ -418,12 +425,22 @@ class Stats {
         return o;
     }
 
+    syncManagement() {
+        this.lastUpdatedFire = this.allItems.reduce((maxItem, item) => {
+            return !maxItem || item.properties.time.updated > maxItem.properties.time.updated ? item : maxItem;
+        }, 0).properties.time.updated * 1000;
+
+        if (settings) this.newDataAvailable = this.lastUpdatedFire - settings.dataSync > 0;
+    }
+
     calculate() {
         this.totalAll = this.allFires.length;
         this.totalSmoke = this.smokeChecks.length;
         this.totalRX = this.rxBurns.length;
         this.totalIncidents = this.totalAll + this.totalSmoke + this.totalRX;
         this.allItems = [...this.allFires, ...this.smokeChecks, ...this.rxBurns];
+
+        this.syncManagement();
 
         this.allItems.forEach(feat => {
             const prop = feat.properties,
@@ -500,7 +517,13 @@ class Stats {
             else this.fuelModels.other += feat.attributes.COUNT;
         });
 
-        // display all this data
+        // get fires per GACC and set options in the select
+        const initial = this.doGACC();
+        this.animateValue(initial?.count ?? 0, this.gaccCount);
+        this.animateValue(initial?.acres ?? 0, this.gaccAcresCount);
+
+        // save settings as is and display all this data
+        saveSettings();
         this.display();
     }
 
@@ -542,6 +565,11 @@ class Stats {
     }
 
     display() {
+        document.querySelector('#fetchTime').textContent = `, at ${Intl.DateTimeFormat('en-US', {
+            hour: 'numeric',
+            minute: '2-digit'
+        }).format(new Date(this.lastUpdatedFire))}`;
+
         this.animateValue(this.totalIncidents, this.activeFires);
         this.animateValue(this.totalNew, this.newIncs);
         this.animateValue(this.totalAll, this.typeWF);
@@ -557,6 +585,7 @@ class Stats {
             this.sizeFilter.options[this.sizeFilter.selectedIndex].value,
             Array.from(this.typeFilter.selectedOptions).map(opt => opt.value)
         );
+        this.createNewFiresTable();
 
         this.animateValue(this.cause.human, this.fireCause);
         this.animateValue(this.cause.natural, this.fireCause2);
@@ -564,11 +593,6 @@ class Stats {
 
         this.animateValue(this.costTotal, this.cost, true);
         this.animateValue(this.acres, this.currentAcres);
-
-        // get fires per GACC and set options in the select
-        const initial = this.doGACC();
-        this.animateValue(initial?.count ?? 0, this.gaccCount);
-        this.animateValue(initial?.acres ?? 0, this.gaccAcresCount);
 
         // display fires by landownership
         this.filterLandowners.disabled = false;
@@ -586,7 +610,9 @@ class Stats {
         this.animateValue(this.fuelModels.grass, this.grass);
         this.animateValue(this.fuelModels.brush, this.brush);
         this.animateValue(this.fuelModels.slash, this.slash);
-        this.animateValue(this.fuelModels.other, this.other);
+        //this.animateValue(this.fuelModels.other, this.other);
+
+        this.newFiresTitle.textContent = 'New Wildfires (last ' + config.HOURS_NEW + ' hours)';
     }
 
     animateValue(target, displayField, currency = false) {
@@ -605,6 +631,34 @@ class Stats {
         }, 16);
     }
 
+    createTableRow(table, fire) {
+        const prop = fire.properties,
+            div = document.createElement('div');
+
+        div.classList.add('row');
+        div.addEventListener('click', () => {
+            window.open('https://mapofire.com/' + prop.url + '?utm_campaign=mapofire&utm_medium=button&utm_source=blazeboard', 'wildfire');
+        });
+
+        div.innerHTML = `<div>${this.fireName(prop.name, prop.type, prop.incidentId)}</div>
+                    <div class="state">${stateLabels[prop.state]?.name}</div>
+                    <div>${Intl.NumberFormat('en-US', {}).format(prop.acres)} acres</div>
+                    <div class="date">${timeAgo(prop.time.discovered)}</div>`;
+
+        table.querySelector('.scroll').appendChild(div);
+    }
+
+    createNewFiresTable() {
+        this.newFiresList.innerHTML = '<div class="thead"><div class="inline"><div>Name</div><div class="state">State</div><div>Size</div><div>Discovered</div></div></div><div class="scroll"></div>';
+
+        this.tableFires
+            .filter(feat => {
+                return new Date().getTime() - (feat.properties.time.discovered * 1000) < 60 * 60 * config.HOURS_NEW * 1000
+            })
+            .sort((a, b) => b.properties.time.discovered - a.properties.time.discovered)
+            .forEach(fire => this.createTableRow(this.newFiresList, fire));
+    }
+
     updateTable(size, types) {
         this.wildfireList.innerHTML = '<div class="thead"><div class="inline"><div>Name</div><div class="state">State</div><div>Size</div><div>Discovered</div></div></div><div class="scroll"></div>';
 
@@ -618,22 +672,7 @@ class Stats {
                 return ((size == 0 && Number(feat.properties.acres) < 100) ||
                     (size != 0 && Number(feat.properties.acres) >= size)) && typeMatch
             })
-            .forEach(fire => {
-                const prop = fire.properties,
-                    div = document.createElement('div');
-
-                div.classList.add('row');
-                div.addEventListener('click', () => {
-                    window.open('https://mapofire.com/' + prop.url + '?utm_campaign=mapofire&utm_medium=button&utm_source=blazeboard', 'wildfire');
-                });
-
-                div.innerHTML = `<div>${this.fireName(prop.name, prop.type, prop.incidentId)}</div>
-                    <div class="state">${stateLabels[prop.state]?.name}</div>
-                    <div>${Intl.NumberFormat('en-US', {}).format(prop.acres)} acres</div>
-                    <div class="date">${timeAgo(prop.time.discovered)}</div>`;
-
-                this.wildfireList.querySelector('.scroll').appendChild(div);
-            });
+            .forEach(fire => this.createTableRow(this.wildfireList, fire));
 
         this.typeFilter.disabled = false;
         this.sizeFilter.disabled = false;
@@ -642,6 +681,14 @@ class Stats {
 
 function init() {
     getFireData();
+}
+
+function updateTabPos(tab) {
+    document.querySelectorAll('ul.tabs li').forEach(t => t.classList.remove('active'));
+    document.querySelector('ul.tabs li[data-tab="' + tab + '"]').classList.add('active');
+
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelector('.tab-content[data-tab="' + tab + '"]').classList.add('active');
 }
 
 document.onreadystatechange = () => {
@@ -663,6 +710,8 @@ document.onreadystatechange = () => {
             typeFilter.dispatchEvent(new Event('change'));
             sizeFilter.dispatchEvent(new Event('change'));
         }
+
+        updateTabPos(settings?.tab || 'largest');
     } else {
         init();
     }
@@ -685,6 +734,17 @@ window.addEventListener('click', (e) => {
 
     if (e.target.closest('.title')) {
         window.location.href = 'https://mapofire.com/?utm_campaign=mapofire&utm_medium=logo&utm_source=blazeboard';
+    }
+
+    if (e.target.closest('.card')?.id == 'goToNewFires') {
+        updateTabPos('new');
+    }
+
+    if (e.target.closest('.tabs li')) {
+        const tab = e.target.dataset.tab;
+
+        updateTabPos(tab);
+        saveSettings();
     }
 });
 

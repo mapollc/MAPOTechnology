@@ -31,13 +31,6 @@ const specificURL = window.location.origin + '/',
         fuelsData: null,
         specificURL: specificURL,
         donateLink: 'https://mapofire.com/donate',
-        purchaseLink: (utm, next = null) => {
-            if (settings.subscriptions().valid() && config.TIERS[settings.subscriptions().plan()] == config.PERMISSION_LEVELS.PREMIUM) {
-                return config.domain + 'account/billing#upgrade=true&sid=' + settings.subscriptions().subID()
-            } else {
-                return 'https://www.mapotechnology.com/purchase/mapofire' + (utm ? '?utm_campaign=Locked%20Features&utm_source=mapofire&utm_medium=' + utm : '') + (next ? '&next=' + next : '');
-            }
-        },
         mapboxToken: 'pk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbG5qb3ppd3oxbGw5MmtyaXEyenRtZG5xIn0.jBgm6b3soPoBzbKjvMUwWw',
         //defaultAttr: '&copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a> ',
         defaultAttr: '',
@@ -154,7 +147,7 @@ const specificURL = window.location.origin + '/',
         'bp': { layers: ['bp'], exe: () => { config.layersHandler.bp(); } },
         'whp': { layers: ['whp'], exe: () => { config.layersHandler.whp(); } },
         'wet': { layers: ['wet'], exe: () => { config.layersHandler.wet(); } },
-        'drought': { layers: ['drought'], exe: () => { config.layersHandler.drought(); } },
+        'drought': { layers: ['drought', 'drought_outline', 'drought_title'], exe: () => { config.layersHandler.drought(); } },
         'power': { layers: ['power'], exe: () => { config.layersHandler.power(); } },
         'fuels': { layers: ['fuels', 'fuelsAK'], exe: () => { config.layersHandler.fuels(); } },
 
@@ -188,7 +181,7 @@ const specificURL = window.location.origin + '/',
         },
         'spc': {
             run: async (checked) => {
-                if (impact.style.display == 'flex' && impact.getAttribute('data-content') == 'layers') {
+                if (impact.style.display == 'flex' && impact.dataset.content == 'layers') {
                     document.querySelector('#otlkType').disabled = !checked;
                     document.querySelector('#otlkDay').disabled = !checked;
                 }
@@ -488,24 +481,6 @@ config.tiles = {
     dark: config.host + 'data/maps/dark.json'
     //dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
 };
-
-function notify(t, m, time = null) {
-    const timing = (time == null ? (((m.split(' ').length / 5) + 0.5) * 1000) + 500 : time * 1000),
-        el = document.createElement('div'),
-        icon = t == 'success' ? 'fa-check' : (t == 'info' ? 'fa-circle-info' : 'fa-circle-exclamation');
-
-    document.querySelector('div.alert')?.remove();
-
-    el.classList.add('alert', t);
-
-    if (modal.classList.contains('open')) el.classList.add('mo');
-
-    el.style.display = 'flex';
-    el.innerHTML = '<i class="fas ' + icon + '"></i><p>' + m + '</p>';
-    document.body.append(el);
-
-    setTimeout(() => { el.remove(); }, timing);
-}
 
 function debounce(fn, wait) {
     let timeout;
@@ -816,9 +791,7 @@ class Convert {
     }
 
     async getRasterColor(coords, layerId) {
-        if (!map.getLayer(layerId)) {
-            return null;
-        }
+        if (!map.getLayer(layerId)) return null;
 
         const source = map.getSource(map.getLayer(layerId).source),
             z = Math.floor(map.getZoom()),
@@ -870,14 +843,12 @@ class ClickListener {
     }
 
     async mcta() {
-        const utm = this.target.dataset.utm;
-
-        (await loadUtils()).marketing(true, utm);
+        (await loadUtils()).marketing(true, this.target.dataset.utm);
     }
 
     async copy() {
         await navigator.clipboard.writeText(this.target.innerText);
-        notify('info', 'Coordinates copied to clipboard');
+        (await loadUtils()).notify('info', 'Coordinates copied to clipboard');
     }
 
     closeDataForm() {
@@ -1087,20 +1058,17 @@ class ClickListener {
     }
 
     closeNavbar() {
-        const nav = document.querySelector('nav');
         if (!this.target) return;
+        const nav = document.querySelector('nav'),
+            isOpen = this.target.dataset.open === 'true',
+            left = 'fa-chevron-left',
+            right = 'fa-chevron-right';
 
-        if (this.target.dataset.open === '1') {
-            this.target.dataset.open = '0';
-            this.target.classList.replace('fa-chevron-left', 'fa-chevron-right');
-            document.documentElement.style.setProperty('--nav-width', '40px');
-            nav?.classList.add('hide');
-        } else {
-            this.target.dataset.open = '1';
-            this.target.classList.replace('fa-chevron-right', 'fa-chevron-left');
-            document.documentElement.style.setProperty('--nav-width', '100px');
-            nav?.classList.remove('hide');
-        }
+        this.target.dataset.open = (!isOpen).toString();
+        this.target.classList.replace(isOpen ? left : right, isOpen ? right : left);
+
+        document.documentElement.style.setProperty('--nav-width', isOpen ? '40px' : '89px');
+        nav?.classList.toggle('hide', isOpen);
     }
 
     newFire() {
@@ -1122,7 +1090,7 @@ class ClickListener {
         navigator.share({
             title: (this.target.getAttribute('title') ? this.target.getAttribute('title') : document.title),
             text: "",
-            url: (this.target.getAttribute('data-href') ? this.target.getAttribute('data-href').split('#')[0] : window.location.href.split('#')[0])
+            url: (this.target.dataset.href ? this.target.dataset.href.split('#')[0] : window.location.href.split('#')[0])
         }).catch(console.error);
     }
 
@@ -1174,7 +1142,7 @@ class ClickListener {
             if (box) box.querySelector('input[type=checkbox]').checked = isChecked;
 
             if (layer.minZoom) {
-                if (map.getZoom() >= item.getAttribute('data-min-zoom')) {
+                if (map.getZoom() >= item.dataset.minZoom) {
                     item.classList.remove('more-zoom');
                     item.setAttribute('title', String(item.querySelector('label').innerHTML));
                 } else {
@@ -1213,10 +1181,10 @@ class ClickListener {
                         ndfd: [{
                             q: 'forecastModel',
                             v: settings.special().forecastModel()
-                        }, {
+                        }/*, {
                             q: 'fcstTime',
                             v: settings.special().fcstTime()
-                        }]
+                        }*/]
                     };
 
                     if (isChecked) filter.querySelectorAll('select').forEach(select => select.disabled = false);
@@ -1450,7 +1418,7 @@ class ClickListener {
         return content;
     }
 
-    account() {
+    async account() {
         if (!settings.user) {
             const guid = document.cookie.split('; ').find(row => row.startsWith('guid='))?.split('=')[1] || null,
                 url = config.domain.replace('www', 'auth') + 'login?service=' + getPlatform() + '&next=' + encodeURIComponent(window.location.href) + (guid ? '&guid=' + guid : '');
@@ -1507,7 +1475,7 @@ class ClickListener {
         });
 
         if (!settings.subscriptions().valid()) {
-            ms = '<p style="color:#bdbdbd;font-size:15px">You don\'t have a subscription to Map of Fire. <a class="btn btn-green" style="width:100%;margin:1em 0 0 0" href="' + config.purchaseLink('account', encodeURIComponent(window.location.href)) + '">Try it out!</a>';
+            ms = '<p style="color:#bdbdbd;font-size:15px">You don\'t have a subscription to Map of Fire. <a class="btn btn-green" style="width:100%;margin:1em 0 0 0" href="' + (await loadUtils()).purchaseLink('account', encodeURIComponent(window.location.href)) + '">Try it out!</a>';
         } else {
             let theEnd = 'Your subscription will automatically renew';
 
@@ -1580,13 +1548,13 @@ class ClickListener {
     }
 
     async follow() {
-        let id = parseInt(this.target.getAttribute('data-id')),
+        let id = parseInt(this.target.dataset.id),
             fire = config.wildfire.findFire(id),
             name = fire.properties.name.replace(' Fire', '') + (fire.properties.type != 'Smoke Check' ? ' Fire' : '');
 
         if (fire != null) {
-            const isRemove = this.target.getAttribute('data-mode') == 'unfollow' && tracked.includes(id),
-            tf = document.querySelector('#trackFire');
+            const isRemove = this.target.dataset.mode == 'unfollow' && tracked.includes(id),
+                tf = document.querySelector('#trackFire');
 
             // remove, otherwise add
             const m = isRemove ? 'remove' : 'add';
@@ -1618,8 +1586,8 @@ class ClickListener {
     }
 
     async unfollow() {
-        const id = this.target.getAttribute('data-wfid'),
-            name = this.target.getAttribute('data-name'),
+        const id = this.target.dataset.wfid,
+            name = this.target.dataset.name,
             myf = document.querySelector('ul.my-fires');
 
         this.target.parentElement.parentElement.remove();
@@ -1723,14 +1691,14 @@ class ClickListener {
             li.dataset.coords = JSON.stringify(geometry.coordinates);
 
             li.innerHTML = `<div class="header">
-                    <h3>${name}</h3>
-                    <i class="fas fa-circle-check" data-action="my-fire-unfollow" title="Unfollow this incident" data-name="${name}" data-wfid="${p.wfid}"></i>
-                </div>
-                <span class="state">${state}</span>
-                <div class="inf">
-                    <p style="color:#fff;font-size:18px">${size}</p>
-                    <span class="status ${st}">${st.toUpperCase()}</span>
-                </div>`;
+                <h3>${name}</h3>
+                <i class="fas fa-circle-check" data-action="my-fire-unfollow" title="Unfollow this incident" data-name="${name}" data-wfid="${p.wfid}"></i>
+            </div>
+            <span class="state">${state}</span>
+            <div class="inf">
+                <p style="color:#fff;font-size:18px">${size}</p>
+                <span class="status ${st}">${st.toUpperCase()}</span>
+            </div>`;
 
             ul.appendChild(li);
         });
@@ -1741,9 +1709,7 @@ class ClickListener {
             if (!li) return;
 
             const coords = JSON.parse(li.dataset.coords);
-            if (coords) {
-                map.flyTo({ center: coords, zoom: 11.5 });
-            }
+            if (coords) map.flyTo({ center: coords, zoom: 11.5 });
         });
 
         // Replace spinner with list
@@ -1811,8 +1777,8 @@ class ClickListener {
                     .setLngLat([lon, lat])
                     .addTo(map);
 
-                new Popup('Coordinates').create(`<p style="margin-bottom:6px;color:#fff">${lat},&nbsp;${lon}</p>
-                    <span style="display:block;margin-bottom:3px;font-size:14px">${String(conversion.convertToDms(lat, false) + '&nbsp;' + conversion.convertToDms(lon, true)).replace(/\s/g, '')}</span>
+                new Popup('Coordinates').create(`<p style="padding-bottom:8px;color:#fff">${lat},&nbsp;${lon}</p>
+                    <span style="display:block;padding-bottom:4px;font-size:14px">${String(conversion.convertToDms(lat, false) + '&nbsp;' + conversion.convertToDms(lon, true)).replace(/\s/g, '')}</span>
                     <span style="display:block;font-size:14px">${conversion.utm(lat, lon)}</span>`);
 
                 map.easeTo({
@@ -1822,7 +1788,7 @@ class ClickListener {
             }
             // zoom to a wildfire
             else {
-                const wfid = parseInt(p.getAttribute('data-wfid'));
+                const wfid = parseInt(p.dataset.wfid);
                 if (config.wildfire.findFire(wfid)) config.wildfire.incident(wfid, true);
             }
         }
@@ -1853,9 +1819,7 @@ function toggleLayer(e) {
             }
         };
 
-    if (!action || !settings.hasPermissions(layerPerms)) {
-        return;
-    }
+    if (!action || !settings.hasPermissions(layerPerms)) return;
 
     if (action.run) {
         action.run(checked);
@@ -1869,12 +1833,14 @@ function toggleLayer(e) {
 async function getCounties() {
     const ArcGISFeatureSource = window[""]["arcgis-featureserver"];
 
-    new ArcGISFeatureSource('us_counties', map, {
-        url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_Counties_Generalized_Boundaries/FeatureServer/0',
-        precision: 6,
-        where: '1=1',
-        outFields: 'NAME,STATE_ABBR AS STATE,FIPS,POPULATION,SQMI'
-    });
+    if (!map.getSource('us_counties')) {
+        new ArcGISFeatureSource('us_counties', map, {
+            url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_Counties_Generalized_Boundaries/FeatureServer/0',
+            precision: 6,
+            where: '1=1',
+            outFields: 'NAME,STATE_ABBR AS STATE,FIPS,POPULATION,SQMI'
+        });
+    }
 
     if (!map.getLayer('us_counties')) {
         map.addLayer({
@@ -1970,7 +1936,7 @@ function addDynamicControls() {
     list.forEach(c => map.addControl(c, useBottom ? 'bottom-right' : 'top-right'));
 }
 
-function init() {
+async function init() {
     let ctr_lat = settings.map().lat,
         ctr_lon = settings.map().lon;
 
@@ -1981,6 +1947,7 @@ function init() {
         style: config.tiles[settings.getBasemap()],
         projection: 'mercator',
         hash: true,
+        maxPitch: 85,
         pitch: (settings.map().pitch ? settings.map().pitch : 0),
         bearing: (settings.map().bearing ? settings.map().bearing : 0),
         attributionControl: false
@@ -2056,8 +2023,6 @@ function init() {
 
         getCounties();
 
-        new (await loadUtils()).Layers().add3D();
-
         map.setSky(config.fog);
 
         /* add fire icons */
@@ -2077,6 +2042,9 @@ function init() {
         };
 
         loadMapIcons();
+
+        // add terrain on contour lines
+        new (await loadUtils()).Layers().addTerrain();
 
         /* if user has settings saved, go to their saved location...not the mapbox hash location */
         if (window.location.hash) {
@@ -2204,11 +2172,11 @@ function upgrade() {
 async function popstate() {
     // if user is trying to view historical fires without a subscription
     if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && window.location.href.match(/archive=([0-9]+)/g) != null) {
-        notify('info', 'You must upgrade to view historical fires. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="archive_snackbar">Get access</a>', 6);
+        (await loadUtils()).notify('info', 'You must upgrade to view historical fires. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="archive_snackbar">Get access</a>', 6);
     }
 
     if (/loggedOut=1/.test(window.location.href)) {
-        notify('success', 'You were successfully logged out.');
+        (await loadUtils()).notify('success', 'You were successfully logged out.');
     }
 
     /* if URL is supposed to open an incident */
@@ -2280,6 +2248,14 @@ document.onreadystatechange = async () => {
         Object.entries(layers.categories).forEach(([id, _]) => {
             layers.layers[id].forEach(each => config.listOfLayers.push(each));
         });
+
+        // get the user's IP address and UUID from the server (DONT BLOCK UI THREAD)
+        if (sessionStorage.getItem('mapofire.user_session') == null) {
+            api(config.host + 'api/v1/session/get').then(sess => {
+                delete sess.metadata;
+                sessionStorage.setItem('mapofire.user_session', JSON.stringify(sess));
+            });
+        }
 
         if (token != null) {
             const acct = document.querySelector('#account'),
@@ -2447,14 +2423,14 @@ window.addEventListener('click', async (e) => {
                 new (await loadUtils()).NWS().getOutlookText(ds.type, ds.day);
             },
             'marketing-cta': () => clickListener.mcta(),
-            /*'upgrade-subscription': () => {
+            /*'upgrade-subscription': async () => {
                 gtag('event', 'subscription_cta_click', {
                     'event_category': 'Subscription',
                     'event_label': e.target.dataset.medium,
                     'source': e.target.dataset.medium
                 });
 
-                window.location.href = config.purchaseLink(e.target.dataset.medium);
+                window.location.href = (await loadUtils()).purchaseLink(e.target.dataset.medium);
             },*/
             'incident_wx-fwf': () => {
                 new Weather(e.target.dataset.lat, e.target.dataset.lon).fireWxFcst();
@@ -2462,7 +2438,7 @@ window.addEventListener('click', async (e) => {
             'sharer': () => clickListener.sharer(),
             'radar-control': () => clickListener.radarPausePlay(),
             'trackFire': () => clickListener.follow(),
-            'readWWA': async () => new (await loadUtils()).NWS().readWWA(target.getAttribute('data-id')),
+            'readWWA': async () => new (await loadUtils()).NWS().readWWA(target.dataset.id),
             'my-fire-unfollow': () => clickListener.unfollow(),
             'account': () => clickListener.account(),
             'new_fires': () => newFiresReport(),
@@ -2477,7 +2453,7 @@ window.addEventListener('click', async (e) => {
                 } else {
                     document.querySelector('li#fwf').setAttribute('data-active', '1');
                     map.getCanvas().style.cursor = 'crosshair';
-                    notify('info', 'Click anywhere on get the fire weather forecast.');
+                    (await loadUtils()).notify('info', 'Click anywhere on get the fire weather forecast.');
                 }
             },
             'myfires': () => clickListener.myfires(),
@@ -2489,10 +2465,10 @@ window.addEventListener('click', async (e) => {
                     clickListener.archive();
                 }
             },
-            'report': () => {
+            'report': async () => {
                 document.querySelector('li#report').setAttribute('data-active', '1');
                 map.getCanvas().style.cursor = 'crosshair';
-                notify('info', 'Click anywhere on the map to report a <b>NEW</b> fire incident.');
+                (await loadUtils()).notify('info', 'Click anywhere on the map to report a <b>NEW</b> fire incident.');
             },
             'measure': () => new Tools().startMeasure(),
             'save': () => saveSession(false, true)

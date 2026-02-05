@@ -1,7 +1,5 @@
 :root {
-    --nav-width: 89px
-        /*100px*/
-    ;
+    --nav-width: 89px;
     --mb-button-width: 35px;
     --container-space: 0.7em;
     --modal-height: 8vh;
@@ -262,7 +260,7 @@ nav.hide ul li span {
 }
 
 nav.hide .nav-wrapper .logo img {
-    padding: 0 4px;
+    padding: 0 5px;
 }
 
 #close-navbar {
@@ -725,7 +723,7 @@ a.maplibregl-ctrl-logo {
 
     nav {
         transition: transform 0.3s ease;
-        max-width: calc(100% - 33.33vw);
+        max-width: 70vw;
         transform: translateX(-100%);
     }
 

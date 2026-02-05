@@ -65,6 +65,11 @@ $desc = "BlazeBoard is Map of Fire's wildfire dashboard, displaying active fires
         </div>
     </header>
 
+    <h1 class="title">Current U.S. Wildfire Status: Today<span id="fetchTime"></span></h1>
+    <a href="//mapofire.com?utm_campaign=mapofire&utm_medium=button&utm_source=blazeboard" class="btn cta btn-yellow btn-large" title="Go to live wildfire map">
+        <i class="fas fa-location-dot"></i>Explore fire activity
+    </a>
+
     <main>
         <div class="column" id="left">
             <div class="grid highlight">
@@ -85,13 +90,13 @@ $desc = "BlazeBoard is Map of Fire's wildfire dashboard, displaying active fires
             <div class="grid">
                 <div class="card">
                     <div class="card-content">
-                        <h2>Cause: Human</h2>
+                        <h2>Human-Caused</h2>
                         <p class="stat" id="cause"><span class="loading"></span></p>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-content">
-                        <h2>Cause: Natural</h2>
+                        <h2>Nature-Caused</h2>
                         <p class="stat" id="cause2"><span class="loading"></span></p>
                     </div>
                 </div>
@@ -170,34 +175,34 @@ $desc = "BlazeBoard is Map of Fire's wildfire dashboard, displaying active fires
             <div class="grid">
                 <div class="card">
                     <div class="card-content">
-                        <h2>Fuel: Timber</h2>
+                        <h2>Fires in Timber</h2>
                         <p class="stat" id="timber"><span class="loading"></span></p>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-content">
-                        <h2>Fuel: Grass</h2>
+                        <h2>Fires in Grass</h2>
                         <p class="stat" id="grass"><span class="loading"></span></p>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-content">
-                        <h2>Fuel: Brush</h2>
+                        <h2>Fires in Brush</h2>
                         <p class="stat" id="brush"><span class="loading"></span></p>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-content">
-                        <h2>Fuel: Slash</h2>
+                        <h2>Fires in Slash</h2>
                         <p class="stat" id="slash"><span class="loading"></span></p>
                     </div>
                 </div>
-                <div class="card">
+                <!--<div class="card">
                     <div class="card-content">
                         <h2>Fuel: Other</h2>
                         <p class="stat" id="other"><span class="loading"></span></p>
                     </div>
-                </div>
+                </div>-->
             </div>
         </div>
 
@@ -205,7 +210,7 @@ $desc = "BlazeBoard is Map of Fire's wildfire dashboard, displaying active fires
             <hr class="screen">
 
             <div class="grid highlight">
-                <div class="card">
+                <div class="card" id="goToNewFires" style="cursor:pointer">
                     <div class="card-content">
                         <h2>New Incidents</h2>
                         <p class="stat" id="newinc" style="color:var(--green)"><span class="loading"></span></p>
@@ -231,40 +236,50 @@ $desc = "BlazeBoard is Map of Fire's wildfire dashboard, displaying active fires
                 </div>
             </div>
 
-            <div class="grid" id="cta1">
-                <div class="card no-bg">
-                    <div class="card-content">
-                        <a href="//mapofire.com?utm_campaign=mapofire&utm_medium=cta_btn_1&utm_source=blazeboard" class="btn cta btn-yellow btn-large" style="margin:0">See wildfires on the map</a>
-                    </div>
-                </div>
-            </div>
-
             <div class="grid">
-                <div class="card">
-                    <div class="card-content">
-                        <h2 class="filterable">
-                            <span>Current Wildfires</span>
-                            <div>
-                                <i style="font-size:14px" class="far fa-filters"></i>
-                                <select id="typeFilter" size="1" multiple disabled>
-                                    <option selected value="all">Wildfires</option>
-                                    <option selected value="smk">Smoke Checks</option>
-                                    <option selected value="rx">RX Burns</option>
-                                </select>
-                                <select id="sizeFilter" disabled>
-                                    <option value="0">0-100 acres</option>
-                                    <option selected value="100">>100 acres</option>
-                                    <option value="1000">>1,000 acres</option>
-                                    <option value="10000">>10,000 acres</option>
-                                </select>
+                <div class="tab-area">
+                    <ul class="tabs">
+                        <li data-tab="largest">Largest Fires</li>
+                        <li data-tab="new">New Fires</li>
+                    </ul>
+                    <div class="tab-content active" data-tab="largest">
+                        <div class="card">
+                            <div class="card-content">
+
+                                <h2 class="filterable">
+                                    <span>Largest Wildfires</span>
+                                    <div>
+                                        <i style="margin-right:4px;font-size:14px" class="far fa-filters"></i>
+                                        <select id="typeFilter" size="1" multiple disabled>
+                                            <option selected value="all">Wildfires</option>
+                                            <option selected value="smk">Smoke Checks</option>
+                                            <option selected value="rx">RX Burns</option>
+                                        </select>
+                                        <select id="sizeFilter" disabled>
+                                            <option selected value="100">>100 acres</option>
+                                            <option value="1000">>1,000 acres</option>
+                                            <option value="10000">>10,000 acres</option>
+                                        </select>
+                                    </div>
+                                </h2>
+
+                                <div class="table" id="wildfireList">
+                                    <span class="loading"></span>
+                                </div>
                             </div>
-                        </h2>
-
-                        <div class="table" id="wildfireList">
-                            <span class="loading"></span>
                         </div>
+                    </div>
 
-                        <a href="//mapofire.com?utm_campaign=mapofire&utm_medium=cta_btn_2&utm_source=blazeboard" id="cta2" class="btn cta btn-orange btn-large">See wildfires on the map</a>
+                    <div class="tab-content" data-tab="new">
+                        <div class="card">
+                            <div class="card-content">
+                                <h2 class="filterable"><span id="newFiresTitle">New Wildfires</span></h2>
+
+                                <div class="table" id="newFiresList">
+                                    <span class="loading"></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

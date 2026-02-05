@@ -56,15 +56,6 @@ body {
     margin: auto;
 }
 
-.cta {
-    width: 100%;
-    max-width: 300px;
-}
-
-#cta2 {
-    display: none;
-}
-
 header {
     position: sticky;
     top: 0;
@@ -79,6 +70,20 @@ header {
 #menuIcon {
     display: none;
     cursor: pointer;
+}
+
+h1.title {
+    display: block;
+    color: #fff;
+    text-align: center;
+    margin: var(--spacing) 0 0 0;
+    user-select: none;
+}
+
+.cta {
+    display: block;
+    margin: var(--spacing) auto;
+    text-align: center;
 }
 
 header .heading {
@@ -120,6 +125,7 @@ header .heading .data {
 }
 
 header #now {
+    display: none;
     font-size: 12px;
     color: #b5b5b5;
 }
@@ -175,7 +181,7 @@ main .column {
 }
 
 .grid .card .card-content {
-    display: inline-block;
+    display: block;
     min-width: 100%;
 }
 
@@ -278,6 +284,52 @@ hr {
 hr.screen {
     display: none;
     margin: var(--spacing) auto 0 auto;
+}
+
+.tab-area {
+    display: block;
+    color: var(--box-text-color);
+    transition: all .25s ease-in-out;
+    overflow-x: auto;
+}
+
+.tab-area ul.tabs {
+    display: inline-flex;
+    justify-content: flex-start;
+    width: 100%;
+    list-style: none;
+    gap: var(--half-spacing);
+}
+
+.tab-area ul.tabs li {
+    display: block;
+    padding: 10px 16px;
+    background-color: var(--box-border);
+    color: var(--light-gray);
+    border-radius: 3px 3px 0 0;
+    user-select: none;
+    cursor: pointer;
+    transition: all .2s ease-in-out;
+}
+
+.tab-area ul.tabs li.active {
+    background-color: var(--blue);
+}
+
+.tab-area ul.tabs li:not(.active):hover {
+    background-color: #273852;
+}
+
+.tab-area .tab-content {
+    display: none;
+}
+
+.tab-area .tab-content .loading {
+    margin: var(--spacing) auto;
+}
+
+.tab-area .tab-content.active {
+    display: block;
 }
 
 #wildfireList {
@@ -510,15 +562,8 @@ footer .footer-menu li a:hover {
     }
 
     .table div.row div:first-child {
-        font-weight: 400;
-    }
-
-    #cta1 {
-        display: none;
-    }
-
-    #cta2 {
-        display: inline-flex;
+        font-weight: 500;
+        color: var(--orange);
     }
 }
 

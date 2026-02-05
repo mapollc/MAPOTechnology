@@ -19,15 +19,13 @@ self.addEventListener('install', (event) => {
         `${HOST}src/js/incident-${self.VERSION}.js`,
         `${HOST}src/js/wwas-${self.VERSION}.js`,
         `${HOST}src/js/fwf-${self.VERSION}.js`,
-        `${HOST}src/js/mf.tools-${self.VERSION}.js`,
+        //`${HOST}src/js/mf.tools-${self.VERSION}.js`,
         `${HOST}src/js/arcgis-${self.VERSION}.js`,
         'https://kit.fontawesome.com/aa68e0c9b6.js',
         'https://code.highcharts.com/highcharts.js',
         'https://code.highcharts.com/modules/exporting.js',
         `https://cdn.jsdelivr.net/npm/maplibre-gl@${self.MB_VERSION}/dist/maplibre-gl.min.css`,
         `https://cdn.jsdelivr.net/npm/maplibre-gl@${self.MB_VERSION}/dist/maplibre-gl.min.js`
-        /*`https://api.mapbox.com/mapbox-gl-js/${self.MB_VERSION}/mapbox-gl.js`,
-        `https://api.mapbox.com/mapbox-gl-js/${self.MB_VERSION}/mapbox-gl.css`*/
     ];
 
     event.waitUntil(

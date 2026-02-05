@@ -544,7 +544,7 @@ export class Search {
 
                 if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
                     const h = map.getCenter(),
-                        dist = conversion.distance(h.lat, h.lng, lat, lon).toFixed(1),
+                        dist = numberFormat(conversion.distance(h.lat, h.lng, lat, lon), 1),
                         dms = String(conversion.convertToDms(lat, false) + '&nbsp;' + conversion.convertToDms(lon, true)).replace(/\s/g, '');
 
                     const li = document.createElement('li');
@@ -1030,17 +1030,135 @@ export class Layers {
         this.evacuations();
     }
 
-    add3D() {
-        if (settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && settings.getBasemap() == 'outdoors' && !map.getSource('terrain')) {
-            map.addSource('terrain', {
-                'type': 'raster-dem',
-                'url': 'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=ZeQEIVoqyieC6wk8qxJH',
-            });
+    contours(demSource) {
+        demSource.setupMaplibre(maplibregl);
 
-            map.setTerrain({
-                source: 'terrain',
-                exaggeration: 2
+        if (!map.getSource('contours')) {
+            map.addSource('contours', {
+                type: 'vector',
+                tiles: [
+                    demSource.contourProtocolUrl({
+                        multiplier: 3.28084,
+                        thresholds: {
+                            11: [200, 1000],
+                            12: [100, 500],
+                            14: [50, 200],
+                            15: [20, 100]
+                        },
+                        contourLayer: 'contours',
+                        elevationKey: 'ele',
+                        levelKey: 'level',
+                        extent: 4096,
+                        buffer: 1
+                    })
+                ],
+                maxzoom: 15
             });
+        }
+
+        if (!map.getLayer('contour-lines')) {
+            map.addLayer({
+                id: 'contour-lines',
+                type: 'line',
+                source: 'contours',
+                'source-layer': 'contours',
+                paint: {
+                    'line-color': '#626250',
+                    'line-opacity': 0.37,
+                    'line-width': ['match', ['get', 'level'], 1, 1, 0.5],
+                }
+            });
+        }
+
+        if (!map.getLayer('contour-labels')) {
+            map.addLayer({
+                id: 'contour-labels',
+                type: 'symbol',
+                source: 'contours',
+                'source-layer': 'contours',
+                filter: ['>', ['get', 'level'], 0],
+                layout: {
+                    'symbol-placement': 'line',
+                    'text-size': 10,
+                    'text-allow-overlap': true,
+                    'text-justify': 'center',
+                    'text-field': ['concat', ['number-format', ['get', 'ele'], {}], ' ft'],
+                    'text-font': config.fonts.source(),
+                },
+                paint: {
+                    'text-color': '#6b6638',
+                    'text-halo-color': '#ddddd5',
+                    'text-halo-width': 2,
+                    'text-halo-blur': 1
+                }
+            });
+        }
+    }
+
+    addTerrain() {
+        if (settings.hasPermissions(config.PERMISSION_LEVELS.PRO)) { console.log('add terrain');
+            const wait = setInterval(() => {
+                if (typeof mlcontour !== 'undefined') {
+                    clearInterval(wait);
+
+                    const demSource = new mlcontour.DemSource({
+                        url: 'https://tiles.mapterhorn.com/{z}/{x}/{y}.webp',
+                        encoding: 'terrarium',
+                        maxzoom: 13,
+                        worker: true,
+                        cacheSize: 100,
+                        timeoutMs: 10_000
+                    });
+
+                    if (!map.getSource('terrain')) {
+                        map.addSource('terrain', {
+                            type: 'raster-dem',
+                            encoding: 'terrarium',
+                            maxzoom: 13,
+                            url: 'https://tiles.mapterhorn.com/tilejson.json'
+                        });
+                    }
+
+                    if (!map.getSource('hillshading')) {
+                        map.addSource('hillshading', {
+                            type: 'raster-dem',
+                            encoding: 'terrarium',
+                            maxzoom: 13,
+                            url: 'https://tiles.mapterhorn.com/tilejson.json'
+                        });
+                    }
+
+                    // set 3d terrain
+                    map.setTerrain({
+                        source: 'terrain',
+                        exaggeration: 1.1
+                    });
+
+                    if (settings.getBasemap() == 'outdoors') {
+                        map.addLayer({
+                            id: 'hillshading',
+                            type: 'hillshade',
+                            source: 'hillshading',
+                            layout: {},
+                            paint: {
+                                'hillshade-exaggeration': 0.1,
+                                'hillshade-shadow-color': 'rgba(50, 50, 50, 0.7)',
+                                'hillshade-accent-color': 'rgb(129, 128, 120)',
+                                'hillshade-highlight-color': 'rgba(250, 250, 250, 0.9)'
+                            }
+                        });
+                    } else if (map.getLayer('hillshading')) map.removeLayer('hillshading');
+
+                    if (settings.getBasemap() == 'outdoors') {
+                        this.contours(demSource);
+                    } else {
+                        ['contour-lines', 'contour-labels'].forEach(layer => {
+                            if (map.getLayer(layer)) map.removeLayer(layer);
+                        });
+                    }
+                    ////}
+                }
+            }, 100);
         }
     }
 
@@ -1934,7 +2052,7 @@ export class Layers {
             map.addSource('bp', {
                 type: 'raster',
                 tiles: [
-                    'https://imagery.geoplatform.gov/iipp/rest/services/Fire_Aviation/USFS_EDW_RMRS_WRC_BurnProbablility/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Risk%20to%20Homes&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
+                    'https://imagery.geoplatform.gov/iipp/rest/services/Fire_Aviation/USFS_EDW_RMRS_WRC_BurnProbability/ImageServer/exportImage?service=WMS&request=GetMap&layers=show%3A0&styles=&format=png32&transparent=true&version=1.1.1&id=Wildfire%20Risk%20to%20Homes&dpi=96&bboxSR=102100&imageSR=102100&size=256%2C256&f=image&width=256&height=256&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
                 ],
                 tileSize: 256
             });
@@ -1982,7 +2100,94 @@ export class Layers {
     }
 
     async drought() {
+        const ArcGISFeatureSource = window[""]["arcgis-featureserver"],
+            color = [
+                'case',
+                ['==', ['to-number', ['get', 'dm']], 0], '#ffff00',
+                ['==', ['to-number', ['get', 'dm']], 1], '#ffcc99',
+                ['==', ['to-number', ['get', 'dm']], 2], '#ff6600',
+                ['==', ['to-number', ['get', 'dm']], 3], '#ff0000',
+                ['==', ['to-number', ['get', 'dm']], 4], '#660000',
+                'rgba(255, 255, 255, 0)'
+            ];
+
         if (!map.getSource('drought')) {
+            new ArcGISFeatureSource('drought', map, {
+                url: 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/US_Drought_Intensity_v1/FeatureServer/3',
+                precision: 6,
+                where: '1=1',
+                outFields: 'ddate,dm'
+            });
+        }
+
+        if (!map.getLayer('drought')) {
+            map.addLayer({
+                id: 'drought',
+                type: 'fill',
+                source: 'drought',
+                paint: {
+                    'fill-color': color,
+                    'fill-opacity': 0.5
+                },
+                layout: {
+                    visibility: 'visible'
+                }
+            });
+        }
+
+        if (!map.getLayer('drought_outline')) {
+            map.addLayer({
+                id: 'drought_outline',
+                type: 'line',
+                source: 'drought',
+                paint: {
+                    'line-color': color,
+                    'line-width': 2,
+                    'line-opacity': 0.75
+                },
+                layout: {
+                    visibility: 'visible'
+                }
+            });
+        }
+
+        if (!map.getLayer('drought_title')) {
+            map.addLayer({
+                id: 'drought_title',
+                type: 'symbol',
+                source: 'drought',
+                minzoom: 7.8,
+                paint: {
+                    'text-color': '#000',
+                    'text-halo-color': '#fff',
+                    'text-halo-blur': 1,
+                    'text-halo-width': 1
+                },
+                layout: {
+                    'symbol-placement': 'line',
+                    'symbol-spacing': 400,
+                    'text-font': config.fonts.din(),
+                    'text-field': [
+                        'case',
+                        ['==', ['to-number', ['get', 'dm']], 0], 'Abnormally Dry',
+                        ['==', ['to-number', ['get', 'dm']], 1], 'Moderate Drought',
+                        ['==', ['to-number', ['get', 'dm']], 2], 'Severe Drought',
+                        ['==', ['to-number', ['get', 'dm']], 3], 'Extreme Drought',
+                        ['==', ['to-number', ['get', 'dm']], 4], 'Exceptional Drought',
+                        ''
+                    ],
+                    'text-justify': 'auto',
+                    'text-size': 13,
+                    'text-transform': 'uppercase',
+                    'text-max-width': 12,
+                    'text-max-angle': 30,
+                    'text-anchor': 'center',
+                    'text-offset': [0, 1],
+                    'text-letter-spacing': 0.05
+                }
+            });
+        }
+        /*if (!map.getSource('drought')) {
             map.addSource('drought', {
                 type: 'raster',
                 tiles: [
@@ -2004,7 +2209,7 @@ export class Layers {
                     visibility: 'visible'
                 }
             });
-        }
+        }*/
     }
 
     async fuels() {
@@ -3077,6 +3282,7 @@ export class Layers {
 export class Wildfires {
     constructor() {
         this.store = localStorage.getItem('mapofire.clicks');
+        this.ArcGISFeatureSource = window[""]["arcgis-featureserver"];
         this.agencies = {
             'US Forest Service': 'USFS',
             'Bureau of Land Management': 'BLM',
@@ -3545,7 +3751,7 @@ export class Wildfires {
         if (document.querySelector('#modal').classList.contains('opened', 'fire')) {
             const tf = document.querySelector('#trackFire');
 
-            if (tf && tracked.includes(tf.getAttribute('data-id'))) {
+            if (tf && tracked.includes(tf.dataset.id)) {
                 tf.setAttribute('data-following', '1');
                 tf.setAttribute('title', 'You\'re following this fire');
                 tf.classList.add('fas', 'follow');
@@ -4228,7 +4434,15 @@ export class Wildfires {
                 // the map isn't over Canada or Australia so there's no need to fetch perimeters for those areas
                 if (!intersects(viewBBox, this.REGION_BBOX[id])) return null;
 
-                const data = await api(url, [
+                if (!map.getSource(src)) {
+                    new this.ArcGISFeatureSource(src, map, {
+                        url: url,
+                        precision: 6,
+                        where: where,
+                        outFields: '*'
+                    });
+                }
+                /*const data = await api(url, [
                     ['where', where],
                     ['outFields', '*'],
                     ['resultType', 'tile'],
@@ -4247,7 +4461,7 @@ export class Wildfires {
 
                 if (!map.getSource(src)) {
                     map.addSource(src, { type: 'geojson', data });
-                }
+                }*/
 
                 if (!map.getLayer(outline)) {
                     map.addLayer({
@@ -4292,12 +4506,12 @@ export class Wildfires {
         await Promise.all([
             loadPerimeter({
                 id: 'ca',
-                url: 'https://services.arcgis.com/wjcPoefzjpzCgffS/ArcGIS/rest/services/Active_Wildfire_Perimeters_in_Canada_View/FeatureServer/0/query',
+                url: 'https://services.arcgis.com/wjcPoefzjpzCgffS/ArcGIS/rest/services/Active_Wildfire_Perimeters_in_Canada_View/FeatureServer/0',
                 where: '1=1 AND LASTDATE >= TIMESTAMP \'' + new Date().getFullYear() + '-01-01 00:00:00\' AND AREA >= ' + min
             }),
             loadPerimeter({
                 id: 'aus',
-                url: 'https://services-ap1.arcgis.com/ypkPEy1AmwPKGNNv/arcgis/rest/services/Near_Real_Time_Bushfire_Boundaries_view/FeatureServer/3/query',
+                url: 'https://services-ap1.arcgis.com/ypkPEy1AmwPKGNNv/arcgis/rest/services/Near_Real_Time_Bushfire_Boundaries_view/FeatureServer/3',
                 where: '1=1 AND fire_name IS NOT NULL AND area_ha >= ' + min
             })
         ]);
@@ -4323,7 +4537,16 @@ export class Wildfires {
             this.intlPerimeters(update);
         }
 
-        const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0/query', [
+        if (!map.getSource('perimeters')) {
+            new this.ArcGISFeatureSource('perimeters', map, {
+                url: 'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0',
+                precision: 6,
+                where: w,
+                outFields: o
+            });
+        }
+
+        /*const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0/query', [
             ['where', w],
             ['outFields', o],
             ['resultType', 'tile'],
@@ -4335,93 +4558,88 @@ export class Wildfires {
             ['f', 'geojson']
         ]);
 
-        /* when the map moves, update the source data */
+        // when the map moves, update the source data
         if (update && map.getSource('perimeters')) {
-            map.getSource('perimeters').setData(data);
+            //map.getSource('perimeters').setData(data);
         } else {
-            if (!map.getSource('perimeters')) {
+            /*if (!map.getSource('perimeters')) {
                 map.addSource('perimeters', {
                     type: 'geojson',
                     data: data
                 });
-            }
+            }*/
 
-            if (!map.getLayer('perimeters_outline')) {
-                map.addLayer({
-                    id: 'perimeters_outline',
-                    type: 'line',
-                    source: 'perimeters',
-                    paint: {
-                        'line-width': [
-                            'case',
-                            ['boolean', ['feature-state', 'click'], false],
-                            3,
-                            1
-                        ],
-                        'line-color': pc
-                    },
-                    layout: {
-                        visibility: vis
-                    }
-                });
-            }
-
-            if (!map.getLayer('perimeters_fill')) {
-                map.addLayer({
-                    id: 'perimeters_fill',
-                    type: 'fill',
-                    source: 'perimeters',
-                    paint: {
-                        'fill-opacity': 0.3,
-                        'fill-color': pc
-                    },
-                    layout: {
-                        visibility: vis
-                    }
-                });
-            }
-
-            if (!map.getLayer('perimeters_title')) {
-                map.addLayer({
-                    id: 'perimeters_title',
-                    type: 'symbol',
-                    source: 'perimeters',
-                    minzoom: 5.8,
-                    paint: {
-                        'text-color': settings.archive ? '#fff' : ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#333', '#fff'],
-                        'text-halo-color': settings.archive ? '#333' : ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#fff', '#ff0000'],
-                        'text-halo-blur': 1,
-                        'text-halo-width': 1
-                    },
-                    layout: {
-                        'symbol-placement': 'line',
-                        'symbol-spacing': 200,
-                        /*'symbol-avoid-edges': true,*/
-                        'text-font': config.fonts.din(),
-                        'text-field': ['upcase', ['concat', ['get', perimName], ' Fire']],
-                        /*'text-justify': 'center',*/
-                        'text-size': 13,
-                        /*'text-max-width': 8,*/
-                        'text-max-angle': 30,
-                        'text-padding': 5,
-                        'text-pitch-alignment': 'viewport',
-                        'text-rotation-alignment': 'map',
-                        'text-offset': [0, 1],
-                        /*'text-anchor': 'center',
-                        'text-letter-spacing': 0.05*/
-                        visibility: vis
-                    }
-                });
-
-                map.on('mouseenter', 'perimeters_fill', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'perimeters_fill', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
+        if (!map.getLayer('perimeters_outline')) {
+            map.addLayer({
+                id: 'perimeters_outline',
+                type: 'line',
+                source: 'perimeters',
+                paint: {
+                    'line-width': [
+                        'case',
+                        ['boolean', ['feature-state', 'click'], false],
+                        3,
+                        1
+                    ],
+                    'line-color': pc
+                },
+                layout: {
+                    visibility: vis
+                }
+            });
         }
+
+        if (!map.getLayer('perimeters_fill')) {
+            map.addLayer({
+                id: 'perimeters_fill',
+                type: 'fill',
+                source: 'perimeters',
+                paint: {
+                    'fill-opacity': 0.3,
+                    'fill-color': pc
+                },
+                layout: {
+                    visibility: vis
+                }
+            });
+        }
+
+        if (!map.getLayer('perimeters_title')) {
+            map.addLayer({
+                id: 'perimeters_title',
+                type: 'symbol',
+                source: 'perimeters',
+                minzoom: 5.8,
+                paint: {
+                    'text-color': settings.archive ? '#fff' : ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#333', '#fff'],
+                    'text-halo-color': settings.archive ? '#333' : ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#fff', '#ff0000'],
+                    'text-halo-blur': 1,
+                    'text-halo-width': 1
+                },
+                layout: {
+                    'symbol-placement': 'line',
+                    'symbol-spacing': 200,
+                    'text-font': config.fonts.din(),
+                    'text-field': ['upcase', ['concat', ['get', perimName], ' Fire']],
+                    'text-size': 13,
+                    'text-max-angle': 30,
+                    'text-padding': 5,
+                    'text-pitch-alignment': 'viewport',
+                    'text-rotation-alignment': 'map',
+                    'text-offset': [0, 1],
+                    visibility: vis
+                }
+            });
+
+            map.on('mouseenter', 'perimeters_fill', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'perimeters_fill', () => {
+                map.getCanvas().style.cursor = 'auto';
+            });
+        }
+        //}
 
         return this;
     }
@@ -4875,6 +5093,32 @@ export class NWS {
     }
 }
 
+export function purchaseLink(utm, next = null) {
+    if (settings.subscriptions().valid() && config.TIERS[settings.subscriptions().plan()] == config.PERMISSION_LEVELS.PREMIUM) {
+        return config.domain + 'account/billing#upgrade=true&sid=' + settings.subscriptions().subID()
+    } else {
+        return config.domain + 'purchase/mapofire' + (utm ? '?utm_campaign=Locked%20Features&utm_source=mapofire&utm_medium=' + utm : '') + (next ? '&next=' + next : '');
+    }
+};
+
+export function notify(t, m, time = null) {
+    const timing = (time == null ? (((m.split(' ').length / 5) + 0.5) * 1000) + 500 : time * 1000),
+        el = document.createElement('div'),
+        icon = t == 'success' ? 'fa-check' : (t == 'info' ? 'fa-circle-info' : 'fa-circle-exclamation');
+
+    document.querySelector('div.alert')?.remove();
+
+    el.classList.add('alert', t);
+
+    if (modal.classList.contains('open')) el.classList.add('mo');
+
+    el.style.display = 'flex';
+    el.innerHTML = '<i class="fas ' + icon + '"></i><p>' + m + '</p>';
+    document.body.append(el);
+
+    setTimeout(() => { el.remove(); }, timing);
+}
+
 export function marketing(override = false, utm = null) {
     const now = Date.now(),
         lastShown = parseInt(localStorage.getItem('mapofire.marketing.last_shown') || '0', 10),
@@ -5154,7 +5398,7 @@ export const moveEnd = debounce(() => {
     //settings.logMovement();
 
     if (!settings.user || !settings.checkboxes() || settings.isEnabled('perimeters')) {
-        config.wildfire.perimeters(true);
+        //config.wildfire.perimeters(true);
     }
 
     if ((!settings.checkboxes() || settings.isEnabled('allFires')) && settings.archive != null) {
@@ -5236,18 +5480,13 @@ export class MFAttribControl extends maplibregl.AttributionControl {
 
     onAdd(map) {
         const container = super.onAdd(map);
-
         map.on('resize', this._applyViewportRule);
-
         this._applyViewportRule();
-
         return container;
     }
 
     onRemove() {
-        if (this._map) {
-            this._map.off('resize', this._applyViewportRule);
-        }
+        if (this._map) this._map.off('resize', this._applyViewportRule);
         super.onRemove();
     }
 

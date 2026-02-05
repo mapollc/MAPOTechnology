@@ -1454,11 +1454,11 @@
 					returnZ: !1,
 					returnM: !1,
 					precision: this._esriServiceOptions.precision,
-					quantizationParameters: JSON.stringify({
+					/*quantizationParameters: JSON.stringify({
 						extent: r,
 						tolerance: t,
 						mode: "view"
-					}),
+					}),*/
 					resultType: "tile",
 					spatialRel: "esriSpatialRelIntersects",
 					geometryType: "esriGeometryEnvelope",
