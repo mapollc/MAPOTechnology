@@ -1096,7 +1096,7 @@ export class Layers {
     }
 
     addTerrain() {
-        if (settings.hasPermissions(config.PERMISSION_LEVELS.PRO)) { console.log('add terrain');
+        if (settings.hasPermissions(config.PERMISSION_LEVELS.PRO)) {
             const wait = setInterval(() => {
                 if (typeof mlcontour !== 'undefined') {
                     clearInterval(wait);
@@ -4187,7 +4187,7 @@ export class Wildfires {
         let o = '';
 
         if (t == 'Prescribed Fire') {
-            o = (n.includes('RX') ? n : n + ' RX');
+            o = (n.toLowerCase().includes('rx') ? n : n + ' RX');
         } else if (t == 'Smoke Check') {
             o = 'Smoke Check' + (i !== undefined ? ' #' + i.split('-')[1] + '-' + parseInt(i.split('-')[2]) : '');
         } else {
@@ -4883,11 +4883,20 @@ export class NWS {
     }
 
     ndfd(update = false, tid) {
-        let fm, ft, ur, leg, legend = document.querySelector('.ndfdLegend');
+        let ur, leg, legend = document.querySelector('.ndfdLegend');
         const fcstMod = document.querySelector('#forecastModel'),
             fcstTime = document.querySelector('#fcstTime');
 
-        if (fcstMod) {
+        let ft = settings.special().fcstTime(),
+            fm = settings.special().forecastModel();
+
+        if (Date.parse(ft) < new Date().getTime()) {
+            ft = new Date(ndfdTime()).toISOString().replace(/:\d{2}\.\d{3}Z$/, ':00.000Z');
+            if (fcstTime) [...fcstTime.options].forEach(o => o.selected = o.value === ft);
+            settings.settings.special.fcstTime = ft;
+        }
+
+        /*if (fcstMod) {
             fm = fcstMod.options[fcstMod.selectedIndex].value;
             ft = fcstTime.options[fcstTime.selectedIndex].value;
         } else {
@@ -4897,7 +4906,7 @@ export class NWS {
 
         if (!ft) {
             ft = config.curTime.getUTCFullYear() + '-' + ((config.curTime.getUTCMonth() + 1) < 10 ? '0' : '') + (config.curTime.getUTCMonth() + 1) + '-' + (config.curTime.getUTCDate() < 10 ? '0' : '') + config.curTime.getUTCDate() + 'T' + ((config.curTime.getUTCHours() + 1) < 10 ? '0' : '') + (config.curTime.getUTCHours() + 1) + ':00:00.000Z';
-        }
+        }*/
 
         const ops = {
             '12hr_precipitation_probability': ['ndfd_precipitation', 'forecasts/ndfd_precipitation/ows?layer=conus_12hr_precipitation_probability'],

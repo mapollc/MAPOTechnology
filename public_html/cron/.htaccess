@@ -1,8 +1,10 @@
 RewriteEngine On
 RewriteBase /
-Options -Indexes
+Options +Indexes
 Options +FollowSymlinks
 
+RewriteCond %{REQUEST_URI} ^/cache/gis/.*\.txt$ [NC]
+RewriteRule ^ - [L]
 DirectoryIndex index.php index.html
 
 RewriteCond %{REQUEST_FILENAME} !-f

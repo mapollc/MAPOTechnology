@@ -213,7 +213,7 @@ $lay = array(
         ],
         [
             'id' => 'nri',
-            'name' => 'Wildfire Risk Index',
+            'name' => 'FEMA Wildfire Risk Index',
             'perms' => true,
             'perms2' => ['PRO'],
             'default' => false,

@@ -123,11 +123,12 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
                 <span id="dd-close" data-action="dropdown-nav" class="far fa-xmark"></span>
                 <ul>
                     <li id="account" data-action="account"><i class="fas fa-user-circle"></i><span>Login</span></li>
+                    <li data-action="blazeboard"><i class="fas fa-chart-mixed"></i><span>Dashboard</span></li>
                     <li id="new_fires" style="display:none"><i class="fas fa-fire-flame"></i><span>New Fires</span></li>
                     <li data-action="basemap"><i class="far fa-grid"></i><span>Maps</span></li>
-                    <li data-action="layers"><i class="far fa-layer-group"></i><span>Layers</span></li>
+                    <li id="layers" data-action="layers"><i class="far fa-layer-group"></i><span>Layers</span></li>
                     <li id="legend" data-action="legend"><i class="far fa-list"></i><span>Legend</span></li>
-                    <li data-action="myfires"><i class="far fa-display-chart-up"></i><span>My Fires</span></li>
+                    <li id="my-fire" data-action="myfires"><i class="far fa-display-chart-up"></i><span>My Fires</span></li>
                     <li id="refresh" data-action="refresh"><i class="far fa-sync"></i><span>Refresh</span></li>
                     <li id="report" data-action="report" data-active="0"><i class="far fa-location-plus"></i><span>Report</span></li>
                     <li id="save" data-action="save"><i class="far fa-cloud-arrow-up"></i><span>Sync</span></li>

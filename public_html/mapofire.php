@@ -1,192 +1,172 @@
 <?
-$product = 'mapofire';
-include_once 'product-header.inc.php';
-?>
-        <header>
-            <div class="container">
-                <div class="logos">
-                    <a href="#" style="height:45px"><img class="logo" title="Map of Fire logo" alt="Map of Fire logo" src="https://www.mapotechnology.com/assets/images/mapofire_logo.png"></a>
-                    <span style="padding:0 0.5em;font-style:italic;font-weight:100;color:#666">by</span>
-                    <a href="https://www.mapotechnology.com"><img style="height:30px" title="MAPO logo" alt="MAPO logo" src="https://www.mapotechnology.com/assets/images/mapo_logo.png"></a>
-                </div>
-                <a href="https://www.mapotechnology.com">Home</a>
-            </div>
-        </header>
+$domain = '//mapotechnology.com/';
+$url = "//$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 
-        <div class="header-wrapper">
-            <div class="header-product">
-                <div class="overlay"></div>
-                <div class="hero">
-                    <div class="content-wrap">
-                        <div class="content">
-                            <h1>Get real time information for wildfires near you</h1>
-                            <p>Monitor the spread and intensity of wildfires, track smoke dispersion, and stay alert to lightning activity across the US.</p>
-                            
-                            <div class="ctas">
-                                <a href="<?=$downloadUrl.'&'.utm('hero')?>" class="btn"><i class="fab fa-android"></i>Download for Android</a>
-                                <a href="<?=webUrl('','hero')?>" class="btn btn-blue"><i class="far fa-laptop"></i>Use the Web App</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="app">
-                        <img src="assets/images/mapofire/f4811.png">
-                    </div>
+if (!isset($ga_id)) {
+    $site = 'MAPO';
+    $ga_id = 'G-J2PB456CE6';
+} else {
+    $site = 'MF';
+}
+
+session_start();
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>Map of Fire | Real-Time Wildfire & Smoke Awareness</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f18f01">
+    <meta name="robots" content="index,follow">
+    <meta name="description" content="Get real-time updates on wildfires, smoke, and lightning strikes across the United States with Map of Fire. Monitor the spread and intensity of wildfires, track smoke dispersion, and stay alert to lightning activity.">
+    <meta property="og:title" content="Map of Fire: Live Wildfire, Lightning, & Smoke Map - MAPO LLC">
+    <meta property="og:description" content="Get real-time updates on wildfires, smoke, and lightning strikes across the United States with Map of Fire. Monitor the spread and intensity of wildfires, track smoke dispersion, and stay alert to lightning activity.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Map of Fire">
+    <meta property="og:url" content="<?= $url ?>">
+    <meta property="og:image" content="//mapotechnology.com/assets/images/preview_mapofire.png">
+    <meta property="og:image:alt" content="Map of Fire - MAPO LLC">
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="<?= $url ?>">
+    <meta property="twitter:title" content="Map of Fire: Live Wildfire, Lightning, & Smoke Map - MAPO LLC">
+    <meta property="twitter:description" content="Get real-time updates on wildfires, smoke, and lightning strikes across the United States with Map of Fire. Monitor the spread and intensity of wildfires, track smoke dispersion, and stay alert to lightning activity.">
+    <meta property="twitter:image" content="//mapotechnology.com/assets/images/preview_mapofire.png">
+    <link rel="stylesheet" href="//mapotechnology.com/src/css/mapofire.css">
+    <link rel="preload" href="//fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="apple-touch-icon" sizes="114x114" href="//mapotechnology.com/assets/images/mf-apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="//mapotechnology.com/assets/images/mf-favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="//mapotechnology.com/assets/images/mf-favicon-16x16.png">
+    <link rel="shortcut icon" href="//mapotechnology.com/assets/images/mf-favicon.ico" type="image/x-icon" />
+    <link rel="manifest" href="//mapotechnology.com/assets/images/mf-site.webmanifest">
+    <noscript>
+        <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    </noscript>
+</head>
+
+<body>
+
+    <header>
+        <div class="nav">
+            <div class="logo">
+                <a href=""><img src="//mapotechnology.com/assets/images/mapofire_logo.png" alt="Map of Fire logo" title="Map of Fire logo"></a>
+            </div>
+
+            <a href="//mapofire.com?utm_campaign=mapofire&utm_medium=<?= $site ?>_Landing Page&utm_source=header" class="btn primary">Open Live Map</a>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <h1>Track Wildfires and Smoke Impacts Near You</h1>
+                <p>Real-time wildfires, evacuations, smoke, and weather data—everything you need to stay informed and
+                    safe during fire season.</p>
+
+                <div class="cta-group">
+                    <a href="//mapofire.com?utm_campaign=mapofire&utm_medium=<?= $site ?>_Landing Page&utm_source=hero"
+                        class="btn primary">Open Live Map</a>
+                    <a href="#premium" class="btn secondary">See Premium Benefits</a>
+                </div>
+            </div>
+
+            <div class="hero-media">
+                <img loading="lazy" src="//mapotechnology.com/assets/images/preview_mapofire_nobg.png"
+                    alt="Map of Fire live wildfire map" title="Map of Fire live wildfire map" />
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">🔥</div>
+                    <h3>Active Wildfire Mapping</h3>
+                    <p>View new and ongoing wildfires, plus detailed perimeters and prescribed burns to stay aware of
+                        fire activity across the U.S.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💨</div>
+                    <h3>Smoke Forecasts</h3>
+                    <p>Visualize current and forecasted smoke, including surface and vertically integrated models, to
+                        plan for air quality and visibility impacts.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🗺️</div>
+                    <h3>Evacuation Zones</h3>
+                    <p>See detailed mapping of evacuation areas in Oregon and California to monitor high-risk zones near
+                        wildfires.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning + Weather Data</h3>
+                    <p>Track lightning strikes, winds, and humidity in real time to understand wildfire risks and spread
+                        potential.</p>
                 </div>
             </div>
         </div>
-        <div class="spacer"></div>
+    </section>
 
-        <section>
-            <div class="container">
-                <h1 class="center">Everything fire&mdash;at your fingertips</h1>
-
-                <ul class="highlight">
-                    <li>
-                        <i class="fas fa-fire"></i>
-                        <h2>ALL Wildfires</h2>
-                        <span>Not just big fires, but all wildfires currently burning in the US<sup>1</sup></span>
-                    </li>
-                    <li>
-                        <i class="fad fa-smoke"></i>
-                        <h2>Smoke Forecast</h2>
-                        <span>Overlay satellite data or see visual forecasts of where smoke is impacting you</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-bolt-lightning"></i>
-                        <h2>Lightning Strikes</h2>
-                        <span>Check where lightning is striking or look for new fires after a storm blows through</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-draw-polygon"></i>
-                        <h2>Fire Perimeters</h2>
-                        <span>See where a fire has already burned, how big it is, and where its burning</span>
-                    </li>
-                </ul>
-
-                <div class="ctas center" style="margin-top:3rem">
-                    <a href="<?=$downloadUrl.'&'.utm('desc_list')?>" class="btn">Find what's burning near you</a>
-                    <a href="<?=webUrl('','desc_list')?>" class="btn btn-black">Open Map</a>
-                </div>
+    <section class="trust">
+        <div class="container">
+            <h2>Trusted by Emergency Responders and Public Safety Professionals</h2>
+            <div class="content">
+                <p>Map of Fire is used by people across many disciplines &mdash; from residents near wildfires to
+                    journalists, researchers, and firefighters &mdash; because of its real-time data and reliable
+                    visualization tools.</p>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section style="background-color:#f9f9f9">
-            <div class="container">
-                <div class="row">
-                    <div class="col" style="flex-direction:column">
-                        <h1 class="center">A Firefighter's Best Friend</h1>
+    <section id="premium" class="premium-section">
+        <div class="container">
+            <div class="display">
+                <div>
+                    <h2>Unlock Advanced Wildfire Mapping</h2>
+                    <p>Unlock premium access to see advanced wildfire activity with 24-72 hour satellite heat detection,
+                        infrared and water vapor imagery, and lightning overlays. Track live weather stations, forecast
+                        models, and fire potential indicators like ERC, Significant Fire Potential, and wildfire Risk to
+                        Homes.</p>
 
-                        <p class="center" style="color:#999">The last wildfire map you'll need: Map of Fire features nearly 40 layers of wildfire-centric information.</p>
+                    <p>Visualize wildfire likelihood, hazard potential, structure exposure, drought conditions, and
+                        fuels to get a complete picture of fire risk and make informed, real-time decisions.</p>
 
-                        <ul class="highlight" style="margin-top:1em">
-                            <li><b>Wildfires</b><span>A proprietary algorithm of wildfires burning recently</span></li>
-                            <li><b>Weather</b><span>Lightning strikes, weather alerts, air quality, and more</span></li>
-                            <li><b>Evacuations</b><span>An every-growing map of evacuations&mdash;all in one place</span></li>
-                            <li><b>Planning Tools</b><span>Fire weather models, risk indexes, drought conditions, and fuels</span></li>
-                            <li><b>GIS</b><span>Because what map is complete without administrative data</span></li>
-                            <li><b>California</b><span>Specially-curated data for California from CAL FIRE</span></li>
-                        </ul>
-                    </div>
-                    <div class="col justify-center">
-                        <img src="assets/images/mapofire/r48gasdf.png">                        
+                    <div class="cta-group">
+                        <a href="//mapotechnology.com/purchase/mapofire?utm_campaign=mapofire&utm_medium=<?= $site ?>_Landing Page&utm_source=upgrade_cta"
+                            class="btn premium">Get Premium Access</a>
+                        <a href="//play.google.com/store/apps/details?id=com.mapollc.mapofire&utm_campaign=mapofire&utm_medium=<?= $site ?>_Landing Page&utm_source=download_cta" style="line-height:0">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+                                alt="Get it on Google Play" title="Download Map of Fire on Google Play" style="height:52px"></a>
                     </div>
                 </div>
-            </div>
-
-            <div class="container">
-                <div class="row rev">
-                    <div class="col justify-center">
-                        <img src="assets/images/mapofire/81adsfs.png">
-                    </div>
-                    <div class="col" style="flex-direction:column">
-                        <h1 class="center">Historical Maps</h1>
-                        <p class="center hl">As wildfires adapt to current landscapes and burn more and more land, it's important to look at old burn scars.</p>
-                        <p class="center hl">Find historical wildfire data all the way back to 2015&mdash;using our same app.</p>
-
-                        <p class="center"><a href="<?=webUrl('/archive/2015', 'historical')?>" class="btn btn-black">See a real example</a></p>
-                    </div>
+                <div class="img-holder">
+                    <img loading="lazy" src="//mapotechnology.com/assets/images/mapofire/r48gasdf.png"
+                        alt="Map of Fire Android app" title="Map of Fire Android app">
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!--<section class="dark">
-            <div class="container">
-                <p class="center">This app is a third-party app built by MAPO LLC. The data and information used in this app is provided by the Oregon Department of Transportation (ODOT)&mdash;an 
-                    official government agency. However, this app is not an official government app, and is not affiliated or associated with ODOT or the State of Oregon in any way.</p>
-            </div>
-        </section>-->
+    <footer>
+        <div class="container">
+            <p>&copy; <?= date('Y') ?> MAPO LLC</p>
+            <ul class="footer-menu">
+                <li><a href="<?=$domain?>about">About</a></li>
+                <li><a href="<?=$domain?>about/contact">Contact</a></li>
+                <li><a href="<?=$domain?>purchase/mapofire?utm_campaign=mapofire&utm_medium=<?= $site ?>_Landing Page&utm_source=footer">Pricing</a></li>
+                <li><a href="<?=$domain?>about/legal/terms">Terms</a></li>
+                <li><a href="<?=$domain?>about/legal/privacy">Privacy</a></li>
+            </ul>
+        </div>
+    </footer>
 
-        <section>
-            <div class="container">
-                <div class="row" style="align-items:center">
-                    <div class="col" style="flex-direction:column">
-                        <h1 class="title c"><span>Monitor</span> large fire growth</h1>
-                        <p class="hl">Find historical wildfire growth for large incidents around the country. See how quickly a wildfire grows over time.<sup>2</sup></p>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=<?= $ga_id ?>"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','<?= $ga_id ?>'<?= isset($_COOKIE['guid']) ? ",{'user_id':'$_COOKIE[guid]'}" : "" ?>);</script>
 
-                        <div class="center" style="margin-top:3em">
-                            <a href="<?=webUrl('', 'nearby')?>" class="btn">Find nearby wildfires</a>
-                        </div>
-                    </div>
-                    <div class="col justify-center">
-                        <!--<img src="assets/images/mapofire/had84d1.png" style="width:100%">-->
-                        <img src="assets/images/mapofire/sdf168s.png">
-                    </div>
-                </div>
-            </div>
-            <div class="container">
-                <div class="row rev" style="align-items:center">
-                    <div class="col justify-center">
-                        <img src="assets/images/mapofire/999e9iii.png">
-                    </div>
-                    <div class="col" style="flex-direction:column">
-                        <h1 class="title c"><span>Find</span> realtime information</h1>
-                        <p class="hl">We pull data from multiple sources to provide you the latest information on a wildfire 24/7. Find acreage, the fire's status, containment,
-                            and more.
-                        </p>
-
-                        <div class="center" style="margin-top:3em">
-                            <a href="<?=webUrl('','realtime')?>" class="btn">See a live example</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="container">
-                <div class="row" style="align-items:center">
-                    <div class="col" style="flex-direction:column">
-                        <h1 class="title c"><span>Customize</span> data for you</h1>
-                        <p class="hl">We've built Map of Fire with customization in mind. Change your settings to see data the way you want to see it.</p>
-
-                        <div class="center" style="margin-top:3em">
-                            <a href="<?=webUrl('','settings')?>" class="btn">Personalize your own map</a>
-                        </div>
-                    </div>
-                    <div class="col justify-center">
-                        <img src="assets/images/mapofire/8cs4151.png" style="width:100%">
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section style="background-color:#f9f9f9">
-            <div class="container center">
-                <img src="assets/images/mapofire_icon_transparent.png" style="height:100px">
-                <p style="color:#555;text-transform:uppercase">Start tracking wildfires near <i>you</i></p>
-                <h1>Available for Web and Android</h1>
-
-                <div class="ctas center">
-                    <a href="<?=$downloadUrl.'&'.utm('bottom')?>" class="btn btn-blue"><i class="fab fa-google-play"></i>Download Now</a>
-                    <a href="<?=webUrl('', 'bottom')?>" class="btn btn-black"><i class="far fa-laptop"></i>Use the Web App</a>
-                </div>
-
-                <div class="highlight" style="margin-top:3em">
-                    <h2>We need your help!</h2>
-                    <p>Help support MAPO LLC by making a contribution. It helps us continue to make updates, fix bugs, and add new features to Map of Fire&mdash;both in the Android app and the Web App.</p>
-                    <a href="https://donate.stripe.com/3csg1F7PF8gpfni003?__prefilled_amount=2500" class="btn btn-stripe"><i class="fab fa-stripe"></i> Donate</a>
-                </div>
-
-                <p class="center" style="margin-top:4em"><small><sup>1</sup> Wildfires not reported to interagency dispatch centers may not show on the map.</small><br>
-                <small><sup>2</sup> Not all wildfires report their change in size. Only available for some incidents.</small></p>
-            </div>
-        </section>
-
-        <?include_once 'footer.inc.php'?>
+</body>
+</html>

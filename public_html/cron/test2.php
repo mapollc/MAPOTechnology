@@ -37,7 +37,8 @@ arsort($count);
 print_r($count);*/
 exit();
 
-function isValidCoordinate($lat, $lon) {
+function isValidCoordinate($lat, $lon)
+{
     // Check both are numeric
     if (!is_numeric($lat) || !is_numeric($lon)) {
         return false;

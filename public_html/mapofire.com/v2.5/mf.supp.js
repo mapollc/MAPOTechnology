@@ -328,6 +328,7 @@ class Weather {
                     name = wx.weather.name,
                     t = (o.temp.current ? Math.round(o.temp.current) : '--'),
                     rh = (o.rh ? Math.round(o.rh) : '--'),
+                    rwd = (o.raw_wind_dir ? o.raw_wind_dir : null),
                     wd = (o.wind_dir ? o.wind_dir : '--'),
                     ws = (o.wind_speed ? Math.round(o.wind_speed) : '--'),
                     u = timeAgo(wx.weather.updated),
@@ -349,13 +350,18 @@ class Weather {
                 const t1 = document.querySelector('#curwx #a h4'),
                     rh1 = document.querySelector('#curwx #b h4'),
                     w1 = document.querySelector('#curwx #c h4'),
+                    w2 = document.querySelector('#curwx #d h4'),
                     up = document.querySelector('#curwx .updated');
 
-                if (t1 && rh1 && w1) {
+                if (t1 && rh1 && w2) {
                     t1.innerHTML = `${t}&deg;${tunit}`;
                     rh1.innerHTML = (!o.rh || rh == '--' ? '--' : rh + '%');
                     //w1.querySelector('svg').style.transform = 'rotate(' + rwd + 'deg)';
-                    w1.innerHTML = `${wd} @ ${ws} ${ws != '--' ? wunit : ''}`;
+                    if (rwd != null) {
+                        w1.innerHTML = `${wd}`;
+                        document.querySelector('#curwx #c i').style.transform = 'rotate(' + Number(rwd - 45) + 'deg)';
+                    }
+                    w2.innerHTML = `${ws} ${ws != '--' ? wunit : ''}`;
                     //w1.setAttribute('title', 'Winds are ' + wd + ' at ' + ws);
 
                     up.innerHTML = `Last report ${u}${settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? ' @ ' + name : ''}`;
@@ -1124,7 +1130,7 @@ async function onRasterLayerClick(e) {
     }
 
     if (wet && wet.layout.visibility == 'visible') {
-        const popup = new Popup('Wildfire Hazard Potential', true).create('<div id="spinner" class="sm" style="display:block;margin:0 auto"></div>');
+        const popup = new Popup('Wildfire Exposure Type', true).create('<div id="spinner" class="sm" style="display:block;margin:0 auto"></div>');
 
         const pc = await new Convert().getRasterColor(e.lngLat, 'wet'),
             val = legend.items.wet.find(i => i[2] === pc),

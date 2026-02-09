@@ -3,7 +3,7 @@ function versionDate($matches) {
     $version = $matches[1];
     $date = date('F j, Y', strtotime($matches[2].' 00:00:00 '.date('T')));
 
-    return "<p style=\"font-weight:400\"><b style=\"font-weight:500\">$version</b> &mdash; Released $date</p>";
+    return "<p style=\"font-weight:400\"><b style=\"font-weight:500\">" . strtolower($version) . "</b> &mdash; Released $date</p>";
 }
 
 function android() {
@@ -13,7 +13,7 @@ function android() {
     $b = preg_replace('/<span class="[a-z0-9\s]+"><a class="[a-z0-9\s]+" href="(.*?)">(.*?)<\/a><\/span>/', '', $a[1]);
     $c = str_replace('</div>', '', preg_replace('/<p class="[a-z0-9\s]+">(<span class="[a-z0-9\s]+"><\/span>)?<\/p>/', '', $b));
     
-    return preg_replace_callback('/<p class="[a-z0-9\s]+"><span class="[a-zA-z0-9\s]+">(v[\.0-9]+)\s-\s([\d\/]+)<\/span><\/p>/', 'versionDate', $c);
+    return preg_replace_callback('/<p class="[a-z0-9\s]+"><span class="[a-zA-z0-9\s]+">((v|V)[\.0-9]+)\s-\s([\d\/]+)<\/span><\/p>/', 'versionDate', $c);
 }
 
 function getChanges() {
@@ -40,6 +40,12 @@ function getChanges() {
     return $content;
 }
 
+/*$log[] = ['version' => '2.5', 'date' => '', 'changes' => [
+'Numerous changes to layout and style of the app',
+'Additional layers were added (primarily for premium and pro users)',
+'Numerous bug and performance fixes',
+'Updated Maplibre versions'
+]];*/
 $log[] = ['version' => '2.4', 'date' => '10/1/2025', 'changes' => [
 'Numerous bug and performance fixes',
 'Integrated subscriptions into the platform',

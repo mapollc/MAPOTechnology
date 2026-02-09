@@ -411,7 +411,7 @@ let map,
     activeEvacuations = null,
     evacsLoaded = false,
     controlsAtBottom = null,
-    premFeature = '<i class="fas fa-lock" style="color:#656565" title="Subscribe to Map of Fire to gain access to this feature"></i>',
+    premFeature = '<i class="fas fa-lock" style="color:#a1d5e9" title="Subscribe to Map of Fire to gain access to this feature"></i>',
     tileConfig = [
         {
             id: 'outdoors',
@@ -878,7 +878,7 @@ class ClickListener {
 
     clearLayerSearch() {
         document.querySelectorAll('.layers-list li.layer').forEach(layer => layer.style.display = 'flex');
-        impact.querySelector('#layerSearch')?.setProperty('value', '');
+        impact.querySelector('#layerSearch').setProperty('value', '');
     }
 
     closeImpact() {
@@ -2297,11 +2297,11 @@ document.onreadystatechange = async () => {
             //if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) el.classList.add('disabled');
             el.dataset.action = opts.id;
             el.innerHTML = '<i class="far fa-' + opts.icon + '"></i><span>' + opts.span + '</span>';
-            document.querySelector('#' + opts.insert).insertAdjacentElement('afterend', el);
+            document.querySelector('#' + opts.insert)?.insertAdjacentElement('afterend', el);
         };
 
-        makeItem({ id: 'fwf', icon: 'cloud-bolt', span: 'Fire WX', insert: 'legend' });
-        makeItem({ id: 'archive', icon: 'calendars', span: 'Historical', insert: 'refresh' });
+        makeItem({ id: 'fwf', icon: 'cloud-bolt', span: 'Fire WX', insert: 'my-fire' });
+        makeItem({ id: 'archive', icon: 'calendars', span: 'Historical', insert: 'layers' });
 
         // 1) start a wildfire class 2) get user's currently tracked wildfires 3) get austrailian bush fires
         config.wildfire = new (await loadUtils()).Wildfires();
@@ -2406,6 +2406,7 @@ window.addEventListener('click', async (e) => {
             //'close-modal': () => clickListener.closeModal(),
             'copy': () => clickListener.copy(),
             'tools': () => clickListener.tools(),
+            'blazeboard': () => window.open(config.host + 'blazeboard?utm_campaign=blazeboard&utm_medium=mapofire.com&utm_source=menu'),
             'close-android': () => clickListener.android(),
             'back-my-content': () => clickListener.myContent(),
             'close-historical': () => clickListener.closeArchive(),

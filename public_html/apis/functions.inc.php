@@ -967,8 +967,8 @@ function wildfireURL($wfid, $name, $state)
                 '/\s+|\band\b|\bor\b|\bthe\b|\bwith\b/',
                 '-',
                 str_replace(
-                    ['&amp;-', '#', '&-', 'and-', '&', '_', '/', '\''],
-                    ['', '', '', '', '', '-', '', ''],
+                    ['&amp;-', '#', '&-', 'and-', '&', '_', '/', '\'', '(', ')'],
+                    ['', '', '', '', '', '-', '', '', '', ''],
                     strtolower($name . ' fire')
                 )
             )

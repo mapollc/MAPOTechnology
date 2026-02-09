@@ -265,7 +265,7 @@ self.onmessage = (e) => {
                 <div id="curwx" class="card">
                     <h3>Nearby Weather Conditions</h3>
 
-                    <div class="table" data-cols="3">
+                    <div class="table" data-cols="4">
                         <div id="a">
                             <i class="fal fa-temperature-high"></i>
                             <h4>${spin}</h4>
@@ -277,9 +277,14 @@ self.onmessage = (e) => {
                             <dt class="label">Humidity</dt>
                         </div>
                         <div id="c">
+                            <i class="fas fa-location-arrow" style="transform:rotate(-45deg)"></i>
+                            <h4>${spin}</h4>
+                            <dt class="label">Wind Direction</dt>
+                        </div>
+                        <div id="d">
                             <i class="fal fa-wind"></i>
                             <h4>${spin}</h4>
-                            <dt class="label">Winds</dt>
+                            <dt class="label">Wind Speed</dt>
                         </div>
                     </div>
 

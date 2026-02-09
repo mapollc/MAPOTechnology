@@ -1,1 +1,0 @@
-<?$ga_id = 'G-X03WWLX3BJ';require_once '../mapofire.com/thank-you.php';?>
