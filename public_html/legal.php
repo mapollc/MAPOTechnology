@@ -13,9 +13,14 @@ include_once 'header.inc.php';
                 $url = '2PACX-1vSNCu7nUWG67F_j_1nnKYwYUPYEJYC0N-k0xYrvSG_dHi773UYgT8NGdwFlIE7Pz-mEsW2Uar97Xf-4';
             }
 
-            $out = str_replace('Effective:', '<b>Effective:</b>', preg_replace('/href\=\"(.*?)q\=(.*?)&(.*?)\"/', 'href="$2"', preg_replace('/ class=".*?"/', '', explode('<script', explode('</style>', file_get_contents('https://docs.google.com/document/d/e/'.$url.'/pub?embedded=true'))[1])[0])));
-            $out = preg_replace('/(<p><span>([0-9\.]+)(.*?)<\/span><\/p>)/', '<p><span style="font-style:italic">$2$3</span></p>', $out);
+            $file = explode('<script', explode('</style>', file_get_contents('https://docs.google.com/document/d/e/'.$url.'/pub?embedded=true'))[1])[0];
 
+            $out = preg_replace('/ class=".*?"/', '', $file);
+            $out = preg_replace('/"https:\/\/www\.google\.com\/url\?q=(.*?)&(.*?)"/', '"$1"', $out);
+            $out = str_replace('Effective:', '<b>Effective:</b>', $out);
+            $out = preg_replace('/(<p><span>([0-9\.]+)(.*?)<\/span><\/p>)/', '<p><span style="font-weight:400;font-style:italic">$2$3</span></p>', $out);
+
+            //echo $file;
             echo $out;
             echo '<p class="mt-4">A print copy of the '.$title.' is <a target="blank" href="https://docs.google.com/document/d/e/'.$url.'/pub?embedded=true">available here</a>.';
             ?>

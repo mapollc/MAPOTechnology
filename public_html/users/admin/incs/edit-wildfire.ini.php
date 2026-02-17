@@ -67,13 +67,13 @@ if (!$permission->fire()->edit()) {
                 <div class="header">
                     <div style="flex:0 1 auto">
                         <div class="title">
-                            <h1 style="margin:0;color:#e0e0e0"><?= strtoupper(fireName($row['name'], $type, $row['incidentID'])) ?></h1>
-                            <span style="font-size:20px;color:#888">#<?= $row['incidentID'] ?></span>
+                            <h1 style="margin:0;color:#5e4949"><?= strtoupper(fireName($row['name'], $type, $row['incidentID'])) ?></h1>
+                            <span style="font-size:20px;color:#505050">#<?= $row['incidentID'] ?></span>
                         </div>
                     </div>
                     <div class="details">
                         <span class="status-badge <?= $status ?>"><?= strtoupper($status) ?></span>
-                        <div style="margin-top:5px">WFID #: 68926923</div>
+                        <div style="color:#000;margin-top:5px">WFID #: <?= $row['wfid'] ?></div>
                     </div>
                 </div>
 
@@ -120,7 +120,7 @@ if (!$permission->fire()->edit()) {
                     </div>
                     <div class="item">
                         <div class="label">Size</div>
-                        <input type="number" name="acres" step="0.02" placeholder="0" value="<?= $acres ?>" <?= $status == 'out' ? ' disabled' : '' ?>>
+                        <input type="number" name="acres" class="field" style="max-width:106px" step="0.02" placeholder="0" value="<?= $acres ?>" <?= $status == 'out' ? ' disabled' : '' ?>>
                     </div>
                     <div class="item">
                         <div class="label">Behavior</div>
@@ -154,11 +154,11 @@ if (!$permission->fire()->edit()) {
                         <div class="label">Display on Map</div>
                         <div class="radio" style="margin:0">
                             <input type="radio" id="d1" name="display" value="1" <?= $row['display'] == 1 ? ' checked' : '' ?>>
-                            <label for="d1" style="color:#e9e9e9">Yes</label>
+                            <label for="d1">Yes</label>
                         </div>
                         <div class="radio" style="margin:0">
                             <input type="radio" id="d2" name="display" value="0" <?= $row['display'] != 1 ? ' checked' : '' ?>>
-                            <label for="d2" style="color:#e9e9e9">No</label>
+                            <label for="d2">No</label>
                         </div>
                     </div>
                 </div>

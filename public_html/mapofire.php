@@ -42,7 +42,6 @@ session_start();
     <link rel="icon" type="image/png" sizes="32x32" href="//mapotechnology.com/assets/images/mf-favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="//mapotechnology.com/assets/images/mf-favicon-16x16.png">
     <link rel="shortcut icon" href="//mapotechnology.com/assets/images/mf-favicon.ico" type="image/x-icon" />
-    <link rel="manifest" href="//mapotechnology.com/assets/images/mf-site.webmanifest">
     <noscript>
         <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
     </noscript>

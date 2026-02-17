@@ -34,13 +34,13 @@ const numberFormat = (n, d = 2) => {
 
         if (center.website != '') website = `<p><a target="blank" href="${center.website}">${center.website}</a></p>`;
 
-        return `<h2>Dispatch Center</h2>
-            <div class="grid top-align">
-                <div class="card dispatch">
-                    <dt class="label large">${center.name} (${center.agency})</dt>
-                    <dd><p>${center.location}</p>${website}</dd>
-                </div>
-            </div>`;
+        return `<div class="grid top-align">
+            <div class="card dispatch">
+            <h3>Dispatch Center</h3>
+                <dt class="label large">${center.name} (${center.agency})</dt>
+                <dd><p>${center.location}</p>${website}</dd>
+            </div>
+        </div>`;
     },
     incidentDetails = (json, cols) => {
         const uniqueJson = [...new Map(json.map(item => [item.desc, item])).values()],
@@ -200,7 +200,7 @@ self.onmessage = (e) => {
                     </div>
 
                     <p class="timestamps">
-                        Last updated <b>${updated}</b> &middot; Reported <b>${dt(fire.time.discovered)}</b> via ${dispatch} &middot; Incident <b>#${incID}</b>
+                        Last updated <b>${updated}</b> &middot; Reported <b>${vars.reported.useAgo ? vars.reported.ago : dt(fire.time.discovered)}</b> via ${dispatch} &middot; Incident <b>#${incID}</b>
                     </p>
                 </div>
                 <div class="tr">
@@ -233,7 +233,7 @@ self.onmessage = (e) => {
             </div>
 
             <div class="grid cols-2 top-align">
-                <div class="card">
+                <div class="card initial">
                     <dt class="label icon fa-location-dot">Initial Location</dt>
                     <dd>${near}</dd>
 
@@ -246,7 +246,7 @@ self.onmessage = (e) => {
                     <dt class="label icon fa-trees">Fuels</dt>
                     <dd>${fuels}</dd>
                 </div>
-                <div class="card">
+                <div class="card initial">
                     <dt class="label icon fa-sensor-triangle-exclamation">Initial Resources</dt>
                     <dd>${resources}</dd>
 
@@ -291,7 +291,7 @@ self.onmessage = (e) => {
                     <p class="updated"></p>
                 </div>
                 <div id="fcstwx" class="card">
-                    <h3>24-hr Weather Concerns</h3>
+                    <h3>24-Hour Fire Weather Analysis</h3>
 
                     <div class="table" data-cols="4">
                         <div id="b">

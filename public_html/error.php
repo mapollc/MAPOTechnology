@@ -17,6 +17,4 @@ include_once 'header.inc.php';
     </div>
 </section>
 
-<?
-include_once 'footer.inc.php';
-?>
+<? include_once 'footer.inc.php' ?>

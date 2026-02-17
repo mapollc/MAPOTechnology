@@ -1,0 +1,20 @@
+{
+    "name": "MAPO LLC",
+    "short_name": "MAPO",
+    "orientation": "portrait",
+    "display": "standalone",
+    "dir": "auto",
+    "lang": "en-US",
+    "start_url": "/",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "//mapotechnology.com/assets/images/favicon.png",
+            "sizes": "any",
+            "type": "image\/png",
+            "purpose": "any"
+        }
+    ],
+    "theme_color": "#ffc65c",
+    "background_color": "#ffc65c"
+}

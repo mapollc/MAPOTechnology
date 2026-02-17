@@ -11,10 +11,13 @@ RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.+)$ /$1.php [L,QSA]
 
 # Redirect to WWW unless a subdomain
-RewriteCond %{HTTPS} off [OR]
-RewriteCond %{HTTP_HOST} !^www\. [NC]
-RewriteCond %{HTTPS} off
-RewriteRule (.*) https://www.mapofire.com%{REQUEST_URI} [R=301,L]
+#RewriteCond %{HTTPS} off [OR]
+#RewriteCond %{HTTP_HOST} !^www\. [NC]
+#RewriteCond %{HTTPS} off
+#RewriteRule (.*) https://mapofire.com%{REQUEST_URI} [R=301,L]
+
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
 ErrorDocument 500 /error.php?error=500
 ErrorDocument 404 /error.php?error=404
@@ -23,7 +26,7 @@ ErrorDocument 401 /error.php?error=401
 RewriteRule ^error/([^/]*)$ /error.php?error_code=$1 [L,QSA]
 
 # favicon
-RewriteRule ^favicon.ico https://www.mapotechnology.com/assets/images/favicon.ico [L]
+RewriteRule ^favicon.ico https://www.mapotechnology.com/assets/images/mf-favicon.ico [L]
 
 # WILDFIRE MAP RULES
 RewriteRule ^list-of-wildfires$ /list.php [L,QSA]
@@ -64,9 +67,12 @@ RewriteRule ^purchase$ /subscribe.php [L,QSA]
 # SITEMAP
 RewriteRule ^sitemap.xml$ /sitemap.xml.php [L,QSA]
 
-
 # BEGIN Expire headers  
 <IfModule mod_expires.c>  
+  <Files "mf-site.webmanifest">
+    Header set Access-Control-Allow-Origin *
+  </Files>
+  
   # Turn on the module.
   ExpiresActive on
 

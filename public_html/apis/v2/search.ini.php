@@ -2,7 +2,7 @@
 $cityFields = 'fips, city, county, state_prefix AS state, zip_code AS zip, population, lat, lon';
 $countyFields = 'fips, name, state, population, xmin, xmax, ymin, ymax';
 $gisFields = 'class, type, county, state, name, lat, lon, elevation';
-$excludeGISTypes = ['Post Office', 'Place', 'Census', 'Building', 'Locale'];
+$excludeGISTypes = ['Post Office', 'Place', 'Census', 'Building', 'Locale', 'Populated Place'];
 
 function formatQuery($s)
 {

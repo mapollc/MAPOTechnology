@@ -1,4 +1,74 @@
-!function (e) { if ("object" == typeof exports && "undefined" != typeof module) module.exports = e(); else if ("function" == typeof define && define.amd) define([], e); else { var n; "undefined" != typeof window ? n = window : "undefined" != typeof global ? n = global : "undefined" != typeof self && (n = self), n.geojsonExtent = e() } }(function () { return function e(t, n, r) { function s(o, u) { if (!n[o]) { if (!t[o]) { var a = "function" == typeof require && require; if (!u && a) return a(o, !0); if (i) return i(o, !0); var f = new Error("Cannot find module '" + o + "'"); throw f.code = "MODULE_NOT_FOUND", f } var l = n[o] = { exports: {} }; t[o][0].call(l.exports, function (e) { var n = t[o][1][e]; return s(n ? n : e) }, l, l.exports, e, t, n, r) } return n[o].exports } for (var i = "function" == typeof require && require, o = 0; o < r.length; o++)s(r[o]); return s }({ 1: [function (require, module, exports) { function getExtent(_) { for (var ext = extent(), coords = geojsonCoords(_), i = 0; i < coords.length; i++)ext.include(coords[i]); return ext } var geojsonCoords = require("@mapbox/geojson-coords"), traverse = require("traverse"), extent = require("@mapbox/extent"), geojsonTypesByDataAttributes = { features: ["FeatureCollection"], coordinates: ["Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon"], geometry: ["Feature"], geometries: ["GeometryCollection"] }, dataAttributes = Object.keys(geojsonTypesByDataAttributes); module.exports = function (_) { return getExtent(_).bbox() }, module.exports.polygon = function (_) { return getExtent(_).polygon() }, module.exports.bboxify = function (_) { return traverse(_).map(function (value) { if (value) { var isValid = dataAttributes.some(function (attribute) { return value[attribute] ? -1 !== geojsonTypesByDataAttributes[attribute].indexOf(value.type) : !1 }); isValid && (value.bbox = getExtent(value).bbox(), this.update(value)) } }) } }, { "@mapbox/extent": 2, "@mapbox/geojson-coords": 4, traverse: 7 }], 2: [function (require, module, exports) { function Extent(bbox) { return this instanceof Extent ? (this._bbox = bbox || [1 / 0, 1 / 0, -(1 / 0), -(1 / 0)], void (this._valid = !!bbox)) : new Extent(bbox) } module.exports = Extent, Extent.prototype.include = function (ll) { return this._valid = !0, this._bbox[0] = Math.min(this._bbox[0], ll[0]), this._bbox[1] = Math.min(this._bbox[1], ll[1]), this._bbox[2] = Math.max(this._bbox[2], ll[0]), this._bbox[3] = Math.max(this._bbox[3], ll[1]), this }, Extent.prototype.equals = function (_) { var other; return other = _ instanceof Extent ? _.bbox() : _, this._bbox[0] == other[0] && this._bbox[1] == other[1] && this._bbox[2] == other[2] && this._bbox[3] == other[3] }, Extent.prototype.center = function (_) { return this._valid ? [(this._bbox[0] + this._bbox[2]) / 2, (this._bbox[1] + this._bbox[3]) / 2] : null }, Extent.prototype.union = function (_) { this._valid = !0; var other; return other = _ instanceof Extent ? _.bbox() : _, this._bbox[0] = Math.min(this._bbox[0], other[0]), this._bbox[1] = Math.min(this._bbox[1], other[1]), this._bbox[2] = Math.max(this._bbox[2], other[2]), this._bbox[3] = Math.max(this._bbox[3], other[3]), this }, Extent.prototype.bbox = function () { return this._valid ? this._bbox : null }, Extent.prototype.contains = function (ll) { if (!ll) return this._fastContains(); if (!this._valid) return null; var lon = ll[0], lat = ll[1]; return this._bbox[0] <= lon && this._bbox[1] <= lat && this._bbox[2] >= lon && this._bbox[3] >= lat }, Extent.prototype.intersect = function (_) { if (!this._valid) return null; var other; return other = _ instanceof Extent ? _.bbox() : _, !(this._bbox[0] > other[2] || this._bbox[2] < other[0] || this._bbox[3] < other[1] || this._bbox[1] > other[3]) }, Extent.prototype._fastContains = function () { if (!this._valid) return new Function("return null;"); var body = "return " + this._bbox[0] + "<= ll[0] &&" + this._bbox[1] + "<= ll[1] &&" + this._bbox[2] + ">= ll[0] &&" + this._bbox[3] + ">= ll[1]"; return new Function("ll", body) }, Extent.prototype.polygon = function () { return this._valid ? { type: "Polygon", coordinates: [[[this._bbox[0], this._bbox[1]], [this._bbox[2], this._bbox[1]], [this._bbox[2], this._bbox[3]], [this._bbox[0], this._bbox[3]], [this._bbox[0], this._bbox[1]]]] } : null } }, {}], 3: [function (require, module, exports) { module.exports = function (list) { function _flatten(list) { return Array.isArray(list) && list.length && "number" == typeof list[0] ? [list] : list.reduce(function (acc, item) { return Array.isArray(item) && Array.isArray(item[0]) ? acc.concat(_flatten(item)) : (acc.push(item), acc) }, []) } return _flatten(list) } }, {}], 4: [function (require, module, exports) { var geojsonNormalize = require("@mapbox/geojson-normalize"), geojsonFlatten = require("geojson-flatten"), flatten = require("./flatten"); module.exports = function (_) { if (!_) return []; var normalized = geojsonFlatten(geojsonNormalize(_)), coordinates = []; return normalized.features.forEach(function (feature) { feature.geometry && (coordinates = coordinates.concat(flatten(feature.geometry.coordinates))) }), coordinates } }, { "./flatten": 3, "@mapbox/geojson-normalize": 5, "geojson-flatten": 6 }], 5: [function (require, module, exports) { function normalize(gj) { if (!gj || !gj.type) return null; var type = types[gj.type]; return type ? "geometry" === type ? { type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry: gj }] } : "feature" === type ? { type: "FeatureCollection", features: [gj] } : "featurecollection" === type ? gj : void 0 : null } module.exports = normalize; var types = { Point: "geometry", MultiPoint: "geometry", LineString: "geometry", MultiLineString: "geometry", Polygon: "geometry", MultiPolygon: "geometry", GeometryCollection: "geometry", Feature: "feature", FeatureCollection: "featurecollection" } }, {}], 6: [function (require, module, exports) { module.exports = function e(t) { switch (t && t.type || null) { case "FeatureCollection": return t.features = t.features.reduce(function (t, r) { return t.concat(e(r)) }, []), t; case "Feature": return t.geometry ? e(t.geometry).map(function (e) { var r = { type: "Feature", properties: JSON.parse(JSON.stringify(t.properties)), geometry: e }; return void 0 !== t.id && (r.id = t.id), r }) : [t]; case "MultiPoint": return t.coordinates.map(function (e) { return { type: "Point", coordinates: e } }); case "MultiPolygon": return t.coordinates.map(function (e) { return { type: "Polygon", coordinates: e } }); case "MultiLineString": return t.coordinates.map(function (e) { return { type: "LineString", coordinates: e } }); case "GeometryCollection": return t.geometries.map(e).reduce(function (e, t) { return e.concat(t) }, []); case "Point": case "Polygon": case "LineString": return [t] } } }, {}], 7: [function (require, module, exports) { function Traverse(obj) { this.value = obj } function walk(root, cb, immutable) { var path = [], parents = [], alive = !0; return function walker(node_) { function updateState() { if ("object" == typeof state.node && null !== state.node) { state.keys && state.node_ === state.node || (state.keys = objectKeys(state.node)), state.isLeaf = 0 == state.keys.length; for (var i = 0; i < parents.length; i++)if (parents[i].node_ === node_) { state.circular = parents[i]; break } } else state.isLeaf = !0, state.keys = null; state.notLeaf = !state.isLeaf, state.notRoot = !state.isRoot } var node = immutable ? copy(node_) : node_, modifiers = {}, keepGoing = !0, state = { node: node, node_: node_, path: [].concat(path), parent: parents[parents.length - 1], parents: parents, key: path.slice(-1)[0], isRoot: 0 === path.length, level: path.length, circular: null, update: function (x, stopHere) { state.isRoot || (state.parent.node[state.key] = x), state.node = x, stopHere && (keepGoing = !1) }, "delete": function (stopHere) { delete state.parent.node[state.key], stopHere && (keepGoing = !1) }, remove: function (stopHere) { isArray(state.parent.node) ? state.parent.node.splice(state.key, 1) : delete state.parent.node[state.key], stopHere && (keepGoing = !1) }, keys: null, before: function (f) { modifiers.before = f }, after: function (f) { modifiers.after = f }, pre: function (f) { modifiers.pre = f }, post: function (f) { modifiers.post = f }, stop: function () { alive = !1 }, block: function () { keepGoing = !1 } }; if (!alive) return state; updateState(); var ret = cb.call(state, state.node); return void 0 !== ret && state.update && state.update(ret), modifiers.before && modifiers.before.call(state, state.node), keepGoing ? ("object" != typeof state.node || null === state.node || state.circular || (parents.push(state), updateState(), forEach(state.keys, function (key, i) { path.push(key), modifiers.pre && modifiers.pre.call(state, state.node[key], key); var child = walker(state.node[key]); immutable && hasOwnProperty.call(state.node, key) && (state.node[key] = child.node), child.isLast = i == state.keys.length - 1, child.isFirst = 0 == i, modifiers.post && modifiers.post.call(state, child), path.pop() }), parents.pop()), modifiers.after && modifiers.after.call(state, state.node), state) : state }(root).node } function copy(src) { if ("object" == typeof src && null !== src) { var dst; if (isArray(src)) dst = []; else if (isDate(src)) dst = new Date(src.getTime ? src.getTime() : src); else if (isRegExp(src)) dst = new RegExp(src); else if (isError(src)) dst = { message: src.message }; else if (isBoolean(src)) dst = new Boolean(src); else if (isNumber(src)) dst = new Number(src); else if (isString(src)) dst = new String(src); else if (Object.create && Object.getPrototypeOf) dst = Object.create(Object.getPrototypeOf(src)); else if (src.constructor === Object) dst = {}; else { var proto = src.constructor && src.constructor.prototype || src.__proto__ || {}, T = function () { }; T.prototype = proto, dst = new T } return forEach(objectKeys(src), function (key) { dst[key] = src[key] }), dst } return src } function toS(obj) { return Object.prototype.toString.call(obj) } function isDate(obj) { return "[object Date]" === toS(obj) } function isRegExp(obj) { return "[object RegExp]" === toS(obj) } function isError(obj) { return "[object Error]" === toS(obj) } function isBoolean(obj) { return "[object Boolean]" === toS(obj) } function isNumber(obj) { return "[object Number]" === toS(obj) } function isString(obj) { return "[object String]" === toS(obj) } var traverse = module.exports = function (obj) { return new Traverse(obj) }; Traverse.prototype.get = function (ps) { for (var node = this.value, i = 0; i < ps.length; i++) { var key = ps[i]; if (!node || !hasOwnProperty.call(node, key)) { node = void 0; break } node = node[key] } return node }, Traverse.prototype.has = function (ps) { for (var node = this.value, i = 0; i < ps.length; i++) { var key = ps[i]; if (!node || !hasOwnProperty.call(node, key)) return !1; node = node[key] } return !0 }, Traverse.prototype.set = function (ps, value) { for (var node = this.value, i = 0; i < ps.length - 1; i++) { var key = ps[i]; hasOwnProperty.call(node, key) || (node[key] = {}), node = node[key] } return node[ps[i]] = value, value }, Traverse.prototype.map = function (cb) { return walk(this.value, cb, !0) }, Traverse.prototype.forEach = function (cb) { return this.value = walk(this.value, cb, !1), this.value }, Traverse.prototype.reduce = function (cb, init) { var skip = 1 === arguments.length, acc = skip ? this.value : init; return this.forEach(function (x) { this.isRoot && skip || (acc = cb.call(this, acc, x)) }), acc }, Traverse.prototype.paths = function () { var acc = []; return this.forEach(function (x) { acc.push(this.path) }), acc }, Traverse.prototype.nodes = function () { var acc = []; return this.forEach(function (x) { acc.push(this.node) }), acc }, Traverse.prototype.clone = function () { var parents = [], nodes = []; return function clone(src) { for (var i = 0; i < parents.length; i++)if (parents[i] === src) return nodes[i]; if ("object" == typeof src && null !== src) { var dst = copy(src); return parents.push(src), nodes.push(dst), forEach(objectKeys(src), function (key) { dst[key] = clone(src[key]) }), parents.pop(), nodes.pop(), dst } return src }(this.value) }; var objectKeys = Object.keys || function (obj) { var res = []; for (var key in obj) res.push(key); return res }, isArray = Array.isArray || function (xs) { return "[object Array]" === Object.prototype.toString.call(xs) }, forEach = function (xs, fn) { if (xs.forEach) return xs.forEach(fn); for (var i = 0; i < xs.length; i++)fn(xs[i], i, xs) }; forEach(objectKeys(Traverse.prototype), function (key) { traverse[key] = function (obj) { var args = [].slice.call(arguments, 1), t = new Traverse(obj); return t[key].apply(t, args) } }); var hasOwnProperty = Object.hasOwnProperty || function (obj, key) { return key in obj } }, {}] }, {}, [1])(1) });
+(function (global) {
+    function Extent() {
+        this._bbox = [Infinity, Infinity, -Infinity, -Infinity];
+        this._valid = false;
+    }
+    Extent.prototype.include = function ([lng, lat]) {
+        this._valid = true;
+        this._bbox[0] = Math.min(this._bbox[0], lng);
+        this._bbox[1] = Math.min(this._bbox[1], lat);
+        this._bbox[2] = Math.max(this._bbox[2], lng);
+        this._bbox[3] = Math.max(this._bbox[3], lat);
+        return this;
+    };
+    Extent.prototype.bbox = function () { return this._valid ? this._bbox : null; };
+    Extent.prototype.polygon = function () {
+        if (!this._valid) return null;
+        const [minX, minY, maxX, maxY] = this._bbox;
+        return { type: "Polygon", coordinates: [[[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY], [minX, minY]]] };
+    };
+
+    function geojsonCoords(gj) {
+        const coords = [];
+        function flatten(obj) {
+            if (!obj) return;
+            switch (obj.type) {
+                case "FeatureCollection": obj.features.forEach(flatten); break;
+                case "Feature": flatten(obj.geometry); break;
+                case "GeometryCollection": obj.geometries.forEach(flatten); break;
+                default:
+                    if (Array.isArray(obj.coordinates)) {
+                        const stack = [obj.coordinates];
+                        while (stack.length) {
+                            const item = stack.pop();
+                            typeof item[0] === "number" ? coords.push(item) : stack.push(...item);
+                        }
+                    }
+            }
+        }
+        flatten(gj);
+        return coords;
+    }
+
+    function traverse(obj, fn) {
+        if (!obj || typeof obj !== "object") return;
+        fn(obj);
+        Object.values(obj).forEach(v => traverse(v, fn));
+    }
+
+    function geojsonExtent(gj) {
+        const ext = new Extent();
+        geojsonCoords(gj).forEach(c => ext.include(c));
+        return ext.bbox();
+    }
+
+    geojsonExtent.polygon = function (gj) {
+        const ext = new Extent();
+        geojsonCoords(gj).forEach(c => ext.include(c));
+        return ext.polygon();
+    };
+
+    geojsonExtent.bboxify = function (obj) {
+        const geojsonTypes = ["FeatureCollection", "Feature", "GeometryCollection", "Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon"];
+        traverse(obj, function (v) {
+            if (v && v.type && geojsonTypes.includes(v.type)) {
+                v.bbox = geojsonExtent(v);
+            }
+        });
+    };
+
+    global.geojsonExtent = geojsonExtent;
+})(window);
 
 class NearbyEvacuations {
     constructor(y, x) {
@@ -16,18 +86,17 @@ class NearbyEvacuations {
         if (lineLength === 0) return distToV;
 
         // Treat points as cartesian (approximate) for projection
-        const px = this.x, py = this.y;
-        const vx = v[0], vy = v[1];
-        const wx = w[0], wy = w[1];
-
-        const t = ((px - vx) * (wx - vx) + (py - vy) * (wy - vy)) /
-            ((wx - vx) ** 2 + (wy - vy) ** 2);
+        const px = this.x, py = this.y,
+            vx = v[0], vy = v[1],
+            wx = w[0], wy = w[1],
+            t = ((px - vx) * (wx - vx) + (py - vy) * (wy - vy)) /
+                ((wx - vx) ** 2 + (wy - vy) ** 2);
 
         if (t < 0) return distToV;
         if (t > 1) return distToW;
 
-        const projX = vx + t * (wx - vx);
-        const projY = vy + t * (wy - vy);
+        const projX = vx + t * (wx - vx),
+            projY = vy + t * (wy - vy);
 
         return conversion.distance(this.y, this.x, projY, projX);
     }
@@ -36,10 +105,9 @@ class NearbyEvacuations {
         let inside = false;
         const [x, y] = this.point;
         for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-            const [xi, yi] = polygon[i];
-            const [xj, yj] = polygon[j];
-            const intersect = yi > y !== yj > y &&
-                x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+            const [xi, yi] = polygon[i],
+                [xj, yj] = polygon[j],
+                intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
             if (intersect) inside = !inside;
         }
         return inside;
@@ -48,8 +116,8 @@ class NearbyEvacuations {
     isPointNearPolygon(polygon) {
         if (this.isPointInPolygon(polygon)) return true;
         for (let i = 0; i < polygon.length; i++) {
-            const v = polygon[i];
-            const w = polygon[(i + 1) % polygon.length];
+            const v = polygon[i],
+                w = polygon[(i + 1) % polygon.length];
             if (this.distanceToSegmentMiles(v, w) <= this.bufferMiles) return true;
         }
         return false;
@@ -60,9 +128,9 @@ class NearbyEvacuations {
             if (evacsLoaded) {
                 resolve(this.process());
             } else {
-                const loop = setInterval(() => {
+                const wait = setInterval(() => {
                     if (evacsLoaded) {
-                        clearInterval(loop);
+                        clearInterval(wait);
                         resolve(this.process());
                     }
                 }, 500);
@@ -77,13 +145,7 @@ class NearbyEvacuations {
         activeEvacuations.forEach(feature => {
             const geom = feature.geometry;
             let fnotes = '',
-                polygons = [];
-
-            if (geom.type === "Polygon") {
-                polygons = [geom.coordinates[0]];
-            } else if (geom.type === "MultiPolygon") {
-                polygons = geom.coordinates.flat();
-            }
+                polygons = geom.type === 'Polygon' ? [geom.coordinates[0]] : geom.coordinates.flat();
 
             const isNear = polygons.some(ring =>
                 this.isPointNearPolygon(ring)
@@ -91,20 +153,12 @@ class NearbyEvacuations {
 
             if (isNear) {
                 const level = feature.properties.level,
-                    notes = feature.properties.notes || "",
-                    county = feature.properties.county || "";
+                    notes = feature.properties.notes || '',
+                    county = feature.properties.county || '';
 
-                if (!grouped[level]) {
-                    grouped[level] = {
-                        level: level,
-                        notes: new Set(),
-                        counties: new Set()
-                    };
-                }
+                if (!grouped[level]) grouped[level] = { level: level, notes: new Set(), counties: new Set() };
 
-                if (notes.search('Evac Zone Name') >= 0) {
-                    fnotes = RegExp(/Evac Zone Name: (.*?)\s\//gm).exec(notes)[1]
-                }
+                if (notes.search('Evac Zone Name') >= 0) fnotes = RegExp(/Evac Zone Name: (.*?)\s\//gm).exec(notes)[1];
 
                 grouped[level].notes.add(fnotes);
                 grouped[level].counties.add(county);
@@ -221,7 +275,7 @@ class Weather {
 
             map.once('moveend', () => {
                 // get weather stations without checking the layer
-                if (!settings.isEnabled('stns')) config.layerActions['stns'].exe();
+                if (!settings.isEnabled('stns')) layerActions['stns'].exe();
 
                 const wait = setInterval(() => {
                     if (map.getSource('stns')) {
@@ -239,7 +293,7 @@ class Weather {
 
     currentConds(p) {
         if (!p) return;
-        setHeaders('Current Fire Weather at ' + p.NAME, 'weather/current/' + p.STID, 'See current fire weather conditions at ' + p.NAME + '.');
+        setHeaders('Current Weather Conditions at ' + p.NAME, 'weather/current/' + p.STID, 'See current fire weather conditions at ' + p.NAME + '.');
 
         const hasPermissions = settings.hasPermissions('PRO'),
             popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>');
@@ -282,9 +336,9 @@ class Weather {
         popup.update(stnData, 'Current Conditions');
     }
 
-    windIndicator(d) {
+    /*windIndicator(d) {
         return '<svg xmlns="http://www.w3.org/2000/svg" style="transform:rotate(' + d + 'deg)" width="24" height="24" viewBox="0 0 24 24"><path fill="var(--orange)" d="M12,2L4.5,20.29l0.71,0.71L12,18l6.79,3 0.71,-0.71z"></path></svg>';
-    }
+    }*/
 
     fireWxFcst() {
         new ClickListener().openModal('wwa');
@@ -300,8 +354,8 @@ class Weather {
             lat: this.lat,
             lon: this.lon,
             units: {
-                temp: settings.weather().temp() ? settings.weather().temp() : 'f',
-                wind: settings.weather().wind() ? settings.weather().wind() : 'mph'
+                temp: settings.weather().temp() || 'f',
+                wind: settings.weather().wind() || 'mph'
             }
         });
 
@@ -314,69 +368,71 @@ class Weather {
     }
 
     async incidentWX() {
-        const holder = document.querySelector('#curwx'),
-            onError = (error) => {
-                console.error('There is an error getting current conditions', error);
-                if (holder != null) holder.innerHTML = '<h2>Nearby Weather Conditions</h2><div class="message error">No current weather conditions are available near this incident.</div>';
-            };
+        const holder = document.querySelector('#curwx');
+        if (!holder) return;
+
+        const onError = (error) => {
+            if (error) console.error(error);
+            holder.innerHTML = '<h2>Nearby Weather Conditions</h2><div class="message error">No current weather conditions are available near this incident.</div>';
+        };
 
         try {
             const wx = await api(config.apiURL + 'weather/nearby', [['radius', this.lat + ',' + this.lon + ',30'], ['latest', 1]]);
 
-            if (wx.weather) {
-                let o = wx.weather.obs,
-                    name = wx.weather.name,
-                    t = (o.temp.current ? Math.round(o.temp.current) : '--'),
-                    rh = (o.rh ? Math.round(o.rh) : '--'),
-                    rwd = (o.raw_wind_dir ? o.raw_wind_dir : null),
-                    wd = (o.wind_dir ? o.wind_dir : '--'),
-                    ws = (o.wind_speed ? Math.round(o.wind_speed) : '--'),
-                    u = timeAgo(wx.weather.updated),
-                    tunit = 'F',
-                    wunit = 'mph';
+            if (!wx?.weather?.obs) return showError();
 
-                /* format temperature */
-                if (settings.weather()?.temp() == 'c' && t != '--') {
-                    t = conversion.FtoC(t).toFixed(1);
-                    tunit = 'C';
-                }
+            const { obs: o, name, updated } = wx.weather;
 
-                /* format wind speed */
-                if (settings.weather()?.wind() != 'mph' && ws != '--') {
-                    ws = conversion.speed(ws, settings.weather().wind());
-                    wunit = settings.weather().wind();
-                }
+            if (o.temp?.current == null && !o.rh && !o.wind_speed) return showError();
 
-                const t1 = document.querySelector('#curwx #a h4'),
-                    rh1 = document.querySelector('#curwx #b h4'),
-                    w1 = document.querySelector('#curwx #c h4'),
-                    w2 = document.querySelector('#curwx #d h4'),
-                    up = document.querySelector('#curwx .updated');
+            const pref = settings.weather?.() || {},
+                isMetric = pref.temp?.() === 'c',
+                windUnit = pref.wind?.() || 'mph',
+                formatTemp = (val) => {
+                    if (val == null) return '--';
+                    const t = Math.round(val);
+                    return isMetric ? `${conversion.FtoC(t).toFixed(1)}&deg;C` : `${t}&deg;F`;
+                },
+                formatWind = (val) => {
+                    if (!val) return '--';
+                    const speed = Math.round(val),
+                        converted = windUnit !== 'mph' ? conversion.speed(speed, windUnit) : speed;
+                    return `${converted} ${windUnit}`;
+                },
+                domTemp = holder.querySelector('#a h4'),
+                domRH = holder.querySelector('#b h4'),
+                domWD = holder.querySelector('#c h4'),
+                icon = holder.querySelector('#c i'),
+                domWS = holder.querySelector('#d h4'),
+                u = holder.querySelector('.updated');
 
-                if (t1 && rh1 && w2) {
-                    t1.innerHTML = `${t}&deg;${tunit}`;
-                    rh1.innerHTML = (!o.rh || rh == '--' ? '--' : rh + '%');
-                    //w1.querySelector('svg').style.transform = 'rotate(' + rwd + 'deg)';
-                    if (rwd != null) {
-                        w1.innerHTML = `${wd}`;
-                        document.querySelector('#curwx #c i').style.transform = 'rotate(' + Number(rwd - 45) + 'deg)';
-                    }
-                    w2.innerHTML = `${ws} ${ws != '--' ? wunit : ''}`;
-                    //w1.setAttribute('title', 'Winds are ' + wd + ' at ' + ws);
+            domTemp.innerHTML = formatTemp(o.temp?.current);
+            domRH.innerHTML = o.rh ? `${Math.round(o.rh)}%` : '--';
 
-                    up.innerHTML = `Last report ${u}${settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? ' @ ' + name : ''}`;
-                }
+            if (o.raw_wind_dir != null) {
+                domWD.innerHTML = o.wind_dir || '--';
+                if (icon) icon.style.transform = `rotate(${Number(o.raw_wind_dir - 45)}deg)`;
             } else {
-                onError(null);
+                domWD.innerHTML = '--';
             }
+
+            domWS.innerHTML = formatWind(o.wind_speed);
+            u.innerHTML = `Last report ${timeAgo(updated)}${settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? ` @ ${name}` : ''}`;
         } catch (err) {
             onError(err);
         }
     }
 
     async incidentForecast() {
-        const holder = document.querySelector('#fcstwx'),
-            now = Date.now(),
+        const holder = document.querySelector('#fcstwx');
+        if (!holder) return;
+
+        const onError = (error) => {
+            if (error) console.error(error);
+            holder.innerHTML = '<h2>24-Hour Fire Weather Analysis</h2><div class="message error">The 24-hour fire forecast is unavailable at this time.</div>';
+        };
+
+        const now = Date.now(),
             pref = settings.weather() || {},
             isMetric = pref.temp?.() === 'c',
             wUnit = pref.wind?.() || 'mph',
@@ -387,49 +443,57 @@ class Weather {
             };
 
         try {
+            // get pri
             const ap = await api(`https://api.weather.gov/points/${this.lat.toFixed(4)},${this.lon.toFixed(4)}`);
+
+            // if points API is unavailable or returns an error
+            if (ap.status) return showError();
+
+            // get hourly forecast grid data from ndfd
             const { properties: prop } = await api(ap.properties.forecastGridData);
 
-            if (!prop.temperature) throw new Error('No temp data');
+            // if no temp data, cancel this process
+            if (!prop?.temperature?.values?.length) return showError();
 
-            const validIndices = prop.temperature.values
-                .map((v, i) => ({ t: new Date(v.validTime.split('/')[0]).getTime(), i }))
-                .filter(item => item.t >= now && item.t - now < 86400000)
-                .map(item => item.i);
-            const tempArray = validIndices.map(i => prop.temperature.values[i].value),
-                rhArray = validIndices.map(i => prop.relativeHumidity.values[i].value),
-                windArray = validIndices.filter(i => prop.windSpeed.values[i]).map(i => prop.windSpeed.values[i].value);
+            // map temperatures to time frames
+            const valid = prop.temperature.values.map((v, i) => ({
+                t: new Date(v.validTime.split('/')[0]).getTime(),
+                i
+            })).filter(x => x.t >= now && x.t - now < 86400000).map(x => x.i);
 
-            let maxT = Math.max(...tempArray) * 1.8 + 32,
-                minRH = Math.min(...rhArray),
-                avgW = (windArray.reduce((a, b) => a + b, 0) / windArray.length) / 1.609,
-                maxW = Math.max(...windArray) / 1.609;
+            if (!valid.length) return showError();
 
-            const displayT = isMetric ? `${conversion.FtoC(maxT).toFixed(1)}&deg;C` : `${Math.round(maxT)}&deg;F`,
-                displayAvgW = formatWind(avgW),
-                displayMaxW = formatWind(maxW);
+            const temps = valid.map(i => prop.temperature.values[i].value),
+                rhs = valid.map(i => prop.relativeHumidity.values[i]?.value),
+                winds = valid.map(i => prop.windSpeed.values[i]?.value).filter(Boolean),
+                maxT = Math.max(...temps) * 1.8 + 32,
+                minRH = Math.min(...rhs),
+                avgW = winds.length ? (winds.reduce((a, b) => a + b, 0) / winds.length) / 1.609 : NaN,
+                maxW = winds.length ? Math.max(...winds) / 1.609 : NaN,
+                displayT = isMetric ? `${conversion.FtoC(maxT).toFixed(1)}&deg;C` : `${Math.round(maxT)}&deg;F`;
 
-            const q = (sel) => modal.querySelector(`#fcstwx ${sel}`);
-            q('#a h4').innerHTML = displayT;
-            q('#b h4').innerHTML = `${minRH}%`;
-            q('#c h4').innerHTML = displayAvgW;
-            q('#d h4').innerHTML = displayMaxW;
-            q('.updated').innerHTML = `Last forecasted ${timeAgo(new Date(prop.updateTime).getTime())}`;
+            let btnHtml;
+            const isPremium = settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM),
+                domTemp = holder.querySelector('#a h4'),
+                domRH = holder.querySelector('#b h4'),
+                domAvgW = holder.querySelector('#c h4'),
+                domMaxW = holder.querySelector('#d h4'),
+                u = holder.querySelector('.updated');
 
-            // 6. Premium Button Logic
-            const isPremium = settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM);
-            const btnHtml = isPremium
-                ? `<a href="#" class="btn btn-orange btn-sm" style="margin:0" data-lat="${this.lat}" data-lon="${this.lon}" data-action="incident_wx-fwf" onclick="return false">View the full fire forecast</a>`
-                : `<a href="#" class="btn btn-sm btn-orange" style="margin:0" data-action="marketing-cta" data-utm="acres_history" onclick="return false"><i class="fas fa-lock"></i> Upgrade to view forecast</a>`;
+            if (isPremium) {
+                btnHtml = `<a href="#" class="btn btn-orange btn-sm" style="margin:0" data-lat="${this.lat}" data-lon="${this.lon}" data-action="incident_wx-fwf" onclick="return false">View the full fire forecast</a>`
+            } else {
+                btnHtml = `<a href="#" class="btn btn-sm btn-orange" style="margin:0" data-action="marketing-cta" data-utm="acres_history" onclick="return false"><i class="fas fa-lock"></i> Upgrade to view forecast</a>`;
+            };
 
-            q('.updated').insertAdjacentHTML('afterend', `<div class="btn-group centered" style="margin:0">${btnHtml}</div>`);
-
+            domTemp.innerHTML = displayT;
+            domRH.innerHTML = `${minRH}%`;
+            domAvgW.innerHTML = formatWind(avgW);
+            domMaxW.innerHTML = formatWind(maxW);
+            u.innerHTML = `Latest data from ${timeAgo(new Date(prop.updateTime).getTime())}`;
+            u.insertAdjacentHTML('afterend', `<div class="btn-group centered" style="margin:0">${btnHtml}</div>`);
         } catch (error) {
-            console.error('Incident weather error', error);
-
-            if (holder != null) {
-                holder.innerHTML = `<h3>Incident Weather Concerns</h3><div class="message error">The 24-hour fire forecast is unavailable at this time.</div>`;
-            }
+            showError(error);
         }
         return this;
     }
@@ -490,12 +554,12 @@ class Weather {
             });
 
             if (update) {
-                if (feat.length > 0 && map.getSource('stns') != null) {
-                    map.getSource('stns').setData({
-                        type: 'FeatureCollection',
-                        features: feat
-                    });
-                }
+                //if (feat.length > 0 && map.getSource('stns') != null) {
+                map.getSource('stns').setData({
+                    type: 'FeatureCollection',
+                    features: feat
+                });
+                //}
             } else {
                 if (!map.getSource('stns')) {
                     map.addSource('stns', {
@@ -606,14 +670,19 @@ class Weather {
         return { quality: range.label, desc: range.desc };
     }
 
-    /*nearbyAQ() {
-        const g = setInterval(() => {
-            if (airQualityStns.features) {
-                clearInterval(g);
+    nearbyAQ() {
+        if (!this.lat || !this.lon) {
+            const c = map.getCenter();
+            this.lat = c.lat;
+            this.lon = c.lng;
+        }
 
-                if (airQualityStns.features.length > 0) {
-                    const aqh = modal.querySelector('#aq'),
-                        distances = [],
+        return new Promise(resolve => {
+            const check = setInterval(() => {
+                if (airQualityStns.features) {
+                    clearInterval(check);
+
+                    const distances = [],
                         stns = [];
 
                     airQualityStns.features.forEach(f => {
@@ -622,26 +691,17 @@ class Weather {
                         stns.push(f.properties);
                     });
 
-                    const minDist = Math.min.apply(null, distances),
-                        stn = stns[distances.indexOf(minDist)],
-                        aq = stn.PM25_AQI,
-                        color = this.airQColor(aq),
-                        details = this.airQDesc(aq);
+                    const stn = stns[distances.indexOf(Math.min(...distances))];
 
-                    aqh.querySelector('.desc').innerHTML = `<span class="air_quality"
-                        onclick="notify('info', '${details.desc}');return false"
-                        title="${details.quality}: ${details.desc}"
-                        style="color:#${(aq <= 100 ? '000' : 'fff')};background-color:${color}">${details.quality.replace('Unhealthy for Sensitive Groups', 'Unhealthy')}'</span>`;
-                } else {
-                    aqh.parentElement.classList.remove('max25');
-                    aqh.parentElement.classList.add('max33');
-                    aqh.remove();
+                    resolve({
+                        ...stn,
+                        color: this.airQColor(stn.PM25_AQI),
+                        details: this.airQDesc(stn.PM25_AQI)
+                    });
                 }
-            }
-        }, 200);
-
-        return this;
-    }*/
+            }, 200);
+        });
+    }
 }
 
 class ChangeListener {
@@ -822,28 +882,45 @@ function dateTime(it, time = false, timezone = false, longMonth = false) {
 
 /* social media shares */
 function socialShare(se) {
-    let p = window.location.pathname,
-        s = p.split('/');
+    const p = window.location.pathname,
+        s = p.split('/'),
+        clean = v => ucwords(String(v).replaceAll('-', ' ')).replaceAll(' ', '');
 
     if (se == 'tt') {
         window.open('https://tiktok.com/search?q=' + s[4].replaceAll('-', '%20').toLowerCase());
     } else {
-        let ref = config.host.substring(0, config.host.length - 1) + p;
+        const ref = config.host.substring(0, config.host.length - 1).replace('www.', '') + p;
 
         if (se == 'fb') {
             url = 'https://www.facebook.com/sharer/sharer.php?u=' + ref + '&src=sdkpreparse';
         } else {
-            let hashtags = ucwords(s[3].toString().replaceAll('-', ' ')).replaceAll(' ', '') + ',' + ucwords(s[4].toString().replaceAll('-', ' ')).replaceAll(' ', '');
+            const hashtags = `${clean(s[3])},${clean(s[4])}`;
             url = 'https://x.com/intent/post?hashtags=' + hashtags + '&original_referer=' + ref + '&url=' + ref + '&ref_src=twsrc%5Etfw&tw_p=tweetbutton';
         }
 
-        let h = 425,
-            w = 700,
+        const h = 425, w = 700,
             t = (window.innerHeight - h) / 2,
             l = (window.innerWidth - w) / 2;
 
-        window.open(url, 'social', 'location=no,menubar=no,status=no,resizable=no,top=' + t + ',left=' + l + ',width=' + w + ',height=' + h);
+        window.open(url, 'social', `location=no,menubar=no,status=no,resizable=no,top=${t},left=${l},width=${w},height=${h}`);
     }
+}
+
+function sfpTimes() {
+    return Array.from({ length: 7 }, (_, z) => {
+        const t = new Date();
+        t.setDate(t.getDate() + z);
+
+        const y = t.getFullYear(),
+            m = String(t.getMonth() + 1).padStart(2, '0'),
+            d = String(t.getDate()).padStart(2, '0'),
+            dayLabel = z === 0 ? ' (Today)' : (z === 1 ? ' (Tomorrow)' : '');
+
+        return {
+            key: `${y}-${m}-${d}T00:00:00.0Z`,
+            value: `${config.days[t.getDay()]}, ${config.months[t.getMonth()]} ${t.getDate()}${dayLabel}`
+        };
+    });
 }
 
 function ndfdTime(add = 0) {
@@ -988,7 +1065,7 @@ function createDataForm(title, content, center = false) {
     df?.classList.remove('bg');
     df?.remove();
 
-    const el = document.createElement('div');
+    const el = document.createElement('dialog');
     el.id = 'data-form';
     el.innerHTML = `<span id="exit" data-action="close-data-form" class="far fa-xmark"></span>
         <div class="wrapper${(center ? ' center' : '')}">
@@ -1682,9 +1759,8 @@ window.addEventListener('submit', async (e) => {
 });
 
 window.addEventListener('input', (e) => {
-    /* perimeter min size change text */
+    // perimeter min size change text
     if (e.target.parentElement.id == 'perimeterSize' && e.target.classList.contains('slider')) {
-        /*settings.updatePSize(e.target.value);*/
         document.querySelector('#pSize').innerHTML = e.target.value + ' acres';
     }
 });

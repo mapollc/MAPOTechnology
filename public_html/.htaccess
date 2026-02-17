@@ -84,6 +84,12 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.+)$ /$1.php [L,QSA]
 
+<IfModule mod_expires.c>  
+  <Files "mapo.webmanifest">
+    Header set Access-Control-Allow-Origin *
+  </Files>
+</IfModule>
+
 <Files ~ "\.ini\.php$">
     Require all denied
 </Files>

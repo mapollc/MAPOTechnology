@@ -13,12 +13,13 @@
     --hover-close-color: #9b9797;
     --color-transition: all .15s ease-in-out;
     --container-color: #0f172a;
+    --tooltip-light: #e7e7e7;
     --data-color: #192232;
     --box-color: #0d1324;
     --box-border: #1e293b;
     --box-border-light: #334155;
     --box-text-color: #94a3b8;
-    --box-header-color: #ed4d00/*#92befb*/;
+    --box-header-color: #ed4d00;
     --box-orange: #f97316;
     --box-orange-hover: rgb(249 115 22 / 0.5);
 }
@@ -96,7 +97,7 @@ main {
     position: relative;
     display: none;
     width: 100%;
-    padding: 16px;
+    padding: var(--half-spacing);
     align-items: center;
     justify-content: space-between;
     gap: .75em;
@@ -130,9 +131,9 @@ main {
 
 .android-banner .icon {
     display: block;
-    width: 55px;
-    min-width: 55px;
-    height: 55px;
+    width: 45px;
+    min-width: 45px;
+    height: 45px;
     border-radius: 10px;
     background: url(https://play-lh.googleusercontent.com/3Hz4Kr-v7TlKDeFZsUWeCToqQpcx5w4PN4An2WUOEGYrok4ctSAwMD3-fnLarPPWYQ=w240-h480-rw) no-repeat;
     background-size: cover;
@@ -214,21 +215,12 @@ nav ul li {
     cursor: pointer;
 }
 
-/*nav ul li.disabled i,
-nav ul li.disabled span,
-nav ul li.disabled:hover i,
-nav ul li.disabled:hover span {
-    cursor: not-allowed;
-    color: #a1a1a1 !important;
-}*/
-
 nav ul li.disabled {
     cursor: not-allowed;
     color: #646c78 !important;
 }
 
 nav ul li i {
-    /*color: #404040;*/
     font-size: 19px;
 }
 
@@ -239,7 +231,6 @@ nav ul li span {
 }
 
 nav ul li:hover {
-    /*color: #222;*/
     color: var(--box-orange);
 }
 
@@ -252,7 +243,7 @@ nav.hide ul {
 }
 
 nav.hide ul li i {
-    font-size: 16px;
+    font-size: 18px;
 }
 
 nav.hide ul li span {
@@ -267,7 +258,7 @@ nav.hide .nav-wrapper .logo img {
     display: none;
     flex: 0;
     width: 100%;
-    padding: var(--spacing) 0 var(--half-spacing);
+    padding: var(--spacing) 0;
     justify-content: center;
     color: #fff;
     cursor: pointer;
@@ -282,10 +273,6 @@ nav.hide .nav-wrapper .logo img {
     background-color: rgb(100 100 100 / 5%);
 }
 
-nav.hide #close-navbar {
-    padding: 1.5em 0;
-}
-
 .notify {
     position: absolute;
     display: inline-flex;
@@ -293,8 +280,8 @@ nav.hide #close-navbar {
     right: 5px;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     padding: 2px;
     font-size: 11px;
     color: #fff;
@@ -304,13 +291,18 @@ nav.hide #close-navbar {
     border-radius: 50%;
 }
 
+.notify.m10 {
+    width: 18px;
+    height: 18px;
+}
+
 .filter-controls {
     position: absolute;
     top: var(--container-space);
     left: calc(var(--nav-width) + var(--container-space));
     display: flex;
     align-items: center;
-    width: calc(100% - var(--mb-button-width) - var(--nav-width) - calc(3 * var(--container-space)));
+    width: calc(var(--search-results-width) - var(--container-space));
     gap: var(--spacing);
     z-index: 998;
 }
@@ -323,7 +315,7 @@ nav.hide #close-navbar {
     box-shadow: 0 0.125rem 0.3125rem rgb(0 0 0 / 14%), 0 0.0625rem 0.375rem rgb(0 0 0 / 12%);
 }
 
-.tools.control {
+/*.tools.control {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -341,134 +333,7 @@ nav.hide #close-navbar {
 
 .tools.control .tool:hover {
     background-color: #eee;
-}
-
-.filter-controls .search {
-    display: none;
-    width: var(--search-results-width);
-    align-items: center;
-    font-size: 18px;
-}
-
-.filter-controls .search>span {
-    padding: 0 calc(var(--spacing) * .75);
-    color: var(--box-text-color);
-    font-size: 17px;
-    user-select: none;
-}
-
-.filter-controls .search #clearSearch {
-    display: none;
-    padding: 0 calc(var(--spacing) * .75);
-    cursor: pointer;
-}
-
-.filter-controls .search input {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    outline: none;
-    background: transparent;
-    font-family: var(--roboto);
-    font-size: 16px;
-}
-
-.filter-controls .search input:disabled {
-    cursor: not-allowed;
-    background-color: transparent;
-}
-
-ul#search-results {
-    position: absolute;
-    top: calc(40px + .5em);
-    left: 0;
-    display: none;
-    flex-direction: column;
-    width: 100%;
-    max-width: var(--search-results-width);
-    padding: .4em 0;
-    height: auto;
-    max-height: 350px;
-    list-style: none;
-    overflow-y: auto;
-}
-
-ul#search-results li {
-    display: inline-flex;
-    gap: var(--spacing);
-    align-items: center;
-    padding: .6em var(--spacing);
-    font-size: 15px;
-    line-height: 1.2;
-    cursor: pointer;
-    transition: all .15s ease-in-out;
-}
-
-ul#search-results li.trending {
-    justify-content: space-between;
-}
-
-ul#search-results li>div {
-    display: inline-flex;
-    gap: var(--spacing);
-    align-items: center;
-}
-
-ul#search-results li span.icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 30px;
-    height: 30px;
-    background-color: var(--orange);
-    color: #fff;
-    border-radius: 50%;
-    box-shadow: 0 0 5px rgb(50 50 50 / 10%);
-}
-
-ul#search-results li span.icon.fire {
-    background-color: #dd3f3f;
-}
-
-/*span.feature-icon {
-    font-weight: 800;
-    line-height: 0;
 }*/
-
-ul#search-results li span.icon.none {
-    background-color: transparent;
-    box-shadow: none;
-}
-
-ul#search-results li h3 {
-    display: inline-flex;
-    flex-direction: column;
-    gap: .4em;
-    font-size: inherit;
-    font-weight: 400;
-    line-height: inherit;
-}
-
-ul#search-results li h3 span {
-    font-size: 12px;
-    color: #5a5a5a;
-    letter-spacing: 0.2px;
-}
-
-ul#search-results li:not(.standby):hover {
-    background-color: #eee;
-}
-
-ul#search-results li.standby {
-    cursor: default !important;
-}
-
-ul#search-results li.standby i {
-    color: var(--light-blue);
-    animation: .9s linear infinite spin;
-}
 
 #menuIcon {
     display: none;
@@ -534,19 +399,15 @@ a.maplibregl-ctrl-logo {
     margin: var(--spacing) var(--spacing) 0 0;
 }
 
-/*.maplibregl-ctrl-bottom-left .maplibregl-ctrl {
-    margin: 0 0 var(--spacing) var(--spacing);
-}*/
-
 .maplibregl-ctrl-scale {
     font-family: var(--roboto);
-    border: 1px solid #333!important;
-    border-top: transparent!important;
-    padding: 1px 5px!important;
-    margin: 0 0 var(--spacing) 0!important;
+    border: 1px solid #333 !important;
+    border-top: transparent !important;
+    padding: 1px 5px !important;
+    margin: 0 0 var(--spacing) 0 !important;
     font-weight: 500;
     color: #202020;
-    background-color: rgb(245 245 245 / 50%)!important;
+    background-color: rgb(245 245 245 / 50%) !important;
 }
 
 .maplibregl-ctrl-group button {
@@ -605,45 +466,86 @@ a.maplibregl-ctrl-logo {
 }
 
 .tooltip {
-    display: none;
     position: absolute;
-    max-width: 160px;
-    height: auto;
-    max-height: 36px;
-    padding: 5px 8px;
-    background-color: #333;
-    color: #fff;
-    border-radius: 5px;
+    padding: 4px 6px;
+    max-width: 200px;
     font-size: 13px;
-    white-space: nowrap;
-    text-wrap: auto;
-    text-align: center;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    z-index: 999;
-    user-select: none;
+    line-height: 1.2;
+    background: rgb(0 0 0 / 90%);
+    color: #fff;
+    border-radius: 3px;
+    pointer-events: none;
+    opacity: 0;
+    box-shadow: 0 0 3px rgb(20 20 20 / 50%);
+    transition: opacity 0.1s, transform 0.1s;
+    z-index: 9999;
+    word-wrap: break-word;
 }
 
-/*@media ((min-width: 641px) and (max-height: 490px)) or ((max-width: 640px) and (max-height: 450px)) {
-    .maplibregl-ctrl-top-right .maplibregl-ctrl-group:last-child {
-        display: none;
-    }
-}*/
+.tooltip.light {
+    background: var(--tooltip-light);
+    color: #262626;
+    box-shadow: 0 0 6px rgb(20 20 20 / 20%);
+}
 
-@media (max-width: 640px) {
-    /*:root {
-        --mb-button-width: 29px;
-    }
+.tooltip.show {
+    opacity: 1;
+}
 
-    .maplibregl-ctrl-group button {
-        width: var(--mb-button-width);
-        height: var(--mb-button-width);
-    }
+.tooltip::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+}
 
-    .maplibregl-ctrl button .maplibregl-ctrl-icon,
-    .mapbox-gl-draw_ctrl-draw-btn {
-        background-size: auto;
-    }*/
+.tooltip.down::after {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0 6px;
+    border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent;
+}
+
+.tooltip.light.down::after {
+    border-color: var(--tooltip-light) transparent transparent transparent;
+}
+
+.tooltip.up::after {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 0 6px 6px 6px;
+    border-color: transparent transparent rgba(0, 0, 0, 0.85) transparent;
+}
+
+.tooltip.light.up::after {
+    border-color: transparent transparent var(--tooltip-light) transparent;
+}
+
+.tooltip.left::after {
+    top: 50%;
+    left: 0;
+    transform: translate(-100%, -50%);
+    border-width: 6px 6px 6px 0;
+    border-color: transparent rgba(0, 0, 0, 0.85) transparent transparent;
+}
+
+.tooltip.light.left::after {
+    border-color: transparent var(--tooltip-light) transparent transparent;
+}
+
+.tooltip.right::after {
+    top: 50%;
+    right: 0;
+    transform: translate(100%, -50%);
+    border-width: 6px 0 6px 6px;
+    border-color: transparent transparent transparent rgba(0, 0, 0, 0.85);
+}
+
+.tooltip.light.right::after {
+    border-color: transparent transparent transparent var(--tooltip-light);
 }
 
 @media (max-width: 600px) {
@@ -681,23 +583,10 @@ a.maplibregl-ctrl-logo {
         display: none;
     }
 
-    /*.filter-controls {
-        width: calc(100% - var(--mb-button-width) - calc(var(--spacing) * 2.5));
-    }*/
-
-    /*.maplibregl-ctrl-top-right {
-        bottom: calc((var(--spacing) * 2) + 24px);
-        top: unset !important;
-    }*/
-
     .notify {
         top: 0;
         left: 0;
     }
-
-    /*.maplibregl-ctrl-top-right .maplibregl-ctrl-group:last-child {
-        display: none;
-    }*/
 }
 
 @media (max-width: 500px) {
@@ -710,8 +599,7 @@ a.maplibregl-ctrl-logo {
     }
 
     .filter-controls {
-        width: calc(100% - var(--container-space) - var(--spacing));
-        /*width: calc(100% - var(--mb-button-width) - calc(var(--spacing) * 2.5));*/
+        width: calc(100% - var(--container-space) - 10px);
         left: var(--container-space);
         gap: 0.7em;
     }
@@ -800,6 +688,9 @@ a.maplibregl-ctrl-logo {
 
     .android-banner {
         flex-wrap: wrap;
-        justify-content: center;
+    }
+
+    .play_store_download {
+        margin: 0 auto!important;
     }
 }

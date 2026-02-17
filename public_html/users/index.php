@@ -149,7 +149,7 @@ $lock = '<i class="far fa-lock"></i>';
             <div class="container">
                 <div class="row align-center space-between">
                     <div class="col">
-                        <a href="https://www.mapotechnology.com/account/home"><img src="https://www.mapotechnology.com/assets/images/mapo_logo.png" style="height:35px"></a>
+                        <a href="https://www.mapotechnology.com/account/home"><img src="https://www.mapotechnology.com/assets/images/mapo_logo_small.png" style="height:50px"></a>
                     </div>
                     <div class="col">
                         <div id="menuIcon"><i class="far fa-bars"></i></div>

@@ -41,7 +41,6 @@ $desc = "BlazeBoard is Map of Fire's wildfire dashboard, displaying active fires
     <link rel="icon" type="image/png" sizes="32x32" href="//mapotechnology.com/assets/images/mf-favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="//mapotechnology.com/assets/images/mf-favicon-16x16.png">
     <link rel="shortcut icon" href="//mapotechnology.com/assets/images/mf-favicon.ico" type="image/x-icon" />
-    <link rel="manifest" href="//mapotechnology.com/assets/images/mf-site.webmanifest">
     <noscript>
         <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@200;400;500;600;700&display=swap">
     </noscript>

@@ -75,7 +75,7 @@ $sourceURL = 'https://';
 $serviceName = '';
 $nextURL = preg_replace('/(\?|&)loggedOut=1/', '', $_GET['next'] ?? '');
 $prod = $_GET['prod'] ?? '';
-$logo = 'mapo_logo.png';
+$logo = 'mapo_logo_small.png';
 
 // get the default service URL
 if ($service == 'apps') {

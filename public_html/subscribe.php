@@ -238,7 +238,6 @@ if ($trialExhausted) {
     <link rel="icon" type="image/png" sizes="32x32" href="https://www.mapotechnology.com/assets/images/mf-favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="https://www.mapotechnology.com/assets/images/mf-favicon-16x16.png">
     <link rel="shortcut icon" href="https://www.mapotechnology.com/assets/images/mf-favicon.ico" type="image/x-icon" />
-    <link rel="manifest" href="https://www.mapotechnology.com/assets/images/mf-site.webmanifest">
     <link rel="preload" href="//fonts.googleapis.com/css2?family=Roboto:wght@200;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="stylesheet" href="https://www.mapotechnology.com/src/css/global.css">
     <link rel="stylesheet" href="https://www.mapotechnology.com/src/css/subs.css">

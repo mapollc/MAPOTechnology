@@ -44,7 +44,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
     <link rel="icon" type="image/png" sizes="32x32" href="https://www.mapotechnology.com/assets/images/mf-favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="https://www.mapotechnology.com/assets/images/mf-favicon-16x16.png">
     <link rel="shortcut icon" href="https://www.mapotechnology.com/assets/images/mf-favicon.ico" type="image/x-icon" />
-    <link rel="manifest" href="https://www.mapotechnology.com/assets/images/mf-site.webmanifest">
+    <link rel="manifest" href="https://www.mapofire.com/mf-site.webmanifest">
     <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@<?= $maplibreVersion ?>/dist/maplibre-gl.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="<?= $baseURL ?>src/css/mf.app-<?= $version ?>.css">
     <link rel="stylesheet" href="https://www.mapotechnology.com/src/css/global.css">

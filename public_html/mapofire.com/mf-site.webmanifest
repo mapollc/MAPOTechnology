@@ -1,0 +1,20 @@
+{
+    "name": "Map of Fire",
+    "short_name": "Map of Fire",
+    "orientation": "portrait",
+    "display": "standalone",
+    "dir": "auto",
+    "lang": "en-US",
+    "start_url": "/",
+    "scope": "/",
+    "icons": [
+        {
+            "purpose": "any",
+            "src": "//mapotechnology.com/assets/images/mf-favicon.png",
+            "sizes": "any",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#ffc65c",
+    "background_color": "#ffc65c"
+}

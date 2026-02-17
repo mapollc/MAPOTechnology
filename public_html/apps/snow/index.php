@@ -33,7 +33,7 @@ $title = ($dashboard == 'wallowas' ? 'Wallowa' : 'Blue') . ' Mountains';
 <div class="wrapper">
     <header>
         <div class="header">
-            <a href="https://www.mapotechnology.com"><img class="logo" src="https://www.mapotechnology.com/assets/images/mapo_logo_transparent.png"></a>
+            <a href="https://www.mapotechnology.com"><img class="logo" src="https://www.mapotechnology.com/assets/images/mapo_logo_transparent_small.png"></a>
             <div>
                 <div class="toggle">
                     <span data-deg="f" class="selected">&deg;F</span>

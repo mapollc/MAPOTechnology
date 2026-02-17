@@ -443,6 +443,246 @@ export const wwaColors = [
     '#eee'
 ];
 
+export class UTM {
+    constructor() {
+        this.a = 6378137;         // WGS84 Major Axis
+        this.f = 1 / 298.257223563; // Flattening
+        this.k0 = 0.9996;        // Scale factor
+        this.e2 = 2 * this.f - Math.pow(this.f, 2); // Eccentricity squared (e^2)
+        this.e2prime = this.e2 / (1 - this.e2);      // e'2
+    }
+
+    toUTM(lat, lon) {
+        const letters = 'CDEFGHJKLMNPQRSTUVWXX',
+            latRad = conversion.deg2rad(lat),
+            lonRad = conversion.deg2rad(lon);
+
+        let zone = Math.floor((lon + 180) / 6) + 1;
+        // Handle Svalbard/Norway exceptions
+        if (lat >= 56 && lat < 64 && lon >= 3 && lon < 12) zone = 32;
+        if (lat >= 72 && lat < 84) {
+            if (lon >= 0 && lon < 9) zone = 31;
+            else if (lon >= 9 && lon < 21) zone = 33;
+            else if (lon >= 21 && lon < 33) zone = 35;
+            else if (lon >= 33 && lon < 42) zone = 37;
+        }
+
+        const lonOriginRad = conversion.deg2rad((zone - 1) * 6 - 180 + 3);
+
+        const N = this.a / Math.sqrt(1 - this.e2 * Math.pow(Math.sin(latRad), 2)),
+            T = Math.pow(Math.tan(latRad), 2),
+            C = this.e2prime * Math.pow(Math.cos(latRad), 2),
+            A = Math.cos(latRad) * (lonRad - lonOriginRad);
+
+        const M = this.a * (
+            (1 - this.e2 / 4 - 3 * Math.pow(this.e2, 2) / 64 - 5 * Math.pow(this.e2, 3) / 256) * latRad -
+            (3 * this.e2 / 8 + 3 * Math.pow(this.e2, 2) / 32 + 45 * Math.pow(this.e2, 3) / 1024) * Math.sin(2 * latRad) +
+            (15 * Math.pow(this.e2, 2) / 256 + 45 * Math.pow(this.e2, 3) / 1024) * Math.sin(4 * latRad) -
+            (35 * Math.pow(this.e2, 3) / 3072) * Math.sin(6 * latRad)
+        );
+
+        let easting = this.k0 * N * (A + (1 - T + C) * Math.pow(A, 3) / 6 + (5 - 18 * T + Math.pow(T, 2) + 72 * C - 58 * this.e2prime) * Math.pow(A, 5) / 120) + 500000,
+            northing = this.k0 * (M + N * Math.tan(latRad) * (Math.pow(A, 2) / 2 + (5 - T + 9 * C + 4 * Math.pow(C, 2)) * Math.pow(A, 4) / 24 + (61 - 58 * T + Math.pow(T, 2) + 600 * C - 330 * this.e2prime) * Math.pow(A, 6) / 720));
+
+        if (lat < 0) northing += 10000000;
+
+        return `${zone}${letters[Math.floor((lat + 80) / 8)] || 'X'} ${easting.toFixed(1)}E ${northing.toFixed(1)}N`;
+    }
+}
+
+export class Convert {
+    coords(a, b) {
+        if (!settings.get().coordsDisplay() || settings.get().coordsDisplay() == 'dec') {
+            return parseFloat(a).toFixed(4) + ',&nbsp;' + parseFloat(b).toFixed(4);
+        } else if (settings.get().coordsDisplay() == 'dms') {
+            return this.convertToDms(a, false) + ',&nbsp;' + this.convertToDms(b, true);
+        } else if (settings.get().coordsDisplay() == 'utm') {
+            return this.utm(a, b);
+        }
+    }
+
+    async utm(a, b) {
+        return new (await loadUtils()).UTM().toUTM(Number(a), Number(b));
+    }
+
+    convertToDms(dd, isLng) {
+        var dir = dd < 0 ? isLng ? 'W' : 'S' : isLng ? 'E' : 'N';
+
+        var absDd = Math.abs(dd),
+            deg = absDd | 0,
+            frac = absDd - deg,
+            min = (frac * 60) | 0,
+            sec = Math.round((frac * 3600 - min * 60) * 100) / 100;
+
+        return deg + "&deg; " + min + "' " + sec + '" ' + dir;
+    }
+
+    rad2deg(r) {
+        return r / (Math.PI * 180);
+    }
+
+    deg2rad(d) {
+        return d * (Math.PI / 180);
+    }
+
+    speed(spd, u) {
+        if (!spd) return;
+        const v = parseFloat(spd);
+
+        if (u == 'km/h') {
+            return Math.round(v * 1.609);
+        } else {
+            return (u == 'mph' ? v : Math.round(v / (u == 'm/s' ? 2.237 : (u == 'kts' ? 1.151 : 1))));
+        }
+    }
+
+    sizeUnit(customUnit = null) {
+        return customUnit != null ? customUnit : (settings.get().acres() ? settings.get().acres() : 'acres');
+    }
+
+    sizeFormat(size, returnSize = true, returnUnit = true, customUnit = null) {
+        let displayUnit = 'acre';
+        const unit = this.sizeUnit(customUnit);
+
+        if (size.toString().toLowerCase() === 'unknown' || size.toString() == '') {
+            return returnSize ? '0' : (returnUnit ? unit : '');
+        } else if (size !== null && size !== '') {
+            let v = parseFloat(size);
+
+            switch (unit) {
+                case 'hectares':
+                    v /= 2.471;
+                    displayUnit = 'hectare';
+                    break;
+                case 'sqmi':
+                    v /= 640;
+                    displayUnit = 'square mile';
+                    break;
+                case 'sqkm':
+                    v /= 247.1;
+                    displayUnit = 'square km.';
+                    break;
+            }
+
+            if ((unit === 'acre' || unit === 'hectares') && v > 100000) {
+                v = Math.floor(v);
+            } else if ((unit === 'sqmi' || unit === 'sqkm') && v > 100000) {
+                v = Math.floor(v * 10) / 10;
+            }
+
+            const formattedSize = v.toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: (unit === 'acre' || unit === 'hectares') && v > 100000 ? 0 : 2,
+            });
+
+            // Use the original number 'v' to check for pluralization
+            const isOne = (v >= 0.995 && v < 1.005);
+            const unitPlural = (isOne || unit === 'sqkm') ? displayUnit : displayUnit + 's';
+
+            return (returnSize ? formattedSize : '') + (returnUnit ? ` ${unitPlural}` : '');
+        } else {
+            return '';
+        }
+    }
+
+    heatIndex(t, rh) {
+        var hi;
+
+        if (t > 80) {
+            hi = -42.379 + (2.04901523 * t) + (10.14333127 * rh) - (0.22475541 * t * rh) - (0.00683783 * Math.pow(t, 2)) -
+                (0.05481717 * Math.pow(rh, 2)) + (0.00122874 * Math.pow(t, 2) * rh) + (0.00085282 * t * Math.pow(rh, 2)) -
+                (0.00000199 * Math.pow(t, 2) * Math.pow(rh, 2));
+
+            if (rh < 13 && (t > 80 && t < 112)) {
+                hi -= ((13 - rh) / 4) * Math.sqrt((17 - Math.abs(t - 95)) / 17);
+            } else if (rh > 85 && (t > 80 && t < 87)) {
+                hi += ((rh - 85) / 10) * ((87 - t) / 5);
+            }
+        } else {
+            hi = 0.5 * (t + 61 + ((t - 68) * 1.2) + (rh * 0.094));
+        }
+
+        return Math.round(hi);
+    }
+
+    windChill(t, w) {
+        if (t >= 60 || !w) return null;
+
+        return Math.round(35.74 + (0.6215 * t) - (35.75 * Math.pow(w, 0.16)) + (0.4275 * t * Math.pow(w, 0.16)));
+    }
+
+    wetBulb(it, hum) {
+        if (it == null || hum == null) return null;
+
+        const t = this.FtoC(it),
+            rh = Number(hum),
+            wetC = t * Math.atan(0.151977 * Math.sqrt(rh + 8.313659)) +
+                Math.atan(t + rh) -
+                Math.atan(rh - 1.676331) +
+                0.00391838 * Math.pow(rh, 1.5) * Math.atan(0.023101 * rh) -
+                4.686035;
+
+        return Number(settings.weather()?.temp() == 'f' ? this.CtoF(wetC) : wetC);
+    }
+
+    FtoC(t) {
+        return Number((t - 32) * 5 / 9);
+    }
+
+    CtoF(t) {
+        return Number((t * 1.8) + 32);
+    }
+
+    distance(lat1, lon1, lat2, lon2, metric = false) {
+        var R = 6371,
+            dLat = this.deg2rad(lat2 - lat1),
+            dLon = this.deg2rad(lon2 - lon1),
+            a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2),
+            c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
+            km = R * c,
+            dist = metric ? km : km / 1.60934;
+
+        return dist;
+    }
+
+    getCompassDirection(bearing) {
+        const dir = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+        return dir[Math.round(bearing / 22.5) % 16];
+    }
+
+    async getRasterColor(coords, layerId) {
+        if (!map.getLayer(layerId)) return null;
+
+        const source = map.getSource(map.getLayer(layerId).source),
+            z = Math.floor(map.getZoom()),
+            tileX = Math.floor((coords.lng + 180) / 360 * Math.pow(2, z)),
+            tileY = Math.floor((1 - Math.log(Math.tan(coords.lat * Math.PI / 180) + 1 / Math.cos(coords.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z)),
+            getBBox = (tx, ty, z) => {
+                const s = 20037508.34 * 2;
+                const res = s / Math.pow(2, z);
+                const minX = -20037508.34 + tx * res;
+                const maxY = 20037508.34 - ty * res;
+                return `${minX},${maxY - res},${minX + res},${maxY}`;
+            };
+
+        const url = source.tiles[0].replace('{bbox-epsg-3857}', getBBox(tileX, tileY, z)),
+            img = new Image();
+
+        img.crossOrigin = "Anonymous";
+        await new Promise(res => { img.onload = res; img.src = url; });
+
+        const canvas = new OffscreenCanvas(1, 1),
+            ctx = canvas.getContext('2d'),
+            px = Math.floor(((coords.lng + 180) / 360 * Math.pow(2, z) % 1) * 256),
+            py = Math.floor(((1 - Math.log(Math.tan(coords.lat * Math.PI / 180) + 1 / Math.cos(coords.lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z) % 1) * 256);
+
+        ctx.drawImage(img, px, py, 1, 1, 0, 0, 1, 1);
+
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    }
+}
+
 export class Search {
     constructor(q) {
         this.key = 'mapofire.search_history';
@@ -1783,7 +2023,7 @@ export class Layers {
                     ops += `<option value="${i}">${config.longMonths[date.getMonth()]} ${date.getDate()}</option>`;
                 }
                 return ops;
-            }
+            };
 
             const el = document.createElement('div');
             el.classList.add('spcTimeline');
@@ -4048,14 +4288,14 @@ export class Wildfires {
     }
 
     renderNewFiresUI(count) {
-        const nf = document.querySelector('nav #new_fires'),
-            nfCount = document.createElement('div');
+        const nf = document.querySelector('nav #new_fires');
 
         nf.dataset.action = 'new_fires';
         nf.title = 'New Fires';
         nf.style.display = 'inline-flex';
 
-        nfCount.classList.add('notify');
+        const nfCount = document.createElement('div');
+        nfCount.className = `notify${count > 9 ? ' m10' : ''}`;
         nfCount.innerHTML = count;
         nf.appendChild(nfCount);
     }
@@ -4303,7 +4543,10 @@ export class Wildfires {
                 tracked: tracked,
                 acres: conversion.sizeFormat(prop.acres, true, false),
                 sizeUnit: conversion.sizeUnit(),
-                reported: timeAgo(fire.time.discovered),
+                reported: {
+                    ago: timeAgo(fire.time.discovered),
+                    useAgo: (Date.now() / 1000) - fire.time.discovered < 60 * 60 * 6
+                },
                 updated: config.curTime.getTime() - fire.time.updated * 1000 > TWO_MONTHS ? dateTime(fire.time.updated, true) : timeAgo(fire.time.updated)
             }
         });
@@ -5110,6 +5353,124 @@ export function purchaseLink(utm, next = null) {
     }
 };
 
+export class Tooltips {
+    constructor(options = {}) {
+        this.nav = document.querySelector('nav');
+        this.tooltipEl = document.createElement("div");
+        this.tooltipEl.className = "tooltip";
+        document.body.appendChild(this.tooltipEl);
+
+        this.activeTitle = null;
+        this.activeTarget = null;
+        this.offset = options.offset || 8;
+        this.followMouse = options.followMouse || false;
+    }
+
+    show(targetEl, content, event) {
+        if (!targetEl || (targetEl.closest('li') && !this.nav.classList.contains('hide'))) return;
+
+        this.tooltipEl.textContent = content;
+
+        this.tooltipEl.style.top = "0px";
+        this.tooltipEl.style.left = "-9999px";
+        this.tooltipEl.classList.add("show");
+
+        const rect = targetEl.getBoundingClientRect(),
+            scrollY = window.scrollY || window.pageYOffset,
+            scrollX = window.scrollX || window.pageXOffset,
+            tooltipWidth = this.tooltipEl.offsetWidth,
+            tooltipHeight = this.tooltipEl.offsetHeight,
+            space = {
+                top: rect.top,
+                bottom: window.innerHeight - rect.bottom,
+                left: rect.left,
+                right: window.innerWidth - rect.right
+            };
+
+        let top, left;
+        let arrowClass = '';
+
+        if (this.followMouse && event) {
+            top = event.pageY + this.offset;
+            left = event.pageX - tooltipWidth / 2;
+            arrowClass = '';
+        } else {
+            const sideThreshold = 150; // px from left/right edges to force horizontal placement
+
+            // LEFT/RIGHT only if element is near viewport edges
+            if (rect.left < sideThreshold && space.right >= tooltipWidth + this.offset) {
+                // place to right
+                top = rect.top + scrollY + rect.height / 2 - tooltipHeight / 2;
+                left = rect.right + scrollX + this.offset;
+                arrowClass = 'left';
+            } else if (rect.right > window.innerWidth - sideThreshold && space.left >= tooltipWidth + this.offset) {
+                // place to left
+                top = rect.top + scrollY + rect.height / 2 - tooltipHeight / 2;
+                left = rect.left + scrollX - tooltipWidth - this.offset;
+                arrowClass = 'right';
+            } else if (space.top >= tooltipHeight + this.offset) {
+                // place above
+                top = rect.top + scrollY - tooltipHeight - this.offset;
+                left = rect.left + scrollX + rect.width / 2 - tooltipWidth / 2;
+                arrowClass = 'down';
+            } else if (space.bottom >= tooltipHeight + this.offset) {
+                // place below
+                top = rect.bottom + scrollY + this.offset;
+                left = rect.left + scrollX + rect.width / 2 - tooltipWidth / 2;
+                arrowClass = 'up';
+            } else {
+                // fallback above
+                top = rect.top + scrollY - tooltipHeight - this.offset;
+                left = rect.left + scrollX + rect.width / 2 - tooltipWidth / 2;
+                arrowClass = 'down';
+            }
+
+            // Clamp horizontal/vertical
+            if (left < 0) left = 0;
+            if (left + tooltipWidth > window.innerWidth)
+                left = window.innerWidth - tooltipWidth;
+            if (top < 0) top = 0;
+            if (top + tooltipHeight > window.innerHeight)
+                top = window.innerHeight - tooltipHeight;
+        }
+
+        this.activeTarget.removeAttribute('title');
+        this.tooltipEl.style.top = `${top}px`;
+        this.tooltipEl.style.left = `${left}px`;
+        this.tooltipEl.className = `tooltip show ${arrowClass}${targetEl.classList.contains('light') ? ' light' : ''}`;
+    }
+
+    hide() {
+        this.tooltipEl.classList.remove('show');
+    }
+
+    attach(selector, getContent) {
+        document.querySelectorAll(selector).forEach(el => {
+            document.addEventListener('mouseover', (e) => {
+                const target = e.target.closest(selector);
+                if (!target || this.activeTarget === target) return;
+                this.activeTarget = target;
+                this.activeTitle = target.title;
+                this.show(target, getContent(target), e);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!this.followMouse || !this.activeTarget) return;
+                this.show(this.activeTarget, getContent(this.activeTarget), e);
+            });
+
+            document.addEventListener('mouseout', (e) => {
+                const target = e.target.closest(selector);
+                if (!target || target !== this.activeTarget) return;
+                this.hide();
+                this.activeTarget.title = this.activeTitle;
+                this.activeTitle = null;
+                this.activeTarget = null;
+            });
+        });
+    }
+}
+
 export function notify(t, m, time = null) {
     const timing = (time == null ? (((m.split(' ').length / 5) + 0.5) * 1000) + 500 : time * 1000),
         el = document.createElement('div'),
@@ -5179,7 +5540,7 @@ export function marketing(override = false, utm = null) {
     }
 
     // don't show to admin users
-    if (settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN) shouldShow = false;
+    if (!override && settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN) shouldShow = false;
 
     if (shouldShow) {
         const content = `<p style="text-align:center;margin:1.5em 0;font-size:18px;font-weight:400">${option.text}</p>
@@ -5314,6 +5675,163 @@ export function addTrending() {
     searchResults.appendChild(fragment);
 }
 
+export async function startReportProcess(e) {
+    let data = null;
+
+    // query the map for the county and state first before requesting from the API
+    map.queryRenderedFeatures(e.point)?.forEach(feat => {
+        if (feat.layer.id == 'us_counties') {
+            data = { geocode: { county: { county: feat.properties.NAME.replace(' County', '') }, state: feat.properties.STATE } };
+        }
+    });
+
+    const geocode = await api(config.apiURL + 'geocode/incident' + (data != null ? '/near' : ''), [['lat', e.lngLat.lat], ['lon', e.lngLat.lng]], true);
+
+    if (data == null) {
+        data = geocode;
+    } else {
+        data.geocode['near'] = geocode?.geocode?.near ?? null;
+    }
+
+    createDataForm('Report an incident', `<form id="newReport" method="post">
+        <input type="hidden" name="platform" value="web">
+        <input type="hidden" name="authUser" value="0">
+        <input type="hidden" name="lat">
+        <input type="hidden" name="lon">
+        <input type="hidden" name="state">
+        <input type="hidden" name="version" value="${version}">
+        <input type="hidden" name="geolocation">
+        
+        <label>County</label>
+        <input type="text" id="gc" value="Loading..." disabled>
+        
+        <label>State</label>
+        <input type="text" id="gs" value="Loading..." disabled>
+        
+        <label>General Location</label>
+        <input type="text" id="gl" value="Loading..." disabled>
+        
+        <label>What type of incident is this?</label>
+        <select name="type" required>
+            <option>- Choose -</option>
+            <option value="Wildfire">Wildfire</option>
+            <option value="Smoke Check">Smoke Check</option>
+        </select>
+
+        <label>How big is it?</label>
+        <input type="text" name="size" placeholder="eg: 10" style="display:inline-block;max-width:100px" required>
+        <div id="alab" style="display:inline-block;padding-left:5px">acres</div>
+        
+        <label>Brief description of incident:</label>
+        <textarea name="notes" placeholder="Anything else you can add..." style="min-height:100px;resize:none" required></textarea>
+        
+        <div class="btn-group centered">
+            <input type="submit" class="btn btn-green" value="Submit Report">
+            <a class="btn btn-gray" href="#" data-action="close-data-form" onclick="return false">Cancel</a>
+        </div>
+        <div class="disclaimer">Submitting this report only sends information to the ${config.productName} team&mdash;it does not send
+        any information to emergency or governmental authorities. Please call 911 to report a new wildfire. By submitting a report,
+        you agree to our <a target="blank" href="//mapotechnology.com/about/legal/terms">Terms of Service</a>.</div>
+    </form>`);
+
+    createCSReport(data, e.lngLat.lat, e.lngLat.lng);
+}
+
+export function contextMenu(e, isTouch = false) {
+    const click = new ClickListener(),
+        menu = document.querySelector('.context-menu');
+
+    if (menu) menu.remove();
+
+    let point, coords;
+
+    if (isTouch) {
+        const rect = map.getContainer().getBoundingClientRect();
+        point = { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+        coords = map.unproject([point.x, point.y]);
+    } else {
+        point = e.point;
+        coords = e.lngLat;
+    }
+
+    const ele = map.queryTerrainElevation([coords.lng, coords.lat]) ?? null,
+        elevation = ele != null ? ele * 3.28084 : null;
+
+    const div = document.createElement('div'),
+        ul = document.createElement('ul'),
+        options = [
+            { text: coords.lat.toFixed(4) + ', ' + coords.lng.toFixed(4), hasPerms: true },
+            { text: 'Copy coordinates', task: () => { click.copy(coords.lat + ', ' + coords.lng) }, hasPerms: true },
+            {
+                text: 'Copy elevation',
+                task: async () => {
+                    if (elevation == null) {
+                        (await loadUtils()).notify('info', 'Unable to get elevation here')
+                    } else {
+                        click.copy(numberFormat(elevation, 1) + ' ft.', 'Elevation copied to clipboard');
+                    }
+                },
+                hasPerms: settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)
+            },
+            {
+                text: 'Zoom here',
+                task: () => {
+                    map.easeTo({
+                        center: [coords.lng, coords.lat],
+                        zoom: 12,
+                        duration: 1400
+                    });
+                },
+                hasPerms: true
+            },
+            {
+                text: 'Get fire weather',
+                task: () => new Weather(coords.lat, coords.lng).fireWxFcst(),
+                hasPerms: settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)
+            },
+            { text: 'Report new fire', task: async () => (await loadUtils()).startReportProcess(e), hasPerms: true }
+        ];
+
+    div.className = 'context-menu';
+    document.body.appendChild(div);
+    div.appendChild(ul);
+
+    options.forEach((i, n) => {
+        const li = document.createElement('li');
+        if (n == 0) li.style = 'padding:1em 1em 0.5em 1em;font-weight:600;cursor:default;user-select:none';
+        if (!i.hasPerms) li.classList.add('disabled');
+        li.textContent = i.text;
+        li.addEventListener('click', () => {
+            if (!i.hasPerms) return;    // maybe suggest they subscribe?
+
+            if (i.task) {
+                i.task();
+                div.remove();
+            }
+        });
+
+        ul.appendChild(li);
+    });
+
+    const menuWidth = div.offsetWidth,
+        menuHeight = div.offsetHeight,
+        mapRect = map.getContainer().getBoundingClientRect();
+
+    let top = point.y;
+    let left = point.x;
+
+    if (left + menuWidth > mapRect.width) left = mapRect.width - menuWidth;
+    if (top + menuHeight > mapRect.height) top = mapRect.height - menuHeight;
+    if (left < 0) left = 0;
+    if (top < 0) top = 0;
+
+    div.style.top = `${top}px`;
+    div.style.left = `${left}px`;
+
+    div.innerHTML = '';
+    div.appendChild(ul);
+}
+
 export const mapClick = async (e) => {
     /* open new incident report form */
     if (document.querySelector('li#report').dataset.active == 1) {
@@ -5322,65 +5840,7 @@ export const mapClick = async (e) => {
         map.getCanvas().style.cursor = 'auto';
         map.panTo([e.lngLat.lng, e.lngLat.lat]);
 
-        let data = null;
-
-        // query the map for the county and state first before requesting from the API
-        map.queryRenderedFeatures(e.point)?.forEach(feat => {
-            if (feat.layer.id == 'us_counties') {
-                data = { geocode: { county: { county: feat.properties.NAME.replace(' County', '') }, state: feat.properties.STATE } };
-            }
-        });
-
-        const geocode = await api(config.apiURL + 'geocode/incident' + (data != null ? '/near' : ''), [['lat', e.lngLat.lat], ['lon', e.lngLat.lng]], true);
-
-        if (data == null) {
-            data = geocode;
-        } else {
-            data.geocode['near'] = geocode?.geocode?.near ?? null;
-        }
-
-        createDataForm('Report an incident', `<form id="newReport" method="post">
-            <input type="hidden" name="platform" value="web">
-            <input type="hidden" name="authUser" value="0">
-            <input type="hidden" name="lat">
-            <input type="hidden" name="lon">
-            <input type="hidden" name="state">
-            <input type="hidden" name="version" value="${version}">
-            <input type="hidden" name="geolocation">
-            
-            <label>County</label>
-            <input type="text" id="gc" value="Loading..." disabled>
-            
-            <label>State</label>
-            <input type="text" id="gs" value="Loading..." disabled>
-            
-            <label>General Location</label>
-            <input type="text" id="gl" value="Loading..." disabled>
-            
-            <label>What type of incident is this?</label>
-            <select name="type" required>
-                <option>- Choose -</option>
-                <option value="Wildfire">Wildfire</option>
-                <option value="Smoke Check">Smoke Check</option>
-            </select>
-
-            <label>How big is it?</label>
-            <input type="text" name="size" placeholder="eg: 10" style="display:inline-block;max-width:100px" required>
-            <div id="alab" style="display:inline-block;padding-left:5px">acres</div>
-            
-            <label>Brief description of incident:</label>
-            <textarea name="notes" placeholder="Anything else you can add..." style="min-height:100px;resize:none" required></textarea>
-            
-            <div class="btn-group centered">
-                <input type="submit" class="btn btn-green" value="Submit Report">
-                <a class="btn btn-gray" href="#" data-action="close-data-form" onclick="return false">Cancel</a>
-            </div>
-            <div class="disclaimer">Submitting this report only sends information to the ${config.productName} team&mdash;it does not send
-            any information to emergency or governmental authorities. Please call 911 to report a new wildfire. By submitting a report,
-            you agree to our <a target="blank" href="//mapotechnology.com/about/legal/terms">Terms of Service</a>.</div>
-        </form>`);
-
-        createCSReport(data, e.lngLat.lat, e.lngLat.lng);
+        startReportProcess(e);
     }
 
     /* get fire weather forecast */

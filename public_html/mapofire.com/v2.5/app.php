@@ -60,7 +60,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
     <meta name="description" content="<?= $desc ?>" />
     <meta property="og:title" content="<?= $title ?>" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://mapotechnology.com/assets/images/preview_mapofire.png">
+    <meta property="og:image" content="//mapotechnology.com/assets/images/preview_mapofire.png">
     <meta property="og:image:alt" content="Map of Fire: Web App preview">
     <meta property="og:image:width" content="1920">
     <meta property="og:image:height" content="1080">
@@ -69,13 +69,12 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
     <meta property="og:description" content="<?= $desc ?>" />
     <meta name="twitter:title" content="<?= $title ?>">
     <meta name="twitter:description" content="<?= $desc ?>">
-    <meta name="twitter:image" content="https://mapotechnology.com/assets/images/preview_mapofire.png">
+    <meta name="twitter:image" content="//mapotechnology.com/assets/images/preview_mapofire.png">
     <script async src="//kit.fontawesome.com/aa68e0c9b6.js" crossorigin="anonymous"></script>
-    <link rel="apple-touch-icon" sizes="114x114" href="https://www.mapotechnology.com/assets/images/mf-apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://www.mapotechnology.com/assets/images/mf-favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://www.mapotechnology.com/assets/images/mf-favicon-16x16.png">
-    <link rel="shortcut icon" href="https://www.mapotechnology.com/assets/images/mf-favicon.ico" type="image/x-icon" />
-    <link rel="manifest" href="https://www.mapotechnology.com/assets/images/mf-site.webmanifest">
+    <link rel="apple-touch-icon" href="//mapotechnology.com/assets/images/mf-apple-touch-icon.png">
+    <link rel="icon" sizes="any" href="//mapotechnology.com/assets/images/mf-favicon.png">
+    <link rel="shortcut icon" href="//mapotechnology.com/assets/images/mf-favicon.ico" type="image/x-icon" />
+    <link rel="manifest" href="<?= "//$_SERVER[HTTP_HOST]$_SERVER[HTTP_ORIGIN]" ?>/mf-site.webmanifest">
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/maplibre-gl@<?= $maplibreVersion ?>/dist/maplibre-gl.min.css" media="print" onload="this.media='all'">
     <? if (isset($_GET['version'])) { ?>
         <link rel="stylesheet" href="<?= $baseURL ?>v<?= $version ?>/mf.app.css">
@@ -85,10 +84,10 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
         <link rel="preload" href="<?= $baseURL ?>src/css/mf.supp-<?= $version ?>.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <? } ?>
     <link rel="preload" href="//mapotechnology.com/src/css/global.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="//fonts.googleapis.com/css2?family=Roboto:wght@200;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="//fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript>
         <link rel="stylesheet" href="//mapotechnology.com/src/css/global.css">
-        <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@200;400;500;600;700&display=swap">
+        <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap">
         <? if (isset($_GET['version'])) { ?>
             <link rel="stylesheet" href="<?= $baseURL ?>v<?= $version ?>/mf.supp.css" media="print" onload="this.media='all'">
         <? } else { ?>
@@ -122,16 +121,16 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
                 </div>
                 <span id="dd-close" data-action="dropdown-nav" class="far fa-xmark"></span>
                 <ul>
-                    <li id="account" data-action="account"><i class="fas fa-user-circle"></i><span>Login</span></li>
-                    <li data-action="blazeboard"><i class="fas fa-chart-mixed"></i><span>Dashboard</span></li>
-                    <li id="new_fires" style="display:none"><i class="fas fa-fire-flame"></i><span>New Fires</span></li>
-                    <li data-action="basemap"><i class="far fa-grid"></i><span>Maps</span></li>
-                    <li id="layers" data-action="layers"><i class="far fa-layer-group"></i><span>Layers</span></li>
-                    <li id="legend" data-action="legend"><i class="far fa-list"></i><span>Legend</span></li>
-                    <li id="my-fire" data-action="myfires"><i class="far fa-display-chart-up"></i><span>My Fires</span></li>
-                    <li id="refresh" data-action="refresh"><i class="far fa-sync"></i><span>Refresh</span></li>
-                    <li id="report" data-action="report" data-active="0"><i class="far fa-location-plus"></i><span>Report</span></li>
-                    <li id="save" data-action="save"><i class="far fa-cloud-arrow-up"></i><span>Sync</span></li>
+                    <li id="account" class="ttip light" data-tooltip="Your account" data-action="account"><i class="fas fa-user-circle"></i><span>Login</span></li>
+                    <li class="ttip light" data-tooltip="Go to dashboard" data-action="blazeboard"><i class="fas fa-chart-mixed"></i><span>Dashboard</span></li>
+                    <li id="new_fires" class="ttip light" data-tooltip="New incidents" style="display:none"><i class="fas fa-fire-flame"></i><span>New Fires</span></li>
+                    <li class="ttip light" data-tooltip="Basemaps" data-action="basemap"><i class="far fa-grid"></i><span>Maps</span></li>
+                    <li id="layers" class="ttip light" data-tooltip="Map Layers" data-action="layers"><i class="far fa-layer-group"></i><span>Layers</span></li>
+                    <li id="legend" class="ttip light" data-tooltip="Map Legend" data-action="legend"><i class="far fa-list"></i><span>Legend</span></li>
+                    <li id="my-fire" class="ttip light" data-tooltip="My Fires" data-action="myfires"><i class="far fa-display-chart-up"></i><span>My Fires</span></li>
+                    <li id="refresh" class="ttip light" data-tooltip="Refresh Map" data-action="refresh"><i class="far fa-sync"></i><span>Refresh</span></li>
+                    <li id="report" class="ttip light" data-tooltip="Report an incident" data-action="report" data-active="0"><i class="far fa-location-plus"></i><span>Report</span></li>
+                    <li id="save" class="ttip light" data-tooltip="Sync Settings" data-action="save"><i class="far fa-cloud-arrow-up"></i><span>Sync</span></li>
                 </ul>
                 <i class="fas fa-chevron-left" title="Toggle navigation" id="close-navbar" data-action="close-navbar" data-open="true"></i>
             </div>
@@ -175,10 +174,10 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@<?= $maplibreVersion ?>/dist/maplibre-gl.min.js"></script>
-    <script async defer src="https://unpkg.com/maplibre-contour@0.1.0/dist/index.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/maplibre-gl@<?= $maplibreVersion ?>/dist/maplibre-gl.min.js"></script>
+    <script async defer src="//unpkg.com/maplibre-contour@0.1.0/dist/index.min.js"></script>
     <? if (!isset($_GET['version'])) { ?>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-X03WWLX3BJ"></script>
+        <script async src="//googletagmanager.com/gtag/js?id=G-X03WWLX3BJ"></script>
     <? } ?>
     <script><?= $javascript ?></script>
     <? if (isset($_GET['version'])) { ?>

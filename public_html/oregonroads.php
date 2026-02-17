@@ -7,7 +7,7 @@ include_once 'product-header.inc.php';
                 <div class="logos">
                     <a href="#" style="height:45px"><img class="logo" title="OregonRoads logo" alt="OregonRoads logo" src="https://www.mapotechnology.com/assets/images/oreroads/oreroads_square_logo.png"></a>
                     <span style="padding:0 0.5em;font-weight:100;color:#666">by</span>
-                    <a href="https://www.mapotechnology.com"><img style="height:30px" title="MAPO logo" alt="MAPO logo" src="https://www.mapotechnology.com/assets/images/mapo_logo.png"></a>
+                    <a href="https://www.mapotechnology.com"><img style="height:50px" title="MAPO logo" alt="MAPO logo" src="https://www.mapotechnology.com/assets/images/mapo_logo_small.png"></a>
                 </div>
                 <a href="https://www.mapotechnology.com">Home</a>
             </div>

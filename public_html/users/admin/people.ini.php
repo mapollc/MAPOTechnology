@@ -91,12 +91,15 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
             // query for a specific user by name or email
             $where = '';
             if (isset($_GET['q'])) {
-                $where = "WHERE first_name LIKE '%" . $_GET['q'] . "%' OR last_name LIKE '%" . $_GET['q'] . "%' OR u.email LIKE '%" . $_GET['q'] . "%' OR phone LIKE '%" . $_GET['q'] . "%'";
+                $where = "WHERE (first_name LIKE '%" . $_GET['q'] . "%' OR last_name LIKE '%" . $_GET['q'] . "%' OR u.email LIKE '%" . $_GET['q'] . "%' OR phone LIKE '%" . $_GET['q'] . "%')";
+            }
+            if (isset($_GET['userType']) && $_GET['userType'] == '1') {
+                $where .= " AND cid IS NOT NULL";
             }
             $order = ($_GET['sort'] != '' ? $_GET['sort'] : 'uid') . ' ' . ($_GET['order'] != '' ? $_GET['order'] : 'DESC');
 
             $rowsPerPage = 50;
-            $totalRows = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) AS totalRows FROM users AS u $where"))['totalRows'];
+            $totalRows = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) AS totalRows FROM users AS u LEFT JOIN billing AS b ON b.email = u.email $where"))['totalRows'];
             $totalPages = ceil($totalRows / $rowsPerPage);
 
             $currentPage = isset($_GET['results']) ? $_GET['results'] : 1;
@@ -111,6 +114,10 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
             <div class="controls">
                 <form action="" method="get">
                     <input type="text" class="input" style="max-width:300px" name="q" placeholder="Search users..." value="<?= $_GET['q'] ? $_GET['q'] : '' ?>">
+                    <select name="userType" class="input" style="max-width:150px">
+                        <option <?= !isset($_GET['userType']) || $_GET['userType'] == '0' ? 'selected ' : '' ?>value="0">All Users</option>
+                        <option <?= $_GET['userType'] == '1' ? 'selected ' : '' ?>value="1">Subscribers ONLY</option>
+                    </select>
                     <div class="btn-group">
                         <input type="submit" class="btn btn-sm btn-blue" value="Search">
                         <? if ($permission->user()->add()) { ?><a class="btn btn-sm btn-green" href="./people/create">Create New User</a><? } ?>
