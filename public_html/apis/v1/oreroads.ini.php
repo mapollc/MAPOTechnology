@@ -4,7 +4,7 @@ $token = $_REQUEST['token'];
 if (!$token) {
     $returnJson = array('error' => true, 'msg' => 'No authentication token was provided');
 } else {
-    $data = prepareQuery('s', [$token], "SELECT uid, expires FROM sessions WHERE token = ? ORDER BY created DESC LIMIT 1");
+    $data = executeQuery('s', [$token], "SELECT uid, expires FROM sessions WHERE token = ? ORDER BY created DESC LIMIT 1");
 
     if (!$data || isset($data['error'])) {
         $returnJson = array('error' => true, 'msg' => 'An invalid token was provided');
@@ -15,7 +15,7 @@ if (!$token) {
             $uid = $data['uid'];
 
             if ($method == 'sync') {
-                $row = prepareQuery('i', [$uid], "SELECT settings, time FROM oreroads_settings WHERE uid = ? LIMIT 1");
+                $row = executeQuery('i', [$uid], "SELECT settings, time FROM oreroads_settings WHERE uid = ? LIMIT 1");
 
                 if (!isset($row['error'])) {
                     $returnJson = array('settings' => json_decode($row['settings']), 'synced' => $row['time']);
@@ -29,10 +29,10 @@ if (!$token) {
 
                     if ($settings && $token) {
                         $firebase = $_REQUEST['firebase_token'];
-                        prepareQuery('ssi', [$settings, $time, $uid], "UPDATE oreroads_settings SET settings = ?, time = ? WHERE uid = ?");
+                        executeQuery('ssi', [$settings, $time, $uid], "UPDATE oreroads_settings SET settings = ?, time = ? WHERE uid = ?");
 
                         if ($firebase) {
-                            prepareQuery('si', [$firebase, $uid], "UPDATE oreroads_settings SET app_token = ? WHERE uid = ?");
+                            executeQuery('si', [$firebase, $uid], "UPDATE oreroads_settings SET app_token = ? WHERE uid = ?");
                         }
 
                         $returnJson = array('success' => true);

@@ -145,7 +145,7 @@ if ($method == 'create' || $method == 'update') {
 
 // delete a GIS object
 if ($method == 'delete') {
-    $query = prepareQuery('ii', [$uid, $_REQUEST['id']], "DELETE FROM user_content WHERE uid = ? AND objectID = ?");
+    $query = executeQuery('ii', [$uid, $_REQUEST['id']], "DELETE FROM user_content WHERE uid = ? AND objectID = ?");
 
     if ($query && $query['success']) {
         $returnJson = ['response' => 'success'];

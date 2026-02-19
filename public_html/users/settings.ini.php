@@ -15,21 +15,21 @@ if ($method == 'delete') {
                 $p = substr($p, 0, 3) . '-' . substr($p, 3, 3) . '-' . substr($p, 6, 4);
                 $phone = mysqli_real_escape_string($con, $p);
 
-                prepareQuery('si', [$phone, $_SESSION['uid']], "UPDATE users SET phone = ? WHERE uid = ?");
+                executeQuery('si', [$phone, $_SESSION['uid']], "UPDATE users SET phone = ? WHERE uid = ?");
             }
 
-            prepareQuery('sssi', [$fname, $lname, $email, $_SESSION['uid']], "UPDATE users SET first_name = ?, last_name = ?, email = ? WHERE uid = ?");
+            executeQuery('sssi', [$fname, $lname, $email, $_SESSION['uid']], "UPDATE users SET first_name = ?, last_name = ?, email = ? WHERE uid = ?");
 
             echo message(true, 'Your profile settings were successfully updated.');
         } else if ($_POST['action'] == 'location') {
             if ($_POST['location'] != '') {
                 $l = serialize(json_decode($_POST['location']));
-                prepareQuery('si', [$l, $_SESSION['uid']], "UPDATE users SET location = ? WHERE uid = ?");
+                executeQuery('si', [$l, $_SESSION['uid']], "UPDATE users SET location = ? WHERE uid = ?");
 
                 echo message(true, 'Your location settings were successfully updated.');
             }
         } else {
-            $p = prepareQuery('i', [$_SESSION['uid']], "SELECT password FROM users WHERE uid = ?");
+            $p = executeQuery('i', [$_SESSION['uid']], "SELECT password FROM users WHERE uid = ?");
 
             if (isset($p['error'])) {
                 echo message(false, 'There was an error updating your password.');
@@ -77,7 +77,7 @@ if ($method == 'delete') {
                             echo message(false, $msg);
                         } else {
                             $pass = password_hash($new, PASSWORD_DEFAULT);
-                            $update = prepareQuery('si', [$pass, $_SESSION['uid']], "UPDATE users SET password = ? WHERE uid = ?");
+                            $update = executeQuery('si', [$pass, $_SESSION['uid']], "UPDATE users SET password = ? WHERE uid = ?");
 
                             if (isset($update['error'])) {
                                 echo message(false, 'There was an error updating your password.');
@@ -91,7 +91,7 @@ if ($method == 'delete') {
         }
     }
 
-    $profile = prepareQuery('i', [$_SESSION['uid']], "SELECT first_name, last_name, email, password, phone, location, provider, created FROM users WHERE uid = ?");
+    $profile = executeQuery('i', [$_SESSION['uid']], "SELECT first_name, last_name, email, password, phone, location, provider, created FROM users WHERE uid = ?");
 
     if ($profile['password']) {
         $passwordOn = true;

@@ -80,12 +80,12 @@ $lay = array(
         ],
         [
             'id' => 'firemed',
-            'name' => 'Fire/EMS/Medical',
+            'name' => 'Fire & EMS Locations',
             'perms' => true,
             'perms2' => ['PREMIUM'],
             'default' => false,
-            'app' => false,
-            'testing' => true
+            'app' => true,
+            'testing' => false
         ]
     ],
     'wx' => [
@@ -128,7 +128,7 @@ $lay = array(
             'perms2' => ['PRO'],
             'default' => false,
             'app' => true
-        ],       
+        ],
         [
             'id' => 'stns',
             'name' => 'Current Observations',
@@ -156,7 +156,8 @@ $lay = array(
         [
             'id' => 'visSatellite',
             'name' => 'Visible Satellite',
-            'perms' => false, 'perms2' => [],
+            'perms' => false,
+            'perms2' => [],
             'default' => false,
             'app' => true
         ],
@@ -208,8 +209,8 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PREMIUM', 'PRO'],
             'default' => false,
-            'app' => false,
-            'testing' => true
+            'app' => true,
+            'testing' => false
         ],
         [
             'id' => 'nri',
@@ -249,8 +250,8 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PRO'],
             'default' => false,
-            'app' => false,
-            'testing' => true
+            'app' => true,
+            'testing' => false
         ],
         [
             'id' => 'drought',
@@ -266,8 +267,8 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PRO'],
             'default' => false,
-            'app' => false,
-            'testing' => true
+            'app' => true,
+            'testing' => false
         ],
         [
             'id' => 'fuels',
@@ -463,15 +464,15 @@ $layerDesc = array(
     ]
 );
 
-foreach ($lay as $k => $v) {    
+foreach ($lay as $k => $v) {
     for ($i = 0; $i < count($lay[$k]); $i++) {
         $lay[$k][$i]['desc'] = $layerDesc[$k][$i];
         $count++;
     }
 }
 
-$layers = array(
-    'categories' => array(
+$layers = [
+    'categories' => [
         'fire' => 'Wildfire',
         'evac' => 'Evacuations',
         'wx' => 'Weather',
@@ -479,16 +480,16 @@ $layers = array(
         'gis' => 'GIS Layers',
         'smoke' => 'Smoke',
         'state' => 'State-Specific'
-    ),
+    ],
     'layers' => $lay,
     'build' => date('Ymd', filemtime('./layers.inc.php'))
-);
+];
 
 if (isset($_REQUEST['json'])) {
     $ts = gmdate("D, d M Y H:i:s", time() + 60 * 60 * 24 * 14) . ' GMT';
-    header('Expires: '.$ts);
+    header('Expires: ' . $ts);
     header('Pragma: cache');
-    header('Cache-control: max-age='.$ts);
+    header('Cache-control: max-age=' . $ts);
     header('Content-type: application/json');
 
     echo json_encode($layers);

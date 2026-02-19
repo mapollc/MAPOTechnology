@@ -112,7 +112,7 @@ if ($category == 'stats') {
             require_once 'getWildfires.inc.php';
 
             if (!isset($_REQUEST['bbox'])) {
-                prepareQuery('ssi', [$cachefilename, json_encode($returnJson), $cacheExpires], "REPLACE INTO wildfire_api_cache (cache_key, cache_data, expires) VALUES (?,?,?)");
+                executeQuery('ssi', [$cachefilename, json_encode($returnJson), $cacheExpires], "REPLACE INTO wildfire_api_cache (cache_key, cache_data, expires) VALUES (?,?,?)");
                 $memcache->set($cachefilename, json_encode($returnJson), $cacheExpires);
                 $memcache->set("$cachefilename-time", time(), $cacheExpires);
             }

@@ -5,6 +5,8 @@ Options +FollowSymlinks
 
 DirectoryIndex index.php index.html
 
+SetEnv JWT_SECRET "mZ9x!F@p7qL#2r8uV^wT&yQ*eR$hJ1kN"
+
 RewriteCond %{HTTPS} !=on
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 

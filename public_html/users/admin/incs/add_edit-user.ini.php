@@ -7,7 +7,7 @@ include_once '/home/mapo/public_html/subs.inc.php';
 $stripe = new \Stripe\StripeClient($stripeSecretKey);
 
 // get users details
-$row = prepareQuery('i', [$_GET['uid']], "SELECT u.uid AS userID, first_name, last_name, u.email, phone, location, u.created, last_active, ip_address, role, permissions FROM users AS u LEFT JOIN permissions AS p ON p.uid = u.uid WHERE u.uid = ? LIMIT 1");
+$row = executeQuery('i', [$_GET['uid']], "SELECT u.uid AS userID, first_name, last_name, u.email, phone, location, u.created, last_active, ip_address, role, permissions FROM users AS u LEFT JOIN permissions AS p ON p.uid = u.uid WHERE u.uid = ? LIMIT 1");
 $conf = mysqli_fetch_assoc(mysqli_query($con, "SELECT confirmed FROM confirmation WHERE email = '$row[email]' ORDER BY cid DESC LIMIT 1"));
 $location = unserialize($row['location']);
 $loc = $location ? $location->city . ', ' . convertState($location->state, 2) . ' ' . $location->zip : '';

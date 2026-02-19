@@ -23,7 +23,7 @@ if (strlen($fips) > 6) {
     $sql = "SELECT * FROM risk WHERE fips = ?";
 }
 
-$row = prepareQuery('s', [$fips], $sql);
+$row = executeQuery('s', [$fips], $sql);
 
 if (!isset($row['error']) && count($row) > 0) {
     $row['data'] = json_decode(unserialize($row['data']));

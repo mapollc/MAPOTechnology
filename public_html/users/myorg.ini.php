@@ -7,7 +7,7 @@ if (isset($_POST['action']) && $_POST['action'] == 'Invite User') {
     $token = createToken(['org_key' => $_POST['org_key'], 'group_id' => $_POST['group_id']], $expires);
 
     try {
-        $query = prepareQuery(
+        $query = executeQuery(
             'issi',
             [$_POST['group_id'], $_POST['invite_email'], $token, $expires],
             "INSERT INTO group_users (group_id, uid, email, invite_code, expires, status) VALUES(?, NULL, ?, ?, ?, 0)"

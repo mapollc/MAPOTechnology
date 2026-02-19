@@ -6,7 +6,7 @@ $sql = "SELECT $fields FROM sessions AS s LEFT JOIN users AS u ON s.uid = u.uid 
 $validToken = validToken($token);
 
 if ($validToken) {
-    $result = prepareQuery('is', [$now, $token], $sql);
+    $result = executeQuery('is', [$now, $token], $sql);
 
     if (!isset($result['error'])) {
         //while ($row = mysqli_fetch_assoc($result)) {

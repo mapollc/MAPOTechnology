@@ -18,7 +18,7 @@ session_start();
 // use the script to update user's last active time
 if (isset($_SESSION['visited']) && time() - $_SESSION['visited'] > 600) {
     require_once '/home/mapo/database.inc.php';
-    prepareQuery('ii', [time(), $_SESSION['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
+    executeQuery('ii', [time(), $_SESSION['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
     mysqli_close($con);
 }
 $_SESSION['visited'] = time();

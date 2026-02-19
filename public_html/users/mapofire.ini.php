@@ -25,7 +25,7 @@ function convertToDMS($dec)
 
 function getSubscriptions($email){
     global $plan;
-    $sub = prepareQuery('s', [$email], "SELECT cid, subscription, trial, plan, created, start, end AS ends, status, cancel_end_period FROM billing WHERE email = ? AND status != 'expired' ORDER BY created DESC");
+    $sub = executeQuery('s', [$email], "SELECT cid, subscription, trial, plan, created, start, end AS ends, status, cancel_end_period FROM billing WHERE email = ? AND status != 'expired' ORDER BY created DESC");
 
     if (empty($sub)) {
         return [];

@@ -32,7 +32,7 @@ if ($redirect === true) {
     session_regenerate_id();
     header('Location: ' . $baseURL . 'secure/login?fail=' . $error . '&next=' . urlencode(str_replace('?existing=1', '', $_SERVER['REQUEST_URI'])));
 } else {
-    $u = prepareQuery('is', [$_SESSION['uid'], $_COOKIE['token']], "SELECT u.location, method, s.time, se.expires, email, permissions, u.role FROM users AS u LEFT JOIN permissions AS p ON p.uid = u.uid LEFT JOIN settings AS s ON s.uid = u.uid LEFT JOIN sessions AS se ON se.uid = u.uid WHERE u.uid = ? AND se.token = ?");
+    $u = executeQuery('is', [$_SESSION['uid'], $_COOKIE['token']], "SELECT u.location, method, s.time, se.expires, email, permissions, u.role FROM users AS u LEFT JOIN permissions AS p ON p.uid = u.uid LEFT JOIN settings AS s ON s.uid = u.uid LEFT JOIN sessions AS se ON se.uid = u.uid WHERE u.uid = ? AND se.token = ?");
 
     if (!isset($u['error'])) {
         if (time() > $u['expires']) {
@@ -41,10 +41,10 @@ if ($redirect === true) {
             session_regenerate_id();
             header('Location: ' . $baseURL . 'secure/login?fail=2&next=' . urlencode(str_replace('?existing=1', '', $_SERVER['REQUEST_URI'])));
         } else {
-            $subs = prepareQuery('s', [$u['email']], "SELECT * FROM billing WHERE email = ? AND status = 'active'");
+            $subs = executeQuery('s', [$u['email']], "SELECT * FROM billing WHERE email = ? AND status = 'active'");
 
             if (!isset($_SESSION['org_admin'])) {
-                $orgs = prepareQuery('s', [$u['email']], "SELECT org_key FROM groups WHERE admin_email = ?");
+                $orgs = executeQuery('s', [$u['email']], "SELECT org_key FROM groups WHERE admin_email = ?");
 
                 if ($orgs) {
                     $_SESSION['org_admin'] = true;
@@ -75,7 +75,7 @@ if ($redirect === true) {
 
             // use the script to update user's last active time
             if (isset($_SESSION['visited']) && time() - $_SESSION['visited'] > 600) {
-                prepareQuery('ii', [time(), $_SESSION['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
+                executeQuery('ii', [time(), $_SESSION['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
             }
             $_SESSION['visited'] = time();
         }

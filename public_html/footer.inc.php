@@ -20,7 +20,7 @@
 </footer>
 
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-J2PB456CE6"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-J2PB456CE6');</script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-J2PB456CE6',{'user_id':'<?= $_COOKIE['guid'] ?>'});</script>
 <?if(!$productPage || !isset($productPage)){?><script src="<?=$domain?>src/js/main.js"></script><?}?>
 <?if($js){
 $jsct = 0;

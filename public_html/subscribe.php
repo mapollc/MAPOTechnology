@@ -44,12 +44,12 @@ if (isset($_POST) && isset($_POST['price'])) {
 
             if (isset($_POST['cid'])) $custID = $_POST['cid'];
 
-            $user = prepareQuery('i', [$_SESSION['uid']], "SELECT email FROM users WHERE uid = ?");
+            $user = executeQuery('i', [$_SESSION['uid']], "SELECT email FROM users WHERE uid = ?");
 
             if (!empty($user)) $email = $user['email'];
 
             if ($custID == null) {
-                $getCust = prepareQuery('s', [$email], "SELECT cid FROM billing WHERE email = ? ORDER BY status ASC, created DESC LIMIT 1");
+                $getCust = executeQuery('s', [$email], "SELECT cid FROM billing WHERE email = ? ORDER BY status ASC, created DESC LIMIT 1");
                 $custID = $getCust['cid'];
             }
 

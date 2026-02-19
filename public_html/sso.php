@@ -33,7 +33,7 @@ $failURL = 'https://auth.mapotechnology.com/login';
 
 if ($_REQUEST['token']) {
     $token = $_REQUEST['token'];
-
+    
     // check if the token is valid and came from this server
     if (validToken($token)) {
         if ($_GET['next']) {

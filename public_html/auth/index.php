@@ -98,7 +98,7 @@ if ($service == 'mapotrails') {
 
 // verify if the user is already logged in
 if (isset($_SESSION['uid'])) {
-    $exp = prepareQuery('s', [$_SESSION['token']], "SELECT expires FROM sessions WHERE token = ?")['expires'];
+    $exp = executeQuery('s', [$_SESSION['token']], "SELECT expires FROM sessions WHERE token = ?")['expires'];
 
     if ($_SESSION['expires'] < time() || $exp <= time()) {
         $goto = '//mapotechnology.com/logout?expired=1' . ($_SERVER['QUERY_STRING'] ? '&' . preg_replace('/(%26|%3F)loggedOut%3D1/m', '', $_SERVER['QUERY_STRING']) : '');
@@ -116,14 +116,15 @@ if (isset($_SESSION['uid'])) {
 }
 
 if ($method == 'invitation') {
-    $org = prepareQuery('s', [$_GET['org_key']], "SELECT name AS orgName FROM groups WHERE org_key = ?");
+    $org = executeQuery('s', [$_GET['org_key']], "SELECT name AS orgName FROM groups WHERE org_key = ?");
     $orgName = $org['orgName'] ?? '';
 }
 
 $failMessages = [
     1 => 'You must be logged in to view this content',
     2 => 'Your session expired. Please sign in again to continue',
-    3 => 'Single sign-on authentication failed. Please sign in again'
+    3 => 'Single sign-on authentication failed. Please sign in again',
+    4 => $_GET['err']
 ];
 $msg = $_GET['fail'] ?? 0 ? $failMessages[$_GET['fail']] : '';
 
@@ -223,17 +224,12 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
                 <? } ?>
 
                 <? if ($method == 'login' && isset($_GET['gtoken']) && !empty($_GET['gtoken'])) {
-                    if ($service) {
-                        echo '<input type="hidden" name="service" value="' . $service . '">';
-                    }
+                    if ($service) echo '<input type="hidden" name="service" value="' . $service . '">';
+                    if ($prod) echo '<input type="hidden" name="prod" value="' . $prod . '">';
 
-                    if ($prod) {
-                        echo '<input type="hidden" name="prod" value="' . $prod . '">';
-                    }
-
-                    echo '<input type="hidden" name="next" value="' . $nextURL . '">';
-                    echo '<div class="loading" style="margin:3em auto 2em auto"></div>';
-                    echo '<p style="margin-bottom:175px;text-align:center">We\'re signing you in...</p>';
+                    //echo '<input type="hidden" name="next" value="' . $nextURL . '">';
+                    echo '<div id="loading_login"><div class="loading" style="margin:3em auto 2em auto"></div>' .
+                        '<p style="margin-bottom:175px;text-align:center">We\'re signing you in...</p></div>';
                 } else {
                     $allowedMethods = ['confirmation', 'invitation', 'login', 'forgot', 'register'];
 
@@ -241,6 +237,7 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
                         require_once "$method.inc.php";
                     }
                 } ?>
+                
             </form>
 
             <div class="info">
@@ -255,7 +252,7 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
     <? if ($method == 'login') {
         echo '<script defer async src="https://accounts.google.com/gsi/client"></script>';
     } ?>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-J2PB456CE6'<?= isset($_COOKIE['guid']) ? ",{'user_id':'$_COOKIE[guid]'}" : '' ?>);const ipaddr='<?= $_SERVER['REMOTE_ADDR'] ?>'<?= $gtoken != null ? ",gtoken='$gtoken'" : '' ?>;</script>
+    <script><?= isset($_REQUEST['state']) ? 'const auth_state="' . str_replace('loggedOut=1', '', base64_decode($_REQUEST['state'])) . '";' : '' ?>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-J2PB456CE6'<?= isset($_COOKIE['guid']) ? ",{'user_id':'$_COOKIE[guid]'}" : '' ?>);const ipaddr='<?= $_SERVER['REMOTE_ADDR'] ?>'<?= $gtoken != null ? ",gtoken='$gtoken'" : '' ?>;</script>
     <script src="//mapotechnology.com/js/auth.js"></script>
 </body>
 

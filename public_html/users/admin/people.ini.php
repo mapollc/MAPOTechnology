@@ -16,15 +16,15 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
 
             $perms = serialize($_POST['perms']);
 
-            prepareQuery('sssisss', [$fname, $lname, $email, $time, $role, $phone, $l], "INSERT INTO users (first_name,last_name,email,password,last_active,created,role,phone,location,profilePic,provider) VALUES(?,?,?,'','',?,?,?,?,'','0')");
+            executeQuery('sssisss', [$fname, $lname, $email, $time, $role, $phone, $l], "INSERT INTO users (first_name,last_name,email,password,last_active,created,role,phone,location,profilePic,provider) VALUES(?,?,?,'','',?,?,?,?,'','0')");
             $uid = mysqli_insert_id($con);
 
             if ($perms) {
-                prepareQuery('isi', [$uid, $perms, $time], "INSERT INTO permissions (uid,permissions,time) VALUES(?,?,?)");
+                executeQuery('isi', [$uid, $perms, $time], "INSERT INTO permissions (uid,permissions,time) VALUES(?,?,?)");
             }
-            prepareQuery('ii', [$uid, $time], "INSERT INTO settings (uid,settings,method,time) VALUES(?,'','0',?)");
-            prepareQuery('ii', [$uid, $time], "INSERT INTO trail_settings (uid,settings,method,time) VALUES(?,'','0',?)");
-            prepareQuery('ii', [$uid, $time], "INSERT INTO oreroads_settings (uid,settings,app_token,time) VALUES(?,'','',?)");
+            executeQuery('ii', [$uid, $time], "INSERT INTO settings (uid,settings,method,time) VALUES(?,'','0',?)");
+            executeQuery('ii', [$uid, $time], "INSERT INTO trail_settings (uid,settings,method,time) VALUES(?,'','0',?)");
+            executeQuery('ii', [$uid, $time], "INSERT INTO oreroads_settings (uid,settings,app_token,time) VALUES(?,'','',?)");
 
             logEvent('Created a new user account (<a href="https://www.mapotechnology.com/account/admin/people/edit?uid=' . $uid . '">#' . $uid . '</a>)');
             header('Location: edit?created=1&uid=' . $uid);
@@ -54,19 +54,19 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
 
             if ($_POST['location'] != '') {
                 $l = serialize(json_decode($_POST['location']));
-                prepareQuery('si', [$l, $_POST['uid']], "UPDATE users SET location = ? WHERE uid = ?");
+                executeQuery('si', [$l, $_POST['uid']], "UPDATE users SET location = ? WHERE uid = ?");
             }
 
             if (isset($_POST['confirmed']) && $_POST['confirmed'] == 1) {
-                prepareQuery('s', [$email], "UPDATE confirmation SET confirmed = 1 WHERE email = ?");
+                executeQuery('s', [$email], "UPDATE confirmation SET confirmed = 1 WHERE email = ?");
             }
 
             $perms = serialize($_POST['perms']);
 
-            prepareQuery('sssssi', [$fname, $lname, $email, $phone, $role, $_POST['uid']], "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, role = ? WHERE uid = ?");
+            executeQuery('sssssi', [$fname, $lname, $email, $phone, $role, $_POST['uid']], "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, role = ? WHERE uid = ?");
             
             if ($perms) {
-                prepareQuery('isis', [$_POST['uid'], $perms, $time, $perms], "INSERT INTO permissions (uid,permissions,time) VALUES(?,?,?) ON DUPLICATE KEY UPDATE permissions = ?");
+                executeQuery('isis', [$_POST['uid'], $perms, $time, $perms], "INSERT INTO permissions (uid,permissions,time) VALUES(?,?,?) ON DUPLICATE KEY UPDATE permissions = ?");
             }
 
             logEvent('Modified a user account (<a href="https://www.mapotechnology.com/account/admin/people/edit?uid=' . $_POST['uid'] . '">#' . $_POST['uid'] . '</a>)');

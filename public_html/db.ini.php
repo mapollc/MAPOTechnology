@@ -9,7 +9,7 @@ use Firebase\JWT\Key;
 require_once '/home/mapo/database.inc.php';
 
 $tokenDomain = 'https://www.mapotechnology.com';
-$secretKey = 'MapoLLC.Q1.w.2.e.34';
+$secretKey = getenv('JWT_SECRET');
 $jqueryVersion = '3.6.4';
 
 /*function memcached($key, $data = '', $expires = 0) {

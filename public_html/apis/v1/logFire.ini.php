@@ -14,7 +14,7 @@ if (!$_REQUEST['data']) {
         $count = $fire['count'];
         $data = json_encode($fire['data']);
 
-        prepareQuery('isissi', [
+        executeQuery('isissi', [
             $wfid,
             $data,
             $count,

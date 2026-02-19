@@ -1,6 +1,7 @@
 const apiURL = 'https://api.mapotechnology.com/v1/',
-    apiKey = 'c196d0958608ad2b7d4af2be078ecc54',
-    submitBtn = document.querySelector('input[type=submit]'),
+    apiKey = '57a83db35f6d91d1ee2bd83a2d305857'
+//apiKey = 'c196d0958608ad2b7d4af2be078ecc54',
+submitBtn = document.querySelector('input[type=submit]'),
     city = document.querySelector('#city'),
     userLocation = document.querySelector('input[name=location]'),
     cityResults = document.querySelector('#cityResults'),
@@ -63,7 +64,7 @@ const apiURL = 'https://api.mapotechnology.com/v1/',
     },
     createError = (msg) => {
         removeErrors();
-        document.querySelector('form').insertAdjacentHTML('beforebegin', '<div id="loginerrors" class="message error">' + msg + '</div>');
+        document.querySelector('form').insertAdjacentHTML('beforebegin', '<div id="loginerrors" class="message error">' + msg.replaceAll('..', '.') + '</div>');
     },
     removeErrors = () => {
         const e = document.querySelector('#loginerrors');
@@ -100,8 +101,15 @@ class SSO {
             const api = await resp.json();
 
             if (api.response == 'error') {
-                submitBtn.value = submitBtn.getAttribute('data-o');
-                submitBtn.disabled = false;
+                if (api.isGoogle) {
+                    window.location.href = `${window.location.origin}/login?fail=4&${auth_state ? `&${auth_state}` : ''}&err=${api.msg}`;
+                    return;
+                }
+
+                if (submitBtn) {
+                    submitBtn.value = submitBtn.getAttribute('data-o');
+                    submitBtn.disabled = false;
+                }
                 createError(api.msg);
                 return;
             }
@@ -113,17 +121,27 @@ class SSO {
     loginWithGoogle(r) {
         removeErrors();
 
-        if (submitBtn) submitBtn.value = 'Signing you in...';
-        if (submitBtn) submitBtn.disabled = true;
+        if (submitBtn) {
+            submitBtn.value = 'Signing you in...';
+            submitBtn.disabled = true;
+        }
+
+        const params = auth_state ? Object.fromEntries(new URLSearchParams(auth_state)) : null;
 
         const fd = new FormData();
         fd.append('google', 1);
         fd.append('token', r);
 
-        ['service', 'next', 'subscribe', 'price_id'].forEach((n) => {
+        if (params) {
+            for (const [key, value] of Object.entries(params)) {
+                fd.append(key, value);
+            }
+        }
+
+        /*['service', 'next', 'subscribe', 'price_id'].forEach((n) => {
             const el = document.querySelector(`input[name=${n}]`);
             if (el) fd.append(n, el.value);
-        });
+        });*/
 
         this.doLogin(fd);
     }

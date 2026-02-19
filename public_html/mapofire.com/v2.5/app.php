@@ -108,7 +108,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
             <div class="icon"></div>
             <div class="text"><b>Map of Fire: Wildfire Map</b><span>Download on the Google Play Store</span></div>
         </div>
-        <a href="https://play.google.com/store/apps/details?id=com.mapollc.mapofire" class="btn btn-sm btn-yellow play_store_download" style="margin:0">Download</a>
+        <a href="//play.google.com/store/apps/details?id=com.mapollc.mapofire" class="btn btn-sm btn-yellow play_store_download" style="margin:0">Download</a>
     </div>
 
     <main>
@@ -116,7 +116,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
             <div class="nav-wrapper">
                 <div class="logo">
                     <a href="#" onclick="window.location.href=window.location.href;return false">
-                        <img src="https://www.mapotechnology.com/assets/images/mapofire_icon_transparent.png" alt="Map of Fire logo" title="Map of Fire">
+                        <img src="//mapotechnology.com/assets/images/mapofire_icon_transparent.png" alt="Map of Fire logo" title="Map of Fire">
                     </a>
                 </div>
                 <span id="dd-close" data-action="dropdown-nav" class="far fa-xmark"></span>

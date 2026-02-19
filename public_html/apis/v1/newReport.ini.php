@@ -14,7 +14,7 @@ if ($_REQUEST['type'] && $_REQUEST['size'] && $_REQUEST['notes']) {
         $msg = '';
 
         if ($_REQUEST['authUser'] == 1) {
-            $row = prepareQuery('i', [$_REQUEST['uid']], "SELECT first_name, last_name, email FROM users WHERE uid = ?");
+            $row = executeQuery('i', [$_REQUEST['uid']], "SELECT first_name, last_name, email FROM users WHERE uid = ?");
             $msg .= '<b>Reported By:</b> ' . $row['first_name'] . ' ' . $row['last_name'] . ' (<a href="' . $row['email'] . '">' . $row['email'] . '</a>)<br>';
         } else {
             $msg .= '<b>Reported by:</b> Anonymous<br>';
@@ -32,7 +32,7 @@ if ($_REQUEST['type'] && $_REQUEST['size'] && $_REQUEST['notes']) {
         $user = json_encode($u);
         $time = time();
 
-        $upload = prepareQuery('ssssssi', [$state,$type,$acres,$details,$geo,$user,$time], "INSERT INTO user_reports (state,type,acres,details,geo,user,time) VALUES(?,?,?,?,?,?,?)");
+        $upload = executeQuery('ssssssi', [$state,$type,$acres,$details,$geo,$user,$time], "INSERT INTO user_reports (state,type,acres,details,geo,user,time) VALUES(?,?,?,?,?,?,?)");
         $rid = mysqli_insert_id($con);
 
         $msg .= '<br><a href="https://www.mapotechnology.com/account/admin/crowdsource/view?id='.$rid.'">View Report</a>';
@@ -47,7 +47,7 @@ if ($_REQUEST['type'] && $_REQUEST['size'] && $_REQUEST['notes']) {
         $msg = '';
 
         if ($_REQUEST['authUser'] == 1) {
-            $row = prepareQuery('i', [$uid], "SELECT first_name, last_name, email FROM users WHERE uid = ?");
+            $row = executeQuery('i', [$uid], "SELECT first_name, last_name, email FROM users WHERE uid = ?");
             $msg .= '<b>Reported By:</b> ' . $row['first_name'] . ' ' . $row['last_name'] . ' (<a href="' . $row['email'] . '">' . $row['email'] . '</a>)<br>';
         } else {
             $msg .= '<b>Reported by:</b> Anonymous<br>';

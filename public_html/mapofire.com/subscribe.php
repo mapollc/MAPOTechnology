@@ -45,7 +45,7 @@ if (isset($_POST) && isset($_POST['price'])) {
     if ($_SESSION && $_SESSION['uid']) {
         $email = null;
         require_once '/home/mapo/public_html/db.ini.php';
-        $user = prepareQuery('i', [$_SESSION['uid']], "SELECT email FROM users WHERE uid = ?");
+        $user = executeQuery('i', [$_SESSION['uid']], "SELECT email FROM users WHERE uid = ?");
         mysqli_close($con);
 
         if (!empty($user)) {

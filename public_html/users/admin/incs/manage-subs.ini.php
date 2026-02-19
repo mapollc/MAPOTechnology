@@ -1,6 +1,6 @@
 <?
 if (isset($_GET['sid']) && $_GET['sid'] != '') {
-    $sub = prepareQuery('s', [$_GET['sid']], "SELECT * FROM billing WHERE subscription = ?");
+    $sub = executeQuery('s', [$_GET['sid']], "SELECT * FROM billing WHERE subscription = ?");
 }
 ?>
 <div class="row">

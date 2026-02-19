@@ -17,7 +17,7 @@ if (!$cache || filemtime(root() . 'fire-info.ini.php') > $memcache->get($cachefi
 
     // execute the query
     ////echo $sql;
-    $row = prepareQuery($incID ? 's' : 'i', [$incID ? $incID : $wfid], $sql);
+    $row = executeQuery($incID ? 's' : 'i', [$incID ? $incID : $wfid], $sql);
 
     if ($row) {
         date_default_timezone_set($row['timezone'] ? $row['timezone'] : 'America/Los_Angeles');

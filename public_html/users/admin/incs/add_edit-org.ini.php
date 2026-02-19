@@ -10,7 +10,7 @@ if ($function == 'create' && !$permission->orgs()->add() || $function == 'edit' 
             $end = strtotime($_POST['end_period']);
 
             try {
-                $query = prepareQuery(
+                $query = executeQuery(
                     'ssisiiii',
                     [$_POST['org_key'], $_POST['name'], $_POST['max_users'], $_POST['admin_email'], $now, $start, $end, $_POST['active']],
                     "INSERT INTO groups (org_key,name,max_users,admin_email,created,start_period,end_period,active,suspended) VALUES(?,?,?,?,?,?,?,0)"
@@ -35,7 +35,7 @@ if ($function == 'create' && !$permission->orgs()->add() || $function == 'edit' 
         if (isset($_POST['action'])) {
             $end = strtotime($_POST['end_period']);
 
-            $query = prepareQuery(
+            $query = executeQuery(
                 'ssiiii',
                 [$_POST['name'], $_POST['admin_email'], $_POST['max_users'], $end, $_POST['active'], $_POST['group_id']],
                 "UPDATE groups SET name = ?, admin_email = ?, max_users = ?, end_period = ?, active = ? WHERE group_id = ?"

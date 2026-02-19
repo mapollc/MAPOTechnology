@@ -3,6 +3,7 @@ require '../vendor/autoload.php';
 include_once '/home/mapo/public_html/subs.inc.php';
 
 use Firebase\JWT\JWT;
+use Firebase\JWT\JWK;
 use Firebase\JWT\Key;
 use UAParser\Parser;
 
@@ -27,7 +28,7 @@ class SSO
         $this->domain = 'https://www.mapotechnology.com/';
         $this->fields = $request;
         $this->con = $con;
-        $this->secretKey = 'MapoLLC.Q1.w.2.e.34';
+        $this->secretKey = getenv('JWT_SECRET');
         $this->guid = $_COOKIE['guid'] ? $_COOKIE['guid'] : $this->getGUID();
         $this->nextURL = null;
 
@@ -44,12 +45,13 @@ class SSO
         }
     }
 
-    function isJson($string) {
+    function isJson($string)
+    {
         json_decode($string);
         return json_last_error() === JSON_ERROR_NONE;
     }
 
-    function getGUID()
+    private function getGUID()
     {
         if (function_exists('com_create_guid')) {
             return com_create_guid();
@@ -64,8 +66,8 @@ class SSO
                 . substr($charid, 16, 4) . $hyphen
                 . substr($charid, 20, 12)
                 . chr(125);
-            
-            return str_replace(['{','}'], ['',''], $uuid);
+
+            return str_replace(['{', '}'], ['', ''], $uuid);
         }
     }
 
@@ -189,6 +191,30 @@ class SSO
         return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode(hash_hmac('sha256', $e[0] . '.' . $e[1], 'MapoLLC.Q1.w.2.e.34', true)));
     }*/
 
+    function productConfig()
+    {
+        global $function;
+
+        return match ($function) {
+            'mapofire' => [
+                'extra' => ', settings, method, mf.time AS synced',
+                'join' => ' LEFT JOIN settings AS mf ON mf.uid = u.uid'
+            ],
+            'mapotrails' => [
+                'extra' => ', settings, ts.time AS updatedTime',
+                'join' => ' LEFT JOIN trail_settings AS ts ON ts.uid = u.uid'
+            ],
+            'oreroads' => [
+                'extra' => ', settings, rd.time AS updatedTime',
+                'join' => ' LEFT JOIN oreroads_settings AS rd ON rd.uid = u.uid'
+            ],
+            default => [
+                'extra' => '',
+                'join' => ''
+            ]
+        };
+    }
+
     function in($e)
     {
         $total = $e + 900 - time();
@@ -206,39 +232,28 @@ class SSO
         return str_replace('{cols}', $cols, $q) . ' ' . $s;
     }
 
-    /*function prepareQuery($types = '', $params = [], $sql)
+    function bruteForce()
     {
-        $stmt = $this->con->prepare($sql);
-        if ($stmt === false) {
-            return false;
+        global $_SESSION;
+
+        $now = time();
+        $lockWindow = 900;
+
+        if (!isset($_SESSION['login_attempts'])) {
+            $_SESSION['login_attempts'] = 0;
         }
 
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result === false) {
-            if ($this->con->errno) {
-                $stmt->close();
-                return ['error' => true, 'message' => 'Execute failed: ' . $this->con->error];
-            } else {
-                $stmt->close();
-                return ['success' => true];
-            }
-        } else {
-            $rows = [];
-            while ($row = $result->fetch_assoc()) {
-                $rows[] = $row;
-            }
-            $stmt->close();
-
-            if (count($rows) === 1) {
-                return $rows[0];
-            } else {
-                return $rows;
-            }
+        if (!isset($_SESSION['last_login_attempt'])) {
+            $_SESSION['last_login_attempt'] = 0;
         }
-    }*/
+
+        if ($_SESSION['last_login_attempt'] + $lockWindow < $now) {
+            $_SESSION['login_attempts'] = 0;
+        }
+
+        $_SESSION['login_attempts']++;
+        $_SESSION['last_login_attempt'] = $now;
+    }
 
     function authenticate()
     {
@@ -246,15 +261,7 @@ class SSO
         global $function;
 
         // record how many attempts this user has made to login
-        if ($_SESSION['login_attempts'] >= 3 && $_SESSION['last_login_attempt'] + 900 < time()) {
-            $_SESSION['login_attempts'] = 1;
-        } else if ($_SESSION['login_attempts'] < 3 && $_SESSION['last_login_attempt'] + 900 > time()) {
-            $_SESSION['login_attempts'] = $_SESSION['login_attempts'] + 1;
-        }
-
-        if ($_SESSION['login_attempts'] < 3) {
-            $_SESSION['last_login_attempt'] = time();
-        }
+        $this->bruteForce();
 
         $email = $this->fields['email'];
         $pass = $this->fields['pass'];
@@ -272,20 +279,10 @@ class SSO
                 $error = true;
                 $respMsg = 'You must provide an email address and password.';
             } else {
-                if ($function == 'mapofire') {
-                    $extra = ', settings, method, mf.time AS synced';
-                    $extra2 = ' LEFT JOIN settings AS mf ON mf.uid = u.uid';
-                } else if ($function == 'mapotrails') {
-                    $extra = ', settings, ts.time AS updatedTime';
-                    $extra2 = ' LEFT JOIN trail_settings AS ts ON ts.uid = u.uid';
-                } else if ($function == 'oreroads') {
-                    $extra = ', settings, rd.time AS updatedTime';
-                    $extra2 = ' LEFT JOIN oreroads_settings AS rd ON rd.uid = u.uid';
-                }
+                $config = $this->productConfig();
 
                 $respMsg = '';
-                //$row = mysqli_fetch_assoc(mysqli_query($this->con, $this->sql(', confirmed, settings, method, mf.time AS synced', "LEFT JOIN settings AS mf ON mf.uid = u.uid LEFT JOIN confirmation AS c ON c.email = u.email WHERE u.email = '$email' AND c.valid = 1 ORDER BY c.cid DESC LIMIT 1")));
-                $row = prepareQuery('s', [$email], $this->sql(', confirmed'.$extra, "$extra2 LEFT JOIN confirmation AS c ON c.email = u.email WHERE u.email = ? AND c.valid = 1 ORDER BY c.cid DESC LIMIT 1"));
+                $row = executeQuery('s', [$email], $this->sql(", confirmed{$config['extra']}", "{$config['join']} LEFT JOIN confirmation AS c ON c.email = u.email WHERE u.email = ? AND c.valid = 1 ORDER BY c.cid DESC LIMIT 1"));
 
                 if (isset($row['error'])) {
                     $error = true;
@@ -319,17 +316,15 @@ class SSO
         }
 
         if ($error) {
-            return array('response' => 'error', 'code' => $code, 'msg' => $respMsg);
+            return ['response' => 'error', 'code' => $code, 'msg' => $respMsg];
         }
     }
 
     function loginWithGoogle()
     {
-        global $_SESSION;
-        global $function;
         $error = false;
+        $code = null;
         $msg = '';
-        $time = time();
         $gtoken = $this->fields['token'];
 
         if (isset($this->fields['android'])) {
@@ -343,63 +338,66 @@ class SSO
             $origin = ['27619385576-o8elfb66trj3e5v2acahnjm0jiqacg5n.apps.googleusercontent.com'];
         }
 
-        if ($gtoken) {
-            $json = json_decode(file_get_contents('https://oauth2.googleapis.com/tokeninfo?id_token=' . $gtoken));
+        if (!$gtoken) {
+            $error = true;
+            $code = 1;
+            $msg = 'No Google oauth token was supplied.';
+        } else {
+            $keys = json_decode(file_get_contents('https://www.googleapis.com/oauth2/v3/certs'), true);
 
-            // check to make sure the token originated from us and not somebody else's site
-            if (in_array($json->aud, $origin)) {
-                // check to make sure token hasn't expired
-                if ($time > $json->exp) {
+            try {
+                $jwkKeys = JWK::parseKeySet($keys);
+                $decoded = JWT::decode($gtoken, $jwkKeys);
+
+                if (!in_array($decoded->aud, $origin)) {
+                    $error = true;
+                    $code = 2;
+                    $msg = 'The token provided has an invalid origin.';
+                }
+
+                if (!in_array($decoded->iss, ['accounts.google.com', 'https://accounts.google.com'])) {
                     $error = true;
                     $code = 3;
-                    $msg = 'The token provided has expired. Try again.';
-                } else {
-                    $email = $json->email;
+                    $msg = 'The token provided can\'t be validated for CSFR.';
+                }
+
+                if ($decoded->exp < time()) {
+                    $error = true;
+                    $code = 4;
+                    $msg = 'The Google token provided has expired. Try again.';
+                }
+
+                if (!$error) {
+                    $email = $decoded->email;
 
                     // check to see if user account is already registered in the database
-                    $num = prepareQuery('s', [$email], "SELECT uid, provider FROM users WHERE email = ?");
+                    $num = executeQuery('s', [$email], "SELECT uid, provider FROM users WHERE email = ?");
 
+                    // email isn't on file, so create an account for the user
                     if (empty($num)) {
-                        $this->createAccount($json->given_name, $json->family_name, $email, '', $_SERVER['REMOTE_ADDR'], '1', '', '', 1);
+                        $this->createAccount($decoded->given_name, $decoded->family_name, $email, '', $_SERVER['REMOTE_ADDR'], '1', '', '', 1);
                     } else {
                         // link google account to existing account
                         if ($num['provider'] == 0) {
-                            prepareQuery('i', [$num['uid']], "UPDATE users SET provider = '1' WHERE uid = ?");
+                            executeQuery('i', [$num['uid']], "UPDATE users SET provider = '1' WHERE uid = ?");
                         }
                     }
 
                     // log the user in with google (or after creating an account if they don't have one)
-                    if ($function == 'mapofire') {
-                        $extra = ', settings, method, mf.time AS synced';
-                        $extra2 = ' LEFT JOIN settings AS mf ON mf.uid = u.uid';
-                    } else if ($function == 'mapotrails') {
-                        $extra = ', settings, ts.time AS updatedTime';
-                        $extra2 = ' LEFT JOIN trail_settings AS ts ON ts.uid = u.uid';
-                    } else if ($function == 'oreroads') {
-                        $extra = ', settings, rd.time AS updatedTime';
-                        $extra2 = ' LEFT JOIN oreroads_settings AS rd ON rd.uid = u.uid';
-                    }
-    
-                    $row = prepareQuery('s', [$email], $this->sql(', confirmed'.$extra, "$extra2 LEFT JOIN confirmation AS c ON c.email = u.email WHERE u.email = ? AND c.valid = 1 ORDER BY c.cid DESC LIMIT 1"));
-                    //$row = prepareQuery('s', [$email], $this->sql(', confirmed', "LEFT JOIN confirmation AS c ON c.email = u.email WHERE u.email = ?").' ORDER BY cid DESC LIMIT 1');
+                    $config = $this->productConfig();
+                    $row = executeQuery('s', [$email], $this->sql(", confirmed{$config['extra']}", "{$config['join']} LEFT JOIN confirmation AS c ON c.email = u.email WHERE u.email = ? AND c.valid = 1 ORDER BY c.cid DESC LIMIT 1"));
 
                     $_SESSION['gtoken'] = $gtoken;
                     return $this->login($row);
                 }
-            } else {
+            } catch (Exception $e) {
                 $error = true;
-                $code = 2;
-                $msg = 'The token provided can\'t be validated for CSFR.';
+                $code = 5;
+                $msg = $e->getMessage();
             }
-        } else {
-            $error = true;
-            $code = 1;
-            $msg = 'No Google oauth token was supplied.';
         }
 
-        if ($error) {
-            return array('response' => 'error', 'code' => $code, 'msg' => $msg);
-        }
+        if ($error) return ['response' => 'error', 'isGoogle' => true, 'code' => $code, 'msg' => $msg];
     }
 
     function returnURL($next)
@@ -411,7 +409,7 @@ class SSO
 
         if (isset($this->fields['price_id'])) {
             //return $this->domain . 'checkout?price_id=' . $this->fields['price_id'] . ($this->fields['trial'] ? '&trial=1' : '') . '&customer_email=' . $this->fields['email'] . ($method == 'register' ? '&first_name=' . $this->fields['first_name'] . '&last_name=' . $this->fields['last_name'] . '&next=' . urlencode('secure/login?subscribed=1&pid=' . $this->fields['price_id']) : '');
-            return 'https://www.mapotechnology.com/purchase/'.$this->fields['product_key'].'/complete?newUser=1&price=' . $this->fields['price_id'] . ($this->fields['trial'] ? '&trial=1' : '') . '&customer_email=' . $this->fields['email'];
+            return 'https://www.mapotechnology.com/purchase/' . $this->fields['product_key'] . '/complete?newUser=1&price=' . $this->fields['price_id'] . ($this->fields['trial'] ? '&trial=1' : '') . '&customer_email=' . $this->fields['email'];
         } else {
             if ($this->source != null && $this->source != 'mapotechnology') {
                 $key = array_search($this->source, $validSources);
@@ -425,7 +423,7 @@ class SSO
     function getSubscriptions($email)
     {
         global $plan;
-        $sub = prepareQuery('s', [$email], "SELECT cid, subscription, trial, plan, created, start, end AS ends, status, cancel_end_period FROM billing WHERE email = ? AND status != 'expired' ORDER BY created DESC");
+        $sub = executeQuery('s', [$email], "SELECT cid, subscription, trial, plan, created, start, end AS ends, status, cancel_end_period FROM billing WHERE email = ? AND status != 'expired' ORDER BY created DESC");
 
         if (isset($sub['error'])) {
             return ['error' => true, 'message' => $sub['message']];
@@ -499,30 +497,31 @@ class SSO
 
         if ($function == 'mapofire') {
             $set = unserialize($row['settings']);
-            
+
             if (empty($set['weather'])) {
                 $set['weather'] = null;
             }
 
-            $out['settings'] = array('allsettings' => $row['settings'] ? $set : null, 'method' => $row['method'], 'synced' => intval($row['synced']));
+            $out['settings'] = ['allsettings' => $row['settings'] ? $set : null, 'method' => $row['method'], 'synced' => intval($row['synced'])];
         } else if ($function == 'mapotrails') {
-            $out['settings'] = array('mapotrails' => json_decode($row['settings']), 'synced' => intval($row['updatedTime']));
+            $out['settings'] = ['mapotrails' => json_decode($row['settings']), 'synced' => intval($row['updatedTime'])];
         } else if ($function == 'oreroads') {
-            $out['settings'] = array('oreroads' => json_decode($row['settings']), 'synced' => intval($row['updatedTime']));
+            $out['settings'] = ['oreroads' => json_decode($row['settings']), 'synced' => intval($row['updatedTime'])];
         }
 
         return $out;
     }
 
-    function devices() {
+    function devices()
+    {
         if ($this->fields['mode'] == 'terminate') {
-            prepareQuery('is', [$this->fields['sid'], $this->fields['token']], "UPDATE sessions SET expires = 0 WHERE sid = ? AND token = ?");
+            executeQuery('is', [$this->fields['sid'], $this->fields['token']], "UPDATE sessions SET expires = 0 WHERE sid = ? AND token = ?");
 
             return ['success' => true];
         } else {
             $user_agent = Parser::create();
             $now = time();
-            $devices = prepareQuery('si', [$this->fields['token'], $now], "SELECT sid, token, ip, host, source, location, created, expires FROM sessions WHERE uid = (SELECT uid FROM sessions WHERE token = ? LIMIT 1) AND expires > 0 AND expires > ? ORDER BY created DESC");
+            $devices = executeQuery('si', [$this->fields['token'], $now], "SELECT sid, token, ip, host, source, location, created, expires FROM sessions WHERE uid = (SELECT uid FROM sessions WHERE token = ? LIMIT 1) AND expires > 0 AND expires > ? ORDER BY created DESC");
 
             if ($devices && !isset($devices[0])) {
                 $devices = [$devices];
@@ -543,11 +542,11 @@ class SSO
                     }
 
                     if ($device['location'] == '') {
-                        $json = json_decode(file_get_contents('https://ipwho.is/'.$device['ip']));
-                        $devLoc = ['location' => $json->city.', '.$json->region_code.', '.$json->country, 'isp' => $json->connection->isp];
+                        $json = json_decode(file_get_contents('https://ipwho.is/' . $device['ip']));
+                        $devLoc = ['location' => $json->city . ', ' . $json->region_code . ', ' . $json->country, 'isp' => $json->connection->isp];
                         $location = serialize($devLoc);
-                        
-                        mysqli_query($this->con, "UPDATE sessions SET location = '$location' WHERE sid = '$device[sid]'");
+
+                        executeQuery('ss', [$location, $device['sid']], "UPDATE sessions SET location = ? WHERE sid = ?");
                     } else {
                         $devLoc = unserialize($device['location']);
                     }
@@ -582,23 +581,23 @@ class SSO
         }
 
         $token = $this->fields['token'];
-        //$row = prepareQuery('s', [$token], $this->sql(', token, expires' . $extra, "LEFT JOIN sessions AS s ON s.uid = u.uid$extra2 WHERE s.token = ?"));
-        $row = prepareQuery('s', [$token], "SELECT u.uid, s.guid, first_name, last_name, u.email, u.phone, password, u.location, u.created, role, provider, last_active, token, expires$extra FROM users AS u LEFT JOIN sessions AS s ON s.uid = u.uid$extra2 WHERE s.token = ?");
+        //$row = executeQuery('s', [$token], $this->sql(', token, expires' . $extra, "LEFT JOIN sessions AS s ON s.uid = u.uid$extra2 WHERE s.token = ?"));
+        $row = executeQuery('s', [$token], "SELECT u.uid, s.guid, first_name, last_name, u.email, u.phone, password, u.location, u.created, role, provider, last_active, token, expires$extra FROM users AS u LEFT JOIN sessions AS s ON s.uid = u.uid$extra2 WHERE s.token = ?");
 
         if (isset($row['error'])) {
-            return array('response' => 'error', 'code' => 500, 'msg' => 'Database error: ' . $row['message']);
+            return ['response' => 'error', 'code' => 500, 'msg' => 'Database error: ' . $row['message']];
         } else {
             if ($row) {
                 if ($row['expires'] == 0 || $row['expires'] < time()) {
-                    return array('response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.');
+                    return ['response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.'];
                 } else {
                     // get any user subscriptions
                     $subscribe = $this->getSubscriptions($row['email']);
 
-                    return array('user' => $this->getUser($row, null, $subscribe));
+                    return ['user' => $this->getUser($row, null, $subscribe)];
                 }
             } else {
-                return array('response' => 'error', 'code' => 2, 'msg' => 'An invalid token was provided.');
+                return ['response' => 'error', 'code' => 2, 'msg' => 'An invalid token was provided.'];
             }
         }
     }
@@ -630,13 +629,13 @@ class SSO
         $subscribe = $this->getSubscriptions($row['email']);
 
         // update user activity in database
-        $update = prepareQuery('i', [$row['uid']], "UPDATE users SET last_active = '$time' WHERE uid = ?");
+        $update = executeQuery('i', [$row['uid']], "UPDATE users SET last_active = '$time' WHERE uid = ?");
 
         if (isset($update['error'])) {
             return ['response' => 'error', 'code' => 500, 'msg' => "Database error: $update[message]"];
         }
 
-        $sess = prepareQuery('isssssssi', [
+        $sess = executeQuery('isssssssi', [
             $row['uid'],
             $this->token,
             $this->guid,
@@ -662,27 +661,41 @@ class SSO
         $_SESSION['expires'] = $expires;
         $_SESSION['subscriptions'] = json_encode($subscribe);
 
-        setcookie('token', $this->token, $expires, '/', '.mapotechnology.com', true);
+        setcookie(
+            'token',
+            $this->token,
+            $expires,
+            '/',
+            '.mapotechnology.com',
+            true
+        );
 
         if (!$_COOKIE['guid']) {
-            setcookie('guid', $this->guid, time() + (60 * 60 * 24 * 365.25), '/', '.mapotechnology.com', true);
+            setcookie(
+                'guid',
+                $this->guid,
+                time() + 31557600,  // 60 * 60 * 24 * 365.25
+                '/',
+                '.mapotechnology.com',
+                true
+            );
         }
 
         logEvent('Logged in', false, $row['uid']);
 
-        return array('auth' => true, 'service' => $this->source, 'next' => $this->returnURL($this->nextURL), 'user' => $this->getUser($row, $expires, $subscribe));
+        return ['auth' => true, 'service' => $this->source, 'next' => $this->returnURL($this->nextURL), 'user' => $this->getUser($row, $expires, $subscribe)];
     }
 
     function logout()
     {
         global $_SESSION;
-        $invalid = array('response' => 'error', 'code' => 1, 'msg' => 'An invalid token was provided.');
+        $invalid = ['response' => 'error', 'code' => 1, 'msg' => 'An invalid token was provided.'];
         $this->token = $this->fields['token'];
 
         if (!$this->token) {
             return $invalid;
         } else {
-            $row = prepareQuery('s', [$this->token], "SELECT uid FROM sessions WHERE token = ?");
+            $row = executeQuery('s', [$this->token], "SELECT uid FROM sessions WHERE token = ?");
 
             if (isset($row['error'])) {
                 return ['response' => 'error', 'code' => 500, 'msg' => "Database error: $row[message]"];
@@ -693,13 +706,13 @@ class SSO
                 $uid = $row['uid'];
 
                 setcookie('token', '', $time - 60 * 60 * 24 * 7, '/', '.mapotechnology.com', true);
-                $_SESSION = array();
+                $_SESSION = [];
                 session_regenerate_id();
 
-                prepareQuery('si', [$time, $uid], "UPDATE users SET last_active = ? WHERE uid = ?");
-                prepareQuery('is', [$uid, $this->token], "UPDATE sessions SET expires = '0' WHERE uid = ? AND token = ?");
+                executeQuery('si', [$time, $uid], "UPDATE users SET last_active = ? WHERE uid = ?");
+                executeQuery('is', [$uid, $this->token], "UPDATE sessions SET expires = '0' WHERE uid = ? AND token = ?");
 
-                return array('response' => 'success');
+                return ['response' => 'success'];
             } else {
                 return $invalid;
             }
@@ -711,15 +724,15 @@ class SSO
         $email = $this->fields['email'];
 
         if (!$email) {
-            return array('response' => 'error', 'code' => 1, 'msg' => 'You must provide an email address.');
+            return ['response' => 'error', 'code' => 1, 'msg' => 'You must provide an email address.'];
         } else {
-            $row = prepareQuery('s', [$email], "SELECT uid, first_name, email FROM users WHERE email = ?");
+            $row = executeQuery('s', [$email], "SELECT uid, first_name, email FROM users WHERE email = ?");
 
             if (isset($row['error'])) {
                 return ['response' => 'error', 'code' => 500, 'msg' => "Database error: $row[message]"];
             } else {
                 if (!$row) {
-                    return array('response' => 'error', 'code' => 2, 'msg' => 'You must provide an email address.');
+                    return ['response' => 'error', 'code' => 2, 'msg' => 'You must provide an email address.'];
                 } else {
                     $expires = time() + 600;
                     $token = $this->createToken(['uid' => $row['uid'], 'unqiue' => 'resetPassword-' . time()]);
@@ -727,15 +740,15 @@ class SSO
                     mysqli_query($this->con, "UPDATE password_reset SET expires = '0' WHERE uid = $row[uid]");
                     mysqli_query($this->con, "UPDATE users SET password = 'PASSWORD_RESET_REQUIRED' WHERE uid = $row[uid]");
                     mysqli_query($this->con, "INSERT INTO password_reset (uid,token,expires) VALUES($row[uid],'$token','$expires')");
-                    /*prepareQuery('i', [$row['uid']], "UPDATE password_reset SET expires = '0' WHERE uid = ?");
-                    prepareQuery('i', [$row['uid']], "UPDATE users SET password = 'PASSWORD_RESET_REQUIRED' WHERE uid = ?");
-                    prepareQuery('iis', [$row['uid'], $token, $expires], "INSERT INTO password_reset (uid,token,expires) VALUES(?,?,?)");*/
+                    /*executeQuery('i', [$row['uid']], "UPDATE password_reset SET expires = '0' WHERE uid = ?");
+                    executeQuery('i', [$row['uid']], "UPDATE users SET password = 'PASSWORD_RESET_REQUIRED' WHERE uid = ?");
+                    executeQuery('iis', [$row['uid'], $token, $expires], "INSERT INTO password_reset (uid,token,expires) VALUES(?,?,?)");*/
 
                     logEvent('Request sent to reset password', false, $row['uid']);
 
-                    sendEmail($row['email'], 'Your account password was reset', 'reset', array('{fname}' => $row['first_name'], '{token}' => $token, '{email}' => $row['email']));
+                    sendEmail($row['email'], 'Your account password was reset', 'reset', ['{fname}' => $row['first_name'], '{token}' => $token, '{email}' => $row['email']]);
 
-                    return array('response' => 'success');
+                    return ['response' => 'success'];
                 }
             }
         }
@@ -745,13 +758,13 @@ class SSO
     {
         $pass = $this->fields['pass'];
         $oauth = $this->fields['oauth_token'];
-        $row = prepareQuery('s', [$oauth], "SELECT p.uid, email, expires FROM password_reset AS p LEFT JOIN users AS u ON u.uid = p.uid WHERE token = ?");
+        $row = executeQuery('s', [$oauth], "SELECT p.uid, email, expires FROM password_reset AS p LEFT JOIN users AS u ON u.uid = p.uid WHERE token = ?");
 
         if (isset($row['error'])) {
             return ['response' => 'error', 'code' => 500, 'msg' => "Database error: $row[message]"];
         } else {
             if (!$row) {
-                return array('response' => 'error', 'code' => 403, 'msg' => 'The password reset token provided is incorrect.');
+                return ['response' => 'error', 'code' => 403, 'msg' => 'The password reset token provided is incorrect.'];
             } else {
                 $error = false;
                 $msg = '';
@@ -790,25 +803,26 @@ class SSO
                 } // successfully able to reset the user's password
                 else {
                     $pass = password_hash($this->fields['pass'], PASSWORD_DEFAULT);
-                    prepareQuery('i', [$row['uid']], "UPDATE password_reset SET expires = '0' WHERE uid = ?");
-                    prepareQuery('si', [$pass, $row['uid']], "UPDATE users SET password = ? WHERE uid = ?");
+                    executeQuery('i', [$row['uid']], "UPDATE password_reset SET expires = '0' WHERE uid = ?");
+                    executeQuery('si', [$pass, $row['uid']], "UPDATE users SET password = ? WHERE uid = ?");
 
-                    return array('response' => 'success');
+                    return ['response' => 'success'];
                 }
 
                 if ($error) {
-                    return array('response' => 'error', 'code' => $code, 'msg' => $msg);
+                    return ['response' => 'error', 'code' => $code, 'msg' => $msg];
                 }
             }
         }
     }
 
-    function invitation() {
+    function invitation()
+    {
         $error = false;
         $invite_code = $this->fields['invite_code'];
         $email = $this->fields['email'];
 
-        $match = prepareQuery('ss', [$email, $invite_code], "SELECT * FROM group_users WHERE email = ? AND invite_code = ?");
+        $match = executeQuery('ss', [$email, $invite_code], "SELECT * FROM group_users WHERE email = ? AND invite_code = ?");
 
         if (!$match) {
             $error = true;
@@ -854,17 +868,17 @@ class SSO
                         mysqli_query($this->con, "UPDATE group_users SET status = 1, uid = $newUID WHERE email = '$email'");
                     }
                 } else {
-                    return array('response' => 'error', 'code' => 3, 'msg' => implode('<br>', $msgs));
+                    return ['response' => 'error', 'code' => 3, 'msg' => implode('<br>', $msgs)];
                 }
             } else {
                 $error = true;
                 $code = 2;
-                $msg = 'The invite code provided is invalid.';    
+                $msg = 'The invite code provided is invalid.';
             }
         }
 
         if ($error) {
-            return array('response' => 'error', 'code' => $code, 'msg' => $msg);
+            return ['response' => 'error', 'code' => $code, 'msg' => $msg];
         }
     }
 
@@ -876,7 +890,7 @@ class SSO
         $decoded = $this->decodeToken($oauth);
         $email = $this->fields['email'];
 
-        $row = prepareQuery('s', [$oauth], "SELECT u.first_name, u.email, confirmed FROM confirmation AS c LEFT JOIN users AS u ON u.email = c.email WHERE token = ?");
+        $row = executeQuery('s', [$oauth], "SELECT u.first_name, u.email, confirmed FROM confirmation AS c LEFT JOIN users AS u ON u.email = c.email WHERE token = ?");
 
         if (isset($row['error'])) {
             return ['response' => 'error', 'code' => 500, 'msg' => "Database error: $row[message]"];
@@ -900,11 +914,11 @@ class SSO
                         $msg = 'The email address provided doesn\'t match our records.';
                     } else {
                         if ($row['email'] == $decoded['email']) {
-                            prepareQuery('s', [$oauth], "UPDATE confirmation SET confirmed = 1 WHERE token = ?");
+                            executeQuery('s', [$oauth], "UPDATE confirmation SET confirmed = 1 WHERE token = ?");
 
-                            sendEmail($email, 'Thanks for confirming your email', 'confirmed', array('{fname}' => $row['first_name'], '{email}' => $email));
+                            sendEmail($email, 'Thanks for confirming your email', 'confirmed', ['{fname}' => $row['first_name'], '{email}' => $email]);
 
-                            return array('response' => 'success', 'subscribed' => $this->fields['subscriber'] == 1 ? true : false);
+                            return ['response' => 'success', 'subscribed' => $this->fields['subscriber'] == 1 ? true : false];
                         } else {
                             $error = true;
                             $code = 4;
@@ -915,7 +929,7 @@ class SSO
             }
 
             if ($error) {
-                return array('response' => 'error', 'code' => $code, 'msg' => $msg);
+                return ['response' => 'error', 'code' => $code, 'msg' => $msg];
             }
         }
     }
@@ -941,7 +955,7 @@ class SSO
         $pass = $pass ? $pass : $this->generatePassword();
         $password = password_hash($pass, PASSWORD_DEFAULT);
 
-        $insert = prepareQuery('ssssssssss', [
+        $insert = executeQuery('ssssssssss', [
             $fname,
             $lname,
             $email,
@@ -962,14 +976,14 @@ class SSO
             if (!$uid) {
                 $out = ['response' => 'error', 'code' => 2, 'msg' => 'There was an error creating your account'];
             } else {
-                $ins1 = prepareQuery('is', [$uid, $time], "INSERT INTO settings (uid,settings,time) VALUES(?,'',?)");
-                $ins2 = prepareQuery('is', [$uid, $time], "INSERT INTO trail_settings (uid,settings,time) VALUES(?,'',?)");
-                $ins3 = prepareQuery('is', [$uid, $time], "INSERT INTO oreroads_settings (uid,settings,app_token,time) VALUES(?,'','',?)");
+                $ins1 = executeQuery('is', [$uid, $time], "INSERT INTO settings (uid,settings,time) VALUES(?,'',?)");
+                $ins2 = executeQuery('is', [$uid, $time], "INSERT INTO trail_settings (uid,settings,time) VALUES(?,'',?)");
+                $ins3 = executeQuery('is', [$uid, $time], "INSERT INTO oreroads_settings (uid,settings,app_token,time) VALUES(?,'','',?)");
 
                 if (isset($ins1['error']) || isset($ins2['error']) || isset($ins3['error'])) {
                     $out = ['response' => 'error', 'code' => 3, 'msg' => 'There was an error creating your account'];
                 } else {
-                    $out = array('response' => 'success', 'subscribe' => isset($this->fields['price_id']) ? true : false);
+                    $out = ['response' => 'success', 'subscribe' => isset($this->fields['price_id']) ? true : false];
 
                     // if user is starting a subscription
                     if (isset($this->fields['price_id'])) {
@@ -979,10 +993,10 @@ class SSO
                     }
 
                     if ($needToConfirm) {
-                        prepareQuery('s', [$email], "UPDATE confirmation SET valid = 0 WHERE email = ?");
-                        prepareQuery('ss', [$email, $tok], "INSERT INTO confirmation (email,token,confirmed) VALUES(?,?,'0')");
+                        executeQuery('s', [$email], "UPDATE confirmation SET valid = 0 WHERE email = ?");
+                        executeQuery('ss', [$email, $tok], "INSERT INTO confirmation (email,token,confirmed) VALUES(?,?,'0')");
 
-                        $fields = array('{fname}' => $fname, '{email}' => $email, '{token}' => $tok, '{subscribe}' => (isset($this->fields['price_id']) ? '&subscriber=1' : ''));
+                        $fields = ['{fname}' => $fname, '{email}' => $email, '{token}' => $tok, '{subscribe}' => (isset($this->fields['price_id']) ? '&subscriber=1' : '')];
                         sendEmail($email, 'Confirm your new account', 'newaccount', $fields);
                     }
                 }
@@ -1008,7 +1022,7 @@ class SSO
         $role = 1;
         $passVal = $this->validatePassword($this->fields['pass']);
 
-        $num = prepareQuery('ss', [$email, $phone], "SELECT uid FROM users WHERE email = ? OR (phone != '' AND phone = ?)");
+        $num = executeQuery('ss', [$email, $phone], "SELECT uid FROM users WHERE email = ? OR (phone != '' AND phone = ?)");
 
         if (isset($num['error'])) {
             $error = true;
@@ -1017,7 +1031,7 @@ class SSO
             if (count($num) == 0) {
                 $code = 2;
 
-                if (!$this->fields['tos'] == 1) {
+                if (!isset($this->fields['tos']) || $this->fields['tos'] != 1) {
                     $error = true;
                     $msgs[] = 'You must agree to our Terms and Privacy Policy to create an account.';
                 }
@@ -1069,7 +1083,7 @@ class SSO
         if (!$error) {
             return $this->createAccount($fname, $lname, $email, $pass, $ip, $role, $phone, $location);
         } else {
-            return array('response' => 'error', 'code' => $code, 'msg' => implode('<br>', $msgs));
+            return ['response' => 'error', 'code' => $code, 'msg' => implode('<br>', $msgs)];
         }
     }
 
@@ -1078,19 +1092,19 @@ class SSO
         global $function;
 
         $token = $this->fields['token'];
-        $row = prepareQuery('s', [$token], $this->sql(', token, expires', "LEFT JOIN sessions AS s ON s.uid = u.uid WHERE s.token = ?"));
+        $row = executeQuery('s', [$token], $this->sql(', token, expires', "LEFT JOIN sessions AS s ON s.uid = u.uid WHERE s.token = ?"));
 
         if (isset($row['error'])) {
             return ['response' => 'error', 'code' => 500, 'msg' => "Database error: $row[message]"];
         } else {
             if ($row) {
                 if ($row['expires'] == 0 || $row['expires'] < time()) {
-                    return array('response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.');
+                    return ['response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.'];
                 } else {
                     // update the user's information in the database
                     if ($function == 'location') {
                         $newLoc = serialize(json_decode($this->fields['location']));
-                        $update = prepareQuery('si', [$newLoc, $row['uid']], "UPDATE users SET location = ? WHERE uid = ?");
+                        $update = executeQuery('si', [$newLoc, $row['uid']], "UPDATE users SET location = ? WHERE uid = ?");
 
                         if (isset($update['error'])) {
                             return ['response' => 'error', 'code' => 3, 'msg' => 'There was an error updating your account'];
@@ -1103,21 +1117,21 @@ class SSO
 
                         // the user's email address has been changed
                         if ($this->fields['email'] != $row['email']) {
-                            sendEmail($this->fields['email'], 'Your account email was changed', 'changedemail', array('{fname}' => $this->fields['firstName']));
-                            sendEmail($row['email'], 'Your account email was changed', 'changedemail', array('{fname}' => $this->fields['firstName']));
+                            sendEmail($this->fields['email'], 'Your account email was changed', 'changedemail', ['{fname}' => $this->fields['firstName']]);
+                            sendEmail($row['email'], 'Your account email was changed', 'changedemail', ['{fname}' => $this->fields['firstName']]);
                         }
 
-                        $update = prepareQuery('ssssi', [$fn, $ln, $em, $ph, $row['uid']], "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ? WHERE uid = ?");
+                        $update = executeQuery('ssssi', [$fn, $ln, $em, $ph, $row['uid']], "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ? WHERE uid = ?");
 
                         if (isset($update['error'])) {
                             return ['response' => 'error', 'code' => 3, 'msg' => 'There was an error updating your account'];
                         }
                     }
 
-                    return array('success' => true, 'db' => $function);
+                    return ['success' => true, 'db' => $function];
                 }
             } else {
-                return array('response' => 'error', 'code' => 2, 'msg' => 'An invalid token was provided.');
+                return ['response' => 'error', 'code' => 2, 'msg' => 'An invalid token was provided.'];
             }
         }
     }
@@ -1128,13 +1142,13 @@ $sso = new SSO($con, $_REQUEST);
 
 # if no method was provided to the API
 if (empty($method)) {
-    $returnJson = array('error' => 403, 'msg' => 'Method forbidden');
+    $returnJson = ['error' => 403, 'msg' => 'Method forbidden'];
 } else {
     # check to make sure the ip address from the UI matches the IP from the server
-    $packages = array('com.mapollc.oreroads', 'com.mapollc.mapofire');
+    $packages = ['com.mapollc.oreroads', 'com.mapollc.mapofire'];
 
     if (isset($sso->fields['ip']) && $sso->fields['ip'] != $_SERVER['REMOTE_ADDR'] && (isset($_REQUEST['android']) && !in_array($_REQUEST['android'], $packages))) {
-        $returnJson = array('response' => 'error', 'code' => 100, 'msg' => 'Your IP address has changed. Please try again.');
+        $returnJson = ['response' => 'error', 'code' => 100, 'msg' => 'Your IP address has changed. Please try again.'];
     } else {
         # create a user account
         if ($method == 'register') {
@@ -1152,23 +1166,23 @@ if (empty($method)) {
             $token = $_REQUEST['token'];
 
             if (!$token) {
-                $returnJson = array('response' => 'error', 'code' => 2, 'msg' => 'An authentication token was not provided.');
+                $returnJson = ['response' => 'error', 'code' => 2, 'msg' => 'An authentication token was not provided.'];
             } else {
                 $validToken = $sso->validToken($token);
                 //print_r($validToken);
 
                 if (isset($validToken['exp']) && $validToken['exp'] < time()) {
-                    //prepareQuery('s', [$token], "UPDATE sessions SET expired = CASE WHEN expired != '0' THEN '0' ELSE expired END WHERE token = ?");
+                    //executeQuery('s', [$token], "UPDATE sessions SET expired = CASE WHEN expired != '0' THEN '0' ELSE expired END WHERE token = ?");
 
-                    $returnJson = array('response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.');
+                    $returnJson = ['response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.'];
                 } else if (isset($validToken['invalid'])) {
-                    $returnJson = array('response' => 'error', 'code' => 2, 'msg' => 'An invalid token was provided.');
+                    $returnJson = ['response' => 'error', 'code' => 2, 'msg' => 'An invalid token was provided.'];
                 } else if (isset($validToken['other'])) {
-                    $returnJson = array('response' => 'error', 'code' => 3, 'msg' => 'There was an error decoding your authentication token.');
+                    $returnJson = ['response' => 'error', 'code' => 3, 'msg' => 'There was an error decoding your authentication token.'];
                 } else {
                     $u = $function == 'devices' ? $sso->devices() : $sso->user();
                     //$returnJson = [$u];
-                    $returnJson = is_array($u) ? $u : array('response' => 'error', 'code' => 4, 'msg' => 'There was an error getting user data.');
+                    $returnJson = is_array($u) ? $u : ['response' => 'error', 'code' => 4, 'msg' => 'There was an error getting user data.'];
                 }
             }
         } # send user a reset password link

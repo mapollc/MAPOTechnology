@@ -19,7 +19,7 @@ if (!$permission->manage()->dispatch()) {
             $num = mysqli_num_rows(mysqli_query($con, "SELECT dcid FROM dispatch_centers WHERE agency = '$_POST[agency]"));
 
             if ($num == 0) {
-                prepareQuery('ssssissssi', [$_POST['agency'], $_POST['gacc'], $_POST['state'], $_POST['name'], 0, $_POST['timezone'], $_POST['location'], $_POST['website'], $_POST['phone'], $_POST['active']],
+                executeQuery('ssssissssi', [$_POST['agency'], $_POST['gacc'], $_POST['state'], $_POST['name'], 0, $_POST['timezone'], $_POST['location'], $_POST['website'], $_POST['phone'], $_POST['active']],
                 "INSERT INTO dispatch_centers (agency,gacc,state,name,cad_update,timezone,location,website,phone,active) VALUES(?,?,?,?,?,?,?,?,?,?)");
         
                 logEvent('Created a new dispatch center: ' . $_POST['name'] . ' (' . $_POST['agency'] . ')');
@@ -27,7 +27,7 @@ if (!$permission->manage()->dispatch()) {
                 echo message(false, "The dispatch center $_POST[agency] already exists. Try again.");
             }
         } else {
-            prepareQuery('ssssssssii', [$_POST['agency'], $_POST['gacc'], $_POST['state'], $_POST['name'], $_POST['timezone'], $_POST['location'], $_POST['website'], $_POST['phone'], $_POST['active'], $_POST['id']],
+            executeQuery('ssssssssii', [$_POST['agency'], $_POST['gacc'], $_POST['state'], $_POST['name'], $_POST['timezone'], $_POST['location'], $_POST['website'], $_POST['phone'], $_POST['active'], $_POST['id']],
             "UPDATE dispatch_centers SET agency = ?, gacc = ?, state = ?, name = ?, timezone = ?, location = ?, website = ?, phone = ?, active = ? WHERE dcid = ?");
             
             logEvent('Modified dispatch center: ' . $_POST['name'] . ' (' . $_POST['agency'] . ')');

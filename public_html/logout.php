@@ -27,6 +27,7 @@ function nextURL($next)
     return $base . $sep . $isLoggedOut . $hash;
 }
 
+
 $time = time();
 $token = $_SESSION['token'] ?? $_COOKIE['token'] ?? null;
 $isLoggedOut = !isset($_GET['expired']) || $_GET['expired'] != 1 ? 'loggedOut=1' : '';
@@ -34,13 +35,13 @@ $isLoggedOut = !isset($_GET['expired']) || $_GET['expired'] != 1 ? 'loggedOut=1'
 $secureURL = 'https://auth.mapotechnology.com/login?';
 
 if ($token) {
-    $user = prepareQuery('s', [$token], "SELECT u.uid FROM sessions AS s LEFT JOIN users AS u ON u.uid = s.uid WHERE token = ? LIMIT 1");
+    $user = executeQuery('s', [$token], "SELECT u.uid FROM sessions AS s LEFT JOIN users AS u ON u.uid = s.uid WHERE token = ? LIMIT 1");
 
     if ($user) {
-        $q1 = prepareQuery('si', [$time, $user['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
+        $q1 = executeQuery('si', [$time, $user['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
     }
 
-    prepareQuery('s', [$token], "UPDATE sessions SET expires = 0 WHERE token = ?");
+    executeQuery('s', [$token], "UPDATE sessions SET expires = 0 WHERE token = ?");
 
     setcookie('token', '', $time - 3600 * 24 * 365.25, "/", "." . $domain, true);
     

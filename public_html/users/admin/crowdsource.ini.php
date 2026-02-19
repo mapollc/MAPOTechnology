@@ -20,13 +20,13 @@ if (!$permission->view()->reports() && !$permission->manage()->reports()) {
         if (isset($_POST['verify']) || isset($_POST['reject'])) {
             $v = isset($_POST['verify']) ? 1 : 2;
             $det = json_encode(['user' => $_SESSION['uid'], 'userName' => $_SESSION['name'], 'reason' => $_POST['reason'], 'time' => time()]);
-            prepareQuery('isi', [$v, $det, $_POST['rid']], "UPDATE user_reports SET verified = ?, verification = ? WHERE id = ?");
+            executeQuery('isi', [$v, $det, $_POST['rid']], "UPDATE user_reports SET verified = ?, verification = ? WHERE id = ?");
 
             logEvent((isset($_POST['verify']) ? 'Verified' : 'Rejected').' a crowdsourced report: <a href="../crowdsource/view?id='.$_POST['rid'].'">#'.$_POST['fancyID'].'</a>');
             echo message(true, 'This report was successfully marked as '.(isset($_POST['verify']) ? 'verified' : 'rejected').'.');
         }
 
-        $row = prepareQuery('i', [$_GET['id']], "SELECT * FROM user_reports WHERE id = ?");
+        $row = executeQuery('i', [$_GET['id']], "SELECT * FROM user_reports WHERE id = ?");
         $year = date('Y', $row['time']);
         $ex = json_decode($row['verification']);
         $geo = json_decode($row['geo']);

@@ -47,7 +47,9 @@ echo $hidden;
 
 <div id="g_id_onload"
     data-client_id="<?= $google_client_id ?>"
-    data-login_uri="https://auth.mapotechnology.com<?= $_SERVER['REQUEST_URI'] ?>"
-    data-context="signin" data-ux_mode="redirect"
-    data-callback="loginWithGoogle"
-    data-auto_prompt="false" <?= $redirectURI ? ' data-state="' . $redirectURI . '"' : '' ?>></div>
+    data-login_uri="https://auth.mapotechnology.com<?= $_SERVER['REDIRECT_URL'] ?>"
+    data-context="signin"
+    data-ux_mode="redirect"
+    data-auto_prompt="false"<?= $redirectURI ? '
+    data-state="state=' . base64_encode($redirectURI) . '"' : '' ?>>
+</div>

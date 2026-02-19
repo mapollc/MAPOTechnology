@@ -4,6 +4,9 @@ session_start();
 
 $stableVersion = '1.5';
 
+include_once '/home/mapo/guid.inc.php';
+setupGUID();
+
 /*if ($_SERVER['SCRIPT_URI'] == 'https://www.mapotechnology.com/oregonroads/app') {
     header('Location: https://apps.mapotechnology.com/oregonroads');
     exit();
@@ -17,7 +20,7 @@ if (strpos($_SERVER['REQUEST_URI'], 'oreroads') !== false) {
 // use the script to update user's last active time
 if (isset($_SESSION['visited']) && time() - $_SESSION['visited'] > 600) {
     require_once '/home/mapo/database.inc.php';
-    prepareQuery('ii', [time(), $_SESSION['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
+    executeQuery('ii', [time(), $_SESSION['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
     mysqli_close($con);
 }
 $_SESSION['visited'] = time();
@@ -33,7 +36,7 @@ foreach ($files as $file) {
 }
 
 $build = date('Y-m-d\TH:i:sO', max($times));
-$mapboxVersion = '3.17.0';
+$mapboxVersion = '3.18.1';
 $version = isset($_GET['version']) ? $_GET['version'] : $stableVersion;
 ?>
 <!DOCTYPE html>
@@ -97,7 +100,7 @@ $version = isset($_GET['version']) ? $_GET['version'] : $stableVersion;
     <script src="https://api.mapbox.com/mapbox-gl-js/v<?=$mapboxVersion?>/mapbox-gl.js"></script>
     <?if (!isset($_GET['version'])) {?>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J2PB456CE6"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-J2PB456CE6');</script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-J2PB456CE6',{'user_id':'<?= $_COOKIE['guid'] ?>'});</script>
     <?} if (isset($_GET['version'])) {?>
     <script src="https://apps.mapotechnology.com/oreroads/v<?=$_GET['version']?>/init.js"></script>
     <script src="https://apps.mapotechnology.com/oreroads/v<?=$_GET['version']?>/app.js"></script>

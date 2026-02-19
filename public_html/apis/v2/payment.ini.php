@@ -53,7 +53,7 @@ if ($method == 'subscriptions') {
                 if (!$plan->isPlan($newPriceID)) {
                     $returnJson = ['response' => 'error', 'code' => 999, 'msg' => 'The new subscription requested is not valid.'];
                 } else {
-                    $det = prepareQuery('s', [$subID], "SELECT * FROM billing WHERE subscription = ? LIMIT 1");
+                    $det = executeQuery('s', [$subID], "SELECT * FROM billing WHERE subscription = ? LIMIT 1");
                     $plan->setPlan(null, $det['plan']);
 
                     if (str_contains($plan->getPriceName(), 'ignite')) {

@@ -3,12 +3,16 @@ RewriteBase /
 Options +Indexes
 Options +FollowSymlinks
 
+SetEnv JWT_SECRET "mZ9x!F@p7qL#2r8uV^wT&yQ*eR$hJ1kN"
+
 DirectoryIndex index.php index.html
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.+)$ /$1.php [L,QSA]
+
+RewriteRule ^favicon.ico https://www.mapotechnology.com/assets/images/favicon.ico [L]
 
 # APIs REWRITE
 RewriteRule ^v([^/]*)/([^/]*)$ /index.php?version=$1&api=$2 [L,QSA]

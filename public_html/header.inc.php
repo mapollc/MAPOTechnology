@@ -4,6 +4,9 @@ ini_set('session.cookie_domain', ".$host");
 
 session_start();
 
+include_once '/home/mapo/guid.inc.php';
+setupGUID();
+
 $domain = '//mapotechnology.com/';
 $logoURL = str_contains($host, $domain) ? $domain : "//$host";
 
