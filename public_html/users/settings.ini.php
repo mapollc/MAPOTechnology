@@ -22,8 +22,9 @@ if ($method == 'delete') {
 
             echo message(true, 'Your profile settings were successfully updated.');
         } else if ($_POST['action'] == 'location') {
-            if ($_POST['location'] != '') {
-                $l = serialize(json_decode($_POST['location']));
+            $l = $_POST['location'];
+
+            if ($l != '') {
                 executeQuery('si', [$l, $_SESSION['uid']], "UPDATE users SET location = ? WHERE uid = ?");
 
                 echo message(true, 'Your location settings were successfully updated.');
@@ -162,24 +163,30 @@ if ($method == 'delete') {
             <input type="password" name="confirm_pass" class="input" placeholder="Confirm Password" <?= (!$passwordOn ? ' disabled' : '') ?>>
 
             <div id="meets" style="display:none;font-size:14px;color:var(--red)">Your passwords don't match</div>
-        <? } else if ($method == 'location') { ?>
+        <? } else if ($method == 'location') {
+            if ($profile['location'] == '') {
+                echo message(false, 'Your currently don\'t have a home location saved.');
+            } else {
+                $profileLocation = json_decode($profile['location']);
+            }
+            ?>
             <input type="hidden" name="action" value="location">
             <input type="hidden" name="location" value=''>
 
             <label>City</label>
-            <input type="text" name="city" disabled class="input" value="<?= $user['location']->city ?>">
+            <input type="text" name="city" disabled class="input" value="<?= $profileLocation->city ?>">
 
             <label>State</label>
-            <input type="text" name="state" disabled class="input" value="<?= $user['location']->state ?>">
+            <input type="text" name="state" disabled class="input" value="<?= $profileLocation->state ?>">
 
             <label>Zip Code</label>
-            <input type="text" name="zip" disabled class="input" value="<?= $user['location']->zip ?>">
+            <input type="text" name="zip" disabled class="input" value="<?= $profileLocation->zip ?>">
 
             <label>Latitude</label>
-            <input type="text" name="lat" class="input" disabled value="<?= $user['location']->lat ?>">
+            <input type="text" name="lat" class="input" disabled value="<?= $profileLocation->lat ?>">
 
             <label>Longitude</label>
-            <input type="text" name="lon" class="input" disabled value="<?= $user['location']->lon ?>">
+            <input type="text" name="lon" class="input" disabled value="<?= $profileLocation->lon ?>">
 
             <label>Search Locations</label>
             <input type="text" class="input" id="q" autocomplete="off" placeholder="Change your city...">

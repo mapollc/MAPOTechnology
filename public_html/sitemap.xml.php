@@ -78,10 +78,16 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
         <loc>https://www.mapotechnology.com/mapofire</loc>
     </url>
     <url>
-        <loc>https://www.mapotechnology.com/secure/login</loc>
+        <loc>https://auth.mapotechnology.com/login</loc>
     </url>
     <url>
-        <loc>https://www.mapotechnology.com/secure/register</loc>
+        <loc>https://auth.mapotechnology.com/register</loc>
+    </url>
+    <url>
+        <loc>https://auth.mapotechnology.com/forgot</loc>
+    </url>
+    <url>
+        <loc>https://www.mapotechnology.com/purchase/mapofire</loc>
     </url>
     
 </urlset>

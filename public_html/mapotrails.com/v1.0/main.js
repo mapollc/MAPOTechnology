@@ -2399,9 +2399,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('account').onclick = () => {
         if (user.uid) {
-            window.location.href = 'https://www.mapotechnology.com/account/home?ref=mapotrails';
+            window.location.href = '//mapotechnology.com/account/home?ref=mapotrails';
         } else {
-            window.location.href = 'https://www.mapotechnology.com/secure/login?fail=1&src=mapotrails&next=' + encodeURIComponent(window.location.href);
+            window.location.href = 'https://auth.mapotechnology.com/login?fail=1&src=mapotrails&next=' + encodeURIComponent(window.location.href);
         }
     };
 

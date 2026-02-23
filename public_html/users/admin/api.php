@@ -178,7 +178,7 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
         $row = mysqli_fetch_assoc(mysqli_query($con, "SELECT password, phone FROM users WHERE uid = '$_REQUEST[uid]'"));
 
         if ($mode == 'location') {
-            $geo = mysqli_real_escape_string($con, serialize(json_decode($_REQUEST['geo'])));
+            $geo = mysqli_real_escape_string($con, $_REQUEST['geo']);
 
             mysqli_query($con, "UPDATE users SET location = '$geo' WHERE uid = '$_REQUEST[uid]'");
             $out = 'success';

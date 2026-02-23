@@ -54,7 +54,7 @@ if (isset($_POST) && isset($_POST['price'])) {
 
         header('Location: https://www.mapofire.com/purchase/complete?price=' . $_POST['price'] . ($_POST['trial'] ? '&trial=1' : '') . ($email != null ? '&customer_email=' . $email : ''));
     } else {
-        $url = 'https://www.mapotechnology.com/secure/register?service=mapofire&subscribe=1&price_id=' . $_POST['price'] . ($_POST['trial'] ? '&trial=1' : '');
+        $url = 'https://auth.mapotechnology.com/register?service=mapofire&subscribe=1&price_id=' . $_POST['price'] . ($_POST['trial'] ? '&trial=1' : '');
         #echo $url;
         header("Location: $url");
     }

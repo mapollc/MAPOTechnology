@@ -36,12 +36,11 @@ include_once 'header.inc.php';
                 <img loading="lazy" src="assets/images/VID_20191226_125631.jpg" alt="About MAPO" style="max-width:500px">
             </div>
             <div class="col-md-6 col-sm-12 mt-md-0 mt-sm-4">
-                <p>MĂPO (pronounced MAP-oh) started as a collaboration between colleagues seeking to develop a better way to organize, search, track, and find information&mdash;primarily wildfires and 
-                    recreation opportunities. As passionate technology users, we began combining data, technology, and subject-matter knowledge into the services we wanted to share
-                    with everyone.</p>
-                <p>MAPO serves as a platform to give everyone access to public safety data, wildfire information, recreation opportunities, and more. We work many hours, for free, to 
-                    provide these services and content on our sites. Please consider contributing to help further our endeavours.</p>
-                <p class="text-center mt-3"><a class="btn btn-lg btn-red" href="checkout?price_id=price_1MgyLjIpCdpJm6cT9D5pnE9C"><i class="fas fa-heart"></i> Make a contribution</a></p>
+                <p>MĂPO (pronounced MAP-oh) started as a collaboration between colleagues seeking to develop a better way to organize, search, track, and find 
+                    information&mdash;primarily wildfires and recreation opportunities. As passionate technology users, we began combining data, technology, and 
+                    subject-matter knowledge into the services we wanted to share with everyone.</p>
+
+                <p>MAPO serves as a platform to give everyone access to public safety data, wildfire information, recreation opportunities, and more.</p>
             </div>
         </div>
     </div>
@@ -53,8 +52,9 @@ include_once 'header.inc.php';
             <div class="col">
                 <h1 class="text-center">Map of Fire: Wildfire Mapping</h1>
 
-                <p class="text-center">Wildfires are becoming increasingly inevitable in the US and modern technology to track and disseminate information is necessary. We built Map of Fire to report on
-                    all wildfire incidents. We've added more than 20 other wildfire-centric features to the map, making it one of the most comprehensive tools available for firefighters and community members.</p>
+                <p class="text-center">Wildfires are becoming increasingly inevitable in the US and modern technology to track and disseminate information is necessary. We 
+                    built Map of Fire to report on all wildfire incidents. We've added more than 20 other wildfire-centric features to the map, making it one of the most 
+                    comprehensive tools available for firefighters and community members. <a href="//mapofire.com/about">Learn more</a>.</p>
 
                 <div class="row align-items-center mt-4">
                     <div class="col-md-6 col-sm-12">
@@ -71,7 +71,7 @@ include_once 'header.inc.php';
                             <div class="overlay">    
                                 <h6>Weather</h6>
                                 <p>We incorporated nearly a dozen weather layers into our maps. This includes lightning for the past 24 hours, radar, satellite, weather alerts, and more. 
-                                    We pull current conditions from over 90,000 weather stations in the US.</p>
+                                    We pull conditions from over 90,000 weather stations in the US.</p>
                             </div>
                         </div>
                     </div>
@@ -87,8 +87,8 @@ include_once 'header.inc.php';
                 </div>
             
                 <div class="btn-group centered" style="margin:5em 0 0 0">
-                    <a href="https://www.mapofire.com?utm_campaign=mapotrails&utm_source=mapotechnology.com&utm_medium=front_page" class="btn btn-lg btn-orange">START TRACKING WILDFIRES</a>
-                    <a href="https://play.google.com/store/apps/details?id=com.mapollc.mapofire" class="btn btn-black"><i class="fab fa-android"></i>Get the app</a>
+                    <a href="./purchase/mapofire?utm_campaign=mapofire&utm_source=mapotechnology.com&utm_medium=front_page" class="btn btn-lg btn-orange">Try it free for 7 days</a>
+                    <a href="https://www.mapofire.com?utm_campaign=mapofire&utm_source=mapotechnology.com&utm_medium=front_page" class="btn btn-lg btn-black">START TRACKING WILDFIRES</a>
                 </div>
             </div>
         </div>

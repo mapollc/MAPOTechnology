@@ -47,7 +47,7 @@ if (date('H') < 11) {
 }
 
 if (!isset($_SESSION['uid'])) {
-    $acctLink = 'https://www.mapotechnology.com/secure/login?next='.urlencode($_SERVER['REQUEST_URI']);
+    $acctLink = 'https://auth.mapotechnology.com/login?next='.urlencode($_SERVER['REQUEST_URI']);
 } else {
     $acctLink = 'https://www.mapotechnology.com/account/home';
 }

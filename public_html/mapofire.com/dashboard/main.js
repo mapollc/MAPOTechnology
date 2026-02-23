@@ -1,4 +1,4 @@
-let clock, settings = null, stats = null;
+let map, init, clock, settings = null, stats = null, dashboardType = document.body.id;
 const config = {
     host: `https://${window.location.host}/`,
     domain: 'https://www.mapotechnology.com/',
@@ -9,19 +9,19 @@ const config = {
     incidents: new Map(),
     REFRESH_IN: 5,
     HOURS_NEW: 12
+};
+const listOfGACCs = {
+    'AICC': 'Alaska',
+    'EACC': 'Eastern Area',
+    'GBCC': 'Great Basin',
+    'NRCC': 'Northern Rockies',
+    'NWCC': 'Northwest',
+    'ONCC': 'Northern California',
+    'OSCC': 'Southern California',
+    'RMCC': 'Rocky Mountain',
+    'SACC': 'Southern Area',
+    'SWCC': 'Southwest'
 },
-    listOfGACCs = {
-        'AICC': 'Alaska',
-        'EACC': 'Eastern Area',
-        'GBCC': 'Great Basin',
-        'NRCC': 'Northern Rockies',
-        'NWCC': 'Northwest',
-        'ONCC': 'Northern California',
-        'OSCC': 'Southern California',
-        'RMCC': 'Rocky Mountain',
-        'SACC': 'Southern Area',
-        'SWCC': 'Southwest'
-    },
     federalAgencies = [
         'Bureau of Indian Affairs',
         'Bureau of Land Management',
@@ -151,6 +151,78 @@ const config = {
         'YT': { name: 'Yukon', center: [-135.0, 62.0] }
     };
 
+(function (global) {
+    function Extent() {
+        this._bbox = [Infinity, Infinity, -Infinity, -Infinity];
+        this._valid = false;
+    }
+    Extent.prototype.include = function ([lng, lat]) {
+        this._valid = true;
+        this._bbox[0] = Math.min(this._bbox[0], lng);
+        this._bbox[1] = Math.min(this._bbox[1], lat);
+        this._bbox[2] = Math.max(this._bbox[2], lng);
+        this._bbox[3] = Math.max(this._bbox[3], lat);
+        return this;
+    };
+    Extent.prototype.bbox = function () { return this._valid ? this._bbox : null; };
+    Extent.prototype.polygon = function () {
+        if (!this._valid) return null;
+        const [minX, minY, maxX, maxY] = this._bbox;
+        return { type: "Polygon", coordinates: [[[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY], [minX, minY]]] };
+    };
+
+    function geojsonCoords(gj) {
+        const coords = [];
+        function flatten(obj) {
+            if (!obj) return;
+            switch (obj.type) {
+                case "FeatureCollection": obj.features.forEach(flatten); break;
+                case "Feature": flatten(obj.geometry); break;
+                case "GeometryCollection": obj.geometries.forEach(flatten); break;
+                default:
+                    if (Array.isArray(obj.coordinates)) {
+                        const stack = [obj.coordinates];
+                        while (stack.length) {
+                            const item = stack.pop();
+                            typeof item[0] === "number" ? coords.push(item) : stack.push(...item);
+                        }
+                    }
+            }
+        }
+        flatten(gj);
+        return coords;
+    }
+
+    function traverse(obj, fn) {
+        if (!obj || typeof obj !== "object") return;
+        fn(obj);
+        Object.values(obj).forEach(v => traverse(v, fn));
+    }
+
+    function geojsonExtent(gj) {
+        const ext = new Extent();
+        geojsonCoords(gj).forEach(c => ext.include(c));
+        return ext.bbox();
+    }
+
+    geojsonExtent.polygon = function (gj) {
+        const ext = new Extent();
+        geojsonCoords(gj).forEach(c => ext.include(c));
+        return ext.polygon();
+    };
+
+    geojsonExtent.bboxify = function (obj) {
+        const geojsonTypes = ["FeatureCollection", "Feature", "GeometryCollection", "Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon"];
+        traverse(obj, function (v) {
+            if (v && v.type && geojsonTypes.includes(v.type)) {
+                v.bbox = geojsonExtent(v);
+            }
+        });
+    };
+
+    global.geojsonExtent = geojsonExtent;
+})(window);
+
 function ucfirst(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -260,68 +332,301 @@ function timeAgo(t, w, c) {
     return val + ' ago';
 }
 
-function updated() {
-    let timeLeft = config.REFRESH_IN * 60;
-    const el = document.querySelector('#now');
+class Init {
+    constructor() {
+        this.howManyFires = 15;
+        this.wildfires = [];
+    }
 
-    const timer = setInterval(() => {
-        const minutes = Math.floor(timeLeft / 60),
-            seconds = timeLeft % 60;
+    processFires(json, type) {
+        if (!json || !json.features?.length) return;
 
-        if (window.getComputedStyle(el).display == 'none') el.style.display = 'block';
-        el.textContent = 'Next update in ' + String(minutes).padStart(1, '0') + ':' + String(seconds).padStart(2, '0');
+        const key = type === 'new' || type === 'all' ? 'all' : type;
 
-        if (timeLeft === 0) {
-            clearInterval(timer);
-            document.querySelectorAll('p.stat').forEach(item => {
-                item.innerHTML = '<span class="loading"></span>';
+        const existing = config.incidents.get(key) || [];
+        config.incidents.set(key, [...existing, ...json.features]);
+    }
+
+    updated() {
+        let timeLeft = config.REFRESH_IN * 60;
+        const el = document.querySelector('#now');
+
+        const timer = setInterval(() => {
+            const minutes = Math.floor(timeLeft / 60),
+                seconds = timeLeft % 60;
+
+            if (window.getComputedStyle(el).display == 'none') el.style.display = 'block';
+            el.textContent = 'Next update in ' + String(minutes).padStart(1, '0') + ':' + String(seconds).padStart(2, '0');
+
+            if (timeLeft === 0) {
+                clearInterval(timer);
+                document.querySelectorAll('p.stat').forEach(item => {
+                    item.innerHTML = '<span class="loading"></span>';
+                });
+                document.querySelector('#fetchTime').textContent = '';
+                document.querySelector('#wildfireList').innerHTML = '<span class="loading"></span>';
+                document.querySelector('#newFiresList').innerHTML = '<span class="loading"></span>';
+
+                config.incidents.clear('all');
+                config.incidents.clear('smk');
+                config.incidents.clear('rx');
+
+                init.getFireData();
+            }
+
+            timeLeft--;
+        }, 1000);
+    }
+
+    async getFireData() {
+        try {
+            stats = new Stats();
+
+            const types = ['all', 'new', 'smk', 'rx'];
+
+            await Promise.all(types.map(async (type, _) => {
+                const fires = await api(`${config.apiURL}wildfires/${type}`);
+                this.processFires(fires, type);
+            }));
+
+            this.updated();
+
+            const outStats = '%5B%7B"onStatisticField"%3A"TotalIncidentPersonnel"%2C"outStatisticFieldName"%3A"PEOPLE"%2C"statisticType"%3A"sum"%7D%2C%7B"onStatisticField"%3A"EstimatedCostToDate"%2C"outStatisticFieldName"%3A"COST"%2C"statisticType"%3A"sum"%7D%2C%7B"onStatisticField"%3A"FireCause"%2C"outStatisticFieldName"%3A"CAUSE"%2C"statisticType"%3A"count"%7D%2C%7B"onStatisticField"%3A"CASE+WHEN+FinalAcres+>%3D+IncidentSize+AND+FinalAcres+>%3D+DiscoveryAcres+THEN+FinalAcres+WHEN+IncidentSize+>%3D+DiscoveryAcres+THEN+IncidentSize+ELSE+DiscoveryAcres+END"%2C"outStatisticFieldName"%3A"ACRES"%2C"statisticType"%3A"sum"%7D%5D',
+                outStats2 = '%5B%7B"onStatisticField"%3A"PrimaryFuelModel"%2C"outStatisticFieldName"%3A"COUNT"%2C"statisticType"%3A"count"%7D%5D';
+
+            stats.supp = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_YearToDate/FeatureServer/0/query?where=FireOutDateTime+IS+NULL+AND+IncidentTypeCategory+%3D+%27WF%27&&outFields=*&returnGeometry=false&returnCountOnly=false&groupByFieldsForStatistics=FireCause&outStatistics=' + outStats + '&f=json');
+            stats.fuels = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_YearToDate/FeatureServer/0/query?where=FireOutDateTime+IS+NULL+AND+IncidentTypeCategory+%3D+%27WF%27&&outFields=*&returnGeometry=false&returnCountOnly=false&groupByFieldsForStatistics=PrimaryFuelModel&outStatistics=' + outStats2 + '&f=json');
+
+            stats.init();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    ucwords(s) {
+        const smallWords = new Set([
+            "a",
+            "an",
+            "the",
+            "is",
+            "of",
+            "and",
+            "or",
+            "for",
+            "to",
+            "in",
+            "on",
+            "at",
+            "by",
+            "with"
+        ]);
+        return s
+            .split(" ")
+            .map((word, i) =>
+                i === 0 || !smallWords.has(word.toLowerCase())
+                    ? word.charAt(0).toUpperCase() + word.slice(1)
+                    : word.toLowerCase()
+            )
+            .join(" ");
+    }
+
+    fireName(n) {
+        const cleanedName = n.replace(/^\d+(?=\D)\s?/, "");
+        return ucwords(cleanedName.toLowerCase()) + " Fire";
+    }
+
+    async getTopFires() {
+        const list = document.querySelector("table#data tbody");
+        const fires = await api(
+            "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0/query?geometryPrecision=5&returnGeometry=false&where=1%3D1&outFields=OBJECTID,attr_InitialLatitude,attr_InitialLongitude,attr_FireDiscoveryDateTime,attr_POOState,attr_IncidentName,attr_UniqueFireIdentifier,poly_GISAcres,poly_Acres_AutoCalc&orderByFields=poly_GISAcres DESC&resultRecordCount=" + this.howManyFires + "&f=json"
+        );
+
+        document.querySelector("table#data tbody").innerHTML = "";
+
+        fires.features.forEach((fire, i) => {
+            const attr = fire.attributes;
+
+            this.wildfires.push({
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [
+                        attr.attr_InitialLongitude,
+                        attr.attr_InitialLatitude
+                    ]
+                },
+                properties: attr
             });
-            document.querySelector('#fetchTime').textContent = '';
-            document.querySelector('#wildfireList').innerHTML = '<span class="loading"></span>';
-            document.querySelector('#newFiresList').innerHTML = '<span class="loading"></span>';
 
-            config.incidents.clear('all');
-            config.incidents.clear('smk');
-            config.incidents.clear('rx');
+            const date = Intl.DateTimeFormat("en-US", {
+                year: "numeric"
+            }).format(attr.attr_FireDiscoveryDateTime),
+                name = this.fireName(attr.attr_IncidentName),
+                state = attr.attr_POOState.replace("US-", ""),
+                acres = Intl.NumberFormat("en-US", {
+                    maximumFractionDigits: 0
+                }).format(attr.poly_GISAcres);
 
-            getFireData();
+            const row = document.createElement("tr");
+            row.addEventListener('click', () => {
+                this.goToPerimeter(attr.OBJECTID);
+            });
+
+            row.innerHTML = `<td>#${i + 1}</td><td data-label="State">${state}</td><td data-label="Fire Name">${name}</td>
+                <td class="acres" data-label="Acres Burned">${acres}</td><td data-label="Year">${date}</td>`;
+
+            list.appendChild(row);
+        });
+
+        this.plotFires();
+    }
+
+    mapping() {
+        map = new maplibregl.Map({
+            container: 'map',
+            zoom: 3.3,
+            center: [-97.20712626971056, 40.642220251322556],
+            style: config.host + 'data/maps/terrain.json',
+            projection: 'mercator',
+            hash: false,
+            maxPitch: 0,
+            attributionControl: false
+        });
+
+        map.once('load', () => {
+            map.addControl(new maplibregl.NavigationControl({
+                showCompass: false,
+                showZoom: true,
+                visualizePitch: true
+            }), 'bottom-right');
+        });
+
+        map.on('style.load', async () => {
+            const img = await map.loadImage(`${config.domain}assets/images/icons/fire/fire-icon-large.png`);
+            map.addImage('fire-icon', img.data);
+        });
+    }
+
+    async plotFires() {
+        if (!map.getSource('fires')) {
+            map.addSource('fires', {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: this.wildfires
+                }
+            });
         }
 
-        timeLeft--;
-    }, 1000);
-}
+        if (!map.getLayer('fires')) {
+            map.addLayer({
+                id: 'fires',
+                type: 'symbol',
+                source: 'fires',
+                layout: {
+                    'icon-image': 'fire-icon',
+                    'icon-size': 0.35,
+                    'icon-allow-overlap': true
+                }
+            });
 
-function processFires(json, type) {
-    if (!json || !json.features?.length) return;
+            map.on('mouseenter', 'fires', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
 
-    const key = type === 'new' || type === 'all' ? 'all' : type;
+            map.on('mouseleave', 'fires', () => {
+                map.getCanvas().style.cursor = 'default';
+            });
+        }
 
-    const existing = config.incidents.get(key) || [];
-    config.incidents.set(key, [...existing, ...json.features]);
-}
+        map.on('click', 'fires', (e) => {
+            const query = map.queryRenderedFeatures(e.point);
 
-async function getFireData() {
-    try {
-        stats = new Stats();
+            if (query) {
+                query.forEach(feat => {
+                    if (feat.layer.id == 'fires') {
+                        this.goToPerimeter(feat.properties.OBJECTID);
+                        return;
+                    }
+                });
+            }
+        });
+    }
 
-        const types = ['all', 'new', 'smk', 'rx'];
+    async goToPerimeter(id) {
+        if (document.querySelector('#standby') == null) {
+            const div = document.createElement('div');
+            div.id = 'standby';
+            div.innerHTML = '<div class="loading"></div>';
+            document.body.append(div);
+        }
 
-        await Promise.all(types.map(async (type, _) => {
-            const fires = await api(`${config.apiURL}wildfires/${type}`);
-            processFires(fires, type);
-        }));
+        const fire = await api(
+            "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0/query?geometryPrecision=5&returnGeometry=true&where=OBJECTID%3D" + id + "&outFields=OBJECTID,attr_InitialLatitude,attr_InitialLongitude,attr_FireDiscoveryDateTime,attr_POOState,attr_IncidentName,attr_UniqueFireIdentifier,poly_GISAcres,poly_Acres_AutoCalc&f=geojson"
+        );
 
-        updated();
+        if (!map.getSource('perimeter')) {
+            map.addSource('perimeter', {
+                type: 'geojson',
+                data: fire
+            });
+        } else {
+            map.getSource('perimeter').setData(fire);
+        }
 
-        const outStats = '%5B%7B"onStatisticField"%3A"TotalIncidentPersonnel"%2C"outStatisticFieldName"%3A"PEOPLE"%2C"statisticType"%3A"sum"%7D%2C%7B"onStatisticField"%3A"EstimatedCostToDate"%2C"outStatisticFieldName"%3A"COST"%2C"statisticType"%3A"sum"%7D%2C%7B"onStatisticField"%3A"FireCause"%2C"outStatisticFieldName"%3A"CAUSE"%2C"statisticType"%3A"count"%7D%2C%7B"onStatisticField"%3A"CASE+WHEN+FinalAcres+>%3D+IncidentSize+AND+FinalAcres+>%3D+DiscoveryAcres+THEN+FinalAcres+WHEN+IncidentSize+>%3D+DiscoveryAcres+THEN+IncidentSize+ELSE+DiscoveryAcres+END"%2C"outStatisticFieldName"%3A"ACRES"%2C"statisticType"%3A"sum"%7D%5D',
-            outStats2 = '%5B%7B"onStatisticField"%3A"PrimaryFuelModel"%2C"outStatisticFieldName"%3A"COUNT"%2C"statisticType"%3A"count"%7D%5D';
+        document.querySelector('#standby')?.remove();
 
-        stats.supp = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_YearToDate/FeatureServer/0/query?where=FireOutDateTime+IS+NULL+AND+IncidentTypeCategory+%3D+%27WF%27&&outFields=*&returnGeometry=false&returnCountOnly=false&groupByFieldsForStatistics=FireCause&outStatistics=' + outStats + '&f=json');
-        stats.fuels = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_YearToDate/FeatureServer/0/query?where=FireOutDateTime+IS+NULL+AND+IncidentTypeCategory+%3D+%27WF%27&&outFields=*&returnGeometry=false&returnCountOnly=false&groupByFieldsForStatistics=PrimaryFuelModel&outStatistics=' + outStats2 + '&f=json');
+        map.fitBounds(geojsonExtent(fire.features[0].geometry), {
+            padding: 40
+        });
 
-        stats.init();
-    } catch (e) {
-        console.error(e);
+        if (!map.getLayer('perimeter_outline')) {
+            map.addLayer({
+                id: 'perimeter_outline',
+                type: 'line',
+                source: 'perimeter',
+                paint: {
+                    'line-width': 2,
+                    'line-color': '#ed254e',
+                    'line-opacity': 0.85
+                }
+            });
+        }
+
+        if (!map.getLayer('perimeter')) {
+            map.addLayer({
+                id: 'perimeter',
+                type: 'fill',
+                source: 'perimeter',
+                paint: {
+                    'fill-color': '#ed254e',
+                    'fill-opacity': 0.375
+                }
+            }, 'fires');
+
+            map.on('mouseenter', 'perimeter', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'perimeter', () => {
+                map.getCanvas().style.cursor = 'default';
+            });
+        }
+
+        map.on('click', 'perimeter', (e) => {
+            const query = map.queryRenderedFeatures(e.point);
+
+            if (query) {
+                query.forEach(feat => {
+                    if (feat.layer.id == 'perimeter') {
+                        map.fitBounds(geojsonExtent(feat.geometry), {
+                            padding: 40
+                        });
+                        return;
+                    }
+                });
+            }
+        });
     }
 }
 
@@ -679,10 +984,6 @@ class Stats {
     }
 }
 
-function init() {
-    getFireData();
-}
-
 function updateTabPos(tab) {
     document.querySelectorAll('ul.tabs li').forEach(t => t.classList.remove('active'));
     document.querySelector('ul.tabs li[data-tab="' + tab + '"]').classList.add('active');
@@ -692,28 +993,37 @@ function updateTabPos(tab) {
 }
 
 document.onreadystatechange = () => {
+    init = new Init();
+
     if (document.readyState != 'complete') {
-        settings = JSON.parse(localStorage.getItem('mapofire.dashboard.settings')) ?? null;
+        if (dashboardType != 'top') {
+            settings = JSON.parse(localStorage.getItem('mapofire.dashboard.settings')) ?? null;
 
-        if (settings != null) {
-            const typeFilter = document.querySelector('#typeFilter'),
-                sizeFilter = document.querySelector('#sizeFilter');
+            if (settings != null) {
+                const typeFilter = document.querySelector('#typeFilter'),
+                    sizeFilter = document.querySelector('#sizeFilter');
 
-            Array.from(sizeFilter.options).forEach(opt => {
-                opt.selected = settings.size == opt.value;
-            });
+                Array.from(sizeFilter.options).forEach(opt => {
+                    opt.selected = settings.size == opt.value;
+                });
 
-            Array.from(typeFilter.options).forEach(opt => {
-                opt.selected = settings.types.includes(opt.value);
-            });
+                Array.from(typeFilter.options).forEach(opt => {
+                    opt.selected = settings.types.includes(opt.value);
+                });
 
-            typeFilter.dispatchEvent(new Event('change'));
-            sizeFilter.dispatchEvent(new Event('change'));
+                typeFilter.dispatchEvent(new Event('change'));
+                sizeFilter.dispatchEvent(new Event('change'));
+            }
+
+            updateTabPos(settings?.tab || 'largest');
         }
-
-        updateTabPos(settings?.tab || 'largest');
     } else {
-        init();
+        if (dashboardType == 'top') {
+            init.getTopFires();
+            init.mapping();
+        } else {
+            init.getFireData();
+        }
     }
 };
 

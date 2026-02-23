@@ -4,5 +4,5 @@
     echo '<input type="hidden" name="subscriber" value="1">';
 } ?>
 
-<p style="font-size:18px;text-align:center">Confirm your email address, <b><?= $_GET['email'] ?></b>?</p>
-<input type="submit" class="btn btn-lg btn-blue" data-o="Accept Invite" value="Accept Invite">
+<p style="padding:1em 0;font-size:18px;text-align:center">Confirm your email address, <b><?= $_GET['email'] ?></b>?</p>
+<input type="submit" class="btn btn-lg btn-blue" data-o="Confirm Email" value="Confirm Email">

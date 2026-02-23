@@ -12,6 +12,7 @@ class SSO
     public $request;
     public $domain;
     public $fields;
+    public $ip;
     public $con;
     private $secretKey;
     public $source = 'mapotechnology';
@@ -19,6 +20,11 @@ class SSO
     public $nextURL = null;
     public $token = null;
     public $guid;
+    public $maxLoginWindow;
+    public $maxEmailAttempts;
+    public $maxIPAttempts;
+    public $memcache;
+    public $googleCerts;
 
     function __construct($con, $request)
     {
@@ -27,10 +33,14 @@ class SSO
         $this->request = $request;
         $this->domain = 'https://www.mapotechnology.com/';
         $this->fields = $request;
+        $this->ip = $_SERVER['REMOTE_ADDR'];
         $this->con = $con;
         $this->secretKey = getenv('JWT_SECRET');
         $this->guid = $_COOKIE['guid'] ? $_COOKIE['guid'] : $this->getGUID();
         $this->nextURL = null;
+        $this->maxEmailAttempts = 5;
+        $this->maxIPAttempts = 20;
+        $this->maxLoginWindow = 15;
 
         if ($request['service']) {
             $this->source = $request['service'];
@@ -43,6 +53,14 @@ class SSO
         if ($request['next']) {
             $this->nextURL = $request['next'];
         }
+
+        $this->memcache = new Memcached('auth_pool');
+
+        if (!count($this->memcache->getServerList())) {
+            $this->memcache->addServer('127.0.0.1', 11211);
+        }
+
+        $this->googleCerts = $this->memcache->get('google_certs');
     }
 
     function isJson($string)
@@ -73,88 +91,41 @@ class SSO
 
     function createToken($payload, $expires = null)
     {
-        /*$array['iat'] = time();
-        $array['exp'] = $expires != null ? $expires : time() + 60 * 60 * 24 * 7;
-        $array['host'] = $_SERVER['HTTP_USER_AGENT'];
-        $array['ip'] = $_SERVER['REMOTE_ADDR'];
-
-        $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
-        $payload = json_encode($array);
-        $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
-        $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
-        $signature = hash_hmac('sha256', $base64UrlHeader . "." . $base64UrlPayload, $this->secretKey, true);
-        $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
-        $jwt = $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
-
-        return $jwt;*/
         $payload['iss'] = $this->domain;
         $payload['aud'] = $this->domain;
         $payload['iat'] = time();
         $payload['nbf'] = time();
         $payload['exp'] = $expires != null ? $expires : time() + 60 * 60 * 24 * 7;
-        $payload['host'] = $_SERVER['HTTP_USER_AGENT'];
-        $payload['ip'] = $_SERVER['REMOTE_ADDR'];
+        ////$payload['host'] = $_SERVER['HTTP_USER_AGENT'];
+        ////$payload['ip'] = $_SERVER['REMOTE_ADDR'];
 
         return JWT::encode($payload, $this->secretKey, 'HS256');
     }
 
     function decodeToken($token)
     {
-        /*$e = explode('.', $token);
-
-        return json_decode(base64_decode($e[1]));
-        $parts = explode('.', $token);
-
-        if (count($parts) !== 3) {
-            return null;
-        }
-
-        $payload = json_decode(base64_decode(str_replace(['-', '_', ''], ['+', '/', '='], $parts[1])), true);
-
-        if (!$payload) {
-            return null;
-        }
-
-        return $payload;*/
         JWT::$leeway = 60;
         return (array) JWT::decode($token, new Key($this->secretKey, 'HS256'));
     }
 
     function validToken($token)
     {
-        /*$e = explode('.', $token);
-
-        return $this->getSecretKey($e) == $e[2] ? true : false;
-        $parts = explode('.', $token);
-
-        if (count($parts) !== 3) {
-            return false; // Invalid token format
-        }
-
-        $header = $parts[0];
-        $payload = $parts[1];
-        $signature = $parts[2];
-
-        $calculatedSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode(hash_hmac('sha256', $header . "." . $payload, $this->secretKey, true)));
-
-        return $calculatedSignature === $signature;*/
-
         try {
             $decoded = $this->decodeToken($token);
 
-            if (!isset($decoded['iss']) || (isset($decoded['iss']) && $decoded['iss'] == $this->domain)) {
-                return $decoded;
+            if (!isset($decoded['iss']) || $decoded['iss'] != $this->domain) {
+                return ['status' => 'invalid'];
             } else {
-                return ['other'];
+                return ['status' => 'valid', 'payload' => $decoded];
             }
         } catch (Firebase\JWT\ExpiredException) {
-            return ['expired'];
+            return ['status' => 'expired'];
         } catch (Firebase\JWT\BeforeValidException) {
-            return ['invalid'];
+            return ['status' => 'invalid'];
         } catch (Firebase\JWT\SignatureInvalidException) {
-            return ['invalid'];
+            return ['status' => 'invalid'];
         } catch (Exception $e) {
-            return ['other'];
+            return ['status' => 'other'];
         }
     }
 
@@ -232,52 +203,56 @@ class SSO
         return str_replace('{cols}', $cols, $q) . ' ' . $s;
     }
 
-    function bruteForce()
+    private function bruteForce($email, $record = false)
     {
-        global $_SESSION;
+        $emailKey = "login:email:" . strtolower($email);
+        $ipKey = "login:ip:" . $this->ip;
 
-        $now = time();
-        $lockWindow = 900;
+        if ($record) {
+            $emailAttempts = $this->memcache->increment($emailKey, 1);
+            $ipAttempts = $this->memcache->increment($ipKey, 1);
 
-        if (!isset($_SESSION['login_attempts'])) {
-            $_SESSION['login_attempts'] = 0;
+            if ($emailAttempts === false) {
+                $this->memcache->set($emailKey, 1, $this->maxLoginWindow * 60);
+            }
+
+            if ($ipAttempts === false) {
+                $this->memcache->set($ipKey, 1, $this->maxLoginWindow * 60);
+            }
+        } else {
+            $emailAttempts = $this->memcache->get($emailKey) ?: 0;
+            $ipAttempts    = $this->memcache->get($ipKey) ?: 0;
+
+            if ($emailAttempts >= 3) {
+                sleep(min($emailAttempts - 2, 3));
+            }
+
+            if ($emailAttempts >= $this->maxEmailAttempts || $ipAttempts >= $this->maxIPAttempts) {
+                return true;
+            }
+
+            return false;
         }
-
-        if (!isset($_SESSION['last_login_attempt'])) {
-            $_SESSION['last_login_attempt'] = 0;
-        }
-
-        if ($_SESSION['last_login_attempt'] + $lockWindow < $now) {
-            $_SESSION['login_attempts'] = 0;
-        }
-
-        $_SESSION['login_attempts']++;
-        $_SESSION['last_login_attempt'] = $now;
     }
 
     function authenticate()
     {
         global $_SESSION;
-        global $function;
-
-        // record how many attempts this user has made to login
-        $this->bruteForce();
 
         $email = $this->fields['email'];
         $pass = $this->fields['pass'];
         $error = false;
 
-        // brute force protection: if user has tried to login 3 times unsuccessfully, lock their account
-        if ($_SESSION['login_attempts'] >= 3 && $_SESSION['last_login_attempt'] + 900 > time()) {
+        if (!$email || !$pass) {
+            $code = 1;
             $error = true;
-            $code = 5;
-            $when = $this->in($_SESSION['last_login_attempt']);
-            $respMsg = 'Your account has been locked due to multiple failed login attempts. Try again in ' . $when . '.';
+            $respMsg = 'You must provide an email address and password.';
         } else {
-            if (!$email || !$pass) {
-                $code = 1;
+            // record how many attempts this user has made to login
+            if ($this->bruteForce($email)) {
                 $error = true;
-                $respMsg = 'You must provide an email address and password.';
+                $code = 5;
+                $respMsg = 'Your account has been locked due to multiple failed login attempts. Try again later.';
             } else {
                 $config = $this->productConfig();
 
@@ -287,7 +262,7 @@ class SSO
                 if (isset($row['error'])) {
                     $error = true;
                     $code = 2;
-                    $respMsg = 'An account with that email address does not exist.';
+                    $respMsg = 'The email and/or password you entered is incorrect.';
                 } else {
                     // if user account has not been confirmed yet
                     if ($row['confirmed'] == 0) {
@@ -295,20 +270,21 @@ class SSO
                         $code = 3;
                         $respMsg = 'This account has not been confirmed yet. Please check your email.';
                     } else {
-                        // if password is correct, do login, otherwise password was incorrect
-                        if ($row['password'] == 'PASSWORD_RESET_REQUIRED') {
-                            $error = true;
-                            $code = 5;
-                            $respMsg = 'You must reset your password before you can login.';
+                        if (password_verify($pass, $row['password'])) {
+                            unset($_SESSION['gtoken']);
+
+                            $this->memcache->delete("login:email:" . strtolower($email));
+                            $this->memcache->delete("login:ip:" . $this->ip);
+
+                            return $this->login($row);
                         } else {
-                            if (password_verify($pass, $row['password'])) {
-                                unset($_SESSION['gtoken']);
-                                return $this->login($row);
-                            } else {
-                                $error = true;
-                                $code = 4;
-                                $respMsg = 'The email and/or password you entered is incorrect.';
-                            }
+                            $error = true;
+                            $code = 4;
+                            $respMsg = 'The email and/or password you entered is incorrect.';
+                        }
+
+                        if ($error) {
+                            $this->bruteForce($email, true);
                         }
                     }
                 }
@@ -343,10 +319,17 @@ class SSO
             $code = 1;
             $msg = 'No Google oauth token was supplied.';
         } else {
-            $keys = json_decode(file_get_contents('https://www.googleapis.com/oauth2/v3/certs'), true);
+            if (!$this->googleCerts) {
+                $this->googleCerts = json_decode(file_get_contents(
+                    'https://www.googleapis.com/oauth2/v3/certs',
+                    false,
+                    stream_context_create(['http' => ['timeout' => 3]])
+                ), true);
+                $this->memcache->set('google_certs', $this->googleCerts, 3600);
+            }
 
             try {
-                $jwkKeys = JWK::parseKeySet($keys);
+                $jwkKeys = JWK::parseKeySet($this->googleCerts);
                 $decoded = JWT::decode($gtoken, $jwkKeys);
 
                 if (!in_array($decoded->aud, $origin)) {
@@ -375,7 +358,7 @@ class SSO
 
                     // email isn't on file, so create an account for the user
                     if (empty($num)) {
-                        $this->createAccount($decoded->given_name, $decoded->family_name, $email, '', $_SERVER['REMOTE_ADDR'], '1', '', '', 1);
+                        $this->createAccount($decoded->given_name, $decoded->family_name, $email, '', '1', '', '', 1);
                     } else {
                         // link google account to existing account
                         if ($num['provider'] == 0) {
@@ -413,7 +396,13 @@ class SSO
         } else {
             if ($this->source != null && $this->source != 'mapotechnology') {
                 $key = array_search($this->source, $validSources);
-                return 'https://' . $services[$key] . '/authenticate?token=' . $this->token . ($this->source != null ? '&service=' . $this->source : '') . ($this->prod != null ? '&prod=' . $this->prod : '') . ($next ? '&next=' . urlencode($next) : '');
+                /*$sso_code = md5($this->token);
+                executeQuery('ss', [$sso_code, $this->token, (time() + 45)], "INSERT INTO sso_exchange (sso_code,token,expires) VALUES(?,?,?)");*/
+
+                return 'https://' . $services[$key] . '/authenticate?token=' . $this->token .
+                    ($this->source != null ? '&service=' . $this->source : '') .
+                    ($this->prod != null ? '&prod=' . $this->prod : '') .
+                    ($next ? '&next=' . urlencode($next) : '');
             } else {
                 return str_replace('//', '/', $next ? $next : '../account/home');
             }
@@ -484,7 +473,7 @@ class SSO
             'role' => getUserRole($row['role']),
             'last_active' => intval($row['last_active']),
             'created' => intval($row['created']),
-            'location' => $row['location'] ? unserialize($row['location']) : null,
+            'location' => $row['location'] ? json_decode($row['location']) : null,
             'provider' => $row['provider'] == '1' ? 'google' : 'internal',
             'expires' => intval($expires),
             'token' => $token,
@@ -496,7 +485,7 @@ class SSO
         }
 
         if ($function == 'mapofire') {
-            $set = unserialize($row['settings']);
+            $set = json_decode($row['settings'], true);
 
             if (empty($set['weather'])) {
                 $set['weather'] = null;
@@ -544,11 +533,11 @@ class SSO
                     if ($device['location'] == '') {
                         $json = json_decode(file_get_contents('https://ipwho.is/' . $device['ip']));
                         $devLoc = ['location' => $json->city . ', ' . $json->region_code . ', ' . $json->country, 'isp' => $json->connection->isp];
-                        $location = serialize($devLoc);
+                        $location = mysqli_real_escape_string($this->con, json_encode($devLoc));
 
                         executeQuery('ss', [$location, $device['sid']], "UPDATE sessions SET location = ? WHERE sid = ?");
                     } else {
-                        $devLoc = unserialize($device['location']);
+                        $devLoc = json_decode($device['location']);
                     }
 
                     $device['created'] = intval($device['created']);
@@ -604,13 +593,8 @@ class SSO
 
     function login($row)
     {
-        global $_SESSION;
-        unset($_SESSION['login_attempts']);
-        unset($_SESSION['last_login_attempt']);
-
         $time = time();
         $expires = $time + 60 * 60 * 24 * 7;
-        $ip = $this->fields['ip'] ? $this->fields['ip'] : $_SERVER['REMOTE_ADDR'];
         $host = $_SERVER['HTTP_USER_AGENT'];
 
         // if login is coming from an app, change source to package name of app and extend expiration time
@@ -629,7 +613,7 @@ class SSO
         $subscribe = $this->getSubscriptions($row['email']);
 
         // update user activity in database
-        $update = executeQuery('i', [$row['uid']], "UPDATE users SET last_active = '$time' WHERE uid = ?");
+        $update = executeQuery('ii', [$time, $row['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
 
         if (isset($update['error'])) {
             return ['response' => 'error', 'code' => 500, 'msg' => "Database error: $update[message]"];
@@ -639,7 +623,7 @@ class SSO
             $row['uid'],
             $this->token,
             $this->guid,
-            $ip,
+            $this->ip,
             $host,
             $this->source,
             '',
@@ -661,29 +645,34 @@ class SSO
         $_SESSION['expires'] = $expires;
         $_SESSION['subscriptions'] = json_encode($subscribe);
 
-        setcookie(
-            'token',
-            $this->token,
-            $expires,
-            '/',
-            '.mapotechnology.com',
-            true
-        );
+        setcookie('token', $this->token, [
+            'expires' => $expires,
+            'path' => '/',
+            'domain' => '.mapotechnology.com',
+            'secure' => true,
+            'httponly' => false,
+            'samesite' => 'Lax'
+        ]);
 
         if (!$_COOKIE['guid']) {
-            setcookie(
-                'guid',
-                $this->guid,
-                time() + 31557600,  // 60 * 60 * 24 * 365.25
-                '/',
-                '.mapotechnology.com',
-                true
-            );
+            setcookie('guid', $this->guid, [
+                'expires' => time() + 31557600,  // 60 * 60 * 24 * 365.25
+                'path' => '/',
+                'domain' => '.mapotechnology.com',
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
         }
 
         logEvent('Logged in', false, $row['uid']);
 
-        return ['auth' => true, 'service' => $this->source, 'next' => $this->returnURL($this->nextURL), 'user' => $this->getUser($row, $expires, $subscribe)];
+        return [
+            'auth' => true,
+            'service' => $this->source,
+            'next' => $this->returnURL($this->nextURL),
+            'user' => $this->getUser($row, $expires, $subscribe)
+        ];
     }
 
     function logout()
@@ -705,11 +694,19 @@ class SSO
                 $time = time();
                 $uid = $row['uid'];
 
-                setcookie('token', '', $time - 60 * 60 * 24 * 7, '/', '.mapotechnology.com', true);
+                setcookie('token', '', [
+                    'expires' => $time - 2592000, // 60 * 60 * 24 * 30
+                    'path' => '/',
+                    'domain' => '.mapotechnology.com',
+                    'secure' => true,
+                    'httponly' => false,
+                    'samesite' => 'Lax'
+                ]);
+
                 $_SESSION = [];
                 session_regenerate_id();
 
-                executeQuery('si', [$time, $uid], "UPDATE users SET last_active = ? WHERE uid = ?");
+                executeQuery('ii', [$time, $uid], "UPDATE users SET last_active = ? WHERE uid = ?");
                 executeQuery('is', [$uid, $this->token], "UPDATE sessions SET expires = '0' WHERE uid = ? AND token = ?");
 
                 return ['response' => 'success'];
@@ -735,14 +732,12 @@ class SSO
                     return ['response' => 'error', 'code' => 2, 'msg' => 'You must provide an email address.'];
                 } else {
                     $expires = time() + 600;
-                    $token = $this->createToken(['uid' => $row['uid'], 'unqiue' => 'resetPassword-' . time()]);
+                    $token = $this->createToken(['uid' => $row['uid'], 'unique' => 'resetPassword-' . time()]);
 
-                    mysqli_query($this->con, "UPDATE password_reset SET expires = '0' WHERE uid = $row[uid]");
-                    mysqli_query($this->con, "UPDATE users SET password = 'PASSWORD_RESET_REQUIRED' WHERE uid = $row[uid]");
-                    mysqli_query($this->con, "INSERT INTO password_reset (uid,token,expires) VALUES($row[uid],'$token','$expires')");
-                    /*executeQuery('i', [$row['uid']], "UPDATE password_reset SET expires = '0' WHERE uid = ?");
-                    executeQuery('i', [$row['uid']], "UPDATE users SET password = 'PASSWORD_RESET_REQUIRED' WHERE uid = ?");
-                    executeQuery('iis', [$row['uid'], $token, $expires], "INSERT INTO password_reset (uid,token,expires) VALUES(?,?,?)");*/
+                    /*mysqli_query($this->con, "UPDATE password_reset SET expires = '0' WHERE uid = $row[uid]");
+                    mysqli_query($this->con, "INSERT INTO password_reset (uid,token,expires) VALUES($row[uid],'$token','$expires')");*/
+                    executeQuery('i', [$row['uid']], "UPDATE password_reset SET expires = 0 WHERE uid = ?");
+                    executeQuery('isi', [$row['uid'], $token, $expires], "INSERT INTO password_reset (uid,token,expires) VALUES(?,?,?)");
 
                     logEvent('Request sent to reset password', false, $row['uid']);
 
@@ -816,7 +811,7 @@ class SSO
         }
     }
 
-    function invitation()
+    /*function invitation()
     {
         $error = false;
         $invite_code = $this->fields['invite_code'];
@@ -865,7 +860,8 @@ class SSO
                         return $create;
                     } else {
                         $newUID = mysqli_insert_id($this->con);
-                        mysqli_query($this->con, "UPDATE group_users SET status = 1, uid = $newUID WHERE email = '$email'");
+                        //mysqli_query($this->con, "UPDATE group_users SET status = 1, uid = $newUID WHERE email = '$email'");
+                        executeQuery('is', [$newUID, $email], "UPDATE group_users SET status = 1, uid = ? WHERE email = ?");
                     }
                 } else {
                     return ['response' => 'error', 'code' => 3, 'msg' => implode('<br>', $msgs)];
@@ -880,14 +876,13 @@ class SSO
         if ($error) {
             return ['response' => 'error', 'code' => $code, 'msg' => $msg];
         }
-    }
+    }*/
 
     function confirmation()
     {
         $error = false;
         $msg = '';
         $oauth = $this->fields['oauth_token'];
-        $decoded = $this->decodeToken($oauth);
         $email = $this->fields['email'];
 
         $row = executeQuery('s', [$oauth], "SELECT u.first_name, u.email, confirmed FROM confirmation AS c LEFT JOIN users AS u ON u.email = c.email WHERE token = ?");
@@ -901,6 +896,14 @@ class SSO
                 $code = 1;
                 $msg = 'The token that was provided is invalid.';
             } else {
+                try {
+                    $decoded = $this->decodeToken($oauth);
+                } catch (Exception $e) {
+                    $error = true;
+                    $code = 1;
+                    $msg = 'The token that was provided is invalid.';
+                }
+
                 // if the email has already been confirmed
                 if ($row['confirmed'] == 1) {
                     $error = true;
@@ -947,10 +950,11 @@ class SSO
         return $password;
     }
 
-    function createAccount($fname, $lname, $email, $pass, $ip, $role, $phone, $location, $thirdParty = 0, $needToConfirm = true)
+    function createAccount($fname, $lname, $email, $pass, $role, $phone, $location, $thirdParty = 0, $needToConfirm = true)
     {
         $out = [];
         $tok = $this->createToken(['email' => $email]);
+        $phone = $phone ?? '';
         $time = time();
         $pass = $pass ? $pass : $this->generatePassword();
         $password = password_hash($pass, PASSWORD_DEFAULT);
@@ -960,7 +964,7 @@ class SSO
             $lname,
             $email,
             $password,
-            $ip,
+            $this->ip,
             $time,
             $role,
             $phone,
@@ -969,7 +973,8 @@ class SSO
         ], "INSERT INTO users (first_name,last_name,email,password,ip_address,created,role,phone,location,profilePic,provider) VALUES(?,?,?,?,?,?,?,?,?,'',?)");
 
         if (isset($insert['error'])) {
-            $out = ['response' => 'error', 'code' => 1, 'msg' => 'There was an error creating your account'];
+            $isDuplicate = str_contains($insert['message'], 'Duplicate entry');
+            $out = ['response' => 'error', 'code' => 1, 'msg' => ($isDuplicate ? 'An account with this email address or phone number already exists.' : 'There was an error creating your account')];
         } else {
             $uid = mysqli_insert_id($this->con);
 
@@ -1011,14 +1016,13 @@ class SSO
         $error = false;
         $msgs = [];
 
-        $ip = $this->fields['ip'];
         $fname = ucfirst($this->fields['first_name']);
         $lname = ucfirst($this->fields['last_name']);
         $email = $this->fields['email'];
         $phone = $this->fields['phone'];
         $pass = $this->fields['pass'];
         $cpass = $this->fields['confirm_pass'];
-        $location = serialize(json_decode(urldecode($this->fields['location'])));
+        $location = json_encode(json_decode(urldecode($this->fields['location'])));
         $role = 1;
         $passVal = $this->validatePassword($this->fields['pass']);
 
@@ -1028,13 +1032,8 @@ class SSO
             $error = true;
             $msgs[] = 'There was an error trying to create your account';
         } else {
-            if (count($num) == 0) {
+            if (empty($num)) {
                 $code = 2;
-
-                if (!isset($this->fields['tos']) || $this->fields['tos'] != 1) {
-                    $error = true;
-                    $msgs[] = 'You must agree to our Terms and Privacy Policy to create an account.';
-                }
 
                 if (!$fname) {
                     $error = true;
@@ -1072,6 +1071,11 @@ class SSO
                         }
                     }
                 }
+
+                if (!isset($this->fields['tos']) || $this->fields['tos'] != 1) {
+                    $error = true;
+                    $msgs[] = 'You must agree to our Terms and Privacy Policy to create an account.';
+                }
             } else {
                 $error = true;
                 $code = 1;
@@ -1081,7 +1085,7 @@ class SSO
 
         // no errors, create the user's account
         if (!$error) {
-            return $this->createAccount($fname, $lname, $email, $pass, $ip, $role, $phone, $location);
+            return $this->createAccount($fname, $lname, $email, $pass, $role, $phone, $location);
         } else {
             return ['response' => 'error', 'code' => $code, 'msg' => implode('<br>', $msgs)];
         }
@@ -1103,7 +1107,7 @@ class SSO
                 } else {
                     // update the user's information in the database
                     if ($function == 'location') {
-                        $newLoc = serialize(json_decode($this->fields['location']));
+                        $newLoc = json_encode(json_decode($this->fields['location']));
                         $update = executeQuery('si', [$newLoc, $row['uid']], "UPDATE users SET location = ? WHERE uid = ?");
 
                         if (isset($update['error'])) {
@@ -1135,6 +1139,25 @@ class SSO
             }
         }
     }
+
+    function globalRateCheck()
+    {
+        global $method;
+
+        $key = "rate:$method:global";
+        $current = $this->memcache->increment($key, 1);
+
+        if ($current === false) {
+            $this->memcache->set($key, 1, 60);
+            return false;
+        }
+
+        if ($current > 300) {
+            return true;
+        }
+
+        return false;
+    }
 }
 
 # create the user auth class
@@ -1142,67 +1165,72 @@ $sso = new SSO($con, $_REQUEST);
 
 # if no method was provided to the API
 if (empty($method)) {
-    $returnJson = ['error' => 403, 'msg' => 'Method forbidden'];
+    $returnJson = ['response' => 'error', 'error' => 403, 'msg' => '403 (Method forbidden)'];
 } else {
-    # check to make sure the ip address from the UI matches the IP from the server
-    $packages = ['com.mapollc.oreroads', 'com.mapollc.mapofire'];
-
-    if (isset($sso->fields['ip']) && $sso->fields['ip'] != $_SERVER['REMOTE_ADDR'] && (isset($_REQUEST['android']) && !in_array($_REQUEST['android'], $packages))) {
-        $returnJson = ['response' => 'error', 'code' => 100, 'msg' => 'Your IP address has changed. Please try again.'];
+    if ($sso->globalRateCheck()) {
+        http_response_code(429);
+        $returnJson = ['response' => 'error', 'error' => 429, 'msg' => "Too many $method attempts. Please try again shortly."];
     } else {
-        # create a user account
-        if ($method == 'register') {
-            $returnJson = $sso->register();
-        } # login
-        else if ($method == 'login') {
-            # login with google, otherwise login with MAPO
-            if (isset($_REQUEST['google']) && $_REQUEST['google'] == 1) {
-                $returnJson = $sso->loginWithGoogle();
-            } else {
-                $returnJson = $sso->authenticate();
-            }
-        } # get user account info
-        else if ($method == 'get') {
-            $token = $_REQUEST['token'];
+        # check to make sure the ip address from the UI matches the IP from the server
+        $packages = ['com.mapollc.oreroads', 'com.mapollc.mapofire'];
 
-            if (!$token) {
-                $returnJson = ['response' => 'error', 'code' => 2, 'msg' => 'An authentication token was not provided.'];
-            } else {
-                $validToken = $sso->validToken($token);
-                //print_r($validToken);
-
-                if (isset($validToken['exp']) && $validToken['exp'] < time()) {
-                    //executeQuery('s', [$token], "UPDATE sessions SET expired = CASE WHEN expired != '0' THEN '0' ELSE expired END WHERE token = ?");
-
-                    $returnJson = ['response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.'];
-                } else if (isset($validToken['invalid'])) {
-                    $returnJson = ['response' => 'error', 'code' => 2, 'msg' => 'An invalid token was provided.'];
-                } else if (isset($validToken['other'])) {
-                    $returnJson = ['response' => 'error', 'code' => 3, 'msg' => 'There was an error decoding your authentication token.'];
+        if (isset($sso->fields['ip']) && $sso->fields['ip'] != $_SERVER['REMOTE_ADDR'] && (isset($_REQUEST['android']) && !in_array($_REQUEST['android'], $packages))) {
+            $returnJson = ['response' => 'error', 'code' => 100, 'msg' => 'Your IP address has changed. Please try again.'];
+        } else {
+            # create a user account
+            if ($method == 'register') {
+                $returnJson = $sso->register();
+            } # login
+            else if ($method == 'login') {
+                # login with google, otherwise login with MAPO
+                if (isset($_REQUEST['google']) && $_REQUEST['google'] == 1) {
+                    $returnJson = $sso->loginWithGoogle();
                 } else {
-                    $u = $function == 'devices' ? $sso->devices() : $sso->user();
-                    //$returnJson = [$u];
-                    $returnJson = is_array($u) ? $u : ['response' => 'error', 'code' => 4, 'msg' => 'There was an error getting user data.'];
+                    $returnJson = $sso->authenticate();
                 }
+            } # get user account info
+            else if ($method == 'get') {
+                $token = $_REQUEST['token'];
+
+                if (!$token) {
+                    $returnJson = ['response' => 'error', 'code' => 2, 'msg' => 'An authentication token was not provided.'];
+                } else {
+                    $validToken = $sso->validToken($token);
+                    //print_r($validToken);
+
+                    if (isset($validToken['payload']['exp']) && $validToken['payload']['exp'] < time()) {
+                        //executeQuery('s', [$token], "UPDATE sessions SET expired = CASE WHEN expired != '0' THEN '0' ELSE expired END WHERE token = ?");
+
+                        $returnJson = ['response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.'];
+                    } else if (isset($validToken['status']['invalid'])) {
+                        $returnJson = ['response' => 'error', 'code' => 2, 'msg' => 'An invalid token was provided.'];
+                    } else if (isset($validToken['status']['other'])) {
+                        $returnJson = ['response' => 'error', 'code' => 3, 'msg' => 'There was an error decoding your authentication token.'];
+                    } else {
+                        $u = $function == 'devices' ? $sso->devices() : $sso->user();
+                        //$returnJson = [$u];
+                        $returnJson = is_array($u) ? $u : ['response' => 'error', 'code' => 4, 'msg' => 'There was an error getting user data.'];
+                    }
+                }
+            } # send user a reset password link
+            else if ($method == 'forgot') {
+                $returnJson = $sso->forgot();
+            } # reset the user's password with credentials they set
+            else if ($method == 'reset') {
+                $returnJson = $sso->reset();
+            } # confirm email address after account creation
+            else if ($method == 'confirmation') {
+                $returnJson = $sso->confirmation();
+            } # confirm email address for a user that was invited as a part of an organization
+            else if ($method == 'invitation') {
+                ////$returnJson = $sso->invitation();
+            } # logout the user
+            else if ($method == 'logout') {
+                $returnJson = $sso->logout();
+            } # update user settings
+            else if ($method == 'update') {
+                $returnJson = $sso->update();
             }
-        } # send user a reset password link
-        else if ($method == 'forgot') {
-            $returnJson = $sso->forgot();
-        } # reset the user's password with credentials they set
-        else if ($method == 'reset') {
-            $returnJson = $sso->reset();
-        } # confirm email address after account creation
-        else if ($method == 'confirmation') {
-            $returnJson = $sso->confirmation();
-        } # confirm email address for a user that was invited as a part of an organization
-        else if ($method == 'invitation') {
-            $returnJson = $sso->invitation();
-        } # logout the user
-        else if ($method == 'logout') {
-            $returnJson = $sso->logout();
-        } # update user settings
-        else if ($method == 'update') {
-            $returnJson = $sso->update();
         }
     }
 }

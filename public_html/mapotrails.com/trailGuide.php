@@ -431,7 +431,7 @@ if ($trail->guide->metadata->public == 0 && $settings['user']['role'] == 'ADMIN'
                     <div style="margin:50px auto 0 auto;text-align:center;font-size:20px;font-weight:300;line-height:2">
                         <i class="far fa-lock" style="font-size:20px;color:gold;padding-right:5px"></i>
                         <?='This is a premium guide: <!--<a href="https://www.mapotechnology.com/checkout?price_id='.$planID.'&src=mapotrails'.($settings->user->uid ? '&host=mapotrails.com&force_login=1' : '').'&return='.urlencode(explode('?', $_SERVER['REQUEST_URI'])[0]).'">subscribe for access</a>'.
-                        (!$settings->user->uid ? ', or--><a href="https://www.mapotechnology.com/secure/login?fail=1&service=mapotrails&next='.urlencode('https://www.mapotrails.com'.$_SERVER['REQUEST_URI']).'">login</a> if you\'re already subscribed' : '')?>
+                        (!$settings->user->uid ? ', or--><a href="https://auth.mapotechnology.com/login?fail=1&service=mapotrails&next='.urlencode('https://www.mapotrails.com'.$_SERVER['REQUEST_URI']).'">login</a> if you\'re already subscribed' : '')?>
                     </div>
                     <?}else{?>
                     <div class="stats">

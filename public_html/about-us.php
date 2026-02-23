@@ -52,7 +52,7 @@ include_once 'header.inc.php';
                     Map of Fire is currently available on any device's browser with an Android-exclusive app coming Summer 2025.
                 </p>
 
-                <a href="https://mapofire.com?utm_campaign=mapotechnology.com&utm_medium=button&utm_source=about" class="btn btn-red">
+                <a href="https://mapofire.com?utm_campaign=mapotechnology.com&utm_medium=button&utm_source=about" class="btn btn-lg btn-red">
                     <i class="fas fa-fire"></i> Track nearby wildfires
                 </a>
             </div>
@@ -82,7 +82,7 @@ include_once 'header.inc.php';
                     advise of changing conditions for areas you're interested in. Currently, nothing similar exists for travelers in Oregon.
                 </p>
 
-                <a href="https://apps.mapotechnology.com/oregonroads?utm_campaign=mapotechnology.com&utm_medium=button&utm_source=about" class="btn btn-orange">
+                <a href="https://apps.mapotechnology.com/oregonroads?utm_campaign=mapotechnology.com&utm_medium=button&utm_source=about" class="btn btn-lg btn-orange">
                     <i class="far fa-snowflake"></i> Check road conditions
                 </a>
             </div>
@@ -103,7 +103,7 @@ include_once 'header.inc.php';
                     backcountry snowmobilers.
                 </p>
 
-                <a href="https://mapotrails.com?utm_campaign=mapotechnology.com&utm_medium=button&utm_source=about" class="btn btn-blue">
+                <a href="https://mapotrails.com?utm_campaign=mapotechnology.com&utm_medium=button&utm_source=about" class="btn btn-lg btn-blue">
                     <i class="fas fa-person-biking-mountain"></i> Get outdoors
                 </a>
             </div>

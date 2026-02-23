@@ -115,7 +115,7 @@ if ($_COOKIE['token'] || $_SESSION['token']) {
             <li><a href="<?=$domain?>guides">Guides</a></li>
             <li><a href="<?=$domain?>">Trail Map</a></li>
             <?if(!$_SESSION['uid']){?>
-            <li><a class="btn btn-sm btn-orange sharp" href="https://www.mapotechnology.com/secure/login?service=mapotrails&next=<?=urlencode('https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'])?>">Login</a></li>
+            <li><a class="btn btn-sm btn-orange sharp" href="https://auth.mapotechnology.com/login?service=mapotrails&next=<?=urlencode('https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'])?>">Login</a></li>
             <?}else{?>
             <li><a class="btn btn-sm btn-orange sharp" href="https://www.mapotechnology.com/account/home?ref=mapotrails">Account</a></li>
             <?}?>

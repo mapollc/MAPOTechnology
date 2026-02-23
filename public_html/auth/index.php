@@ -1,38 +1,17 @@
 <?
-////ini_set('display_errors', 1);
-////error_reporting(E_ALL);
+ini_set('display_errors', 1);
+error_reporting(E_PARSE | E_ERROR);
 
 ini_set('session.cookie_domain', '.mapotechnology.com');
 session_start();
 
-function generateGUID()
-{
-    if (function_exists('com_create_guid')) {
-        return com_create_guid();
-    } else {
-        mt_srand((float)microtime() * 10000);
-        $charid = strtoupper(md5(uniqid(rand(), true)));
-        $hyphen = chr(45);
-        $uuid = chr(123)
-            . substr($charid, 0, 8) . $hyphen
-            . substr($charid, 8, 4) . $hyphen
-            . substr($charid, 12, 4) . $hyphen
-            . substr($charid, 16, 4) . $hyphen
-            . substr($charid, 20, 12)
-            . chr(125);
-        $guid = str_replace(['{', '}'], ['', ''], $uuid);
-
-        setcookie('guid', $guid, time() + 60 * 60 * 24 * 365.25, '/', '.mapotechnology.com', true);
-    }
-}
-
 $method = $_GET['method'];
-$validPages = ['login', 'register', 'forgot', 'confirmation', 'invitation'];
+$allowedMethods = ['confirmation', 'invitation', 'login', 'forgot', 'register'];
 $gtoken = $_GET['gtoken'] ?? null;
 $google_client_id = '27619385576-o8elfb66trj3e5v2acahnjm0jiqacg5n.apps.googleusercontent.com';
 
 // ensure user is navigating to valid page
-if (!in_array($method, $validPages)) {
+if (!in_array($method, $allowedMethods)) {
     header("Location: ../login");
     exit();
 }
@@ -48,26 +27,39 @@ require_once '../subs.inc.php';
 
 // set GUID if in query parameters
 if (isset($_GET['guid']) && !empty($_GET['guid'])) {
-    setcookie('guid', $_GET['guid'], time() + 60 * 60 * 24 * 365.25, '/', '.mapotechnology.com', true);
-} else {
-    if (!$_COOKIE['guid']) {
-        generateGUID();
-    }
+    setcookie('guid', $_GET['guid'], [
+        'expires' => time() + 31557600,  // 60 * 60 * 24 * 365.25
+        'path' => '/',
+        'domain' => '.mapotechnology.com',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+} else if (!$_COOKIE['guid']) {
+    include_once '/home/mapo/guid.inc.php';
+    setupGUID();
 }
 
 if ($_GET['fail'] == 3) {
-    $_SESSION = array();
+    $_SESSION = [];
     session_destroy();
     session_regenerate_id(true);
-    setcookie('token', $_REQUEST['token'], time() - 60 * 60 * 24 * 7, '/', '.mapotechnology.com', true);
+    setcookie('token', '', [
+        'expires' => time() - 60 * 60 * 24 * 7,
+        'path' => '/', 
+        'domain' => '.mapotechnology.com',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
 }
 
 // brute force protection
-$locked = ($_SESSION['login_attempts'] ?? 0) >= 3 && ($_SESSION['last_login_attempt'] ?? 0) + 900 > time();
+/*$locked = ($_SESSION['login_attempts'] ?? 0) >= 3 && ($_SESSION['last_login_attempt'] ?? 0) + 900 > time();
 if ($locked) {
     $total = $_SESSION['last_login_attempt'] + 900 - time();
     $when = $total < 60 ? $total . ' seconds.' : round($total / 60, 0) . ' minutes';
-}
+}*/
 
 $service = $_GET['src'] ?? $_GET['service'] ?? null;
 $fireMaps = ['mapofire', 'wildfiremap', 'fireweatheravalanche'];
@@ -96,7 +88,7 @@ if ($service == 'mapotrails') {
     $logo = 'oreroads/oreroads_square_logo.png';
 }
 
-// verify if the user is already logged in
+// verify if the user is already logged in and then redirect them
 if (isset($_SESSION['uid'])) {
     $exp = executeQuery('s', [$_SESSION['token']], "SELECT expires FROM sessions WHERE token = ?")['expires'];
 
@@ -142,8 +134,8 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
 <html>
 
 <head lang="en-US">
-<meta charset="utf-8">
-<title><?= ($service ? "$serviceName - " : '') . $title ?> | MAPO LLC</title>
+    <meta charset="utf-8">
+    <title><?= ($service ? "$serviceName - " : '') . $title ?> | MAPO LLC</title>
     <meta name="description" content="<?= $desc ?>" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#333" />
@@ -231,13 +223,11 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
                     echo '<div id="loading_login"><div class="loading" style="margin:3em auto 2em auto"></div>' .
                         '<p style="margin-bottom:175px;text-align:center">We\'re signing you in...</p></div>';
                 } else {
-                    $allowedMethods = ['confirmation', 'invitation', 'login', 'forgot', 'register'];
-
                     if (in_array($method, $allowedMethods)) {
                         require_once "$method.inc.php";
                     }
                 } ?>
-                
+
             </form>
 
             <div class="info">
@@ -252,7 +242,18 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
     <? if ($method == 'login') {
         echo '<script defer async src="https://accounts.google.com/gsi/client"></script>';
     } ?>
-    <script><?= isset($_REQUEST['state']) ? 'const auth_state="' . str_replace('loggedOut=1', '', base64_decode($_REQUEST['state'])) . '";' : '' ?>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-J2PB456CE6'<?= isset($_COOKIE['guid']) ? ",{'user_id':'$_COOKIE[guid]'}" : '' ?>);const ipaddr='<?= $_SERVER['REMOTE_ADDR'] ?>'<?= $gtoken != null ? ",gtoken='$gtoken'" : '' ?>;</script>
+    <script>
+        <?= isset($_REQUEST['state']) ? 'const auth_state="' . str_replace('loggedOut=1', '', base64_decode($_REQUEST['state'])) . '";' : '' ?>window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-J2PB456CE6'
+            <?= isset($_COOKIE['guid']) ? ",{'user_id':'$_COOKIE[guid]'}" : '' ?>);
+        const ipaddr = '<?= $_SERVER['REMOTE_ADDR'] ?>'
+        <?= $gtoken != null ? ",gtoken='$gtoken'" : '' ?>;
+    </script>
     <script src="//mapotechnology.com/js/auth.js"></script>
 </body>
 

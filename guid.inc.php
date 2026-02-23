@@ -18,7 +18,14 @@ function setupGUID($domain = 'mapotechnology.com') {
                 . chr(125);
             $guid = str_replace(['{', '}'], ['', ''], $uuid);
             
-            setcookie('guid', $guid, time() + (60 * 60 * 24 * 365.25), '/', ".$domain", true);
+            setcookie('guid', $guid, [
+                'expires' => time() + 31557600, // 60 * 60 * 24 * 365.25
+                'path' => '/',
+                'domain' => ".$domain",
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
         }
     }
 }

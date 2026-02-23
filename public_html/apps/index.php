@@ -190,9 +190,9 @@ if ($route == 'authenticate') {
                                 <p style="margin:1em 0;line-height:1.5;text-align:center">Accessing <?= $thisApp->name() ?> requires authentication. Please login to your account first.
                                     You can login to all of MAPO's apps and services from one account using single sign-on (SSO).</p>
 
-                                <a class="btn btn-blue btn-lg" style="display:block;margin:25px auto 0 auto" href="//mapotechnology.com/secure/login?service=apps&prod=<?= $thisApp->url() ?>&next=<?= urlencode($_SERVER['REQUEST_URI']) ?>">Login</a>
+                                <a class="btn btn-blue btn-lg" style="display:block;margin:25px auto 0 auto" href="//auth.mapotechnology.com/login?service=apps&prod=<?= $thisApp->url() ?>&next=<?= urlencode($_SERVER['REQUEST_URI']) ?>">Login</a>
                                 <p class="or">or</p>
-                                <a style="display:block;text-align:center" href="//mapotechnology.com/secure/register?service=apps&prod=<?= $thisApp->url() ?>&next=<?= urlencode($_SERVER['REQUEST_URI']) ?>">Create an account</a>
+                                <a style="display:block;text-align:center" href="//auth.mapotechnology.com/register?service=apps&prod=<?= $thisApp->url() ?>&next=<?= urlencode($_SERVER['REQUEST_URI']) ?>">Create an account</a>
                             </div>
                         </main>
 

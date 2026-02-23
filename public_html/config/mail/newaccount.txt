@@ -4,6 +4,6 @@ Thanks for creating a new account with MAPO LLC. Your account allows you to logi
 
 Before logging in, you need to confirm your email address using the link below:<br><br>
 
-<a href="https://www.mapotechnology.com/secure/confirmation?email={email}&oauth_token={token}{subscribe}">Confirm your email</a><br><br>
+<a href="https://auth.mapotechnology.com/confirmation?email={email}&oauth_token={token}{subscribe}">Confirm your email</a><br><br>
 
 If you did not create this account, please contact us to resolve the issue.

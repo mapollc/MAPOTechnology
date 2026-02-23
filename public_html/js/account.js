@@ -1,17 +1,11 @@
-let host = 'https://www.mapotechnology.com/',
+const host = 'https://www.mapotechnology.com/',
     pageName = window.location.pathname.replace('/account/', ''),
     /*pageName = window.location.search.split('page=')[1],*/
     apiURL = 'https://api.mapotechnology.com/v1/',
+    mapofireAPI = 'https://mapofire.com/api/v1/',
     usersAPI = 'account/secure/apis/',
     apiKey = 'c196d0958608ad2b7d4af2be078ecc54',
     WILDFIRE_NEARBY_DIST = 50,
-    calc,
-    map,
-    kw,
-    token = '',
-    wildfires = [],
-    keywordResults,
-    centerMarker,
     stateLabels = {
         'AL': 'Alabama',
         'AK': 'Alaska',
@@ -72,6 +66,14 @@ let host = 'https://www.mapotechnology.com/',
         'Caution', 'Fishing', 'Hike', 'Info', 'Lake', 'Media',
         'Mountain Bike', 'Parking', 'Redneck', 'Restroom', 'River', 'Sledding', 'Summit', 'Swimming'];
 
+let calc,
+    map,
+    kw,
+    token = '',
+    wildfires = [],
+    keywordResults,
+    centerMarker;
+
 async function api(uri, fields = null, v2 = false) {
     if (!navigator.onLine) {
         console.error('You are not connected to the internet');
@@ -82,7 +84,7 @@ async function api(uri, fields = null, v2 = false) {
         url = v2 ? uri.replace('v1', 'v2') : uri;
 
     const isExternal = url.includes('weather.gov') || url.includes('unl.edu'),
-        isInternal = url.includes(apiURL) || url.includes(apiURL.replace('v1', 'v2')) || url.includes(host),
+        isInternal = url.includes(apiURL) || url.includes(apiURL.replace('v1', 'v2')) || url.includes(host) || url.includes(mapofireAPI),
         ops = {
             method: isExternal ? 'GET' : 'POST'
         },
@@ -112,7 +114,7 @@ async function api(uri, fields = null, v2 = false) {
         result = await resp.json();
     } catch (e) {
         console.error(`Fetch or JSON parsing error for URL: ${url}`, e.message);
-        result = null;
+        result = null
     }
 
     return result;
@@ -269,7 +271,7 @@ async function getFires() {
                     url = f.properties.url.replace('wildfire/', 'fires/'),
                     bear = calc.bearing(lat, lon, userLocation.lat, userLocation.lon);
 
-                content += '<div class="data-item"><div class="item"><a target="blank" href="https://www.mapofire.com/' + url + '">' + 
+                content += '<div class="data-item"><div class="item"><a target="blank" href="https://www.mapofire.com/' + url + '">' +
                     name + (type != 'Smoke Check' ? ' Fire' : '') + '</a><span class="data">' + dist + ' miles ' + bear + ' of you</span></div></div>';
             }
         });
@@ -381,7 +383,7 @@ function formatBytes(bytes) {
 }
 
 async function getFavoriteFires() {
-    return await api('https://www.mapofire.com/api/v1/trackFires/list', [
+    return await api(mapofireAPI + 'trackFires/list', [
         ['token', token],
         ['meta', 1]
     ]);
@@ -502,7 +504,7 @@ function createDialog(title, text, affirm = 'Yes', func) {
 
 async function unfollow(wfid) {
     const total = document.querySelectorAll('#favfires .row').length,
-        resp = await api('https://www.mapofire.com/api/v1/trackFires/remove', [['token', token], ['wfid', wfid]]);
+        resp = await api(mapfireAPI + 'trackFires/remove', [['token', token], ['wfid', wfid]]);
 
     if (resp.success && resp.success == 'removed') {
         closeDialog();
@@ -1147,16 +1149,16 @@ newMarker.setLatLng(L.latLng(lat, lon));
 });
 
 /* on popup save button *//*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       /* get values from popup and store them in hidden input fields *//*
-                                                                                                                        wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
-                                                                                                                        wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
-                                                                                                                        wrap.querySelector('input[name="waypoint[name][]"]').value = name;
-                                                                                                                        wrap.querySelector('input[name="waypoint[note][]"]').value = notes;
-                                                                                                                        wrap.querySelector('input[name="waypoint[icon][]"]').value = icon;
-                                                                                                                        
-                                                                                                                        map.closePopup();
-                                                                                                                        });
-                                                                                                                        
-                                                                                                                        /* on popup delete button *//*
+                                                                                                                                    wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
+                                                                                                                                    wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
+                                                                                                                                    wrap.querySelector('input[name="waypoint[name][]"]').value = name;
+                                                                                                                                    wrap.querySelector('input[name="waypoint[note][]"]').value = notes;
+                                                                                                                                    wrap.querySelector('input[name="waypoint[icon][]"]').value = icon;
+                                                                                                                                    
+                                                                                                                                    map.closePopup();
+                                                                                                                                    });
+                                                                                                                                    
+                                                                                                                                    /* on popup delete button *//*
 const markerDataContainer = document.createElement('div');
 markerDataContainer.id = 'waypoint-' + markerCounter;
  

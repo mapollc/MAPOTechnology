@@ -1863,7 +1863,7 @@ window.addEventListener('load', () => {
             get('ul#userMenu').style.top = get('#user').parentElement.offsetTop + 'px';
             get('ul#userMenu').style.left = (get('#user').parentElement.offsetLeft - 166) + 'px';
         } else {
-            window.location.href = 'https://www.mapotechnology.com/secure/login?src=apps&prod=oregonroads&next=' + encodeURIComponent(uri);
+            window.location.href = 'https://auth.mapotechnology.com/login?src=apps&prod=oregonroads&next=' + encodeURIComponent(uri);
         }
     });
 

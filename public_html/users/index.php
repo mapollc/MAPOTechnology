@@ -229,7 +229,7 @@ $lock = '<i class="far fa-lock"></i>';
                         <ul class="inline-menu">
                             <li><a href="<?= $baseURL ?>about">About</a>
                             <li><a href="<?= $baseURL ?>about/contact">Contact</a>
-                            <li><a href="<?= $baseURL ?>checkout?price_id=<?= $mapoSubscriptions['donate']['live'] ?>">Donate</a>
+                            <li><a href="<?= $baseURL ?>purchase/mapofire?utm_campaign=mapofire&utm_source=user_account&utm_medium=footer">Pricing</a>
                             <li><a href="<?= $baseURL ?>about/legal/terms">Terms</a>
                             <li><a href="<?= $baseURL ?>about/legal/privacy">Privacy</a>
                         </ul>
@@ -241,14 +241,11 @@ $lock = '<i class="far fa-lock"></i>';
 
     <div id="shadow"></div>
 
-    <script>
-        let uid = <?= $_SESSION['uid'] ?>,
-            userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;
-    </script>
+    <script>const uid=<?= $_SESSION['uid'] ?>;let userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;</script>
     <? if (in_array($pageFile, $leafletPages) || $method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
         <script src="https://cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet-src.min.js"></script>
     <? } ?>
-    <script src="<?= $baseURL ?>src/js/account.js?<?= time() ?>"></script>
+    <script src="<?= $baseURL ?>src/js/account.js"></script>
 
 </body>
 

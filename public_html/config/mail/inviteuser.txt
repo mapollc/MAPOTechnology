@@ -4,6 +4,6 @@ Someone from {company} you work with has invited you to create an account with M
 
 Before gaining access, you will need to accept the invitation using the link below:<br><br>
 
-<a href="https://www.mapotechnology.com/secure/invitation?service=mapofire&org_key={org_key}&email={email}&invite_code={token}">Confirm your email</a><br><br>
+<a href="https://auth.mapotechnology.com/invitation?service=mapofire&org_key={org_key}&email={email}&invite_code={token}">Confirm your email</a><br><br>
 
 If you did not create this account, please contact us to resolve the issue.

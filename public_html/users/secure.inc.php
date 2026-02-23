@@ -30,6 +30,7 @@ if ($redirect === true) {
     setcookie('token', $_COOKIE['token'], $time - 60 * 60 * 24 * 7, '/', '.mapotechnology.com');
     $_SESSION = array();
     session_regenerate_id();
+
     header('Location: ' . $baseURL . 'secure/login?fail=' . $error . '&next=' . urlencode(str_replace('?existing=1', '', $_SERVER['REQUEST_URI'])));
 } else {
     $u = executeQuery('is', [$_SESSION['uid'], $_COOKIE['token']], "SELECT u.location, method, s.time, se.expires, email, permissions, u.role FROM users AS u LEFT JOIN permissions AS p ON p.uid = u.uid LEFT JOIN settings AS s ON s.uid = u.uid LEFT JOIN sessions AS se ON se.uid = u.uid WHERE u.uid = ? AND se.token = ?");
@@ -39,6 +40,7 @@ if ($redirect === true) {
             setcookie('token', $_COOKIE['token'], $time - (60 * 60 * 24 * 7), '/', '.mapotechnology.com', true);
             $_SESSION = array();
             session_regenerate_id();
+
             header('Location: ' . $baseURL . 'secure/login?fail=2&next=' . urlencode(str_replace('?existing=1', '', $_SERVER['REQUEST_URI'])));
         } else {
             $subs = executeQuery('s', [$u['email']], "SELECT * FROM billing WHERE email = ? AND status = 'active'");
@@ -70,7 +72,7 @@ if ($redirect === true) {
                 'subscriptions' => $sub,
                 'permissions' => ($u['permissions'] ? unserialize($u['permissions']) : []),
                 'sync' => array('m' => $u['method'], 't' => $u['time']),
-                'location' => unserialize($u['location'])
+                'location' => json_decode($u['location'])
             );
 
             // use the script to update user's last active time

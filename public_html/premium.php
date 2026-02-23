@@ -63,7 +63,7 @@ $suggestUpgrade = isset($_GET['upgrade']);
                 <li>❌ Smoke models</li>
             </ul>
 
-            <a href="https://www.mapotechnology.com/secure/register?service=mapofire" class="btn btn-<?=$_SESSION['uid'] ? 'gray disabled' : 'black'?>">Get Started</a>
+            <a href="https://auth.mapotechnology.com/register?service=mapofire" class="btn btn-<?=$_SESSION['uid'] ? 'gray disabled' : 'black'?>">Get Started</a>
         </div>
         <? }
         $plan->setPlan('ignite_monthly');

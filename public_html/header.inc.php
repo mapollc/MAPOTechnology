@@ -102,7 +102,7 @@ $metaDesc = $metaDesc ? $metaDesc : 'Track wildfires with Map of Fire. Explore t
             <div class="row d-flex align-items-center" style="height:100%">
                 <div class="col-3">
                     <a href="<?= $logoURL ?>">
-                        <img loading="lazy" class="logo2" src="<?= $domain ?>assets/images/<?= $logoA ?>" alt="<?= $siteProduct ?> logo" title="<?= $siteProduct ?> logo">
+                        <!--<img loading="lazy" class="logo2" src="<?= $domain ?>assets/images/<?= $logoA ?>" alt="<?= $siteProduct ?> logo" title="<?= $siteProduct ?> logo">-->
                         <img class="logo" src="<?= $domain ?>assets/images/<?= $logoB ?>" alt="<?= $siteProduct ?> logo" title="<?= $siteProduct ?> logo">
                     </a>
                 </div>

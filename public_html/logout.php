@@ -1,10 +1,10 @@
 <?
-ini_set('display_errors', 0);
-error_reporting(E_ALL);
-
 $domain = str_replace('www.', '', $_SERVER['HTTP_HOST']);
 
-ini_set('session.cookie_domain', '.' . $domain);
+ini_set('display_errors', 0);
+error_reporting(E_ERROR | E_PARSE);
+ini_set('session.cookie_domain', ".$domain");
+
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Cache-Control: post-check=0, pre-check=0', false);
 header('Pragma: no-cache');
@@ -16,66 +16,95 @@ session_start();
 function nextURL($next)
 {
     global $isLoggedOut;
-    if (!$isLoggedOut || !$next) return $next;
+    if (!$next) return $next;
 
-    $urlParts = explode('#', $next, 2);
-    $base = $urlParts[0];
-    $hash = isset($urlParts[1]) ? '#' . $urlParts[1] : '';
+    $allowedDomains = [
+        'mapofire.com',
+        'mapotrails.com',
+        'wildfiremap.org',
+        'fireweatheravalanche.org',
+        'mapotechnology.com',
+        'apps.mapotechnology.com'
+    ];
 
-    $sep = (strpos($base, '?') !== false) ? '&' : '?';
+    $parsed = parse_url($next);
+    if (!isset($parsed['host'])) return '';
 
-    return $base . $sep . $isLoggedOut . $hash;
+    foreach ($allowedDomains as $allowed) {
+        if (stripos($parsed['host'], $allowed) !== false) {
+            $urlParts = explode('#', $next, 2);
+            $base = $urlParts[0];
+            $hash = isset($urlParts[1]) ? '#' . $urlParts[1] : '';
+            $sep = (strpos($base, '?') !== false) ? '&' : '?';
+            return "$base$sep$isLoggedOut$hash";
+        }
+    }
+    return '';
 }
-
 
 $time = time();
 $token = $_SESSION['token'] ?? $_COOKIE['token'] ?? null;
 $isLoggedOut = !isset($_GET['expired']) || $_GET['expired'] != 1 ? 'loggedOut=1' : '';
-////$secureURL = 'https://www.mapotechnology.com/secure/login?';
 $secureURL = 'https://auth.mapotechnology.com/login?';
+$isMainDomain = $domain === 'mapotechnology.com';
 
 if ($token) {
     $user = executeQuery('s', [$token], "SELECT u.uid FROM sessions AS s LEFT JOIN users AS u ON u.uid = s.uid WHERE token = ? LIMIT 1");
-
-    if ($user) {
-        $q1 = executeQuery('si', [$time, $user['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
-    }
+    if ($user) executeQuery('si', [$time, $user['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
 
     executeQuery('s', [$token], "UPDATE sessions SET expires = 0 WHERE token = ?");
 
-    setcookie('token', '', $time - 3600 * 24 * 365.25, "/", "." . $domain, true);
-    
-    $_SESSION = [];
-    $params = session_get_cookie_params();
-    
-    setcookie(
-        session_name(),
-        '',
-        time() - 3600 * 24 * 365.25,
-        $params["path"],
-        $params["domain"],
-        $params["secure"],
-        $params["httponly"]
-    );
+    setcookie('token', '', [
+        'expires' => $time - 31557600, // 60 * 60 * 24 * 365.25
+        'path' => '/',
+        'domain' => ".$domain",
+        'secure' => true,
+        'httponly' => false,
+        'samesite' => 'Lax'
+    ]);
 
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        session_destroy();
-    }
+    $params = session_get_cookie_params();
+
+    setcookie(session_name(), '', [
+        'expires' => $time - 31557600, // 60 * 60 * 24 * 365.25
+        'path' => $params['path'],
+        'domain' => $params['domain'],
+        'secure' => $params['secure'],
+        'httponly' => $params['httponly'],
+        'samesite' => $params['samesite']
+    ]);
+
+    $_SESSION = [];
+    if (session_status() === PHP_SESSION_ACTIVE) session_destroy();
 }
 
 $goto = '';
+$next = $_GET['next'] ?? '';
 
 if (isset($_GET['expired'], $_GET['method']) && $_GET['expired'] == 1 && $_GET['method'] == 'login') {
     $service = urlencode($_GET['service'] ?? '');
-    $next = urlencode($_GET['next'] ?? '');
-    $goto = $secureURL . "fail=2" . (!empty($service) ? "&service=$service" : '') . (!empty($next) ? "&next=$next" : '');
-} else if (isset($_GET['next'])) {
-    $goto = nextURL($_GET['next']);
-} else if ($domain !== 'mapotechnology.com') {
+    $next = urlencode($next);
+    $goto = $secureURL . "fail=2" .
+        (!empty($service) ? "&service=$service" : '') .
+        (!empty($next) ? "&next=$next" : '');
+} else if (!$isMainDomain) {
     $sub = explode('.', $domain)[0];
-    $goto = $secureURL . (!empty($sub) ? "service=$sub" : '');
+    $mainLogoutNext = $next ? nextURL($next) : '';
+
+    $goto = "https://mapotechnology.com/logout";
+    $query['sso'] = 1;
+    if (!empty($sub)) $query['service'] = $sub;
+    if ($mainLogoutNext) $query['next'] = $mainLogoutNext;
+
+    if (!empty($query)) {
+        $goto .= '?' . http_build_query($query);
+    }
 } else {
-    $goto = $secureURL . $isLoggedOut;
+    if ($_GET['sso'] == 1) {
+        $goto = $next;
+    } else {
+        $goto = $secureURL . ($next ? 'next=' . urlencode(nextURL($next)) : $isLoggedOut);
+    }
 }
 
 #echo $goto;

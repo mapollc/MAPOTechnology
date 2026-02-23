@@ -59,7 +59,7 @@ if (isset($_POST) && isset($_POST['price'])) {
                 ($_REQUEST['ref'] ? '&ref=' . $_REQUEST['ref'] : '') .
                 ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
         } else {
-            $goto = 'https://www.mapotechnology.com/secure/register?service=mapofire&subscribe=1&product_key=' . $product .
+            $goto = 'https://auth.mapotechnology.com/register?service=mapofire&subscribe=1&product_key=' . $product .
                 '&price_id=' . $_POST['price'] .
                 ($_POST['trial'] ? '&trial=1' : '') .
                 ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
@@ -297,7 +297,7 @@ if ($trialExhausted) {
                 <? } else { ?>
                     <p style="line-height:1.3">You will be automatically billed every month until you cancel.</p>
                 <? } ?>
-                <a class="btn btn-orange" style="margin:2em 0 0 0" href="https://www.mapotechnology.com/secure/login?service=mapofire&next=<?= urlencode('https://mapofire.com?ref=new_subscriber') ?>">Login & Start Tracking Wildfires</a>
+                <a class="btn btn-orange" style="margin:2em 0 0 0" href="https://auth.mapotechnology.com/login?service=mapofire&next=<?= urlencode('https://mapofire.com?ref=new_subscriber') ?>">Login & Start Tracking Wildfires</a>
                 <? } else if ($_GET['status'] == 'complete') {
                 if ($trialExhausted) {
                     echo 'You have already used your free 7-day trial for this product.';

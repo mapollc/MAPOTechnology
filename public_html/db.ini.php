@@ -30,7 +30,8 @@ function plural($v)
     return $v > 1 ? 's' : '';
 }
 
-function ago($timestamp) {
+function ago($timestamp)
+{
     if ($timestamp == 0) {
         return 'Never';
     }
@@ -60,19 +61,18 @@ function ago($timestamp) {
 
             if ($remainder > 0) {
                 $foundNext = false;
-                foreach($units as $nextSeconds => $nextUnit){
-                    if($foundNext){
+                foreach ($units as $nextSeconds => $nextUnit) {
+                    if ($foundNext) {
                         $remainderValue = floor($remainder / $nextSeconds);
-                        if($remainderValue > 0){
+                        if ($remainderValue > 0) {
                             $result .= ', ' . $remainderValue . ' ' . $nextUnit . plural($remainderValue);
                             break;
                         }
                     }
-                    if($seconds === $nextSeconds){
+                    if ($seconds === $nextSeconds) {
                         $foundNext = true;
                     }
                 }
-
             }
 
             return $result . ' ago';
@@ -82,7 +82,8 @@ function ago($timestamp) {
     return 'Unknown';
 }
 
-function until($timestamp) {
+function until($timestamp)
+{
     $diff = (int) $timestamp - time();
 
     if ($diff < 10) {
@@ -106,14 +107,13 @@ function until($timestamp) {
 
             $result = $value . ' ' . $unit . plural($value);
 
-            if ($remainder > 0 && isset($units[array_search($unit, array_values($units)) +1])) {
-                $remainderUnit = array_values($units)[array_search($unit, array_values($units)) +1];
+            if ($remainder > 0 && isset($units[array_search($unit, array_values($units)) + 1])) {
+                $remainderUnit = array_values($units)[array_search($unit, array_values($units)) + 1];
                 $remainderSeconds = array_search($remainderUnit, $units);
                 $remainderValue = floor($remainder / $remainderSeconds);
-                if($remainderValue > 0){
+                if ($remainderValue > 0) {
                     $result .= ', ' . $remainderValue . ' ' . $remainderUnit . plural($remainderValue);
                 }
-
             }
 
             return $result;
@@ -143,18 +143,19 @@ function getUserRole($r)
     return $p;
 }
 
-function agent($ua) {
-    $version = $ua->ua->major.($ua->ua->minor != 0 ? '.'.$ua->ua->minor : '').($ua->ua->patch != 0 ? '.'.$ua->ua->patch : '');
-    $osVersion = $ua->os->major.($ua->os->minor != 0 ? '.'.$ua->os->minor : '').($ua->os->patch != 0 ? '.'.$ua->os->patch : '');
+function agent($ua)
+{
+    $version = $ua->ua->major . ($ua->ua->minor != 0 ? '.' . $ua->ua->minor : '') . ($ua->ua->patch != 0 ? '.' . $ua->ua->patch : '');
+    $osVersion = $ua->os->major . ($ua->os->minor != 0 ? '.' . $ua->os->minor : '') . ($ua->os->patch != 0 ? '.' . $ua->os->patch : '');
 
-    return ($ua->device->family != 'Other' ? str_replace('Generic_', '', $ua->device->brand).' '.$ua->device->model.' using ' : '').$ua->ua->family.($version ? " ($version)" : '')." on ".$ua->os->family." $osVersion";
+    return ($ua->device->family != 'Other' ? str_replace('Generic_', '', $ua->device->brand) . ' ' . $ua->device->model . ' using ' : '') . $ua->ua->family . ($version ? " ($version)" : '') . " on " . $ua->os->family . " $osVersion";
 }
 
 function createToken($payload, $expires = null)
 {
     global $tokenDomain;
     global $secretKey;
-    
+
     $payload['iss'] = $tokenDomain;
     $payload['aud'] = $tokenDomain;
     $payload['iat'] = time();
@@ -195,6 +196,24 @@ function validToken($token)
     } catch (Exception $e) {
         return false;
     }
+
+    /*try {
+        $decoded = decodeToken($token);
+
+        if (!isset($decoded['iss']) || rtrim($decoded['iss'], '/') != $tokenDomain) {
+            return false;
+        } else {
+            return true;
+        }
+    } catch (Firebase\JWT\ExpiredException) {
+        return false;
+    } catch (Firebase\JWT\BeforeValidException) {
+        return false;
+    } catch (Firebase\JWT\SignatureInvalidException) {
+        return false;
+    } catch (Exception $e) {
+        return false;
+    }*/
 }
 
 function logEvent($action, $system = false, $uid = null)

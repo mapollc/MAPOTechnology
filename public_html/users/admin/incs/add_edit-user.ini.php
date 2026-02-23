@@ -133,9 +133,9 @@ if ($function == 'edit' && !$row) {
         </div>
 
         <div class="btn-group">
-            <input type="submit" name="action" class="btn btn-green" value="<?= ucfirst($function) ?> User">
+            <input type="submit" name="action" class="btn btn-green" value="<?= $function == 'add' ? 'Add User' : 'Save Changes' ?>">
             <input type="button" class="btn" onclick="window.location.href='../people'" value="Go Back">
-            <input type="button" class="btn btn-red" onclick="window.location.href='../people/remove?uid=<?=$_GET['uid']?>'" value="Remove User">
+            <input type="button" class="btn btn-red" onclick="window.location.href='../people/remove?uid=<?=$_GET['uid']?>'" value="Delete User Account">
         </div>
     </form>
 
