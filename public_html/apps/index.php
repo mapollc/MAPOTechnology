@@ -208,4 +208,3 @@ if ($route == 'authenticate') {
         }
     }
 }
-    ?>

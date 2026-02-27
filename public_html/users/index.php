@@ -1,6 +1,6 @@
 <?
 ini_set('display_errors', 0);
-error_reporting(E_ERROR || E_PARSE);
+error_reporting(E_ERROR | E_PARSE);
 ini_set('session.cookie_domain', '.mapotechnology.com');
 
 if (function_exists('opcache_invalidate')) {
@@ -29,27 +29,11 @@ $path = $page . ($method ? '/' . $method : '');
 $baseRoot = '/home/mapo/public_html/';
 $documentRoot = $baseRoot . 'users/';
 
-include_once '../db.ini.php';
-require_once './secure.inc.php';
-include_once '/home/mapo/public_html/subs.inc.php';
-require_once $baseRoot . '/vendor/autoload.php';
-
-use UAParser\Parser;
-
-$user_agent = Parser::create();
-
-require_once 'permissions.inc.php';
-
-// include leaflet on these pages only
-$leafletPages = array('mapofire.ini.php');
-
-// IF THE USER MUST BE A SUPER USER
-$doNotEdit = array(1, 2);
-$superAdmin = in_array($_SESSION['uid'], $doNotEdit) ? true : false;
+require_once 'helpers.inc.php';
 
 switch ($path) {
     case 'home':
-        $pageTitle = 'User Dashboard';
+        $pageTitle = ($isAdmin ? 'Admin' : 'User') . ' Dashboard';
         break;
     case 'admin/people':
         $pageTitle = 'Manage Users';
@@ -108,12 +92,7 @@ switch ($path) {
         break;
 }
 
-if (!file_exists($pageFile)) {
-    $pageTitle = 'Page Not Found';
-}
-
-$securePages = array('wildfires', /*'billing',*/ 'admin');
-$lock = '<i class="far fa-lock"></i>';
+if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
 ?>
 <!DOCTYPE html>
 
@@ -201,17 +180,14 @@ $lock = '<i class="far fa-lock"></i>';
     <section>
         <div class="container">
             <?
-            if (!in_array($_GET['page'], $securePages) || (in_array($_GET['page'], $securePages) && $user['role'] == 'ADMIN')) {
-                //// || $_GET['method'] == 'trails' && $user['role'] == 'TRAIL MODERATOR'*/) {
+            if (!in_array($_GET['page'], $securePages) || in_array($_GET['page'], $securePages) && $isAdmin) {
                 if (file_exists($pageFile)) {
                     include_once './' . $pageFile;
                 } else {
                     echo pageNotFound();
                 }
 
-                if ($con) {
-                    mysqli_close($con);
-                }
+                if ($con) mysqli_close($con);
             } else {
                 echo invalidPermissions();
             } ?>
@@ -241,7 +217,10 @@ $lock = '<i class="far fa-lock"></i>';
 
     <div id="shadow"></div>
 
-    <script>const uid=<?= $_SESSION['uid'] ?>;let userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;</script>
+    <script>
+        const uid = <?= $_SESSION['uid'] ?>;
+        let userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;
+    </script>
     <? if (in_array($pageFile, $leafletPages) || $method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
         <script src="https://cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet-src.min.js"></script>
     <? } ?>

@@ -202,6 +202,175 @@ function validateEmail(email) {
     return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
 }
 
+class QueryWildfires {
+    constructor() {
+        this.totalRows = 0;
+        this.wildfires = null;
+        this.listOfFires = document.querySelector('#listOfFires');
+        this.now = Date.now() / 1000;
+        this.numberFormat = new Intl.NumberFormat('en-US');
+    }
+
+    async search(fields = null) { console.log(fields);
+        const body = [];
+
+        window.history.pushState(
+            {},
+            '',
+            `${window.location.origin}${window.location.pathname}${fields ? `?${fields}` : ''}`
+        );
+
+        if (fields) {
+            for (const [key, value] of new URLSearchParams(fields).entries()) {
+                body.push([key, value]);
+            }
+        }
+
+        document.querySelector('#resultsNum').innerHTML = '';
+        this.listOfFires.querySelector('tbody').innerHTML = '<tr><td colspan="10" style="text-align:center"><div class="spinner"></div></td></tr>';
+
+        const resp = await api(host + usersAPI + 'getFires' + (pageName.search('duplicates') >= 0 ? '/duplicates' : ''), body);
+        this.success(resp);
+    }
+
+    success(resp) {
+        if (resp && resp.response.fires) {
+            this.totalRows = resp.response.count;
+            this.wildfires = resp.response.fires;
+            this.listOfFires.querySelector('tbody').innerHTML = '';
+            this.pagination();
+
+            for (let i = 0; i < this.wildfires.length; i++) {
+                this.createRow(this.wildfires[i], (i > 0 ? this.wildfires[i - 1] : null));
+            }
+        }
+    }
+
+    pagination() {
+        const regex = window.location.search.match(/results=([0-9]+)/);
+        const resultsPage = regex ? parseInt(regex[1], 10) : 1;
+
+        const total = parseInt(this.totalRows, 10);
+        const perPage = 100;
+
+        const curResults = resultsPage <= 1 ? 1 : ((resultsPage - 1) * perPage) + 1;
+
+        let max = resultsPage * perPage;
+        max = Math.min(max, total);
+
+        document.querySelector('#resultsNum').innerHTML = `Showing results ${this.numberFormat.format(curResults)} to ${this.numberFormat.format(max)} of ${this.numberFormat.format(total)}`;
+
+        const links = Math.ceil(total / perPage);
+
+        const container = document.querySelector('.pagination > div');
+        container.innerHTML = '';
+
+        for (let i = 1; i <= links; i++) {
+            let el;
+
+            if (i === resultsPage) {
+                el = document.createElement('b');
+            } else {
+                el = document.createElement('a');
+
+                const params = new URLSearchParams(window.location.search);
+                params.set('results', i);
+
+                el.href = '?' + params.toString();
+            }
+
+            el.textContent = i;
+            container.appendChild(el);
+        }
+    }
+
+    size(a) {
+        if (a === '' || a === null || a === undefined) return 'Unknown';
+
+        const acres = parseFloat(a);
+        if (isNaN(acres)) return 'Unknown';
+
+        // format to 2 decimals
+        let o = acres.toFixed(2);
+
+        if (o.slice(-2) === '00') {
+            o = Math.round(acres).toString();
+        } else if (o.slice(-1) === '0') {
+            o = acres.toFixed(1);
+        }
+
+        return this.numberFormat.format(o);
+    }
+
+    createRow(fire, lastFire) {
+        const isDuplicate = this.isDuplicateFire(fire, lastFire);
+
+        const tr = document.createElement('tr');
+        tr.dataset.wfid = fire.wfid;
+        tr.innerHTML = this.createCols(fire);
+
+        if (pageName != 'admin/wildfires/duplicates' && fire.display !== '1') {
+            tr.style.textDecoration = 'line-through';
+        } else if (pageName == 'admin/wildfires/duplicates' && isDuplicate) {
+            tr.style.color = 'red';
+        }
+
+        this.listOfFires.querySelector('tbody').appendChild(tr);
+    }
+
+    createCols(fire) {
+        const options = {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        };
+        const date = this.now - fire.date > 86400 ? new Intl.DateTimeFormat('en-US', options).format(fire.date * 1000).replace(',', '') : timeAgo(fire.date),
+            url = `../admin/wildfires/${fire.owner == 'mapo' ? 'modify' : 'edit'}?wfid=${fire.wfid}`,
+            dupURL = pageName == 'admin/wildfires/duplicates' ? ` | <a href="#" class="hidefrommap" data-wfid="${fire.wfid}" onclick="return false">hide</a>` : '';
+
+        return `<td>${fire.incidentID}</td>
+            <td>${fire.state}</td>
+            <td>${fire.name}</td>
+            <td>${date}</td>
+            <td>${fire.type}</td>
+            <td>${this.size(fire.acres)}</td>
+            <td>${timeAgo(fire.updated)}</td>
+            <td>${fire.display == '1' ? 'Yes' : 'No'}</td>
+            <td>${fire.owner}</td>
+            <td>${this.listOfFires.dataset.edit == '1' ? `<a style="font-weight:400!important" href="${url}">edit</a>${dupURL}` : ''}</td>`;
+    }
+
+    isDuplicateFire(currentFire, lastFire, acresThreshold = 10.0, idLastDigits = 3) {
+        if (!currentFire || !lastFire) return false;
+
+        const currentNameState = (currentFire.state + currentFire.name).toLowerCase();
+        const lastNameState = (lastFire.state + lastFire.name).toLowerCase();
+
+        const currentIdSuffix = String(currentFire.incidentID).slice(-idLastDigits);
+        const lastIdSuffix = String(lastFire.incidentID).slice(-idLastDigits);
+
+        let acresMatch = false;
+
+        const currentAcres = parseFloat(currentFire.acres);
+        const lastAcres = parseFloat(lastFire.acres);
+
+        if (currentAcres === 0 || lastAcres === 0 || isNaN(currentAcres) || isNaN(lastAcres)) {
+            acresMatch = true;
+        } else {
+            const acresDifference = Math.abs(currentAcres - lastAcres);
+            acresMatch = acresDifference <= acresThreshold;
+        }
+
+        const nameStateMatch = currentNameState === lastNameState;
+        const idSuffixMatch = currentIdSuffix === lastIdSuffix;
+
+        return nameStateMatch && acresMatch && idSuffixMatch;
+    }
+}
+
 class Calculate {
     distance(lat1, lon1, lat2, lon2, metric = false) {
         var R = 6371,
@@ -989,6 +1158,28 @@ document.onreadystatechange = async () => {
             });
         }
 
+        if (pageName == 'admin/wildfires' || pageName == 'admin/wildfires/duplicates') {
+            const query = new QueryWildfires();
+            query.search(window.location.search.replace('?', '') ?? null);
+
+            document.querySelector('form#searchFires').addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const formData = new FormData(e.target);
+                const params = new URLSearchParams();
+
+                for (const [key, value] of formData.entries()) {
+                    if (value !== '') {
+                        params.append(key, value); // append preserves multiple values
+                    }
+                }
+
+                const queryString = params.toString();
+
+                query.search(queryString);
+            });
+        }
+
         if (pageName.search('admin/wildfires') >= 0) {
             const ac = document.querySelector('input[name=acres]');
 
@@ -1149,16 +1340,16 @@ newMarker.setLatLng(L.latLng(lat, lon));
 });
 
 /* on popup save button *//*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       /* get values from popup and store them in hidden input fields *//*
-                                                                                                                                    wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
-                                                                                                                                    wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
-                                                                                                                                    wrap.querySelector('input[name="waypoint[name][]"]').value = name;
-                                                                                                                                    wrap.querySelector('input[name="waypoint[note][]"]').value = notes;
-                                                                                                                                    wrap.querySelector('input[name="waypoint[icon][]"]').value = icon;
-                                                                                                                                    
-                                                                                                                                    map.closePopup();
-                                                                                                                                    });
-                                                                                                                                    
-                                                                                                                                    /* on popup delete button *//*
+                                                                                                                                                                                                                                                                        wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
+                                                                                                                                                                                                                                                                        wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
+                                                                                                                                                                                                                                                                        wrap.querySelector('input[name="waypoint[name][]"]').value = name;
+                                                                                                                                                                                                                                                                        wrap.querySelector('input[name="waypoint[note][]"]').value = notes;
+                                                                                                                                                                                                                                                                        wrap.querySelector('input[name="waypoint[icon][]"]').value = icon;
+                                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                        map.closePopup();
+                                                                                                                                                                                                                                                                        });
+                                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                        /* on popup delete button *//*
 const markerDataContainer = document.createElement('div');
 markerDataContainer.id = 'waypoint-' + markerCounter;
  
@@ -1209,6 +1400,7 @@ document.querySelector('#waypoints').appendChild(markerDataContainer);
             });
 
             document.querySelector('#q').addEventListener('keyup', async (e) => {
+                let results = '';
                 const fd = new FormData();
                 fd.append('callback', 'jurisdictions');
                 fd.append('q', e.target.value);
@@ -1290,6 +1482,19 @@ window.addEventListener('click', async (e) => {
         target.disabled = true;
         target.value = 'Getting location...';
         getMyLoc(target);
+    }
+
+    if (target.classList.contains('sortTable')) {
+        const url = target.dataset.url;
+        const match = url.match(/order=ASC/);
+        const match2 = url.match(/order=DESC/);
+        if (match != null) {
+            target.dataset.url = url.replace('order=ASC', 'order=DESC');
+        } else {
+            if (match2 != null) target.dataset.url = url.replace('order=DESC', 'order=ASC');
+        }
+
+        new QueryWildfires().search(url);
     }
 
     if (target.classList.contains('result')) {

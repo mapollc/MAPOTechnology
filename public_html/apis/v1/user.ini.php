@@ -950,10 +950,40 @@ class SSO
         return $password;
     }
 
+    private function normalizeName($name)
+    {
+        $parts = explode(' ', $name);
+
+        foreach ($parts as &$part) {
+            $subParts = explode('-', $part);
+
+            foreach ($subParts as &$sub) {
+                if (preg_match("/^Mc(.+)$/i", $sub, $matches)) {
+                    $sub = 'Mc' . ucfirst(strtolower($matches[1]));
+                } else if (preg_match("/^O'(.+)$/i", $sub, $matches)) {
+                    $sub = "O'" . ucfirst(strtolower($matches[1]));
+                } else if (strpos($sub, "'") !== false) {
+                    $apostropheParts = explode("'", $sub);
+                    foreach ($apostropheParts as &$aPart) {
+                        $aPart = ucfirst(strtolower($aPart));
+                    }
+                    $sub = implode("'", $apostropheParts);
+                } else {
+                    $sub = ucfirst(strtolower($sub));
+                }
+            }
+            $part = implode('-', $subParts);
+        }
+
+        return implode(' ', $parts);
+    }
+
     function createAccount($fname, $lname, $email, $pass, $role, $phone, $location, $thirdParty = 0, $needToConfirm = true)
     {
         $out = [];
         $tok = $this->createToken(['email' => $email]);
+        $fname = $this->normalizeName($fname);
+        $lname = $this->normalizeName($lname);
         $phone = $phone ?? '';
         $time = time();
         $pass = $pass ? $pass : $this->generatePassword();

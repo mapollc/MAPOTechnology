@@ -185,6 +185,8 @@ if ($function == 'edit' && !$row) {
             } catch (Exception $e) {
                 print_r($e->getMessage());
             }
+        } else {
+            echo '<p>This user does not have any subscriptions.</p>';
         }
     }
 } ?>

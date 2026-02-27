@@ -590,7 +590,7 @@ class Modal {
             wi = `<svg xmlns="http://www.w3.org/2000/svg" title="${weather.wind.dir}" style="transform:rotate(${weather.wind.rawdir}deg)" width="24" height="24" viewBox="0 0 24 24"><path fill="var(--light-blue)" d="M12,2L4.5,20.29l0.71,0.71L12,18l6.79,3 0.71,-0.71z"/></svg>`;
         }
 
-        if (weather.temp <= 50 && (weather.wind.speed >= 3 || weather.wind.gust >= 3)) {
+        if (weather.temp <= 50 && (weather.wind && (weather.wind.speed >= 3 || weather.wind.gust >= 3))) {
             wc = windChill(weather.temp, (weather.wind.speed >= 3 ? weather.wind.speed : weather.wind.gust)) + '&deg;F';
         } else {
             wc = Math.round(weather.temp) + '&deg;F';
@@ -727,21 +727,35 @@ class Modal {
             });
         }
 
-        var h = `<div class="boxes"><div class="ea"><span>Road</span><p>${dataLoc.hwy}</p></div>
-            <div class="ea"><span>Milepost</span><p>${dataLoc.milepost.start}${dataLoc.milepost.end ? '-' + dataLoc.milepost.end : ''}</p></div>
-            ${dataLoc.direction ? `<div class="ea"><span>Direction</span><p>${dataLoc.direction}</p></div>` : ''}</div>
-            <p style="color:var(--blue-gray)">${data.desc}</p>${comments && !comments.link ? `<p style="color:var(--blue-gray)">${comments.desc}</p>` : ''}
-            <div class="rows">
-            ${filesObj || (comments && comments.link) ? `<div class="line m"><div class="de" style="font-size:13px">Links</div>${files}</div>` : ''}
+        /*var h = `<div class="boxes"><div class="ea"><span>Road</span><p>${dataLoc.hwy}</p></div>
+        <div class="ea"><span>Milepost</span><p>${dataLoc.milepost.start}${dataLoc.milepost.end ? '-' + dataLoc.milepost.end : ''}</p></div>
+        ${dataLoc.direction ? `<div class="ea"><span>Direction</span><p>${dataLoc.direction}</p></div>` : ''}</div>
+        <p style="color:var(--blue-gray)">${data.desc}</p>${comments && !comments.link ? `<p style="color:var(--blue-gray)">${comments.desc}</p>` : ''}
+        <div class="rows">
+        ${filesObj || (comments && comments.link) ? `<div class="line m"><div class="de" style="font-size:13px">Links</div>${files}</div>` : ''}
+        <div class="line m"><div class="de" style="font-size:13px">Delays</div><span>${data.impact}</span></div></div>
+        <div class="line m" style="margin-top:0.5em"><div class="de" style="font-size:13px">Lanes Affected</div><span>${lanes == null ? 'None' : affected}</span></div></div>
+        <a href="#" class="btn dark" style="margin-top:1em" data-find="incident" data-id="${data.id}">Zoom in</a><span class="bottom">Incident #${data.id} &middot; ${dataLoc.name} (#${dataLoc.id})</span>`;*/
+
+        const thisInc = incidents.filter(f => f.properties.id == data.id)[0];
+        const coords = thisInc?.geometry.type == 'Point' ? thisInc?.geometry.coordinates : thisInc?.geometry.coordinates[0];
+        const whichWay = dataLoc.direction ? ` ${dataLoc.direction.replace('NB', 'North').replace('SB', 'South').replace('W', 'West').replace('E', 'East')}bound` : '';
+        const h = `<p style="color:var(--blue-gray)">${data.desc}</p>${comments && !comments.link ? `<p style="color:var(--blue-gray)">${comments.desc}</p>` : ''}
+            <div class="rows">${filesObj || (comments && comments.link) ? `<div class="line m"><div class="de" style="font-size:13px">Links</div>${files}</div>` : ''}
             <div class="line m"><div class="de" style="font-size:13px">Delays</div><span>${data.impact}</span></div></div>
             <div class="line m" style="margin-top:0.5em"><div class="de" style="font-size:13px">Lanes Affected</div><span>${lanes == null ? 'None' : affected}</span></div></div>
-            <a href="#" class="btn dark" style="margin-top:1em" data-find="incident" data-id="${data.id}">Zoom in</a><span class="bottom">Incident #${data.id} &middot; ${dataLoc.name} (#${dataLoc.id})</span>`;
+            <a href="#" class="btn dark" style="margin-top:1em" data-find="incident" data-id="${data.id}">Zoom in</a>
+            <span class="bottom">Incident #${data.id} &middot; ${dataLoc.name} (#${dataLoc.id})</span>`;
+
+        const where = `<div class="boxes" style="margin:0 0 1em 0"><div class="ea" style="max-width:100%"><p>${dataLoc.hwy}${whichWay ?? ''}, MP ${dataLoc.milepost.start}${dataLoc.milepost.end ? '-' + dataLoc.milepost.end : ''}</p>
+            <p style="font-size:15px;color:black;margin-top:2px;font-weight:400">${nearestCity(coords[1], coords[0])}</p></div></div>`;
 
         modal.innerHTML = this.ht;
         modal.querySelector('h1').innerHTML = '<i class="fa-solid fa-' + ty + '" style="color:' + col + ';margin-right:0.75em"></i>' + data.type;
         modal.querySelector('.updated').style.textAlign = 'left';
         modal.querySelector('.updated').setAttribute('title', 'Last updated ' + new Date(data.updated * 1000).toLocaleString().split(', ').join(' at '));
         modal.querySelector('.updated').innerHTML = `Updated ${timeAgo(data.updated)} &middot; Reported ${timeAgo(data.created)}`;
+        modal.querySelector('.updated').insertAdjacentHTML('beforebegin', where);
         modal.querySelector('.rows').insertAdjacentHTML('afterend', h);
         modal.querySelector('.rows').remove();
 
@@ -1145,13 +1159,14 @@ class RoadNetwork {
 class Data {
     constructor() {
         this.cluster = {
-            maxZoom: 10,
+            maxZoom: 8,
             minPoints: 3,
-            radius: 25
+            radius: 40
         };
         this.DB_NAME = 'OreRoadsCache';
-        this.STORE_NAME = 'apiCache';
-        this.DB_VERSION = 1;
+        this.STORE_NAMES = ['prod', 'dev'];
+        this.STORE_NAME = 'prod';
+        this.DB_VERSION = 2;
     }
 
     init() {
@@ -1171,11 +1186,15 @@ class Data {
     openDB() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+
             request.onupgradeneeded = () => {
                 const db = request.result;
-                if (!db.objectStoreNames.contains(this.STORE_NAME)) {
-                    db.createObjectStore(this.STORE_NAME);
-                }
+                
+                this.STORE_NAMES.forEach(storeName => {
+                    if (!db.objectStoreNames.contains(storeName)) {
+                        db.createObjectStore(storeName);
+                    }
+                });
             };
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
@@ -1662,17 +1681,39 @@ class Data {
                 layout: {
                     'symbol-placement': 'point',
                     'text-font': ['DIN Pro Medium'],
-                    'text-field': ['concat', ['round', ['get', 'temp', ['get', 'weather', ['properties']]]], '°'],
+                    'text-field': [
+                        'case',
+                        [
+                            'all',
+                            ['has', 'weather'],
+                            ["==", ["typeof", ["get", "weather"]], "object"]
+                        ],
+                        [
+                            'concat',
+                            ['round', ['get', 'temp', ['get', 'weather', ['properties']]]], '°'
+                        ],
+                        ''
+                    ],
                     'text-justify': 'center',
                     'text-size': [
                         'case',
-                        ['>', ['round', ['get', 'temp', ['get', 'weather', ['properties']]]], 99],
+                        [
+                            'all',
+                            ['has', 'weather'],
+                            ["==", ["typeof", ["get", "weather"]], "object"],
+                            ['>', ['round', ['get', 'temp', ['get', 'weather', ['properties']]]], 99]
+                        ],
                         12,
                         14
                     ],
                     'text-offset': [
                         'case',
-                        ['>', ['round', ['get', 'temp', ['get', 'weather', ['properties']]]], 99],
+                        [
+                            'all',
+                            ['has', 'weather'],
+                            ["==", ["typeof", ["get", "weather"]], "object"],
+                            ['>', ['round', ['get', 'temp', ['get', 'weather', ['properties']]]], 99]
+                        ],
                         [-1.98, -1],
                         [-1.7, -.85]
                     ],
@@ -2068,32 +2109,20 @@ function onMapClickListener(features, point) {
             return;
         }
 
-        if (layer == 'plows') { console.log(properties);
+        if (layer == 'plows') {
+            console.log(properties);
             createDialog('ODOT Snow Plow', '');
             const spot = document.querySelector('.dialog .wrapper p'),
                 temp = JSON.parse(properties.temp),
-                theCity = [],
-                theDist = [],
-                theBear = [];
+                where = nearestCity(feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
 
-            cities.list.forEach((c) => {
-                const dist = distance(c.lat, c.lon, feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
-                const bear = getBearing(c.lat, c.lon, feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
-                theCity.push(c.city);
-                theDist.push(dist);
-                theBear.push(bear);
-            });
-
-            const min = Math.min.apply(null, theDist);
-            const where = min.toFixed(1) + ' miles ' + theBear[theDist.indexOf(min)] + ' of ' + theCity[theDist.indexOf(min)] + ', OR';
-            
             let content = '<div style="line-height:1.3">';
 
-            content += '<b>Speed</b><br>' + properties.speed + ' mph<br><b>Location</b><br>' + where + '<br><b>Air Temperature</b><br>' + 
-            temp.air + '&deg;<br><b>Road Temperature</b><br>' + 
-            temp.road + '&deg;<br><b>Last Seen</b><br>' + 
-            timeAgo(properties.updated) + '</div>';
-            
+            content += '<b>Speed</b><br>' + properties.speed + ' mph<br><b>Location</b><br>' + where + '<br><b>Air Temperature</b><br>' +
+                temp.air + '&deg;<br><b>Road Temperature</b><br>' +
+                temp.road + '&deg;<br><b>Last Seen</b><br>' +
+                timeAgo(properties.updated) + '</div>';
+
             spot.insertAdjacentHTML('beforebegin', content);
             spot.remove();
         }
@@ -2112,7 +2141,7 @@ function onMapClickListener(features, point) {
                     report,
                     properties.name,
                     true
-                );
+                ); console.log(range);
 
                 const uqid = {
                     lat: point.lat,

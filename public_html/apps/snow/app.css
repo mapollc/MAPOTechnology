@@ -99,7 +99,7 @@ footer {
     padding: 10px 20px;
     font-size: 14px;
     background-color: #252525;
-    color: #fff;
+    color: #fff!important;
 }
 
 #weather .station .btn:hover {
