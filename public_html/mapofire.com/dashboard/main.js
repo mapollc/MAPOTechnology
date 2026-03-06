@@ -938,11 +938,12 @@ class Stats {
 
     createTableRow(table, fire) {
         const prop = fire.properties,
-            div = document.createElement('div');
+            geo = `7/${fire.geometry.coordinates[0]}/${fire.geometry.coordinates[1]}`,
+            div = document.createElement('div'); console.log(fire);
 
         div.classList.add('row');
         div.addEventListener('click', () => {
-            window.open('https://mapofire.com/' + prop.url + '?utm_campaign=mapofire&utm_medium=button&utm_source=blazeboard', 'wildfire');
+            window.open(`//mapofire.com/${prop.url}?utm_campaign=mapofire&utm_medium=button&utm_source=blazeboard#${geo}`, 'wildfire');
         });
 
         div.innerHTML = `<div>${this.fireName(prop.name, prop.type, prop.incidentId)}</div>

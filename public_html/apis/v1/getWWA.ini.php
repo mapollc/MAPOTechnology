@@ -506,7 +506,7 @@ if (!$cache || filemtime(root() . 'getWWA.ini.php') > $memcache->get($cachefilen
         } else if ($title == 'Red Flag Warning' || $title == 'Fire Weather Watch') {
             $desc = text4($p['description']);
         } else {
-            $desc = $_REQUEST['app'] == 1 ? text3($p['description']) :  text($p['description']);
+            $desc = $_REQUEST['app'] == 1 ? text3($p['description']) : text($p['description']);
         }
 
         if (date('njY') == date('njY', $exp)) {
@@ -517,7 +517,7 @@ if (!$cache || filemtime(root() . 'getWWA.ini.php') > $memcache->get($cachefilen
             $expires .= date('l', $exp);
         }
 
-        $wwa = array('title' => $title, 'headline' => $headline, 'area' => $area, 'issued' => ago($issued), 'expires' => $expires, 'wfo' => $wfo, 'office' => $office, 'text' => $desc, 'help' => $help, 'color' => '#' . color($title));
+        $wwa = ['title' => $title, 'headline' => $headline, 'area' => $area, 'issued' => ago($issued), 'expires' => $expires, 'wfo' => $wfo, 'office' => $office, 'text' => $desc, 'help' => $help, 'color' => '#' . color($title)];
 
         if (!empty($parameters)) {
             $wwa['parameters'] = $parameters;

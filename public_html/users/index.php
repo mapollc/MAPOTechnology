@@ -22,12 +22,12 @@ $queryParams = ltrim($queryParams, '&');
 
 $page = $_GET['page'];
 $pageFile = $_GET['page'] . '.ini.php';
-$versions = array('leaflet' => '1.9.4', 'jquery' => '3.6.4');
-$method = $_GET['method'] ? $_GET['method'] : false;
-$function = $_GET['function'] ? $_GET['function'] : false;
-$path = $page . ($method ? '/' . $method : '');
+$versions = ['leaflet' => '1.9.4', 'jquery' => '3.6.4'];
+$method = $_GET['method'] ?: false;
+$function = $_GET['function'] ?: false;
+$path = $page . ($method ? "/$method" : '');
 $baseRoot = '/home/mapo/public_html/';
-$documentRoot = $baseRoot . 'users/';
+$documentRoot = "{$baseRoot}users/";
 
 require_once 'helpers.inc.php';
 
@@ -36,7 +36,7 @@ switch ($path) {
         $pageTitle = ($isAdmin ? 'Admin' : 'User') . ' Dashboard';
         break;
     case 'admin/people':
-        $pageTitle = 'Manage Users';
+        $pageTitle = 'Manage People';
         break;
     case 'admin/dispatch':
         $pageTitle = 'Manage Dispatch Centers';
@@ -107,18 +107,18 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
     <link rel="preconnect" href="//ka-p.fontawesome.com">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1">
     <meta name="description" content="" rel="">
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#ffc65c" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@200;400;500;600&display=swap">
-    <link rel="stylesheet" href="https://www.mapotechnology.com/src/css/global.css">
+    <link rel="stylesheet" href="//mapotechnology.com/src/css/global.css">
     <link rel="stylesheet" href="<?= $baseURL ?>src/css/account.css">
     <script async src="https://kit.fontawesome.com/a107124392.js" crossorigin="anonymous"></script>
     <? if (in_array($pageFile, $leafletPages) || $method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet.min.css">
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet.min.css">
     <? } ?>
-    <link rel="shortcut icon" href="https://www.mapotechnology.com/images/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="//mapotechnology.com/images/favicon.ico" type="image/x-icon" />
     <link rel="canonical" href="<?= substr($baseURL, 0, -1) . $_SERVER['REQUEST_URI'] ?>" />
 </head>
 
@@ -128,7 +128,7 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
             <div class="container">
                 <div class="row align-center space-between">
                     <div class="col">
-                        <a href="https://www.mapotechnology.com/account/home"><img src="https://www.mapotechnology.com/assets/images/mapo_logo_small.png" style="height:50px"></a>
+                        <a href="//mapotechnology.com/account/home"><img src="//mapotechnology.com/assets/images/mapo_logo_small.png" style="height:50px"></a>
                     </div>
                     <div class="col">
                         <div id="menuIcon"><i class="far fa-bars"></i></div>

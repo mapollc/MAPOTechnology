@@ -159,8 +159,32 @@ const specificURL = window.location.origin + '/',
 
         'hms': { layers: ['hms', 'hms_title'], exe: () => { config.layersHandler.hms(); } },
         'smokeFcst': { layers: ['smokeFcst'], exe: () => { config.layersHandler.smokeFcst(); } },
-        'sfcSmoke': { layers: ['sfcSmoke'], exe: () => { config.layersHandler.sfcSmoke(); } },
-        'viSmoke': { layers: ['viSmoke'], exe: () => { config.layersHandler.viSmoke(); } },
+        'sfcSmoke': {
+            run: async (checked) => {
+                if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
+                    document.querySelector('#sfc_smoke_time').disabled = !checked;
+                }
+
+                if (map.getSource('sfcSmoke')) {
+                    map.setLayoutProperty('sfcSmoke', 'visibility', checked ? 'visible' : 'none');
+                } else if (checked) {
+                    config.layersHandler.sfcSmoke();
+                }
+            }
+        },
+        'viSmoke': {
+            run: async (checked) => {
+                if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
+                    document.querySelector('#vi_smoke_time').disabled = !checked;
+                }
+
+                if (map.getSource('viSmoke')) {
+                    map.setLayoutProperty('viSmoke', 'visibility', checked ? 'visible' : 'none');
+                } else if (checked) {
+                    config.layersHandler.viSmoke();
+                }
+            }
+        },
 
         'countyBounds': { layers: ['countyBounds'], exe: () => { config.layersHandler.countyBounds(); } },
         'odfFDR': { layers: ['odfFDR', 'odfFDR_outline', 'odfFDR_title'], exe: () => { config.layersHandler.odfFDR(); } },
@@ -180,7 +204,7 @@ const specificURL = window.location.origin + '/',
         },
         'spc': {
             run: async (checked) => {
-                if (impact.style.display == 'flex' && impact.dataset.content == 'layers') {
+                if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
                     document.querySelector('#otlkType').disabled = !checked;
                     document.querySelector('#otlkDay').disabled = !checked;
                 }
@@ -490,7 +514,11 @@ function debounce(fn, wait) {
     };
 }
 
-async function api(uri, fields = null, v2 = false) {
+function storage(key, data = null) {
+    return data ? localStorage.setItem(key, data) : localStorage.getItem(key);
+}
+
+async function api(uri, fields = null, v2 = false, forAuth = false) {
     if (!navigator.onLine) {
         console.error('You are not connected to the internet');
         return null;
@@ -514,6 +542,7 @@ async function api(uri, fields = null, v2 = false) {
         }
     }
 
+    if (forAuth) ops['credentials'] = 'include';
     if (!isExternal) ops['body'] = fd;
 
     try {
@@ -865,7 +894,7 @@ class ClickListener {
 
     // show/open layers menu
     showLayers() {
-        const scrollPosition = localStorage.getItem('mapofire.impactScroll');
+        const scrollPosition = storage('mapofire.impactScroll');
 
         if (config.layersMenu == null) this.createLayers();
 
@@ -1320,9 +1349,9 @@ class ClickListener {
 
             /* if user is logged in, save to account, otherwise store in local storage */
             if (settings.user) {
-                await api(config.host + 'api/v1/trackFires/' + m, [['wfid', id]]);
+                await api(config.host + 'api/v1/trackFires/' + m, [['wfid', id]], false, true);
             } else {
-                localStorage.setItem('mapofire.tracked', JSON.stringify(tracked));
+                storage('mapofire.tracked', JSON.stringify(tracked));
             }
 
             notify('success', (m == 'add' ? 'You\'re now following the ' : 'You\'re no longer following the ') + name + '.');
@@ -1337,12 +1366,12 @@ class ClickListener {
         this.target.parentElement.parentElement.remove();
 
         if (settings.user) {
-            await api(config.host + 'api/v1/trackFires/remove', [['wfid', id]]);
+            await api(config.host + 'api/v1/trackFires/remove', [['wfid', id]], false, true);
         } else {
-            const t = JSON.parse(localStorage.getItem('mapofire.tracked')),
+            const t = JSON.parse(storage('mapofire.tracked')),
                 n = t.splice(t.indexOf(id), 1);
 
-            localStorage.setItem('mapofire.tracked', JSON.stringify(n));
+            storage('mapofire.tracked', JSON.stringify(n));
         }
 
         tracked.splice(tracked.indexOf(id), 1);
@@ -1935,10 +1964,10 @@ function upgrade() {
     const items = ['dispatch', 'dispatch_time', 'impactScroll', 'marketing', 'version', 'clicks', 'tracked'];
 
     items.forEach(item => {
-        const v = localStorage.getItem(item);
+        const v = storage(item);
 
         if (v != null) {
-            localStorage.setItem(`mapofire.${item}`, v);
+            storage(`mapofire.${item}`, v);
             localStorage.removeItem(item);
         }
     });
@@ -2006,40 +2035,40 @@ async function popstate() {
 
 document.onreadystatechange = async () => {
     const preload = async () => {
+        let usr;
         const versioning = () => {
-            const sv = localStorage.getItem('mapofire.version'),
-                lv = localStorage.getItem('mapofire.version');
+            const sv = storage('mapofire.version'),
+                lv = storage('mapofire.layers_version');
 
-            if (sv == null || sv != version) localStorage.setItem('mapofire.version', version);
-            if (lv == null || lv != layers.build) localStorage.setItem('mapofire.layers_version', layers.build);
+            if (sv == null || sv != version) storage('mapofire.version', version);
+            if (lv == null || lv != layers.build) storage('mapofire.layers_version', layers.build);
         };
-
-        let usr = null,
-            token = (/\btoken=(.*?)(?=;|$)/gm).exec(document.cookie);
 
         versioning();
 
         // create a list of layers
-        Object.entries(layers.categories).forEach(([id, _]) => {
-            layers.layers[id].forEach(each => config.listOfLayers.push(each));
-        });
+        config.listOfLayers.push(...Object.keys(layers.categories).flatMap(id => layers.layers[id]));
 
         // get the user's IP address and UUID from the server (DONT BLOCK UI THREAD)
-        if (sessionStorage.getItem('mapofire.user_session') == null) {
-            api(config.host + 'api/v1/session/get').then(sess => {
+        if (!sessionStorage.getItem('mapofire.user_session')) {
+            api(`${config.host}api/v1/session/get`).then(sess => {
                 delete sess.metadata;
                 sessionStorage.setItem('mapofire.user_session', JSON.stringify(sess));
             });
         }
 
-        if (token != null) {
-            const acct = document.querySelector('#account'),
-                get = await api(config.apiURL + 'user/get/mapofire', [['token', token[1]]]);
+        if (window.isAuthUser) {
+            const getAcct = await api(config.apiURL + 'user/get/mapofire', /*[['token', token[1]]]*/null, false, true);
 
-            usr = get.user;
+            if (getAcct?.response) {
+                const loginURL = config.domain.replace('www', 'auth') + 'login?service=' + getPlatform() + '&next=' + encodeURIComponent(window.location.href);
+                (await loadUtils()).notify('info', `Your session has expired. Please <a href="${loginURL}">login again</a>.`, 3.25);
+            } else {
+                usr = getAcct?.user;
+            }
 
             /* change menu button */
-            if (usr != null) acct.querySelector('span').innerHTML = 'Account';
+            if (usr) document.querySelector('#account span').textContent = 'Account';
         } else {
             document.querySelector('#save').remove();
         }
@@ -2065,19 +2094,20 @@ document.onreadystatechange = async () => {
         }
         * * * */
 
-        if (settings.getUser().role() != config.PERMISSION_LEVELS.ADMIN) {
+        if (settings.getUser().role() !== config.PERMISSION_LEVELS.ADMIN) {
             document.querySelector('.filter-controls').addEventListener('contextmenu', (e) => e.preventDefault());
         }
 
         // add fire weather and historical menu options (disabled them if user doesn't have correct perms)
-        const makeItem = (opts) => {
-            const el = document.createElement('li');
-            el.id = opts.id;
-            el.className = 'ttip light';
-            el.dataset.action = opts.id;
-            el.dataset.tooltip = opts.ttip;
-            el.innerHTML = '<i class="far fa-' + opts.icon + '"></i><span>' + opts.span + '</span>';
-            document.querySelector('#' + opts.insert)?.insertAdjacentElement('afterend', el);
+        const makeItem = ({ id, icon, span, insert, ttip }) => {
+            const el = Object.assign(document.createElement('li'), {
+                id,
+                className: 'ttip light',
+                innerHTML: `<i class="far fa-${icon}"></i><span>${span}</span>`
+            });
+            Object.assign(el.dataset, { action: id, tooltip: ttip });
+
+            document.getElementById(insert).insertAdjacentElement('afterend', el);
         };
 
         makeItem({ id: 'fwf', icon: 'cloud-bolt', span: 'Fire WX', insert: 'my-fire', ttip: 'Fire Weather Forecast' });
@@ -2085,16 +2115,12 @@ document.onreadystatechange = async () => {
 
         // 1) start a wildfire class 2) get user's currently tracked wildfires 3) get austrailian bush fires
         config.wildfire = new (await loadUtils()).Wildfires();
-        config.wildfire.getTrackedFires();
-        config.wildfire.getBushfireNames();
+        ['getTrackedFires', 'getBushfireNames'].forEach(fn => config.wildfire[fn]());
 
         // initialize map
-        const idle = window.requestIdleCallback ? window.requestIdleCallback : (cb) => setTimeout(cb, 1);
-
-        idle(async () => {
+        (window.requestIdleCallback || (cb => setTimeout(cb, 1)))(async () => {
             if (typeof maplibregl === 'undefined') return;
-
-            (await loadUtils()).loadDispatchCenters();
+             (await loadUtils()).loadDispatchCenters();
             init();
             popstate();
         }, { timeout: 3250 });
@@ -2109,7 +2135,7 @@ document.onreadystatechange = async () => {
         }
 
         impact.addEventListener('scroll', () => {
-            localStorage.setItem('mapofire.impactScroll', impact.scrollTop);
+            storage('mapofire.impactScroll', impact.scrollTop);
         });
 
         q.addEventListener('blur', () => {
@@ -2156,7 +2182,7 @@ window.onload = async () => {
     }, 20000);
 
     upgrade();
-    //localStorage.setItem('mapofire.refresh', new Date().getTime());
+    //storage('mapofire.refresh', new Date().getTime());
 
     /* reload the map automatically every 5 minutes */
     setInterval(() => {

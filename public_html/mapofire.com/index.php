@@ -171,7 +171,9 @@ if (file_exists($root . 'v' . $version . '/app.php')) {
         $javascript = "function gtag(){}";
     }
 
-    $javascript .= "const version='$version',
+    $isLoggedIn = $_SESSION['token'] ? 'true' : 'false';
+    $javascript .= "window.isAuthUser=$isLoggedIn;
+    const version='$version',
     mbVersion='$maplibreVersion',
     buildDate='$buildDate',
     country=" . ($country ? "'$country'" : 'null') . ",

@@ -117,11 +117,11 @@ if (!$permission->view()->reports() && !$permission->manage()->reports()) {
                         <thead class="sortable">
                             <tr>
                                 <th onclick="window.location.href='?sort=id&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? $queryParams : '') ?>'">Report ID</th>
-                                <th onclick="window.location.href='?sort=verified&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? $queryParams : '') ?>'">Verified</th>
+                                <th onclick="window.location.href='?sort=time&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'DESC' ? 'DESC' : 'ASC') . ($queryParams ? $queryParams : '') ?>'">Submitted</th>
                                 <th onclick="window.location.href='?sort=type&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? $queryParams : '') ?>'">Type</th>
                                 <th onclick="window.location.href='?sort=state&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? $queryParams : '') ?>'">State</th>
                                 <th>Geolocation</th>
-                                <th onclick="window.location.href='?sort=time&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'DESC' ? 'DESC' : 'ASC') . ($queryParams ? $queryParams : '') ?>'">Submitted</th>
+                                <th onclick="window.location.href='?sort=verified&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? $queryParams : '') ?>'">Verified</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -132,11 +132,11 @@ if (!$permission->view()->reports() && !$permission->manage()->reports()) {
                         ?>
                             <tr>
                                 <td><?=date('Y', $row['time']).'-'.str_pad($row['id'], 3, '0', STR_PAD_LEFT)?></td>
-                                <td style="color:var(--<?=$verify['color']?>)"><?=$verify['text']?></td>
+                                <td><?=ago($row['time'])?></td>
                                 <td><?=$row['type']?></td>
                                 <td><?=convertState($row['state'], 1)?></td>
                                 <td><?=$geo->near?></td>
-                                <td><?=ago($row['time'])?></td>
+                                <td style="color:var(--<?=$verify['color']?>)"><?=$verify['text']?></td>
                                 <td><a href="crowdsource/view?id=<?=$row['id']?>">view</a></td>
                             </tr>
                         <?}?>

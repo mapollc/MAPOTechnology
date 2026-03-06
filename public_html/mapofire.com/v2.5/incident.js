@@ -175,7 +175,7 @@ self.onmessage = (e) => {
     /* create inline variables for the template */
     let coords = fire.geometry.lat.toFixed(4).toString() + ', ' + fire.geometry.lon.toFixed(4).toString(),
         edit = role == 'ADMIN' ? '<a target="blank" href="' + domain + 'account/admin/wildfires/' + (dispatch == 'MAPO' ? 'modify' : 'edit') + '?wfid=' + wfid + '" style="display:inline-block;font-size:14px;color:var(--box-orange);margin-right:5px"><i class="far fa-pen-to-square"></i></a>' : '',
-        jdesc = (!agency.agency && !agency.unit ? 'Unknown' : (agency.agency ? agency.agency + ' &mdash; ' : '') + (agency.area ? agency.area : '')),
+        jdesc = (!agency.agency && !agency.unit ? 'Unknown' : (agency.agency ? agency.agency : '') + (agency.area ? ' &mdash; ' + agency.area : '')),
         logo = '';
 
     if (agency.logo || dispatch == 'CAL FIRE') {
@@ -200,7 +200,7 @@ self.onmessage = (e) => {
                     </div>
 
                     <p class="timestamps">
-                        Last updated <b>${updated}</b> &middot; Reported <b>${vars.reported.useAgo ? vars.reported.ago : dt(fire.time.discovered)}</b> via ${dispatch} &middot; Incident <b>#${incID}</b>
+                        Last updated <b>${updated}</b> &middot; Reported <b>${vars.reported.useAgo ? vars.reported.ago : dt(fire.time.discovered)}</b> &middot; Incident <b>#${incID}</b>
                     </p>
                 </div>
                 <div class="tr">

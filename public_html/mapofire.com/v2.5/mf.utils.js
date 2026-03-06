@@ -686,7 +686,7 @@ export class Convert {
 export class Search {
     constructor(q) {
         this.key = 'mapofire.search_history';
-        this.history = localStorage.getItem(this.key);
+        this.history = storage(this.key);
         this.emptyHistory = this.history == null || this.history == '' || JSON.parse(this.history).length == 0 ? true : false;
         this.query = q != null ? q.toLowerCase().replace('fire', '') : null;
         this.results = searchResults;
@@ -703,7 +703,7 @@ export class Search {
                 }
             });
 
-            localStorage.setItem(this.key, JSON.stringify(tmp));
+            storage(this.key, JSON.stringify(tmp));
         }
     }
 
@@ -716,7 +716,7 @@ export class Search {
         };
 
         if (this.history == null) {
-            localStorage.setItem(this.key, JSON.stringify([srJson]));
+            storage(this.key, JSON.stringify([srJson]));
         } else {
             const searchArray = [];
 
@@ -725,7 +725,7 @@ export class Search {
             });
 
             searchArray.push(srJson);
-            localStorage.setItem(this.key, JSON.stringify(searchArray));
+            storage(this.key, JSON.stringify(searchArray));
         }
     }
 
@@ -1125,9 +1125,9 @@ export class Settings {
             role: () => {
                 return this.user ? this.role : null;
             },
-            token: () => {
+            /*token: () => {
                 return this.user?.token ?? null;
-            },
+            },*/
             uid: () => {
                 return this.user?.uid ?? null;
             },
@@ -1204,14 +1204,14 @@ export class Settings {
     /*logMovement() {
         const sn = 'mapofire.movements',
             c = map.getCenter(),
-            history = JSON.parse(localStorage.getItem(sn) || '[]');
+            history = JSON.parse(storage(sn) || '[]');
 
         history.push({
             g: [c.lat, c.lng, map.getBearing(), map.getPitch()],
             w: Date.now()
         });
 
-        localStorage.setItem(sn, JSON.stringify(history));
+        storage(sn, JSON.stringify(history));
     }*/
 }
 
@@ -3521,7 +3521,7 @@ export class Layers {
 
 export class Wildfires {
     constructor() {
-        this.store = localStorage.getItem('mapofire.clicks');
+        this.store = storage('mapofire.clicks');
         this.ArcGISFeatureSource = window[""]["arcgis-featureserver"];
         this.agencies = {
             'US Forest Service': 'USFS',
@@ -3638,7 +3638,7 @@ export class Wildfires {
             clicks.push({ wfid: id, count: 1, data: json });
         }
 
-        localStorage.setItem('mapofire.clicks', JSON.stringify(clicks));
+        storage('mapofire.clicks', JSON.stringify(clicks));
         return this;
     }
 
@@ -3969,7 +3969,7 @@ export class Wildfires {
 
     async getTrackedFires() {
         if (settings.user) {
-            const g = await api(config.host + 'api/v1/trackFires/list', [['token', settings.getUser().token()]]);
+            const g = await api(config.host + 'api/v1/trackFires/list', null/*[['token', settings.getUser().token()]]*/, false, true);
 
             trackedDone = true;
 
@@ -3979,7 +3979,7 @@ export class Wildfires {
                 });
             }
         } else {
-            const tr = localStorage.getItem('mapofire.tracked');
+            const tr = storage('mapofire.tracked');
             trackedDone = true;
 
             if (tr != null) {
@@ -4509,7 +4509,7 @@ export class Wildfires {
             prop = fire.properties,
             nearbyEvacs = await new NearbyEvacuations(fireLat, fireLon).get(),
             fname = this.fireName(prop.fireName, prop.type, prop.incidentId),
-            near = fire.geometry.near,
+            near = fire.geometry.geo.near,
             acresHistory = prop.acres_history/*,
             nearbyPerims = this.getAssociatedPerim(prop.fireName)*/;
 
@@ -5471,8 +5471,8 @@ export class Tooltips {
     }
 }
 
-export function notify(t, m, time = null) {
-    const timing = (time == null ? (((m.split(' ').length / 5) + 0.5) * 1000) + 500 : time * 1000),
+export function notify(t, m, time = 0) {
+    const timing = time === 0 ? (((m.split(' ').length / 5) + 0.5) * 1000) + 500 : time * 1000,
         el = document.createElement('div'),
         icon = t == 'success' ? 'fa-check' : (t == 'info' ? 'fa-circle-info' : 'fa-circle-exclamation');
 
@@ -5491,7 +5491,7 @@ export function notify(t, m, time = null) {
 
 export function marketing(override = false, utm = null) {
     const now = Date.now(),
-        lastShown = parseInt(localStorage.getItem('mapofire.marketing.last_shown') || '0', 10),
+        lastShown = parseInt(storage('mapofire.marketing.last_shown') || '0', 10),
         variants = {
             A: {
                 title: 'Stay Safe. Stay Ahead.',
@@ -5517,8 +5517,8 @@ export function marketing(override = false, utm = null) {
         maxDismissals = 4;
 
     let shouldShow = true,
-        dismissedCount = parseInt(localStorage.getItem('mapofire.marketing.dismiss_count') || '0', 10),
-        cooldownDays = parseInt(localStorage.getItem('mapofire.marketing.cooldown_days')) || 3;
+        dismissedCount = parseInt(storage('mapofire.marketing.dismiss_count') || '0', 10),
+        cooldownDays = parseInt(storage('mapofire.marketing.cooldown_days')) || 3;
 
     // if already shown this session, don't show again
     if (sessionStorage.getItem('modal_shown_this_session')) shouldShow = false;
@@ -5527,7 +5527,7 @@ export function marketing(override = false, utm = null) {
     if (dismissedCount >= maxDismissals) shouldShow = false;
 
     // don't show if dismissed too many times
-    /*if (!localStorage.getItem('mapofire.refresh')) {
+    /*if (!storage('mapofire.refresh')) {
         shouldShow = false;
     }*/
 
@@ -5560,7 +5560,7 @@ export function marketing(override = false, utm = null) {
 
         // mark as shown
         sessionStorage.setItem('modal_shown_this_session', '1');
-        localStorage.setItem('mapofire.marketing.last_shown', now.toString());
+        storage('mapofire.marketing.last_shown', now.toString());
 
         // postive CTA
         document.querySelector('#donate_cta').addEventListener('click', () => {
@@ -5578,13 +5578,13 @@ export function marketing(override = false, utm = null) {
         // dismiss CTA
         document.querySelector('#donate_dismiss').addEventListener('click', () => {
             dismissedCount++;
-            localStorage.setItem('mapofire.marketing.dismiss_count', dismissedCount);
+            storage('mapofire.marketing.dismiss_count', dismissedCount);
 
             if (dismissedCount >= maxDismissals) {
                 cooldownDays = cooldownDays * 2; // double cooldown
                 dismissedCount = 0; // reset dismissals
-                localStorage.setItem('mapofire.marketing.cooldown_days', cooldownDays);
-                localStorage.setItem('mapofire.marketing.dismiss_count', dismissedCount);
+                storage('mapofire.marketing.cooldown_days', cooldownDays);
+                storage('mapofire.marketing.dismiss_count', dismissedCount);
             }
 
             gtag('event', 'subscription_dismiss_click', {
@@ -5600,13 +5600,13 @@ export function marketing(override = false, utm = null) {
 }
 
 export async function loadDispatchCenters() {
-    if (localStorage.getItem('mapofire.dispatch') == null || Date.now() - localStorage.getItem('mapofire.dispatch_time') > 60 * 60 * 24 * 1000) {
+    if (storage('mapofire.dispatch') == null || Date.now() - storage('mapofire.dispatch_time') > 60 * 60 * 24 * 1000) {
         const dc = await api(config.apiURL + 'dispatch/all');
-        localStorage.setItem('mapofire.dispatch', JSON.stringify(dc.dispatch));
-        localStorage.setItem('mapofire.dispatch_time', Date.now());
+        storage('mapofire.dispatch', JSON.stringify(dc.dispatch));
+        storage('mapofire.dispatch_time', Date.now());
         dispatchCenters = dc.dispatch;
     } else {
-        dispatchCenters = JSON.parse(localStorage.getItem('mapofire.dispatch'));
+        dispatchCenters = JSON.parse(storage('mapofire.dispatch'));
     }
 }
 

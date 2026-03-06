@@ -1,1 +1,1 @@
-<?require_once '../minify.php';
+<? require_once '../minify.php';

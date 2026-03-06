@@ -136,8 +136,8 @@ setcookie('token', $user['token'], [
     'path' => '/',
     'domain' => ".$domain",
     'secure' => true,
-    'httponly' => false,
-    'samesite' => 'Lax'
+    'httponly' => true,
+    'samesite' => 'None'
 ]);
 
 if ($_COOKIE['guid'] !== $user['guid']) {

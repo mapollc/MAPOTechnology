@@ -36,7 +36,7 @@ class SSO
         $this->ip = $_SERVER['REMOTE_ADDR'];
         $this->con = $con;
         $this->secretKey = getenv('JWT_SECRET');
-        $this->guid = $_COOKIE['guid'] ? $_COOKIE['guid'] : $this->getGUID();
+        $this->guid = $_COOKIE['guid'] ?? $this->getGUID();
         $this->nextURL = null;
         $this->maxEmailAttempts = 5;
         $this->maxIPAttempts = 20;
@@ -108,13 +108,13 @@ class SSO
         return (array) JWT::decode($token, new Key($this->secretKey, 'HS256'));
     }
 
-    function validToken($token)
+    function tokenStatus($token)
     {
         try {
             $decoded = $this->decodeToken($token);
 
-            if (!isset($decoded['iss']) || $decoded['iss'] != $this->domain) {
-                return ['status' => 'invalid'];
+            if (!isset($decoded['iss']) || $decoded['iss'] != $this->domain || !isset($decoded['aud']) || $decoded['aud'] != $this->domain) {
+                return ['status' => 'issuer'];
             } else {
                 return ['status' => 'valid', 'payload' => $decoded];
             }
@@ -127,6 +127,20 @@ class SSO
         } catch (Exception $e) {
             return ['status' => 'other'];
         }
+    }
+
+    function validateToken($token)
+    {
+        //$validToken['status'] = 'expired';
+        $validToken = $this->tokenStatus($token);
+
+        return match ($validToken['status']) {
+            'expired' => ['response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.'],
+            'invalid' => ['response' => 'error', 'code' => 2, 'msg' => 'An invalid token was provided.'],
+            'other' => ['response' => 'error', 'code' => 3, 'msg' => 'There was an error decoding your authentication token.'],
+            'issuer' => ['response' => 'error', 'code' => 4, 'msg' => 'The token issuer cannot be validated.'],
+            'valid' => ['response' => 'valid']
+        };
     }
 
     function validatePassword($pass)
@@ -508,6 +522,7 @@ class SSO
 
             return ['success' => true];
         } else {
+            $dev = [];
             $user_agent = Parser::create();
             $now = time();
             $devices = executeQuery('si', [$this->fields['token'], $now], "SELECT sid, token, ip, host, source, location, created, expires FROM sessions WHERE uid = (SELECT uid FROM sessions WHERE token = ? LIMIT 1) AND expires > 0 AND expires > ? ORDER BY created DESC");
@@ -530,7 +545,7 @@ class SSO
                         }
                     }
 
-                    if ($device['location'] == '') {
+                    /*if ($device['location'] == '') {
                         $json = json_decode(file_get_contents('https://ipwho.is/' . $device['ip']));
                         $devLoc = ['location' => $json->city . ', ' . $json->region_code . ', ' . $json->country, 'isp' => $json->connection->isp];
                         $location = mysqli_real_escape_string($this->con, json_encode($devLoc));
@@ -538,7 +553,8 @@ class SSO
                         executeQuery('ss', [$location, $device['sid']], "UPDATE sessions SET location = ? WHERE sid = ?");
                     } else {
                         $devLoc = json_decode($device['location']);
-                    }
+                    }*/
+                    $devLoc = $device['location'] != '' ? json_decode($device['location']) : [];
 
                     $device['created'] = intval($device['created']);
                     $device['expires'] = intval($device['expires']);
@@ -555,23 +571,27 @@ class SSO
     function user()
     {
         global $function;
+        $fields = 'u.uid, s.guid, first_name, last_name, u.email, u.phone, password, u.location, u.created, role, provider, last_active, token, expires';
         $extra = '';
         $extra2 = '';
 
-        if ($function == 'mapofire') {
-            $extra = ', settings, method, mf.time AS synced';
-            $extra2 = ' LEFT JOIN settings AS mf ON mf.uid = u.uid';
-        } else if ($function == 'mapotrails') {
-            $extra = ', settings, ts.time AS updatedTime';
-            $extra2 = ' LEFT JOIN trail_settings AS ts ON ts.uid = u.uid';
-        } else if ($function == 'oreroads') {
-            $extra = ', settings, rd.time AS updatedTime';
-            $extra2 = ' LEFT JOIN oreroads_settings AS rd ON rd.uid = u.uid';
+        switch ($function) {
+            case 'mapofire':
+                $extra = ', settings, method, mf.time AS synced';
+                $extra2 = ' LEFT JOIN settings AS mf ON mf.uid = u.uid';
+                break;
+            case 'mapotrails':
+                $extra = ', settings, ts.time AS updatedTime';
+                $extra2 = ' LEFT JOIN trail_settings AS ts ON ts.uid = u.uid';
+                break;
+            case 'oreroads':
+                $extra = ', settings, rd.time AS updatedTime';
+                $extra2 = ' LEFT JOIN oreroads_settings AS rd ON rd.uid = u.uid';
+                break;
         }
 
-        $token = $this->fields['token'];
-        //$row = executeQuery('s', [$token], $this->sql(', token, expires' . $extra, "LEFT JOIN sessions AS s ON s.uid = u.uid$extra2 WHERE s.token = ?"));
-        $row = executeQuery('s', [$token], "SELECT u.uid, s.guid, first_name, last_name, u.email, u.phone, password, u.location, u.created, role, provider, last_active, token, expires$extra FROM users AS u LEFT JOIN sessions AS s ON s.uid = u.uid$extra2 WHERE s.token = ?");
+        $token = $_COOKIE['token'] ?? $this->fields['token'];
+        $row = executeQuery('s', [$token], "SELECT {$fields}{$extra} FROM users AS u LEFT JOIN sessions AS s ON s.uid = u.uid$extra2 WHERE s.token = ?");
 
         if (isset($row['error'])) {
             return ['response' => 'error', 'code' => 500, 'msg' => 'Database error: ' . $row['message']];
@@ -650,8 +670,8 @@ class SSO
             'path' => '/',
             'domain' => '.mapotechnology.com',
             'secure' => true,
-            'httponly' => false,
-            'samesite' => 'Lax'
+            'httponly' => true,
+            'samesite' => 'None'
         ]);
 
         if (!$_COOKIE['guid']) {
@@ -661,7 +681,7 @@ class SSO
                 'domain' => '.mapotechnology.com',
                 'secure' => true,
                 'httponly' => true,
-                'samesite' => 'Lax'
+                'samesite' => 'None'
             ]);
         }
 
@@ -699,8 +719,8 @@ class SSO
                     'path' => '/',
                     'domain' => '.mapotechnology.com',
                     'secure' => true,
-                    'httponly' => false,
-                    'samesite' => 'Lax'
+                    'httponly' => true,
+                    'samesite' => 'None'
                 ]);
 
                 $_SESSION = [];
@@ -753,6 +773,12 @@ class SSO
     {
         $pass = $this->fields['pass'];
         $oauth = $this->fields['oauth_token'];
+        $validOauth = $this->validateToken($oauth);
+
+        if ($validOauth['response'] != 'valid') {
+            return $validOauth;
+        }
+
         $row = executeQuery('s', [$oauth], "SELECT p.uid, email, expires FROM password_reset AS p LEFT JOIN users AS u ON u.uid = p.uid WHERE token = ?");
 
         if (isset($row['error'])) {
@@ -828,7 +854,7 @@ class SSO
             $pass = $this->fields['pass'];
             $cpass = $this->fields['confirm_pass'];
             $passVal = $this->validatePassword($pass);
-            $validToken = $this->validToken($invite_code);
+            $validToken = $this->tokenStatus($invite_code);
 
             if ($validToken) {
                 if (!$pass) {
@@ -1201,66 +1227,48 @@ if (empty($method)) {
         http_response_code(429);
         $returnJson = ['response' => 'error', 'error' => 429, 'msg' => "Too many $method attempts. Please try again shortly."];
     } else {
-        # check to make sure the ip address from the UI matches the IP from the server
         $packages = ['com.mapollc.oreroads', 'com.mapollc.mapofire'];
 
-        if (isset($sso->fields['ip']) && $sso->fields['ip'] != $_SERVER['REMOTE_ADDR'] && (isset($_REQUEST['android']) && !in_array($_REQUEST['android'], $packages))) {
-            $returnJson = ['response' => 'error', 'code' => 100, 'msg' => 'Your IP address has changed. Please try again.'];
-        } else {
-            # create a user account
-            if ($method == 'register') {
-                $returnJson = $sso->register();
-            } # login
-            else if ($method == 'login') {
-                # login with google, otherwise login with MAPO
-                if (isset($_REQUEST['google']) && $_REQUEST['google'] == 1) {
-                    $returnJson = $sso->loginWithGoogle();
+        # create a user account
+        if ($method == 'register') {
+            $returnJson = $sso->register();
+        } # login with google, otherwise login with MAPO
+        else if ($method == 'login') {
+            $returnJson = isset($_REQUEST['google']) && $_REQUEST['google'] == 1 ? $sso->loginWithGoogle() : $sso->authenticate();
+        } # get user account info
+        else if ($method == 'get') {
+            $token = $_COOKIE['token'] ?? $_REQUEST['token'];
+
+            if (!$token) {
+                $returnJson = ['response' => 'error', 'code' => 2, 'msg' => 'An authentication token was not provided.'];
+            } else {
+                $validToken = $sso->validateToken($token);
+
+                if ($validToken['response'] == 'valid') {
+                    $u = $function == 'devices' ? $sso->devices() : $sso->user();
+                    $returnJson = is_array($u) ? $u : ['response' => 'error', 'code' => 4, 'msg' => 'There was an error getting user data.'];
                 } else {
-                    $returnJson = $sso->authenticate();
+                    $returnJson = $validToken;
                 }
-            } # get user account info
-            else if ($method == 'get') {
-                $token = $_REQUEST['token'];
-
-                if (!$token) {
-                    $returnJson = ['response' => 'error', 'code' => 2, 'msg' => 'An authentication token was not provided.'];
-                } else {
-                    $validToken = $sso->validToken($token);
-                    //print_r($validToken);
-
-                    if (isset($validToken['payload']['exp']) && $validToken['payload']['exp'] < time()) {
-                        //executeQuery('s', [$token], "UPDATE sessions SET expired = CASE WHEN expired != '0' THEN '0' ELSE expired END WHERE token = ?");
-
-                        $returnJson = ['response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.'];
-                    } else if (isset($validToken['status']['invalid'])) {
-                        $returnJson = ['response' => 'error', 'code' => 2, 'msg' => 'An invalid token was provided.'];
-                    } else if (isset($validToken['status']['other'])) {
-                        $returnJson = ['response' => 'error', 'code' => 3, 'msg' => 'There was an error decoding your authentication token.'];
-                    } else {
-                        $u = $function == 'devices' ? $sso->devices() : $sso->user();
-                        //$returnJson = [$u];
-                        $returnJson = is_array($u) ? $u : ['response' => 'error', 'code' => 4, 'msg' => 'There was an error getting user data.'];
-                    }
-                }
-            } # send user a reset password link
-            else if ($method == 'forgot') {
-                $returnJson = $sso->forgot();
-            } # reset the user's password with credentials they set
-            else if ($method == 'reset') {
-                $returnJson = $sso->reset();
-            } # confirm email address after account creation
-            else if ($method == 'confirmation') {
-                $returnJson = $sso->confirmation();
-            } # confirm email address for a user that was invited as a part of an organization
-            else if ($method == 'invitation') {
-                ////$returnJson = $sso->invitation();
-            } # logout the user
-            else if ($method == 'logout') {
-                $returnJson = $sso->logout();
-            } # update user settings
-            else if ($method == 'update') {
-                $returnJson = $sso->update();
             }
+        } # send user a reset password link
+        else if ($method == 'forgot') {
+            $returnJson = $sso->forgot();
+        } # reset the user's password with credentials they set
+        else if ($method == 'reset') {
+            $returnJson = $sso->reset();
+        } # confirm email address after account creation
+        else if ($method == 'confirmation') {
+            $returnJson = $sso->confirmation();
+        } # confirm email address for a user that was invited as a part of an organization
+        else if ($method == 'invitation') {
+            ////$returnJson = $sso->invitation();
+        } # logout the user
+        else if ($method == 'logout') {
+            $returnJson = $sso->logout();
+        } # update user settings
+        else if ($method == 'update') {
+            $returnJson = $sso->update();
         }
     }
 }

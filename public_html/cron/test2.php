@@ -4,6 +4,18 @@ error_reporting(E_ALL);*/
 include_once '../db.ini.php';
 include_once '../apis/functions.inc.php';
 
+/*$names = [];
+$result = mysqli_query($con, "SELECT city, lat, lon FROM cities WHERE state_prefix = 'OR' ORDER BY city ASC");
+while($row = mysqli_fetch_assoc($result)) {
+    if (!in_array($row['city'], $names)) {
+        $row['lat'] = strval(round($row['lat'], 4));
+        $row['lon'] = strval(round($row['lon'], 4));
+        $cities[] = $row;
+        $names[] = $row['city'];
+    }
+}
+
+echo preg_replace('/lat:\"(.*?)\"/m', "lat:$1", preg_replace('/lon:\"(.*?)\"/m', "lon:$1", str_replace(['"city":', '"lat":', '"lon":'], ['city:','lat:','lon:'], json_encode($cities))));
 
 /*$result = mysqli_query($con, "SELECT * FROM counties ORDER BY state ASC, name ASC LIMIT 5");
 

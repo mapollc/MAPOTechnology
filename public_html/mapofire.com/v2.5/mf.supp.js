@@ -417,7 +417,7 @@ class Weather {
             }
 
             domWS.innerHTML = formatWind(o.wind_speed);
-            u.innerHTML = `Last report ${timeAgo(updated)}${settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? ` @ ${name}` : ''}`;
+            u.innerHTML = `Last report ${timeAgo(updated)}${settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? `&nbsp;@&nbsp;${name}` : ''}`;
         } catch (err) {
             onError(err);
         }
@@ -490,7 +490,7 @@ class Weather {
             domRH.innerHTML = `${minRH}%`;
             domAvgW.innerHTML = formatWind(avgW);
             domMaxW.innerHTML = formatWind(maxW);
-            u.innerHTML = `Latest data from ${timeAgo(new Date(prop.updateTime).getTime())}`;
+            u.innerHTML = `Latest data retrieved ${timeAgo(new Date(prop.updateTime).getTime())}`;
             u.insertAdjacentHTML('afterend', `<div class="btn-group centered" style="margin:0">${btnHtml}</div>`);
         } catch (error) {
             showError(error);
@@ -1020,10 +1020,10 @@ async function saveSession(method = true) {
     if (sy) sy.innerHTML = 'Syncing...';
     if (syncStatus) syncStatus.innerHTML = 'Syncing...';
 
-    const send = [['method', method], ['settings', JSON.stringify(set)]];
-    if (settings.user) send.push(['token', settings.getUser().token()]);
+    /*const send = [['method', method], ['settings', JSON.stringify(set)]];
+    if (settings.user) send.push(['token', settings.getUser().token()]);*/
 
-    const data = await api(config.host + 'api/v1/session', send);
+    const data = await api(config.host + 'api/v1/session', [['method', method], ['settings', JSON.stringify(set)]], false, true);
 
     if (data?.success === 1) {
         if (settings.user) settings.user.settings.synced = Date.now();

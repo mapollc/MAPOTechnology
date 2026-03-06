@@ -53,7 +53,7 @@ $mapboxVersion = '3.18.1';
 
     <div class="backdrop"></div>
     <div id="loading" class="init">
-        <img src="//mapotechnology.com/assets/images/oreroads/pJg1DYY.png" height="75">
+        <img src="//mapotechnology.com/assets/images/oreroads/oreroads_icon_small.png" height="75">
         <div class="spinner"></div>
         <span>Loading...</span>
     </div>

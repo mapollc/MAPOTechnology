@@ -1,92 +1,8 @@
 <?
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 error_reporting(E_PARSE | E_ERROR);
 
-ini_set('session.cookie_domain', '.mapotechnology.com');
-session_start();
-
-$method = $_GET['method'];
-$allowedMethods = ['confirmation', 'invitation', 'login', 'forgot', 'register'];
-$gtoken = $_GET['gtoken'] ?? null;
-$google_client_id = '27619385576-o8elfb66trj3e5v2acahnjm0jiqacg5n.apps.googleusercontent.com';
-
-// ensure user is navigating to valid page
-if (!in_array($method, $allowedMethods)) {
-    header("Location: ../login");
-    exit();
-}
-
-// receive login data from google
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['credential'])) {
-    header('Location: ' . $_SERVER['SCRIPT_URI'] . "?gtoken=$_POST[credential]" . (isset($_POST['state']) ? '&' . $_POST['state'] : ''));
-    exit();
-}
-
-require_once '../db.ini.php';
-require_once '../subs.inc.php';
-
-// set GUID if in query parameters
-if (isset($_GET['guid']) && !empty($_GET['guid'])) {
-    setcookie('guid', $_GET['guid'], [
-        'expires' => time() + 31557600,  // 60 * 60 * 24 * 365.25
-        'path' => '/',
-        'domain' => '.mapotechnology.com',
-        'secure' => true,
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
-} else if (!$_COOKIE['guid']) {
-    include_once '/home/mapo/guid.inc.php';
-    setupGUID();
-}
-
-if ($_GET['fail'] == 3) {
-    $_SESSION = [];
-    session_destroy();
-    session_regenerate_id(true);
-    setcookie('token', '', [
-        'expires' => time() - 60 * 60 * 24 * 7,
-        'path' => '/', 
-        'domain' => '.mapotechnology.com',
-        'secure' => true,
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
-}
-
-// brute force protection
-/*$locked = ($_SESSION['login_attempts'] ?? 0) >= 3 && ($_SESSION['last_login_attempt'] ?? 0) + 900 > time();
-if ($locked) {
-    $total = $_SESSION['last_login_attempt'] + 900 - time();
-    $when = $total < 60 ? $total . ' seconds.' : round($total / 60, 0) . ' minutes';
-}*/
-
-$service = $_GET['src'] ?? $_GET['service'] ?? null;
-$fireMaps = ['mapofire', 'wildfiremap', 'fireweatheravalanche'];
-$sourceURL = 'https://';
-$serviceName = '';
-$nextURL = preg_replace('/(\?|&)loggedOut=1/', '', $_GET['next'] ?? '');
-$prod = $_GET['prod'] ?? '';
-$logo = 'mapo_logo_small.png';
-
-// get the default service URL
-if ($service == 'apps') {
-    $sourceURL .= 'apps.mapotechnology.com';
-} else {
-    $sourceURL .= "www.$service." . (str_contains($service, 'mapo') ? 'com' : 'org');
-}
-
-// define the service name and logo for the referring service (if available)
-if ($service == 'mapotrails') {
-    $serviceName = 'Map of Trails';
-    $logo = 'mapotrails_logo.png';
-} else if (in_array($service, $fireMaps)) {
-    $serviceName = 'Map of Fire';
-    $logo = 'mapofire_logo.png';
-} else if ($prod == 'oregonroads') {
-    $serviceName = 'Oregon Roads';
-    $logo = 'oreroads/oreroads_square_logo.png';
-}
+require_once 'config.inc.php';
 
 // verify if the user is already logged in and then redirect them
 if (isset($_SESSION['uid'])) {
@@ -135,15 +51,15 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
 
 <head lang="en-US">
     <meta charset="utf-8">
-    <title><?= ($service ? "$serviceName - " : '') . $title ?> | MAPO LLC</title>
+    <title><?= ($service && $serviceName ? "$serviceName - " : '') . $title ?> | MAPO LLC</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1">
     <meta name="description" content="<?= $desc ?>" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#333" />
     <meta name="og:title" content="<?= ($service ? "$serviceName - " : '') . $title ?> | MAPO LLC" />
     <meta name="og:type" content="website" />
     <meta name="og:description" content="<?= $desc ?>" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2, user-scalable=1">
     <link rel="shortcut icon" href="//mapotechnology.com/assets/images/favicon.ico" type="image/x-icon" />
     <link rel="apple-touch-icon" sizes="120x120" href="//mapotechnology.com/assets/images/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="//mapotechnology.com/assets/images/favicon-32x32.png">
@@ -151,19 +67,20 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
     <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@200;400;600&display=swap">
     <meta name="robots" content="index,follow">
     <script src="//kit.fontawesome.com/a107124392.js" crossorigin="anonymous"></script>
-    <link href="//mapotechnology.com/assets/css/global.css" rel="stylesheet">
-    <link href="//mapotechnology.com/assets/css/auth.css" rel="stylesheet">
+    <link href="//mapotechnology.com/src/css/global.css" rel="stylesheet">
+    <link href="//mapotechnology.com/src/css/auth.css" rel="stylesheet">
 </head>
 
 <body>
     <main>
         <div class="wrapper">
-            <a href="https://mapotechnology.com" class="logo">
-                <img src="//mapotechnology.com/assets/images/<?= $logo ?>" alt="<?= $serviceName ? $serviceName : 'MAPO' ?> logo" title="<?= $serviceName ? $serviceName : 'MAPO' ?> logo">
+            <a href="//mapotechnology.com" class="logo">
+                <img src="//mapotechnology.com/assets/images/<?= $logo ?>" alt="<?= $serviceName ?: 'MAPO' ?> logo" title="<?= $serviceName ?: 'MAPO' ?> logo">
             </a>
             <h1><?= $title ?></h1>
 
-            <? if (isset($_GET['price_id'])) {
+            <?
+            if (isset($_GET['price_id'])) {
                 $plan->setPlan(null, $_GET['price_id']);
                 echo '<div class="message subscribe">Start your <b>' . $plan->getName() . '</b> subscription by creating a new account, or logging into your existing account.</div>';
             }
@@ -171,7 +88,7 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
                 echo '<p id="crfas" style="color:#666;text-align:center;margin-top:0.75em">Finish creating an account to activate your subscription.</p>';
             }
             if (isset($_GET['error']) || isset($_GET['fail'])) {
-                echo '<div class="message error">' . $msg . '.</div>';
+                echo "<div class=\"message error\">$msg.</div>";
             }
             if ($_GET['valid'] == 1 && $_GET['confirm'] == 1) {
                 echo '<div class="message success">Your account has been successfully verified' . ($_GET['subscriber'] == 1 ? ' and your subscription is now active' : '') . '.</div>';
@@ -186,17 +103,16 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
                 echo '<div class="message success">Your password was reset. You can login again.</div>';
             }
             if ($_GET['subscribed'] == 1 || isset($_GET['checkout_id'])) {
-                echo '<div class="message subscribe">You have subscribed to <b>' . $productName . '</b>' . ($customer ? ', ' . $customer : '') . '.</div>';
+                echo "<div class=\"message subscribe\">You have subscribed to <b>$productName</b>" . ($customer ? ", $customer" : '') . ".</div>";
 
                 if (!isset($_GET['checkout_id'])) {
                     echo '<div class="message success">Your account was successfully created. Please check your email for a confirmation link to verify your account.</div>';
                 }
-            } ?>
+            }
 
-            <?
             // show a message if the user has tried to login too many times and has been locked out for several minutes
             if ($locked) {
-                echo '<div class="message error" id="loginerrors">Your account has been locked due to multiple failed login attempts. Try again in ' . $when . '.</div>';
+                echo "<div class=\"message error\" id=\"loginerrors\">Your account has been locked due to multiple failed login attempts. Try again in $when.</div>";
             } ?>
 
             <form action="" id="<?= $method ?>" method="post">
@@ -205,9 +121,7 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
                     <input type="hidden" name="subscribe" value="1">
                     <input type="hidden" name="price_id" value="<?= $_GET['price_id'] ?>">
                     <input type="hidden" name="product_key" value="<?= $_GET['product_key'] ?>">
-                    <? if ($_REQUEST['trial']) {
-                        echo '<input type="hidden" name="trial" value="1">';
-                    }
+                <? if ($_REQUEST['trial']) echo '<input type="hidden" name="trial" value="1">';
                 }
 
                 if (isset($_GET['session_id'])) { ?>
@@ -216,16 +130,14 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
                 <? } ?>
 
                 <? if ($method == 'login' && isset($_GET['gtoken']) && !empty($_GET['gtoken'])) {
-                    if ($service) echo '<input type="hidden" name="service" value="' . $service . '">';
-                    if ($prod) echo '<input type="hidden" name="prod" value="' . $prod . '">';
+                    if ($service) echo "<input type=\"hidden\" name=\"service\" value=\"$service\">";
+                    if ($prod) echo "<input type=\"hidden\" name=\"prod\" value=\"$prod\">";
 
                     //echo '<input type="hidden" name="next" value="' . $nextURL . '">';
-                    echo '<div id="loading_login"><div class="loading" style="margin:3em auto 2em auto"></div>' .
-                        '<p style="margin-bottom:175px;text-align:center">We\'re signing you in...</p></div>';
+                    echo "<div id=\"loading_login\"><div class=\"loading\" style=\"margin:3em auto 2em auto\"></div>
+                    <p style=\"margin-bottom:175px;text-align:center\">We're signing you in...</p></div>";
                 } else {
-                    if (in_array($method, $allowedMethods)) {
-                        require_once "$method.inc.php";
-                    }
+                    if (in_array($method, $allowedMethods)) require_once "$method.inc.php";
                 } ?>
 
             </form>
@@ -239,9 +151,7 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
     </main>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J2PB456CE6"></script>
-    <? if ($method == 'login') {
-        echo '<script defer async src="https://accounts.google.com/gsi/client"></script>';
-    } ?>
+    <? if ($method == 'login') echo '<script defer async src="https://accounts.google.com/gsi/client"></script>'; ?>
     <script>
         <?= isset($_REQUEST['state']) ? 'const auth_state="' . str_replace('loggedOut=1', '', base64_decode($_REQUEST['state'])) . '";' : '' ?>window.dataLayer = window.dataLayer || [];
 
@@ -255,6 +165,7 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
         <?= $gtoken != null ? ",gtoken='$gtoken'" : '' ?>;
     </script>
     <script src="//mapotechnology.com/js/auth.js"></script>
+
 </body>
 
 </html>

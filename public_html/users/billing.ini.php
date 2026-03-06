@@ -7,27 +7,31 @@ require_once '/home/mapo/stripe/init.php';
 require_once '/home/mapo/public_html/subs.inc.php';
 
 $stripe = new \Stripe\StripeClient($stripeSecretKey);
+$portal = null;
 
-if ($_GET['method'] == 'portal') {
+// get customer ID and any subscriptions from the DB
+$now = time();
+if ($_GET['cid']) $customerID = $_GET['cid'];
+else {
+    $customerID = mysqli_fetch_assoc(mysqli_query($con, "SELECT cid FROM billing WHERE email = '$user[email]' ORDER BY status ASC, created DESC LIMIT 1"))['cid'];
+}
+
+if ($customerID) {
     try {
         $portal = $stripe->billingPortal->sessions->create([
-            'customer' => $_GET['cid'],
-            'return_url' => ($_GET['next'] ? $_GET['next'] : 'https://www.mapotechnology.com/account/billing' . (isset($_GET['ref']) ? '?ref=' . $_GET['ref'] : '')),
+            'customer' => $customerID,
+            'return_url' => ($_GET['next'] ? $_GET['next'] : 'https://www.mapotechnology.com/account/billing' . (isset($_GET['ref']) ? '?ref=' . $_GET['ref'] : '') . (isset($_GET['devel']) ? '?devel=' . $_GET['devel'] : '')),
         ]);
-
-        header("Location: $portal->url");
-        exit();
     } catch (Exception $e) {
-        echo message(false, $e->getMessage());
+        if (!str_contains($e->getMessage(), 'No such')) echo message(false, $e->getMessage());
     }
 }
 
-/*if ($_GET['method'] == 'manage') {
-    require_once '/home/mapo/public_html/users/admin/incs/manage-subs.ini.php';
-} else {*/
-// get customer ID and any subscriptions from the DB
-$now = time();
-$customerID = mysqli_fetch_assoc(mysqli_query($con, "SELECT cid FROM billing WHERE email = '$user[email]' ORDER BY status ASC, created DESC LIMIT 1"))['cid'];
+if ($_GET['method'] == 'portal') {
+    header("Location: $portal->url");
+    exit();
+}
+
 $sql = mysqli_query($con, "SELECT * FROM billing WHERE status != 'expired' AND email = '$user[email]' ORDER BY created DESC");
 $num = mysqli_num_rows($sql);
 
@@ -51,7 +55,7 @@ if (isset($_REQUEST['upgrade'])) {
     if (isset($_POST['forced'])) {
         $msg .= ' <a href="https://mapofire.com">Return to Map of Fire</a>';
     }
-    
+
     echo message(true, $msg, false, true);
 }
 
@@ -77,14 +81,17 @@ if (isset($_GET['checkout_id'])) {
                 <p style="text-align:center">
                     You're not currently subscribed. Unlock premium and professional features to get the most out of our service.
                 </p>
-                <p style="text-align:center">
-                    <a href="https://www.mapotechnology.com/purchase/mapofire?ref=account&customer_email=<?=$user['email']?><?= ($customerID ? '&cid=' . $customerID : '') ?>" class="btn btn-green"><?=$customerID ? 'Get access to premium features' : 'Start Your Free Trial'?></a>
-                </p>
+                <div class="btn-group" style="width:100%;justify-content:center">
+                    <a href="https://www.mapotechnology.com/purchase/mapofire?ref=account&customer_email=<?= $user['email'] ?><?= ($customerID ? '&cid=' . $customerID : '') ?>" class="btn btn-green"><?= $customerID ? 'Get access to premium features' : 'Start Your Free Trial' ?></a>
+                    <? if ($portal) {
+                        echo "<a class=\"btn btn-black\" href=\"$portal->url\">Manage Payment Methods</a>";
+                    } ?>
+                </div>
                 <? } else {
                 while ($row = mysqli_fetch_assoc($sql)) {
                     $upgrade = $downgrade = false;
                     $product = $plan->setPlan(null, $row['plan']);
-                    
+
                     if (str_contains($plan->getPriceName(), 'ignite')) {
                         $upgrade = true;
                         $newName = $plan->allPlans()[2]['name'];
@@ -138,26 +145,26 @@ if (isset($_GET['checkout_id'])) {
                             } ?>
 
                             <p style="padding-top:1em"><b>Billing cycle:</b> <?= date('M j, Y', $row['start']) . ' - ' . date('M j, Y', $row['end']) ?></p>
-                            <? if (!$canceled) {?>
-                            <p id="next-pymt"><b>Next payment:</b> $<?= $product->getTotalPrice() ?> on <?= date('M j, Y', $row['end']) ?></p>
+                            <? if (!$canceled) { ?>
+                                <p id="next-pymt"><b>Next payment:</b> $<?= $product->getTotalPrice() ?> on <?= date('M j, Y', $row['end']) ?></p>
                             <? } ?>
                             <p><b>Payment method:</b> <?= $howPay ?> </p>
 
-                            <?if (!$canceled) {
+                            <? if (!$canceled) {
                                 if ($row['trial'] == 1) {
-                                    $text = 'Your free trial will end on '.date('F j, Y', $row['end']).'. After that, your default payment method will be charged automatically.';   
+                                    $text = 'Your free trial will end on ' . date('F j, Y', $row['end']) . '. After that, your default payment method will be charged automatically.';
                                 } else {
-                                    $text = 'Your subscription is active and will renew on '.date('F j, Y', $sub->current_period_end).'. Your default payment method will be charged automatically.';
-                                }?>
-                            <span id="trial-notice" class="help"><?=$text?></span>
+                                    $text = 'Your subscription is active and will renew on ' . date('F j, Y', $sub->current_period_end) . '. Your default payment method will be charged automatically.';
+                                } ?>
+                                <span id="trial-notice" class="help"><?= $text ?></span>
 
-                            <div class="btn-group" id="cancels">
-                                <a class="btn btn-gray" href="#" id="modify" data-amount="<?=$amountDue?>"<?=$_GET['ref'] == 'com.mapollc.mapofire' ? ' data-app="1"' : ''?> data-sid="<?= $row['subscription'] ?>" data-name="<?=$newName?>" data-new-plan="<?=$newPlan?>" data-method="<?=$upgrade ? 'up' : 'down'?>grade" onclick="return false"><?=$upgrade ? 'Up' : 'Down'?>grade</a>
-                                <a class="btn btn-red" href="#" id="cancel" <?=$_GET['ref'] == 'com.mapollc.mapofire' ? ' data-app="1"' : ''?> data-sid="<?= $row['subscription'] ?>" data-name="<?=$product->getName()?>" onclick="return false">Cancel subscription</a>
-                            </div>
-                            <? } 
-                            if ($canceled) {?>
-                            <span id="can-notice" class="help">Your subscription has been canceled and will remain active until <?= date('F j, Y', $row['end']) ?>.</span>
+                                <div class="btn-group" id="cancels">
+                                    <a class="btn btn-gray" href="#" id="modify" data-amount="<?= $amountDue ?>" <?= $_GET['ref'] == 'com.mapollc.mapofire' ? ' data-app="1"' : '' ?> data-sid="<?= $row['subscription'] ?>" data-name="<?= $newName ?>" data-new-plan="<?= $newPlan ?>" data-method="<?= $upgrade ? 'up' : 'down' ?>grade" onclick="return false"><?= $upgrade ? 'Up' : 'Down' ?>grade</a>
+                                    <a class="btn btn-red" href="#" id="cancel" <?= $_GET['ref'] == 'com.mapollc.mapofire' ? ' data-app="1"' : '' ?> data-sid="<?= $row['subscription'] ?>" data-name="<?= $product->getName() ?>" onclick="return false">Cancel subscription</a>
+                                </div>
+                            <? }
+                            if ($canceled) { ?>
+                                <span id="can-notice" class="help">Your subscription has been canceled and will remain active until <?= date('F j, Y', $row['end']) ?>.</span>
                             <? } ?>
 
                             <!--<div id="btns-can" class="btn-group" <?= $canceled ? ' style="display:none"' : '' ?>>
@@ -165,14 +172,14 @@ if (isset($_GET['checkout_id'])) {
                                 <a href="#" id="cancel-later" data-sid="<?= $row['subscription'] ?>" class="btn btn-sm btn-red" onclick="return false">Cancel Later</a>
                             </div>-->
 
-                            <?if ($canceled) {?>
-                            <div id="btns-res" class="btn-group">
-                                <a href="#" id="resume" class="btn btn-green"<?=$_GET['ref'] == 'com.mapollc.mapofire' ? ' data-app="1"' : ''?>data-sid="<?= $row['subscription'] ?>" onclick="return false">Resume Subscription</a>
-                            </div>
+                            <? if ($canceled) { ?>
+                                <div id="btns-res" class="btn-group">
+                                    <a href="#" id="resume" class="btn btn-green" <?= $_GET['ref'] == 'com.mapollc.mapofire' ? ' data-app="1"' : '' ?>data-sid="<?= $row['subscription'] ?>" onclick="return false">Resume Subscription</a>
+                                </div>
                             <? } ?>
 
                             <div style="clear:both"></div>
-                            <a href="billing/portal?cid=<?=$customerID . (isset($_GET['ref']) ? '&ref=' . $_GET['ref'] : '')?>" style="font-size:14px">Manage Payment Methods</a>
+                            <a href="billing/portal?cid=<?= $customerID . (isset($_GET['ref']) ? '&ref=' . $_GET['ref'] : '') ?>" style="font-size:14px">Manage Payment Methods</a>
                         </div>
             <? } catch (Exception $e) {
                         //echo $e->getMessage();
@@ -246,4 +253,5 @@ if (isset($_GET['checkout_id'])) {
         </div>
     </div>
 </div>
-<?//}?>
+<? //}
+?>

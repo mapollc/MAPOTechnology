@@ -47,17 +47,17 @@ include_once 'header.inc.php';
 
                 <p>Wildfire mapping is our primary public safety focus. Our only
                     goal mapping wildfire data is to have one, standardized place for everyone to get information on "what's on fire." Of course, we didn't stop there.
-                    Over the last few years we've made <a href="https://mapofire.com?utm_campaign=mapotechnology.com&utm_medium=link&utm_source=about">Map of Fire</a> the
+                    Over the last few years we've made <a href="//mapofire.com?utm_campaign=mapofire&utm_medium=link&utm_source=about">Map of Fire</a> the
                     <u>most</u> comprehensive wildfire mapping tool available with over 30 data layers available.
-                    Map of Fire is currently available on any device's browser with an Android-exclusive app coming Summer 2025.
+                    Map of Fire is currently available on any browser and available to download on <a href="//play.google.com/store/apps/details?id=com.mapollc.mapofire&utm_campaign=mapofire&utm_medium=link&utm_source=about">Google Play</a>.
                 </p>
 
-                <a href="https://mapofire.com?utm_campaign=mapotechnology.com&utm_medium=button&utm_source=about" class="btn btn-lg btn-red">
+                <a href="//mapofire.com?utm_campaign=mapofire&utm_medium=button&utm_source=about" class="btn btn-lg btn-red">
                     <i class="fas fa-fire"></i> Track nearby wildfires
                 </a>
             </div>
             <div class="col-md-6">
-                <a href="https://mapofire.com?utm_campaign=mapotechnology.com&utm_medium=link&utm_source=about">
+                <a href="//mapofire.com?utm_campaign=mapofire&utm_medium=link&utm_source=about">
                     <img loading="lazy" src="../assets/images/mapofire/f4811.png" style="max-width:225px;margin:0 auto" alt="Map of Fire Android app" title="Map of Fire Android app">
                 </a>
             </div>
@@ -69,20 +69,20 @@ include_once 'header.inc.php';
     <div class="container">
         <div class="row align-items-center reverse">
             <div class="col-md-6">
-                <a href="https://mapotechnology.com/oregonroads?utm_campaign=mapotechnology.com&utm_medium=preview_image&utm_source=about">
+                <a href="//mapotechnology.com/oregonroads?utm_campaign=oregonroads&utm_medium=preview_image&utm_source=about">
                     <img loading="lazy" src="../assets/images/oreroads/nwi3fNa.png" style="max-width:200px;margin:0 auto" alt="OregonRoads app" title="OregonRoads app">
                 </a>
             </div>
             <div class="col-md-6 d-flex" style="flex-direction:column;text-align:center;align-items:center">
                 <h2>OregonRoads: Do a tripcheck</h2>
 
-                <p><a href="https://mapotechnology.com/oregonroads?utm_campaign=mapotechnology.com&utm_medium=link&utm_source=about">OregonRoads</a> is our first
+                <p><a href="//mapotechnology.com/oregonroads?utm_campaign=oregonroads&utm_medium=link&utm_source=about">OregonRoads</a> is our first
                     mobile app, exclusively for Android, that we've released. Using data from the <a href="https://tripcheck.com" target="blank">Oregon Department of Transportation</a> we created a user-friendly app
                     that lets you follow road conditions, current weather, and roadside cameras. But, we took it another step and built in notifications that
                     advise of changing conditions for areas you're interested in. Currently, nothing similar exists for travelers in Oregon.
                 </p>
 
-                <a href="https://apps.mapotechnology.com/oregonroads?utm_campaign=mapotechnology.com&utm_medium=button&utm_source=about" class="btn btn-lg btn-orange">
+                <a href="https://apps.mapotechnology.com/oregonroads?utm_campaign=oregonroads&utm_medium=button&utm_source=about" class="btn btn-lg btn-orange">
                     <i class="far fa-snowflake"></i> Check road conditions
                 </a>
             </div>

@@ -65,7 +65,7 @@ include_once 'header.inc.php';
                 <p style="padding:7.5px 0 1em 0"><b style="font-weight:400">General Inquiries</b><br>
                 <a href="mailto:info@mapotechnology.com">info@mapotechnology.com</a></p>
 
-                <p><b style="font-weight:400">Donation/Subscription Inquiries</b><br>
+                <p><b style="font-weight:400">Subscriptions & Billing</b><br>
                 <a href="mailto:payments@mapotechnology.com">payments@mapotechnology.com</a></p>
 
                 <h4 style="margin:0"><i class="fa-solid fa-location-dot" style="margin-top:25px;padding-right:15px"></i> Location</h4>

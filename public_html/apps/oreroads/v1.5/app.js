@@ -1328,7 +1328,7 @@ class Data {
 
         if (json == null) {
             //const resp = await fetch('https://apps.mapotechnology.com/src/oreroads/geojson/v' + version + '/mileposts.geojson');
-            const resp = await fetch('./oreroads/v' + version + '/mileposts.geojson');
+            const resp = await fetch(`${host.replace('www', 'apps')}oreroads/v${version}/mileposts.geojson`);
 
             if (resp.ok) {
                 const ret = await resp.json();

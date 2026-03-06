@@ -6,7 +6,7 @@ if (function_exists('opcache_invalidate')) {
 date_default_timezone_set('America/Los_Angeles');
 session_start();
 
-$stableVersion = '1.5';
+$stableVersion = '1.6';
 
 include_once '/home/mapo/guid.inc.php';
 setupGUID();

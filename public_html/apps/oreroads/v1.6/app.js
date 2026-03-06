@@ -7,6 +7,7 @@ let map,
     siteTitle = document.title,
     menuLoaded = false,
     modal = null,
+    moving = false,
     radar = null,
     radarImgs = [],
     radarAnim,
@@ -20,10 +21,12 @@ let map,
         varMsgSigns: [],
         snowPlows: []
     },
+    cities = null,
     roadNetwork = [],
     roads,
     calculate,
     helpers,
+    radarPlay = true,
     roadsArray = [],
     roadsIDArray = [],
     dialog = '<div class="wrapper"><h1></h1><p></p><div class="buttons"><a href="#" id="neg" class="cta" onclick="return false"></a><a href="#" id="pos" class="cta" onclick="return false"></a></div></div>',
@@ -33,12 +36,15 @@ const curtime = new Date(),
     yr = curtime.getFullYear(),
     disclaimer = 'OregonRoads is a third-party app built by MAPO LLC. The data and information used in this app is provided by the ' +
         'Oregon Department of Transportation (ODOT)&mdash;an official government agency. However, this app is not an official government app, and is not affiliated or ' +
-        'associated with ODOT or the State of Oregon in any way. Please acknowledge that you read and agree with this disclaimer.';
+        'associated with ODOT or the State of Oregon in any way. Please acknowledge that you read and agree with this disclaimer.',
+    dow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturdary'],
+    short_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    long_months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const config = {
     queryParams: window.location.href.split('oregonroads/')[1],
-    host: 'https://www.mapotechnology.com/',
-    apiURL: 'https://api.mapotechnology.com/v1/',
+    host: '//www.mapotechnology.com/',
+    apiURL: '//api.mapotechnology.com/v1/',
     imgPath: 'assets/images/oreroads/',
     apiKey: () => { return 'c196d0958608ad2b7d4af2be078ecc54'; },
     mapboxToken: 'pk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbG5qb3ppd3oxbGw5MmtyaXEyenRtZG5xIn0.jBgm6b3soPoBzbKjvMUwWw',
@@ -53,7 +59,7 @@ const config = {
         roadWorkRetrieved: false
     }
 };
-const userBaseMap = localStorage.getItem('basemap'),
+const userBaseMap = storage('basemap'),
     layersList = [
         {
             'layer': 'roads',
@@ -161,9 +167,6 @@ const userBaseMap = localStorage.getItem('basemap'),
             center: [45.171872, -117.959518],
             zoom: 11
         }
-    ],
-    cities = [
-        { "city": "La Grande", "lat": 45.3246, "lon": -118.0877 }
     ];
 
 function isVisible(el) {
@@ -172,6 +175,11 @@ function isVisible(el) {
     } else {
         return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
     }
+}
+
+function ucwords(s) {
+    const smallWords = new Set(['a', 'an', 'the', 'is', 'of', 'and', 'or', 'for', 'to', 'in', 'on', 'at', 'by', 'with']);
+    return s.split(' ').map((word, i) => i === 0 || !smallWords.has(word.toLowerCase()) ? word.charAt(0).toUpperCase() + word.slice(1) : word.toLowerCase()).join(' ');
 }
 
 function hideLoading() {
@@ -186,6 +194,27 @@ function hideLoading() {
 function Snackbar(m) {
     document.body.insertAdjacentHTML('beforeend', '<div class="snackbar">' + m + '</div>');
     animate(document.querySelector('.snackbar'), 16, 'bottom');
+}
+
+function animate(elem, max, d) {
+    let pos = 0;
+
+    let id = setInterval(() => {
+        if (pos == max) {
+            clearInterval(id);
+
+            setTimeout(() => {
+                elem.remove();
+            }, elem.innerHTML.split(' ').length / 2.5 * 1000);
+        } else {
+            pos++;
+            if (d == 'top') {
+                elem.style.top = pos + 'px';
+            } else if (d == 'bottom') {
+                elem.style.bottom = pos + 'px';
+            }
+        }
+    }, 5);
 }
 
 function createDialog(t, m, neg = false, pb = 'Ok', nb = '') {
@@ -297,7 +326,9 @@ class Calculate {
 
 class Helpers {
     roadName(s) {
-        return s.replace(/((OR)([0-9]+))/gm, '$2E$3')
+        if (!s) return '';
+        return s.replace(/^Hwy\s?/gm, 'ORE')
+            .replace(/((OR)([0-9]+))/gm, '$2E$3')
             .replace(/((I)([0-9]+))/gm, '$2-$3');
     }
 
@@ -314,7 +345,13 @@ class Helpers {
     nearestCity(a, b) {
         const theCity = [],
             theDist = [],
-            theBear = [];
+            theBear = [],
+            dirMap = {
+                N: 'North',
+                S: 'South',
+                E: 'East',
+                W: 'West'
+            };
 
         cities.forEach((c) => {
             const dist = calculate.distance(c.lat, c.lon, a, b);
@@ -325,7 +362,8 @@ class Helpers {
         });
 
         const min = Math.min.apply(null, theDist);
-        return min.toFixed(1) + ' miles ' + theBear[theDist.indexOf(min)] + ' of ' + theCity[theDist.indexOf(min)] + ', OR';
+        const dir = theBear[theDist.indexOf(min)].replace(/\b[NSEW]\b/g, (match) => dirMap[match]);
+        return min.toFixed(1) + ' miles ' + dir + ' of ' + theCity[theDist.indexOf(min)] + ', OR';
     }
 
     incidentStyle(type) {
@@ -343,6 +381,27 @@ class Helpers {
         }
 
         return { icon: ty, color: col };
+    }
+
+    goToRW(name) {
+        new Modal(this.compileReports(name)).roadReport(name);
+    }
+
+    goToRWIS(id) {
+        const stn = this.fetchRWIS(id);
+        if (!stn) return;
+
+        new Modal(stn.properties).rwis();
+    }
+
+    goToIncident(id) {
+        const inc = this.getIncident(id);
+        if (inc == null) {
+            createDialog('Incident Not Found', `We are unable to locate incident #${theID}. It may already be resolved or it doesn't exist.`);
+            return;
+        }
+
+        new Modal(inc.properties).incident();
     }
 
     fetchRWIS(id) {
@@ -413,6 +472,14 @@ class Helpers {
 
         return val + ' ago';
     }
+}
+
+function storage(name, get = true, content = null) {
+    const storagePrefix = `oreroads.v${version.replaceAll('.', '_')}.`,
+        item = `${storagePrefix}${name}`;
+
+    if (get) return localStorage.getItem(item);
+    if (!get && content) return localStorage.setItem(item, content);
 }
 
 async function api(uri, fields = null, v2 = false) {
@@ -503,11 +570,12 @@ function handleURIIntents() {
 
         'road-report': () => config.dataStatus.rwRetrieved,
         'rwis': () => config.dataStatus.rwisRetrieved,
-        'incident': () => config.dataStatus.incidentsRetrieved,
+        'incident': () => config.dataStatus.incidentsRetrieved && globalData.incidents.length,
         'construction': () => config.dataStatus.roadWorkRetrieved,
         'dms': () => config.dataStatus.dmsRetrieved,
         'camera': () => config.dataStatus.webcamsRetrieved,
-        'area': () => true
+        'area': () => true,
+        'wwa': () => true
     };
 
     const handlers = {
@@ -526,20 +594,11 @@ function handleURIIntents() {
             );
         },
         'road-report': () => {
-            const reports = roads.features.filter(r => r.properties.id == theID);
+            const report = roads.features.find(r => r.properties.id == theID);
+            if (!report) return;
 
-            if (!reports.length) return;
-
-            const s = counterpart(reports[0].properties.name.toLowerCase());
-
-            roads.features.forEach(r => {
-                if (r.properties.name.toLowerCase() === s.toLowerCase()) {
-                    reports.push(r.properties);
-                }
-            });
-
-            updateURI(`Road Report for ${reports[0].name}`);
-            new Modal(reports).roadReport(reports[0].name);
+            const name = report.properties.name;
+            new Modal(helpers.compileReports(name)).roadReport(name);
         },
 
         'rwis': () => {
@@ -558,6 +617,7 @@ function handleURIIntents() {
             updateURI(`Current Weather: ${f.properties.station.name}`);
             new Modal(f.properties).rwis(cams);
         },
+
         'incident': () => {
             const inc = helpers.getIncident(theID);
 
@@ -572,6 +632,7 @@ function handleURIIntents() {
             updateURI(buildLocationTitle(inc.properties));
             new Modal(inc.properties).incident();
         },
+
         'construction': () => {
             const match = helpers.getIncident(theID, true);
             if (!match) return;
@@ -585,6 +646,7 @@ function handleURIIntents() {
             updateURI(buildLocationTitle(match.properties));
             new Modal(match.properties).incident();
         },
+
         'dms': () => {
             if (!globalData.varMsgSigns.length) return;
 
@@ -595,6 +657,7 @@ function handleURIIntents() {
             updateURI(sign.properties.name);
             new Modal(sign.properties).vms();
         },
+
         'camera': () => {
             let geo = null;
             let firstName = '';
@@ -616,6 +679,7 @@ function handleURIIntents() {
             updateURI(firstName);
             new Modal(cams).webcam(geo);
         },
+
         'area': () => {
             let area = theID
                 .replaceAll('-', ' ')
@@ -634,6 +698,10 @@ function handleURIIntents() {
             });
 
             updateURI(`${match.name} Area Road Conditions`);
+        },
+
+        'wwa': () => {
+            new Modal().wxAlert(theID);
         }
     };
 
@@ -677,15 +745,15 @@ class Settings {
         this.settings = u != null && u.settings.allsettings ? u.settings.allsettings : this.defaultSettings;
 
         if (this.getRoadReports() != null) {
-            localStorage.setItem('favorites_roadReports', JSON.stringify(this.getRoadReports()));
+            storage('favorites_roadReports', false, JSON.stringify(this.getRoadReports()));
         }
 
         if (this.getRWIS() != null) {
-            localStorage.setItem('favorites_rwis', JSON.stringify(this.getRWIS()));
+            storage('favorites_rwis', false, JSON.stringify(this.getRWIS()));
         }
 
         if (this.getCameras() != null) {
-            localStorage.setItem('favorites_cameras', JSON.stringify(this.getCameras()));
+            storage('favorites_cameras', false, JSON.stringify(this.getCameras()));
         }
     }
 
@@ -770,15 +838,15 @@ class Settings {
     syncFavorites(success = false) {
         const save = async (success) => {
             let data = {
-                "roadReports": JSON.parse(localStorage.getItem('favorites_roadReports')),
-                "rwis": JSON.parse(localStorage.getItem('favorites_rwis')),
-                "cameras": JSON.parse(localStorage.getItem('favorites_cameras'))
+                "roadReports": JSON.parse(storage('favorites_roadReports')),
+                "rwis": JSON.parse(storage('favorites_rwis')),
+                "cameras": JSON.parse(storage('favorites_cameras'))
             };
 
             //const sync = Math.round(new Date().getTime() / 1000);
 
             const response = await api(config.apiURL + 'oreroads', [
-                ['token', settings.getToken()],
+                ['token', settings.getUser().token()],
                 ['settings', JSON.stringify(data)]
             ]);
 
@@ -805,7 +873,7 @@ class Settings {
     }
 
     isFavorite(cat, id) {
-        const s = localStorage.getItem('favorites_' + cat);
+        const s = storage('favorites_' + cat);
 
         if (s == null || s == 'null' || s == '') {
             return false;
@@ -816,7 +884,7 @@ class Settings {
 
     doFavorites(action, category, id, title) {
         const key = `favorites_${category}`;
-        const cur = localStorage.getItem(key);
+        const cur = storage(key);
         let favorites = cur && cur !== 'null' ? JSON.parse(cur) : [];
 
         id = id.toString();
@@ -835,7 +903,7 @@ class Settings {
             Snackbar(`${title} was successfully removed from your favorites.`);
         }
 
-        localStorage.setItem('modTime', Math.floor(Date.now() / 1000));
+        storage('modTime', false, Math.floor(Date.now() / 1000));
     }
 }
 
@@ -847,16 +915,16 @@ class Geo {
     }
 
     saveLocation() {
-        localStorage.setItem('map_lat', this.lat);
-        localStorage.setItem('map_lon', this.lon);
-        localStorage.setItem('map_zoom', this.zoom);
+        storage('map_lat', false, this.lat);
+        storage('map_lon', false, this.lon);
+        storage('map_zoom', false, this.zoom);
     }
 
     getLocation() {
         return [
-            localStorage.getItem('map_lat'),
-            localStorage.getItem('map_lon'),
-            localStorage.getItem('map_zoom')
+            storage('map_lat'),
+            storage('map_lon'),
+            storage('map_zoom')
         ];
     }
 }
@@ -868,7 +936,7 @@ class RoadNetwork {
         this.road = road;
         this.ROAD_RANGE_DIST = 10;
 
-        this.reportTemplate = '<span id="close"></span><h1 style="margin-bottom:0.5em;align-items:center"></h1><div class="wrapper"><ul class="tabs"><li class="tab active" data-tab="rw">Road</li><li class="tab" data-tab="wx">Weather</li>' +
+        this.reportTemplate = '<span id="close"></span><h1></h1><div class="wrapper"><ul class="tabs"><li class="tab active" data-tab="rw">Road</li><li class="tab" data-tab="wx">Weather</li>' +
             '<li class="tab" data-tab="cams">Cameras</li><li class="tab" data-tab="incs">Incidents</li></ul><div class="tab-content"><div class="content active" data-tab="rw">Loading...</div>' +
             '<div class="content" data-tab="wx">Loading...</div><div class="content" data-tab="cams">Loading...</div><div class="content" data-tab="incs">Loading...</div></div></div>';
     }
@@ -982,25 +1050,30 @@ class RoadNetwork {
         return `<h2>${name}</h2>${updated != null ? `<span class="updated">${updated}</span>` : ''}`;
     }
 
+    buildSection(items = [], emptyMsg) {
+        console.log(items);
+        return items.length
+            ? items.map(item => `<div class="roadNetworkItem">${item}</div>`).join('<hr>')
+            : emptyMsg;
+    }
+
     displayFeatures(report) {
         const processor = new Modal();
         modal.innerHTML = this.reportTemplate;
 
         const tabs = modal.querySelector('ul.tabs');
         const tabContent = modal.querySelector('.tab-content');
-        const buildSection = (items = [], emptyMsg) => items.length ? items.join('<hr>') : emptyMsg;
 
         tabs.addEventListener('click', (e) => {
-            onTabClickListener(tabs, tabContent, e);
+            new Style().onTabClickListener(tabs, tabContent, e);
         });
         tabContent.scrollTo({ top: 0, behavior: 'smooth' });
 
         modal.querySelector('h1').innerHTML = `Report for ${report.meta.hwy} from MP ${report.meta.start} - ${report.meta.end}`;
 
         // work through RWIS
-        const rwisContent = buildSection(
-            (report.rwis ?? []).forEach(rwis => {
-                if (!rwis?.properties) return '';
+        const rwisContent = this.buildSection(
+            (report.rwis ?? []).map(rwis => {
                 const { station, surface, weather } = rwis.properties;
                 return this.itemHeader(`${station.name}${processor.genFav('rwis', station.id, station.name)}`, null) +
                     processor.processRWIS([], station, surface, weather, rwis.properties.updated);
@@ -1009,30 +1082,30 @@ class RoadNetwork {
         );
 
         // work through cameras
-        const cameraContent = buildSection(
+        const cameraContent = this.buildSection(
             (report.webcams ?? []).flatMap(json =>
                 (json?.properties?.cameras ?? []).map(cam =>
                     this.itemHeader(`${cam?.name}${processor.genFav('cameras', cam?.id, cam?.name)}`) +
-                    processor.processCameras(null, cam)
+                    processor.processCameras(null, cam, true)
                 )
             ),
             'There are no travel cameras in this area.'
         );
 
         // work through incidents
-        const incidentContent = buildSection(
+        const incidentContent = this.buildSection(
             (report.incidents ?? []).map(inc => {
                 if (!inc) return '';
                 const { icon, color } = helpers.incidentStyle(inc.type);
-                const header = `<h2><i class="fa-solid fa-${icon}" style="color:${color};margin-right:0.75em"></i>${inc.type}</h2>`;
+                const header = `<h2 class="inc"><i class="fa-solid fa-${icon}" style="color:${color};margin-right:0.75em"></i>${inc.type}</h2>`;
 
-                return header + processor.processIncidents(inc, inc.location, true);
+                return header + processor.processIncidents(inc, inc.location, inc.lanes, inc.comments, inc.files, true);
             }),
             'There are no incidents reported in this area.'
         );
 
         // work through road reports
-        const rwContent = buildSection(
+        const rwContent = this.buildSection(
             (report.rw ?? []).map(rw =>
                 this.itemHeader(
                     `${rw.name}${processor.genFav('roadReports', rw.name, rw.name)}`,
@@ -1052,6 +1125,7 @@ class RoadNetwork {
         // finally, show modal
         modal.classList.add('full');
         modal.style.display = 'flex';
+        modal = modal;
     }
 }
 
@@ -1060,8 +1134,8 @@ class Modal {
         this.json = json;
         this.origin = origin;
         this.closeBtn = '<span id="close"></span>';
-        this.template = `${this.closeBtn}<h1 style="align-items:center"></h1><span class="updated"></span><div class="rows"></div>`;
-        this.template2 = `${this.closeBtn}<h1 style="align-items:center"></h1><div class="popup-content"></div>`;
+        this.template = `${this.closeBtn}<h1></h1><span class="updated"></span><div class="rows"></div>`;
+        this.template2 = `${this.closeBtn}<h1></h1><div class="popup-content"></div>`;
     }
 
     updateURI(type, id, title = '') {
@@ -1121,9 +1195,9 @@ class Modal {
 
         const data = this.json[int];
 
-        this.actions().create(`${data.name} (${roadName(data.hwy)})` + this.genFav('roadReports', data.name, data.name));
+        this.actions().create(`${data.name} (${helpers.roadName(data.hwy)})` + this.genFav('roadReports', data.name, data.name));
         this.actions().rows(this.processRoadReports(data));
-        this.actions().updated(`Last report ${timeAgo(data.updated)}`);
+        this.actions().updated(`Last report ${helpers.timeAgo(data.updated)}`);
 
         if (data.restrict.chains.cond != 0 && data.restrict.chains.cond != 'A') {
             modal.querySelector('.updated').insertAdjacentHTML('beforebegin', '<p class="chreq">Chain restrictions are in place</p>');
@@ -1136,7 +1210,7 @@ class Modal {
                 ops += '<option ' + (w.name == data.name ? 'selected ' : '') + 'value="' + n + '">' + w.name + '</option>';
             });
 
-            modal.querySelector('.updated').insertAdjacentHTML('beforebegin', '<select id="changeRW" style="width:100%" data-json=\'' + JSON.stringify(this.json) + '\'>' + ops + '</select>');
+            modal.querySelector('.updated').insertAdjacentHTML('beforebegin', `<select id="changeRW" style="width:100%">${ops}</select>`);
         }
 
         this.actions().show(true);
@@ -1165,7 +1239,7 @@ class Modal {
         }
 
         if (surface.pavement != null) pvt = surface.pavement[0].toFixed(1) + '&deg;F';
-        if (weather.wind != null) wi = `<svg xmlns="http://www.w3.org/2000/svg" title="${weather.wind.dir}" style="transform:rotate(${weather.wind.rawdir}deg)" width="24" height="24" viewBox="0 0 24 24"><path fill="var(--light-blue)" d="M12,2L4.5,20.29l0.71,0.71L12,18l6.79,3 0.71,-0.71z"/></svg>`;
+        if (weather.wind != null) wi = `<svg xmlns="http://www.w3.org/2000/svg" title="${weather.wind.dir}" style="transform:rotate(${weather.wind.rawdir}deg)" width="24" height="24" viewBox="0 0 24 24"><path fill="var(--dark-orange)" d="M12,2L4.5,20.29l0.71,0.71L12,18l6.79,3 0.71,-0.71z"/></svg>`;
         if (weather.temp <= 50 && (weather.wind && (weather.wind.speed >= 3 || weather.wind.gust >= 3))) {
             wc = calculate.windChill(weather.temp, (weather.wind.speed >= 3 ? weather.wind.speed : weather.wind.gust)) + '&deg;F';
         } else {
@@ -1186,7 +1260,7 @@ class Modal {
         </div>`;
 
         if (surface.grip != null) {
-            content += `<div class="card vert" onclick="grip('${surface.grip}');return false">
+            content += `<div class="card vert" onclick="helpers.grip('${surface.grip}');return false">
                 <span class="cl" style="margin:0 0 0.5em 0">surface friction</span>
                 <div class="grip">
                     <svg xmlns="http://www.w3.org/2000/svg" title="West" width="36" height="36" viewBox="0 0 24 24" style="transform:rotate(180deg);left:calc(-17px + ${Math.round(surface.grip / 0.82 * 100)}%)">
@@ -1267,16 +1341,19 @@ class Modal {
         this.updateURI('rwis', station.id, 'Current Weather: ' + station.name);
     }
 
-    processIncidents(data, dataLoc = null, showUpd = false) {
-        let lanes, comments, filesObj, files = "", affected = "";
+    processIncidents(data, dataLoc = null, lanes, comments, filesObj, showUpd = false) {
+        let files = "", affected = '';
 
         if (lanes != null) {
-            for (let i = 0; i < lanes.length; i++) {
-                var aff = lanes[i].lane;
-                var affDir = lanes[i].direction;
+            const arr = { 'NB': [], 'SB': [], 'WB': [], 'EB': [] };
+            lanes?.forEach(ln => {
+                arr[ln.direction].push(ln.lane);
+            });
 
-                affected += aff + ' (' + affDir + ')<br>';
-            }
+            affected = Object.entries(arr)
+                .filter(([_, arr]) => Array.isArray(arr) && arr.length > 0)
+                .map(([dir, arr]) => `${calculate.direction(dir)}: ${arr.join(', ')}`)
+                .join('<br>');
         }
 
         if (comments && comments.link) files = `<span><a target="blank" href="${comments.desc}">Additional Information</a></span>`;
@@ -1291,34 +1368,34 @@ class Modal {
         const coords = thisInc?.geometry.type == 'Point' ? thisInc?.geometry.coordinates : thisInc?.geometry.coordinates[0];
         const whichWay = dataLoc.direction ? ` ${calculate.direction(dataLoc.direction)}` : '';
 
-        return `<div class="boxes" style="margin:0 0 1em 0">
-            <div class="ea" style="max-width:100%">
-                <p>${dataLoc.hwy}${whichWay ?? ''}, MP ${dataLoc.milepost.start}${dataLoc.milepost.end ? '-' + dataLoc.milepost.end : ''}</p>
-                <p style="font-size:15px;color:black;margin-top:2px;font-weight:400">${helpers.nearestCity(coords[1], coords[0])}</p>
+        return `<div class="boxes">
+            <div class="ea">
+                <p class="location">${dataLoc.hwy}${whichWay ?? ''}, MP ${dataLoc.milepost.start}${dataLoc.milepost.end ? '-' + dataLoc.milepost.end : ''}</p>
+                <p class="relLoc">${helpers.nearestCity(coords[1], coords[0])}</p>
             </div>
         </div>
-        ${showUpd ? `Updated ${helpers.timeAgo(data.updated)} &middot; Reported ${helpers.timeAgo(data.created)}` : ''}
-        <p style="color:var(--blue-gray)">${data.desc}</p>
+        ${showUpd ? `<span class="updated">Updated ${helpers.timeAgo(data.updated)} &middot; Reported ${helpers.timeAgo(data.created)}</span>` : ''}
+        <p class="incDesc">${data.desc}</p>
         ${comments && !comments.link ? `<p style="color:var(--blue-gray)">${comments.desc}</p>` : ''}
         <div class="rows">
-            ${filesObj || (comments && comments.link) ? `<div class="line m"><div class="de" style="font-size:13px">Links</div>${files}</div>` : ''}
+            ${filesObj || (comments && comments.link) ? `<div class="line m"><div class="de">Links</div>${files}</div>` : ''}
             <div class="line m">
-                <div class="de" style="font-size:13px">Delays</div>
+                <div class="de">Delays</div>
                 <span>${data.impact}</span>
             </div>
+            <div class="line m">
+                <div class="de">Lanes Affected</div>
+                <span>${lanes == null ? 'None' : affected}</span>
+            </div>
         </div>
-        <div class="line m" style="margin-top:0.5em">
-            <div class="de" style="font-size:13px">Lanes Affected</div>
-            <span>${lanes == null ? 'None' : affected}</span></div>
-        </div>
-        <a href="#" class="btn dark" style="margin-top:1em" data-find="incident" data-id="${data.id}">Zoom in</a>
+        <a href="#" class="btn dark" style="display:block;margin-top:1em" data-find="incident" data-id="${data.id}">Zoom in</a>
         <span class="bottom">Incident #${data.id} &middot; ${dataLoc.name} (#${dataLoc.id})</span>`;
     }
 
     incident() {
-        const data = this.json,
-            thetype = typeof data.location;
-        let dataLoc;
+        let data = this.json;
+        const thetype = typeof data.location;
+        let dataLoc, lanes, comments, filesObj;
 
         if (thetype != 'string') {
             data = JSON.parse(JSON.stringify(data));
@@ -1333,10 +1410,10 @@ class Modal {
             filesObj = data.files ? JSON.parse(data.files) : null;
         }
 
-        const { icon, color } = helpers.incidentStyle(inc.type);
+        const { icon, color } = helpers.incidentStyle(data.type);
 
         this.actions().create(`<i class="fa-solid fa-${icon}" style="color:${color};margin-right:0.75em"></i>${data.type}`);
-        this.actions().setContent(this.processIncidents(data, dataLoc));
+        this.actions().setContent(this.processIncidents(data, dataLoc, lanes, comments, filesObj));
         this.actions().updated(`Updated ${helpers.timeAgo(data.updated)} &middot; Reported ${helpers.timeAgo(data.created)}`);
 
         modal.querySelector('.updated').parentNode.insertBefore(modal.querySelector('.boxes'), modal.querySelector('.updated'));
@@ -1344,16 +1421,16 @@ class Modal {
         this.updateURI('incident', data.id, `${data.type} @ ${dataLoc.hwy} MP ${dataLoc.milepost.start}${dataLoc.milepost.end ? `-${dataLoc.milepost.end}` : ''}${dataLoc.direction ? ` ${dataLoc.direction}` : ''}`);
     }
 
-    processCameras(geo, camera) {
+    processCameras(geo, camera, rn = false) {
         const where = geo == null ? null : helpers.nearestCity(geo[1], geo[0]);
 
-        return `<span>${camera.name}</span>${this.genFav('cameras', camera.id, camera.name)}</h2>
+        return `${!rn ? `<span>${camera.name}</span>${this.genFav('cameras', camera.id, camera.name)}` : ''}</h2>
         <img loading="lazy" src="${atob(camera.url)}?${new Date().getTime()}" alt="${camera.name}" title="${camera.name}" class="webcam">
         <span class="bottom" style="margin-bottom:1em">${where != null && where != '' ? where + ' &middot; ' : ''}${camera.county ? `${camera.county}&nbsp;County&nbsp;&middot;&nbsp;` : ''} Provided by ODOT</span>`;
     }
 
     webcam(geo = null) {
-        let firstID, firstName;
+        let firstID, firstName, camContent = '';
 
         this.actions().create('Travel Cameras');
 
@@ -1363,15 +1440,33 @@ class Modal {
                 firstName = camera.name;
             }
 
-            this.actions().setContent(`<h2 class="wc"${this.json.length > 0 && i != this.json.length - 1 ? ' style="margin-top:1em"' : ''}>${this.processCameras(geo, camera, this.json.length, i)}`);
-
-            this.updateURI('camera', firstID, firstName);
+            camContent += `<h2 class="wc"${i > 0 ? ' style="margin-top:1em"' : ''}>${this.processCameras(geo, camera)}`;
         });
+
+        this.actions().setContent(camContent);
+        this.updateURI('camera', firstID, firstName);
     }
 
     genFav(cat, id, title) {
         const is = settings.isFavorite(cat, id.toString());
         return '<i id="fav" class="fas fa-heart ' + (!is ? 'un' : '') + 'favorite" data-category="' + cat + '" data-title="' + title + '" data-id="' + id + '" title="' + (is ? 'Remove from' : 'Add to') + ' favorites" aria-hidden="true"></i>';
+    }
+
+    async wxAlert(id) {
+        const { wwa } = await api(config.apiURL + 'getWWA', [['id', id]]);
+
+        const content = `<span class="updated">Issued ${wwa.issued} &middot; Expires ${wwa.expires}</span>
+            <div class="wwa-area">
+                <i class="fas fa-location-dot"></i>
+                ${wwa.area}
+            </div>
+            <div class="wwa-headline">${wwa.headline}</div>
+            <p>${wwa.text}</p>${wwa.help && wwa.help != '<p></p>' ? wwa.help : ''}
+            <p style="font-size:14px;color:#727272;margin-top:2em">Issued by <a href="//weather.gov/${wwa.wfo}">NWS ${wwa.office}</a></p>`;
+
+        this.actions().create(`${wwa.title}`, true);
+        this.actions().setContent(content, true);
+        this.updateURI('wwa', id, `${wwa.title} issued by the National Weather Service in ${wwa.office}`);
     }
 
     actions() {
@@ -1406,6 +1501,7 @@ class Modal {
             show: (removeFull = false) => {
                 if (removeFull) modal.classList.remove('full');
                 modal.style.display = 'flex';
+                modal = modal;
             }
         };
     }
@@ -1420,8 +1516,9 @@ class Data {
         };
         this.DB_NAME = 'OreRoadsCache';
         this.DB_LIST_OF_STORE_NAMES = ['prod', 'dev'];
-        this.STORE_NAME = 'dev';
+        this.STORE_NAME = 'prod';
         this.DB_VERSION = 2;
+        this.DEBUG = false;
     }
 
     openDB() {
@@ -1478,7 +1575,7 @@ class Data {
                 json = cached;
             } else {
                 // Fetch new data
-                const url = endpoint.includes('https') ? endpoint : config.apiURL + endpoint;
+                const url = endpoint.includes('https') || endpoint.startsWith('//') ? endpoint : config.apiURL + endpoint;
                 json = await api(url);
 
                 if (json) {
@@ -1511,22 +1608,28 @@ class Data {
 
     async getHighways() {
         let data;
-        const json = localStorage.getItem('road_network');
+        const url = `${config.host.replace('www', 'apps')}oreroads/v${version}/mileposts.geojson`;
+        const json = await this.getCachedData('mileposts', url, 7889400);
+
+        if (json) {
+            new RoadNetwork().mileposts(json);
+        }
+
+        /*let data;
+        const json = storage('road_network');
 
         if (json == null) {
-            const resp = await fetch('./oreroads/v' + version + '/mileposts.geojson');
+            const resp = await fetch(`${config.host.replace('www', 'apps')}oreroads/v${version}/mileposts.geojson`);
 
             if (resp.ok) {
                 const ret = await resp.json();
-                localStorage.setItem('road_network', JSON.stringify(ret));
+                storage('road_network', false, JSON.stringify(ret));
 
                 data = json;
             }
         } else {
             data = JSON.parse(json);
-        }
-
-        new RoadNetwork().mileposts(data);
+        }*/
     }
 
     async doLayers() {
@@ -1547,7 +1650,7 @@ class Data {
     }
 
     defaultLayer(name) {
-        const layer = JSON.parse(localStorage.getItem('layers'))
+        const layer = JSON.parse(storage('layers'))
             .filter(f => f.layer == name);
 
         return !layer[0] || !layer[0]?.show ? 'none' : 'visible';
@@ -1583,13 +1686,13 @@ class Data {
 
         try {
             const [rw, rwis, incidents, cameras, plows, dms, roadWork] = await Promise.allSettled([
-                this.getCachedData('rw', 'roads', 15),
-                this.getCachedData('rwis', 'roads/rwis', 10),
-                this.getCachedData('incidents', 'roads/incidents', 10),
-                this.getCachedData('cameras', 'webcams?network=ODOT', 60),
-                this.getCachedData('plows', 'roads/plows', 15),
-                this.getCachedData('dms', 'roads/dms', 10),
-                this.getCachedData('construction', 'roads/incidents/construction', 30)
+                this.getCachedData('rw', `roads${this.DEBUG ? '?test=1' : ''}`, 15),
+                this.getCachedData('rwis', `roads/rwis${this.DEBUG ? '?test=1' : ''}`, 10),
+                this.getCachedData('incidents', `roads/incidents${this.DEBUG ? '?test=1' : ''}`, 10),
+                this.getCachedData('cameras', `webcams?network=ODOT${this.DEBUG ? '?test=1' : ''}`, 60),
+                this.getCachedData('plows', `roads/plows${this.DEBUG ? '?test=1' : ''}`, 15),
+                this.getCachedData('dms', `roads/dms${this.DEBUG ? '?test=1' : ''}`, 10),
+                this.getCachedData('construction', `roads/incidents/construction${this.DEBUG ? '?test=1' : ''}`, 30)
             ]);
 
             if (rw.status === 'fulfilled' && rw.value) {
@@ -1783,7 +1886,7 @@ class Data {
     displayWebcams(json) {
         const groupedFeatures = new Map();
 
-        json.features.forEach(feature => {
+        json?.features?.forEach(feature => {
             const key = JSON.stringify(feature.geometry.coordinates);
 
             if (!groupedFeatures.has(key)) {
@@ -2091,102 +2194,110 @@ class Data {
                 });
             }
 
-            map.addLayer({
-                id: 'incidents_point',
-                type: 'symbol',
-                source: 'incidents',
-                filter: ['==', '$type', 'Point'],
-                paint: {
-                    'icon-halo-color': '#333',
-                    'icon-halo-width': 5,
-                    'icon-halo-blur': 1
-                },
-                layout: {
-                    'icon-image': [
-                        'case',
-                        ['==', ['get', 'type'], 'Crash'], 'incident_crash',
-                        ['==', ['get', 'type'], 'Closure'], 'incident_closure',
-                        ['==', ['get', 'type'], 'Disabled Vehicle - Hazard'], 'incident_vehicle',
-                        ['==', ['get', 'type'], 'Ramp Gate Activation'], 'incident_ramp_gate',
-                        ['==', ['get', 'category'], 'Obstruction'], 'incident_obstruction',
-                        'incident'
-                    ],
-                    'icon-size': 0.45,
-                    'icon-allow-overlap': true,
-                    'symbol-placement': 'point',
-                    visibility: this.defaultLayer('incidents')
-                }
-            }).on('mouseenter', 'incidents_point', () => {
-                map.getCanvas().style.cursor = 'pointer';
-            }).on('mouseleave', 'incidents_point', () => {
-                map.getCanvas().style.cursor = 'auto';
-            });
-
-            map.addLayer({
-                id: 'incidents_line_bg',
-                type: 'line',
-                source: 'incidents',
-                filter: ['!=', '$type', 'Point'],
-                paint: {
-                    'line-width': 5,
-                    'line-color': '#555'
-                },
-                layout: {
-                    visibility: this.defaultLayer('incidents')
-                }
-            }, 'incidents_point').on('mouseenter', 'incidents_line_bg', () => {
-                map.getCanvas().style.cursor = 'pointer';
-            }).on('mouseleave', 'incidents_line_bg', () => {
-                map.getCanvas().style.cursor = 'auto';
-            });
-
-            map.addLayer({
-                id: 'incidents_line',
-                type: 'line',
-                source: 'incidents',
-                filter: ['!=', '$type', 'Point'],
-                paint: {
-                    'line-width': 5,
-                    'line-color': '#ff4a4a',
-                    'line-dasharray': [3, 3]
-                },
-                layout: {
-                    visibility: this.defaultLayer('incidents')
-                }
-            }, 'incidents_point').on('mouseenter', 'incidents_line', () => {
-                map.getCanvas().style.cursor = 'pointer';
-            }).on('mouseleave', 'incidents_line', () => {
-                map.getCanvas().style.cursor = 'auto';
-            });
-
-            map.addLayer({
-                id: 'incidents_text',
-                type: 'symbol',
-                source: 'incidents',
-                minzoom: 8.5,
-                paint: {
-                    'text-color': '#333',
-                    'text-opacity': {
-                        stops: [[8.4, 0], [8.5, 1]]
+            if (!map.getLayer('incidents_point')) {
+                map.addLayer({
+                    id: 'incidents_point',
+                    type: 'symbol',
+                    source: 'incidents',
+                    filter: ['==', '$type', 'Point'],
+                    paint: {
+                        'icon-halo-color': '#333',
+                        'icon-halo-width': 5,
+                        'icon-halo-blur': 1
                     },
-                    'text-halo-color': '#fff',
-                    'text-halo-width': 1,
-                    'text-halo-blur': 1
-                },
-                filter: ['==', '$type', 'Point'],
-                layout: {
-                    'symbol-placement': 'point',
-                    'text-font': ['DIN Pro Medium'],
-                    'text-field': ['get', 'type'],
-                    'text-max-width': 8,
-                    'text-justify': 'center',
-                    'text-anchor': 'top',
-                    'text-offset': [0, 1.05],
-                    'text-size': 11,
-                    'text-allow-overlap': false,
-                    visibility: this.defaultLayer('incidents')
-                }
-            });
+                    layout: {
+                        'icon-image': [
+                            'case',
+                            ['==', ['get', 'type'], 'Crash'], 'incident_crash',
+                            ['==', ['get', 'type'], 'Closure'], 'incident_closure',
+                            ['==', ['get', 'type'], 'Disabled Vehicle - Hazard'], 'incident_vehicle',
+                            ['==', ['get', 'type'], 'Ramp Gate Activation'], 'incident_ramp_gate',
+                            ['==', ['get', 'category'], 'Obstruction'], 'incident_obstruction',
+                            'incident'
+                        ],
+                        'icon-size': 0.45,
+                        'icon-allow-overlap': true,
+                        'symbol-placement': 'point',
+                        visibility: this.defaultLayer('incidents')
+                    }
+                }).on('mouseenter', 'incidents_point', () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                }).on('mouseleave', 'incidents_point', () => {
+                    map.getCanvas().style.cursor = 'auto';
+                });
+            }
+
+            if (!map.getLayer('incidents_line_bg')) {
+                map.addLayer({
+                    id: 'incidents_line_bg',
+                    type: 'line',
+                    source: 'incidents',
+                    filter: ['!=', '$type', 'Point'],
+                    paint: {
+                        'line-width': 5,
+                        'line-color': '#555'
+                    },
+                    layout: {
+                        visibility: this.defaultLayer('incidents')
+                    }
+                }, 'incidents_point').on('mouseenter', 'incidents_line_bg', () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                }).on('mouseleave', 'incidents_line_bg', () => {
+                    map.getCanvas().style.cursor = 'auto';
+                });
+            }
+
+            if (!map.getLayer('incidents_line')) {
+                map.addLayer({
+                    id: 'incidents_line',
+                    type: 'line',
+                    source: 'incidents',
+                    filter: ['!=', '$type', 'Point'],
+                    paint: {
+                        'line-width': 5,
+                        'line-color': '#ff4a4a',
+                        'line-dasharray': [3, 3]
+                    },
+                    layout: {
+                        visibility: this.defaultLayer('incidents')
+                    }
+                }, 'incidents_point').on('mouseenter', 'incidents_line', () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                }).on('mouseleave', 'incidents_line', () => {
+                    map.getCanvas().style.cursor = 'auto';
+                });
+            }
+
+            if (!map.getLayer('incidents_text')) {
+                map.addLayer({
+                    id: 'incidents_text',
+                    type: 'symbol',
+                    source: 'incidents',
+                    minzoom: 8.5,
+                    paint: {
+                        'text-color': '#333',
+                        'text-opacity': {
+                            stops: [[8.4, 0], [8.5, 1]]
+                        },
+                        'text-halo-color': '#fff',
+                        'text-halo-width': 1,
+                        'text-halo-blur': 1
+                    },
+                    filter: ['==', '$type', 'Point'],
+                    layout: {
+                        'symbol-placement': 'point',
+                        'text-font': ['DIN Pro Medium'],
+                        'text-field': ['get', 'type'],
+                        'text-max-width': 8,
+                        'text-justify': 'center',
+                        'text-anchor': 'top',
+                        'text-offset': [0, 1.05],
+                        'text-size': 11,
+                        'text-allow-overlap': false,
+                        visibility: this.defaultLayer('incidents')
+                    }
+                });
+            }
 
             console.info(json.features.length + ' incidents reported by ODOT TOCs');
         };
@@ -2211,7 +2322,7 @@ class Data {
                 });
             }
 
-            if (!map.getLayer('roadWork')) {
+            if (!map.getLayer('roadWork_point')) {
                 map.addLayer({
                     id: 'roadWork_point',
                     type: 'symbol',
@@ -2356,8 +2467,81 @@ class Data {
 }
 
 class Radar {
-    async init() {
+    constructor() {
+        this.RADAR_INT = 500;
+    }
 
+    async init() {
+        await fetch('https://api.rainviewer.com/public/weather-maps.json').then(async (resp) => {
+            const imgs = await resp.json();
+
+            imgs.radar.past.forEach((e) => {
+                radarImgs.push(e.time);
+            });
+
+            let time = (n) => {
+                const d = new Date(radarImgs[n] * 1000),
+                    h = d.getHours(),
+                    m = d.getMinutes();
+
+                return (h > 12 ? h - 12 : (h == 12 ? 12 : h)) + ':'.replace(' ', '') + (m < 10 ? '0' : '') + m + (h >= 12 ? 'p' : 'a') + 'm';
+            };
+
+            const rl = '<div class="radar"><div><span class="radarControl fas fa-pause"></span><div class="time">' +
+                '<input type="range" steps="12" min="0" max="12" value="0">' +
+                '<div class="tr"><span>' + time(0) + '</span><span>' + time(6) + '</span><span>' + time(12) + '</span></div></div></div></div>';
+
+            document.body.insertAdjacentHTML('beforeend', rl);
+
+            this.radar();
+        });
+    }
+
+    radar() {
+        let counter = 0;
+
+        radarImgs.forEach((e, n) => {
+            map.addSource('radar-' + n, {
+                type: 'raster',
+                tiles: ['https://tilecache.rainviewer.com/v2/radar/' + e + '/256/{z}/{x}/{y}/4/0_1.png'],
+                tileSize: 256,
+                attribution: '&copy; <a href="https://www.rainviewer.com">RainViewer</a>'
+            });
+
+            map.addLayer({
+                id: 'radar-layer-' + n,
+                type: 'raster',
+                source: 'radar-' + n,
+                layout: {
+                    visibility: 'none'
+                },
+                paint: {
+                    'raster-fade-duration': 0,
+                    'raster-opacity': 0.7
+                }
+            });
+        });
+
+        let ra = () => {
+            radarImgs.forEach((e, n) => {
+                map.setLayoutProperty('radar-layer-' + n, 'visibility', (n == counter ? 'visible' : 'none'));
+                document.querySelector('.radar input[type=range]').value = counter;
+            });
+
+            if (counter == radarImgs.length - 1) {
+                counter = 0;
+                clearInterval(radarAnim);
+
+                setTimeout(() => {
+                    radarAnim = setInterval(ra, this.RADAR_INT);
+                }, this.RADAR_INT);
+            } else {
+                counter++;
+            }
+        };
+
+
+        radarAnim = setInterval(ra, this.RADAR_INT);
     }
 }
 
@@ -2366,21 +2550,37 @@ function saveLoc() {
 }
 
 class Style {
-    constructor() {
-        this.menu = null;
-        this.userBtn = null;
-        this.winLoc = window.location;
+    constructor(onLoad = false) {
+        if (onLoad && !menuLoaded) {
+            this.menu = null;
+            this.userBtn = null;
+            this.winLoc = window.location;
 
-        this.createButtons();
-        this.createListeners();
+            this.createButtons();
+            this.getCities();
 
-        hideLoading();
+            hideLoading();
+        }
+
         new Data().doLayers();
 
-        /* whether or not to load up radar animation */
+        // whether or not to load up radar animation
         if (new Data().defaultLayer('radar') != 'none') {
             radar = new Radar();
             radar.init();
+        }
+    }
+
+    async getCities() {
+        const cache = storage('cities');
+
+        if (!cache) {
+            const resp = await api(config.apiURL + 'search/oreroads', null, true);
+
+            cities = resp.cities;
+            storage('cities', false, JSON.stringify(cities));
+        } else {
+            cities = JSON.parse(cache);
         }
     }
 
@@ -2388,7 +2588,7 @@ class Style {
         const d = `<div class="search">
             <i class="fas fa-search" style="color:#919191"></i><input type="text" id="search" autocomplete="off" placeholder="Find road reports or cities..."></div>
             <div class="search-results"><div id="result" class="none">Searching...</div></div>
-            <img class="logo" src="${config.host}${config.imgPath}pJg1DYY.png" title="OregonRoads logo" alt="OregonRoads logo">
+            <img class="logo" src="${config.host}${config.imgPath}oreroads_icon_small.png" title="OregonRoads logo" alt="OregonRoads logo">
             <div class="radar-controls"><div class="t"><span id="time" style="font-size:14px">--</span><span><i class="fas fa-pause" id="radarPP"></i></span></div>
             <input type="range" id="radarTime" min="0" max="12" value="0" oninput="setRT(this.value)"></div>
             <div class="mitem-wrapper"><div id="layers" class="mitem" title="Layers"><i class="fas fa-layer-group"></i></div>
@@ -2404,6 +2604,8 @@ class Style {
         this.menu = document.querySelector('#menu');
         this.userBtn = document.querySelector('#user');
         modal = document.querySelector('#modal');
+
+        this.createListeners();
     }
 
     createListeners() {
@@ -2428,9 +2630,9 @@ class Style {
                 <li onclick="settings.syncFavorites(true)"><a href="#" onclick="return false">Sync Favorites</a></li>
                 <li><a href="${config.host}account/settings">Account</a></li>
                 <li><a href="${config.host}logout?next='${encodeURIComponent(this.winLoc.href + '?loggedOut=1')}">Logout</a></li>
-                <li><a href="#" onclick="createDialog(\'Disclaimer\', disclaimer, false, \'Ok\');get(\'.dialog\').classList.add(\'disclaimer\');get(\'ul#userMenu\').remove();return false">Disclaimer</a></li>
+                <li><a href="#" onclick="createDialog(\'Disclaimer\', disclaimer, false, \'Ok\');get(\'.dialog\').classList.add(\'disclaimer\');return false">Disclaimer</a></li>
                 <li><a target="blank" href="../about/contact">Contact Us</a></li>
-                <li><a href="#" id="aboutDialog" onclick="get(\'ul#userMenu\').remove();return false">About</a></li></ul>`;
+                <li><a href="#" id="aboutDialog">About</a></li></ul>`;
 
             if (!document.querySelector('ul#userMenu')) document.body.insertAdjacentHTML('beforeend', userMenu);
             const um = document.querySelector('ul#userMenu');
@@ -2449,7 +2651,7 @@ class Style {
                 '<div class="radio"><input type="radio" id="dark" name="basemap" value="dark"' + (userBaseMap == 'dark' ? ' checked' : '') + '><label for="dark">Dark</label></div></div></div>';
 
             let lm = '<h1>Layers</h1>' + bm;
-            const cache = JSON.parse(localStorage.getItem('layers')),
+            const cache = JSON.parse(storage('layers')),
                 isChecked = (name) => cache.filter(it => it.layer == name)?.[0].show;
 
             layersList.forEach(e => {
@@ -2478,7 +2680,7 @@ class Style {
         tabContainer.querySelectorAll('li').forEach(t => t.classList.remove('active'));
 
         tabContent.querySelectorAll('.content').forEach(c => {
-            c.style.display = c.getAttribute('data-tab') === clickedTab.getAttribute('data-tab') ? 'block' : 'none';
+            c.style.display = c.dataset.tab === clickedTab.dataset.tab ? 'block' : 'none';
         });
 
         clickedTab.classList.add('active');
@@ -2497,7 +2699,7 @@ class Style {
         modal.style.display = 'flex';
 
         modal.querySelector('ul.tabs').addEventListener('click', (e) => {
-            onTabClickListener(modal.querySelector('ul.tabs'), modal.querySelector('.tab-content'), e);
+            this.onTabClickListener(modal.querySelector('ul.tabs'), modal.querySelector('.tab-content'), e);
         });
 
         tables.webcamTable();
@@ -2562,7 +2764,7 @@ class Style {
         modal.style.display = 'flex';
 
         modal.querySelector('ul.tabs').addEventListener('click', (e) => {
-            onTabClickListener(modal.querySelector('ul.tabs'), modal.querySelector('.tab-content'), e);
+            this.onTabClickListener(modal.querySelector('ul.tabs'), modal.querySelector('.tab-content'), e);
         });
 
         tables.rwisTable();
@@ -2579,10 +2781,15 @@ class Tables {
             exists = false;
 
         if (globalData.roadReports.length > 0) {
-            globalData.roadReports.forEach(p => {
-                if (p.road) {
-                    exists = true;
-                    content += `<div class="inc-card" data-id="${p.name}"  onclick="goToRW('${p.name}')">
+            globalData.roadReports
+                .sort((a, b) => {
+                    const name = a.name.localeCompare(b.name);
+                    if (name !== 0) return name;
+                })
+                .forEach(p => {
+                    if (p.road) {
+                        exists = true;
+                        content += `<div class="inc-card" data-type="rw" data-id="${p.name}" onclick="helpers.goToRW('${p.name}')">
                         <div class="wrap">
                             <h2>${p.name}</h2><span class="updated">Last report ${helpers.timeAgo(p.updated)}</span>
                         </div>
@@ -2591,8 +2798,8 @@ class Tables {
                             <div class="line"><div class="de">Road Conditions</div><span>${p.road.condition}</span></div>
                         </div>
                     </div>`;
-                }
-            });
+                    }
+                });
         }
 
         modal.querySelector('.tab-content .content[data-tab=roads]').innerHTML = exists ? '<input type="text" id="filterRW" class="text" autocomplete="off" placeholder="Search reports...">' + content : 'There are no road reports currently available.';
@@ -2621,36 +2828,42 @@ class Tables {
     rwisTable() {
         let content = '';
 
-        globalData.rwis.forEach(s => {
-            let p = s.properties,
-                pvt;
+        globalData.rwis
+            .sort((a, b) => {
+                const name = a.properties.station.hwy.localeCompare(b.properties.station.hwy);
+                if (name !== 0) return name;
+                return a.properties.station.mp - b.properties.station.mp;
+            })
+            .forEach(s => {
+                let p = s.properties,
+                    pvt;
 
-            if (p.surface.pavement != null) {
-                pvt = Math.round(p.surface.pavement[0]) + '&deg;F';
+                if (p.surface.pavement != null) {
+                    pvt = Math.round(p.surface.pavement[0]) + '&deg;F';
 
-                if (p.surface.pavement[1]) {
-                    pvt += '/' + Math.round(p.surface.pavement[1]) + '&deg;F';
+                    if (p.surface.pavement[1]) {
+                        pvt += '/' + Math.round(p.surface.pavement[1]) + '&deg;F';
+                    }
                 }
-            }
 
-            if (p.weather.wind != null) {
-                var wi = '<svg xmlns="http://www.w3.org/2000/svg" title="' + p.weather.wind.dir + '" style="transform:rotate(' + p.weather.wind.rawdir + 'deg)" width="24" height="24" viewBox="0 0 24 24"><path fill="var(--light-blue)" d="M12,2L4.5,20.29l0.71,0.71L12,18l6.79,3 0.71,-0.71z"/></svg>';
-            }
+                if (p.weather.wind != null) {
+                    var wi = '<svg xmlns="http://www.w3.org/2000/svg" title="' + p.weather.wind.dir + '" style="transform:rotate(' + p.weather.wind.rawdir + 'deg)" width="24" height="24" viewBox="0 0 24 24"><path fill="var(--dark-orange)" d="M12,2L4.5,20.29l0.71,0.71L12,18l6.79,3 0.71,-0.71z"/></svg>';
+                }
 
-            content += `<div class="rwis-card" data-id="${p.station.id}" onclick="goToRWIS('${p.station.id}')">
+                content += `<div class="rwis-card" data-type="rwis" data-id="${p.station.id}" onclick="helpers.goToRWIS('${p.station.id}')">
                 <span class="temp">${Math.round(p.weather.temp)}&deg;</span>
                 <div class="wrapper">
-                    <h2>${p.station.name}</h2>
+                    <h2>${helpers.roadName(p.station.name)}</h2>
                     <div class="rows">
                         ${pvt ? `<div class="line"><div class="de">Pavement Temp</div><span>${pvt}</span></div>` : ''}
                         ${p.weather.wind != null ? `<div class="line"><div class="de">Wind</div><span>${wi}${Math.round(p.weather.wind.speed)} mph</span></div>` : ''}
                         ${p.surface.grip != null ? `<div class="line"><div class="de">Surface Friction</div>
-                        <span><a href="#" onclick="grip('${p.surface.grip}');return false">${p.surface.grip * 100}%</a></span></div>` : ''}
+                        <span><a href="#" onclick="helpers.grip('${p.surface.grip}');return false">${p.surface.grip * 100}%</a></span></div>` : ''}
                     </div>
                     <span class="updated" style="text-align:left;margin-top:1em">Last reported ${helpers.timeAgo(p.updated)}</span>
                 </div>
             </div>`;
-        });
+            });
 
         modal.querySelector('.tab-content .content[data-tab=rwis]').innerHTML = '<input type="text" id="filterRWIS" class="text" autocomplete="off" placeholder="Search stations...">' + content;
     }
@@ -2662,37 +2875,39 @@ class Tables {
         globalData.incidents.forEach(s => {
             if (s.properties.category != 'Road Work') {
                 let p = s.properties,
+                    loc = p.location,
                     isAlert = false;
 
                 if (p.type == 'Closure' || p.impact == 'Closure' || p.impact == 'Closure with Detour') isAlert = true;
 
-                content += `<div class="inc-card" data-find="incident" data-id="${p.id}">
+                content += `<div class="inc-card" data-type="incident" data-id="${p.id}" onclick="helpers.goToIncident('${p.id}')">
                     <div class="wrap">
                         <h2>${p.type}</h2>
                         <span class="updated">${helpers.timeAgo(p.updated)}</span>
                     </div>
-                    <p style="margin:0;color:var(--blue)">${p.location.desc}</p>
-                    <span style="color:#555;font-size:14px">${p.location.hwy}, Milepost ${p.location.milepost.start}${p.location.milepost.end ? `-${p.location.milepost.end}` : ''}
-                    ${p.location.direction ? ' &middot; ' + p.location.direction : ''}</span>
+                    <p style="margin:0;color:var(--blue)">${loc.desc}</p>
+                    <span style="color:#555;font-size:14px">
+                        ${loc.hwy}${loc.direction ? ` ${calculate.direction(loc.direction)}` : ''}, Milepost ${loc.milepost.start}${loc.milepost.end ? `-${loc.milepost.end}` : ''}
+                    </span>
                 </div>`;
 
                 if (isAlert) {
-                    alerts += `<div class="inc-card" data-find="incident" data-id="${p.id}">
+                    alerts += `<div class="inc-card" data-type="incident" data-id="${p.id}" onclick="helpers.goToIncident('${p.id}')">
                         <div class="wrap">
-                            <h2 style="color:#e53935">${p.type}</h2>
+                            <h2 style="color:var(--red)">${p.type}</h2>
                             <span class="updated">${helpers.timeAgo(p.updated)}</span>
                         </div>
-                        <p style="margin:0;color:var(--blue)">${p.location.desc}</p>
-                        <span style="color:#555;font-size:14px">${p.location.hwy}, Milepost ${p.location.milepost.start}${p.location.milepost.end ? `-${p.location.milepost.end}` : ''}
-                        ${p.location.direction ? ' &middot; ' + p.location.direction : ''}</span>
+                        <p style="margin:0;color:var(--blue)">${loc.desc}</p>
+                        <span style="color:#555;font-size:14px">${loc.hwy}, Milepost ${loc.milepost.start}${loc.milepost.end ? `-${loc.milepost.end}` : ''}
+                        ${loc.direction ? ' &middot; ' + loc.direction : ''}</span>
                     </div>`;
                 }
             }
         });
 
         /* parse WWAs */
-        if (nwsAlerts.length > 0) {
-            for (let i = 0; i < nwsAlerts.length; i++) {
+        if (nwsAlerts.length) {
+            nwsAlerts?.forEach(alert => {
                 const d1 = new Date(alert.effective * 1000);
                 const d2 = new Date(alert.expires * 1000);
 
@@ -2715,13 +2930,13 @@ class Tables {
                 const iss = `${short_months[d1.getMonth()]} ${d1.getDate()}, ${d1.getFullYear()} at ${t1} ${tz}`;
                 const exp = `${dow[d2.getDay()]}, ${long_months[d2.getMonth()]} ${d2.getDate()}, ${d2.getFullYear()} at ${t2}`;
 
-                alerts += `<div class="wwa-card" onclick="window.open('https://alerts-v2.weather.gov/#/?id=${nwsAlerts[i].id}')">
-                    <div class="wrap"><h2>${nwsAlerts[i].event}</h2></div>
+                alerts += `<div class="wwa-card" onclick="new Modal().wxAlert('${alert.id}')">
+                    <div class="wrap"><h2 style="color:var(--red);margin:0!important">${alert.event}</h2></div>
                     <p style="font-size:15px;margin:0">In effect until ${exp}</p>
-                    '<p style="color:var(--blue-gray);margin:0">${nwsAlerts[i].zone}</p>
+                    <p style="color:var(--blue-gray);margin:0">${alert.zone}</p>
                     <span class="updated" style="text-align:left">Issued ${iss}</span>
                 </div>`;
-            }
+            });
         }
 
         modal.querySelector('.tab-content .content[data-tab=alerts]').innerHTML = alerts;
@@ -2730,12 +2945,14 @@ class Tables {
 }
 
 function init() {
-    if (localStorage.getItem('map_lat') != null) {
-        var mc = [localStorage.getItem('map_lon'), localStorage.getItem('map_lat')],
-            mz = localStorage.getItem('map_zoom');
+    let mc, mz;
+
+    if (storage('map_lat') != null) {
+        mc = [storage('map_lon'), storage('map_lat')];
+        mz = storage('map_zoom');
     } else {
-        var mc = [-120.5542, 44.10337],
-            mz = 6;
+        mc = [-120.5542, 44.10337];
+        mz = 6;
     }
 
     map = new mapboxgl.Map({
@@ -2769,7 +2986,7 @@ function init() {
         handleURIIntents();
     });
 
-    map.on('style.load', () => new Style());
+    map.on('style.load', () => new Style(true));
     map.on('click', (e) => onMapClickListener(e));
 
     // add controls
@@ -2810,7 +3027,11 @@ function onMapClickListener(e) {
         });
     };
 
-    features.forEach(feature => {
+    let handled = false;
+
+    for (const feature of features) {
+        if (handled) break;
+
         const { source: layer } = feature.layer || {};
         const { properties, geometry, sourceLayer } = feature;
         const coords = geometry.coordinates;
@@ -2828,7 +3049,8 @@ function onMapClickListener(e) {
                 'Milepost',
                 `${name} HWY (#${num}) Milepost ${mp} ${direction}bound`
             );
-            return;
+            handled = true;
+            break;
         }
 
         switch (layer) {
@@ -2839,6 +3061,7 @@ function onMapClickListener(e) {
 
                 if (cams?.length) new Modal(cams, true).webcam(coords);
 
+                handled = true;
                 return;
 
             case 'rwis':
@@ -2850,10 +3073,12 @@ function onMapClickListener(e) {
                 });
 
                 new Modal(properties, true).rwis(nearby);
+                handled = true;
                 return;
 
             case 'dms':
                 new Modal(properties, true).vms();
+                handled = true;
                 return;
 
             case 'plows': {
@@ -2868,12 +3093,14 @@ function onMapClickListener(e) {
                     <b>Last Seen</b><br>${helpers.timeAgo(properties.updated)}
                 </div>`);
 
+                handled = true;
                 return;
             }
 
             case 'incidents':
             case 'roadWork':
                 new Modal(properties, true).incident();
+                handled = true;
                 return;
 
             case 'roads': {
@@ -2881,6 +3108,7 @@ function onMapClickListener(e) {
 
                 if (!report.length) {
                     new Modal(report, true).roadReport(properties.name);
+                    handled = true;
                     return;
                 }
 
@@ -2909,10 +3137,11 @@ function onMapClickListener(e) {
                     `Road Report for ${helpers.roadName(properties.hwy)} from MP ${range}`
                 );
 
+                handled = true;
                 return;
             }
         }
-    });
+    }
 }
 
 document.onreadystatechange = async () => {
@@ -2930,24 +3159,37 @@ document.onreadystatechange = async () => {
         settings = new Settings(usr);
     };
 
+    const clearPreviousVersions = () => {
+        const currentVersion = version.replaceAll('.', '_');
+        const prefix = 'oreroads_';
+
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+
+            if (key?.startsWith(prefix) && !key.includes(currentVersion)) {
+                localStorage.removeItem(key);
+            }
+        }
+    };
+
     const complete = () => {
-        /* save favorites every 5 minutes */
+        // save favorites every 5 minutes
         setInterval(() => {
             settings.syncFavorites();
         }, 1000 * 60 * 5);
 
-        /* refresh the app every 15 minutes */
+        // refresh the app every 15 minutes
         setInterval(() => {
             window.location.href = window.location.href;
         }, 1000 * 60 * 15);
 
-        /* log the user's first time on the map */
-        if (!localStorage.getItem('firstLoad')) {
-            localStorage.setItem('firstLoad', new Date().getTime() / 1000);
+        // log the user's first time on the map
+        if (!storage('firstLoad')) {
+            storage('firstLoad', false, new Date().getTime() / 1000);
         }
 
-        /* show the disclaimer if user hasn't read it before */
-        if (!localStorage.getItem('disclaimer')) {
+        // show the disclaimer if user hasn't read it before
+        if (!storage('disclaimer')) {
             let t = setInterval(() => {
                 if (globalData.roadReports.length > 0) {
                     clearInterval(t);
@@ -2960,8 +3202,11 @@ document.onreadystatechange = async () => {
             }, 500);
         }
 
-        /* set default layers for the map for first time user */
-        if (localStorage.getItem('layers') == null || JSON.parse(localStorage.getItem('layers').length != layersList.length)) {
+        // clear existing localStorage items if on a new version
+        clearPreviousVersions();
+
+        // set default layers for the map for first time user */
+        if (storage('layers') == null || JSON.parse(storage('layers').length != layersList.length)) {
             const defaultLayers = [];
 
             layersList.forEach((e) => {
@@ -2971,7 +3216,7 @@ document.onreadystatechange = async () => {
                 });
             });
 
-            localStorage.setItem('layers', JSON.stringify(defaultLayers));
+            storage('layers', false, JSON.stringify(defaultLayers));
         }
 
         // start mapping
@@ -2985,25 +3230,37 @@ document.onreadystatechange = async () => {
     }
 };
 
+window.onload = () => {
+    /* determine versioning for app */
+    if (storage('version') == null || storage('version') != version) {
+        console.info('Changing web app versions...');
+        storage('version', false, version);
+    }
+
+    if (storage('buildDate') == null || new Date(storage('buildDate')).getTime() < new Date(build).getTime()) {
+        storage('buildDate', false, build);
+    }
+};
+
 window.addEventListener('change', (e) => {
     const target = e.target;
 
     // change basemap
-    if (e.target.type == 'radio' && e.target.dataset.name == 'basemap') {
-        const bm = e.target.value;
+    if (target.type == 'radio' && target.name == 'basemap') {
+        const bm = target.value;
 
         map.setStyle(bm == 'light' ? basemaps.light : basemaps.dark, {
             diff: false
         });
 
-        localStorage.setItem('basemap', bm);
+        storage('basemap', false, bm);
     }
 
     // show or hide layers
-    if (e.target && e.target.className == 'toggle') {
+    if (target && target.className == 'toggle') {
         const customLayers = [];
-        const name = e.target.dataset.layer;
-        const isVisible = e.target.checked ? 'visible' : 'none';
+        const name = target.dataset.layer;
+        const isVisible = target.checked ? 'visible' : 'none';
 
         const layerGroups = {
             roads: ['roads_path', 'roads_point', 'roads_text', 'roads_point_text'],
@@ -3021,8 +3278,8 @@ window.addEventListener('change', (e) => {
         }
 
         if (name === 'radar') {
-            if (e.target.checked) {
-                radarInit();
+            if (target.checked) {
+                new Radar().init();
             } else {
                 radarPlay = true;
                 document.querySelector('.radar')?.remove();
@@ -3041,44 +3298,45 @@ window.addEventListener('change', (e) => {
             });
         });
 
-        localStorage.setItem('layers', JSON.stringify(customLayers));
+        storage('layers', false, JSON.stringify(customLayers));
+    }
+
+    if (target.id == 'changeRW') {
+        const sel = document.querySelector('#changeRW');
+        const ops = sel.options[sel.selectedIndex];
+
+        new Modal(helpers.compileReports(ops.text))
+            .roadReport(ops.text, ops.value);
     }
 });
 
-window.addEventListener('click', (e) => {
-    const target = e.target;
+window.addEventListener('click', async (e) => {
+    const target = e.target,
+        menu = document.querySelector('#menu');
 
     // close modal and/or menu
-    if (target.id == 'close') {
-        if (modal && modal.style.display == 'flex') {
-            modal.style.display = 'none';
-            modal.innerHTML = '';
-            modal.classList.remove('full');
-            modal.classList.remove('disclaimer');
+    if (target.id === 'close' && target.parentElement && target.parentElement.id == 'modal') {
+        modal.style.display = 'none';
+        modal.innerHTML = '';
+        modal.classList.remove('full', 'disclaimer');
 
-            removeHash();
-        }
+        removeHash();
+    }
 
-        if (menu && menu.style.display == 'block') {
-            menu.style.display = 'none';
-            modal.innerHTML = '';
-        }
+    if (target.id === 'close' && target.parentElement && target.parentElement.id == 'menu') {
+        menu.style.display = 'none';
     }
 
     // click on positive CTA button in dialog
     if (target.id == 'pos' && target.classList.contains('cta')) {
-        if (document.querySelector('.dialog').classList.contains('disclaimer')) {
-            localStorage.setItem('disclaimer', new Date().getTime() / 1000);
+        const d = document.querySelector('.dialog');
+        if (d?.classList.contains('disclaimer')) {
+            storage('disclaimer', false, new Date().getTime() / 1000);
         }
 
-        document.querySelector('.dialog').remove();
+        d?.remove();
         document.querySelector('.backdrop').style.display = 'none';
         history.replaceState(null, null, ' ');
-    }
-
-    if (!menu.contains(target) && menu.style.display == 'block') {
-        menu.style.display = 'none';
-        modal.innerHTML = '';
     }
 
     // Toggle favorite status
@@ -3098,7 +3356,7 @@ window.addEventListener('click', (e) => {
     }
 
     /* on search result click */
-    if (e.target.id == 'result') {
+    if (target.id == 'result') {
         const s = document.querySelector('.search');
         const sr = document.querySelector('.search-results');
 
@@ -3108,22 +3366,22 @@ window.addEventListener('click', (e) => {
         sr.style.display = 'none';
         sr.innerHTML = noRes;
 
-        if (e.target.getAttribute('data-report')) {
-            map.fitBounds(geojsonExtent(roadsArray[e.target.getAttribute('data-pos')].geometry), {
+        if (target.getAttribute('data-report')) {
+            map.fitBounds(geojsonExtent(roadsArray[target.getAttribute('data-pos')].geometry), {
                 padding: 60
             });
         } else {
             map.flyTo({
-                center: [e.target.getAttribute('data-lon'), e.target.getAttribute('data-lat')],
+                center: [target.getAttribute('data-lon'), target.getAttribute('data-lat')],
                 zoom: 12
             });
         }
     }
 
     // on area link click
-    if (e.target.id == 'areaLink') {
-        const data = e.target.dataset,
-            name = e.target.innerHTML;
+    if (target.id == 'areaLink') {
+        const data = target.dataset,
+            name = target.innerHTML;
 
         new Modal(null).updateURI('area', name.toLowerCase().replace('/', '-').replaceAll(' ', '-'), `${name} Area Road Conditions`);
 
@@ -3135,96 +3393,159 @@ window.addEventListener('click', (e) => {
         document.querySelector('.dialog').remove();
         document.querySelector('.backdrop').style.display = 'none';
     }
+
+    // open webcams from RWIS modal
+    if (target.classList.contains('rwisCam')) {
+        let geo = null;
+        const cams = [];
+
+        globalData.webcams.forEach(w => {
+            w.properties.cameras
+                .filter(c => c.id == target.dataset.id)
+                .forEach(camera => {
+                    geo = w.geometry.coordinates;
+                    cams.push(camera);
+                });
+        });
+
+        new Modal(cams).webcam(geo);
+    }
+
+    if (target.id == 'aboutDialog') {
+        const geoEnabled = async () => {
+            if (!('permissions' in navigator)) return false;
+
+            try {
+                const status = await navigator.permissions.query({ name: 'geolocation' });
+                return status.state === 'granted';
+            } catch (err) {
+                return false;
+            }
+        };
+        const geoEnable = await geoEnabled();
+
+        createDialog('About OregonRoads', `<span style="display:block;color:#555;padding-bottom:0.5em">&copy; ${new Date().getFullYear()} MAPO LLC</span>
+            <p style="font-size:15px;margin:1em 0"><b>Version:</b> ${version}<br>
+            <b>Build Date:</b> ${storage('buildDate')}<br>
+            <b>Location Enabled:</b> ${geoEnable ? 'Yes' : 'No'}<br>
+            <b>Logged In:</b> ${settings.user == null ? 'No' : 'Yes'}<br>
+            <b>Device:</b> ${navigator.userAgent}</p>
+            <span style="display:block;padding-top:0.5em">
+                <a href="${config.host}oregonroads?utm_campaign=oregonroads&utm_medium=app&utm_source=user_menu">Learn More</a> &middot;&nbsp;
+                <a href="${config.host}about/legal/terms">Terms of Service</a> &middot;&nbsp;
+                <a href="${config.host}about/legal/privacy">Privacy Policy</a>
+            </span>`);
+    }
 });
 
 window.addEventListener('mousedown', (e) => {
-    const target = e.target,
-        user = document.querySelector('#user'),
-        search = document.querySelector('.search'),
-        results = document.querySelector('.search-results');
+    const target = e.target;
+    const user = document.querySelector('#user');
+    const search = document.querySelector('.search');
+    const results = document.querySelector('.search-results');
+    const dia = document.querySelector('.dialog');
+    const menu = document.querySelector('#menu');
 
-    if (e.button === 0) {
-        if (!modal.contains(target) && !user.contains(target) && !search.contains(target)) {
+    if (e.button !== 0) return;
+
+    // Only close modal if no dialog is open
+    if (dia == null) {
+        if (!modal.contains(target)) {
             if (isVisible(modal)) {
                 modal.style.display = 'none';
-                modal.classList.remove('full');
-                modal.classList.remove('disclaimer');
-
+                modal.classList.remove('full', 'disclaimer');
                 removeHash();
             }
         }
 
-        if (!user.contains(target) && target.parentElement.parentElement.id != 'userMenu' && document.querySelector('#userMenu') != null) {
-            document.querySelector('#userMenu').remove();
+        if (!menu.contains(target)) {
+            if (isVisible(menu)) {
+                menu.style.display = 'none';
+            }
         }
+    }
 
-        if (!search.contains(target) && !results.contains(target) && search.style.display == 'flex') {
-            search.style.display = 'none';
-            results.style.display = 'none';
-            results.innerHTML = noRes;
-        }
+    if (!user.contains(target) && target.closest('#userMenu') === null) {
+        document.querySelector('#userMenu')?.remove();
+    }
+
+    if (!search.contains(target) && !results.contains(target) && search.style.display === 'flex') {
+        search.style.display = 'none';
+        results.style.display = 'none';
+        results.innerHTML = noRes;
     }
 });
 
 window.addEventListener('keyup', (e) => {
     const target = e.target;
-    const sr = document.querySelector('.search-results')
+    const sr = document.querySelector('.search-results');
+    const dia = document.querySelector('.dialog');
+    const searchEl = document.querySelector('#search');
 
     /* close dialog when enter key is pressed */
-    if (isVisible(document.querySelector('.dialog')) && (e.code == 'Enter' || e.code == 'Escape')) {
-        document.querySelector('.dialog').remove();
+    if (isVisible(dia) && (e.code == 'Enter' || e.code == 'Escape')) {
+        dia.remove();
         document.querySelector('.backdrop').style.display = 'none';
-    } else {
-        /* close modal when esc key is pressed */
-        if (isVisible(modal) && e.code == 'Escape') {
-            modal.style.display = 'none';
-            modal.classList.remove('full');
-            modal.classList.remove('disclaimer');
-
-            removeHash();
-        }
+    } else if (isVisible(modal) && e.code == 'Escape') {
+        modal.style.display = 'none';
+        modal.classList.remove('full', 'disclaimer');
+        removeHash();
     }
 
     if (target.id == 'search') {
-        if (search.value.length >= 2) {
+        const query = searchEl.value.trim().toLowerCase();
+
+        if (query.length >= 2) {
             document.querySelector('.search').classList.add('open');
             sr.style.display = 'block';
 
-            let count = 0,
-                res = '';
+            let res = '';
 
             /* search through all 12-37 reporting stations */
             roadsArray.forEach((e, n) => {
-                if (e.properties.name.toLowerCase().search(search.value.toLowerCase()) >= 0) {
-                    res += '<div id="result" data-report="' + e.properties.name + '" data-pos="' + n + '">' + e.properties.name + '<span>Road Report</span></div>';
-                    count++;
+                if (e.properties.name.toLowerCase().includes(query)) {
+                    res += `<div id="result" data-report="${e.properties.name}" data-pos="${n}">
+                        ${e.properties.name}
+                        <span>Road Report</span>
+                    </div>`;
                 }
             });
 
             /* search through Oregon cities */
             cities.forEach((c) => {
-                if (c.city.toLowerCase().search(search.value.toLowerCase()) >= 0) {
-                    res += '<div id="result" data-city="' + c.city + '" data-lat="' + c.lat + '" data-lon="' + c.lon + '">' + c.city + ', OR<span>City</span></div>';
-                    count++;
+                if (c.city.toLowerCase().includes(query)) {
+                    res += `<div id="result" data-city="${c.city}" data-lat="${c.lat}" data-lon="${c.lon}">
+                        ${c.city}, OR
+                        <span>City</span>
+                    </div>`;
                 }
             });
 
-            if (count == 0) {
-                if (document.querySelector('.search-result #result.none') != null) {
-                    sr.querySelector('#result.none').innerHTML = 'No results found';
-                } else {
-                    sr.innerHTML = noRes;
-                }
-            } else {
-                sr.innerHTML = res;
-            }
+            sr.innerHTML = res || noRes;
         } else {
-            if (document.querySelector('.search-result #result.none') != null) {
-                sr.querySelector('#result.none').innerHTML = 'No results found';
-            } else {
-                sr.innerHTML = noRes;
-            }
+            sr.innerHTML = noRes;
         }
+    }
+
+    const filterTabular = (tab, cardClass) => {
+        const query = target.value.trim().toLowerCase();
+        const items = document.querySelectorAll(`.content[data-tab="${tab}"] .${cardClass}-card`);
+
+        items.forEach(item => {
+            const text = item.querySelector('h2')?.textContent.toLowerCase();
+            const show = query.length === 0 || text.replace(/([a-zA-Z]+)-([0-9]+)?/g, '$1$2').includes(query) || text.includes(query);
+            item.style.display = show ? 'flex' : 'none';
+        });
+    };
+
+    // filter RWIS in tabular report
+    if (target.id == 'filterRWIS') {
+        filterTabular('rwis', 'rwis');
+    }
+
+    // filter road reports in tabular report
+    if (target.id == 'filterRW') {
+        filterTabular('roads', 'inc');
     }
 });
 
