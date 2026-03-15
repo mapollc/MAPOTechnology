@@ -482,7 +482,7 @@ function storage(name, get = true, content = null) {
     if (!get && content) return localStorage.setItem(item, content);
 }
 
-async function api(uri, fields = null, v2 = false) {
+async function api(uri, fields = null, v2 = false, forAuth = false) {
     if (!navigator.onLine) {
         console.error('You are not connected to the internet');
         return null;
@@ -506,6 +506,7 @@ async function api(uri, fields = null, v2 = false) {
         }
     }
 
+    if (forAuth) ops['credentials'] = 'include';
     if (!isExternal) ops['body'] = fd;
 
     try {
@@ -2812,7 +2813,7 @@ class Tables {
         globalData.webcams.forEach(w => {
             w.properties.cameras.forEach(data => {
                 if (settings.isFavorite('cameras', data.id.toString())) {
-                    content += `<div style="${count != 0 ? 'margin-top:0.5em;' : ''}text-align:center">
+                    content += `<div style="${count != 0 ? 'margin-top:var(--spacing);' : ''}text-align:center">
                         <h4 class="fav">${data.name}${new Modal().genFav('cameras', data.id, data.name)}</h4>
                         <img loading="lazy" src="${atob(data.url)}?${new Date().getTime()}" alt="${data.name}" title="${data.name}" class="webcam">
                     </div>`;
@@ -3146,12 +3147,11 @@ function onMapClickListener(e) {
 
 document.onreadystatechange = async () => {
     const preload = async () => {
-        let usr = null,
-            token = (/\btoken=(.*?)(?=;|$)/gm).exec(document.cookie);
+        let usr = null;
 
-        if (token != null) {
-            const get = await api(config.apiURL + 'user/get/oreroads', [['token', token[1]]]);
-            usr = get.user;
+        if (window.isAuthUser) {
+            const get = await api(config.apiURL + 'user/get/oreroads', null, false, true);
+            usr = get?.user ?? null;
         }
 
         calculate = new Calculate();

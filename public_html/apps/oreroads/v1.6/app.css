@@ -448,6 +448,13 @@ select {
     justify-content: flex-start;
 }
 
+#modal h4.fav {
+    display: inline-flex;
+    justify-content: space-between;
+    width: 100%;
+    margin: var(--spacing) 0;
+}
+
 #modal h5 {
     font-size: 22px;
     margin: 0;

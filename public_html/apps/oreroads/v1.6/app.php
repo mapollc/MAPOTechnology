@@ -58,7 +58,7 @@ $mapboxVersion = '3.18.1';
         <span>Loading...</span>
     </div>
 
-    <script>let version='<?=$version?>',build='<?= $build ?>';</script>
+    <script>window.isAuthUser=<?= $_SESSION['token'] ? 'true' : 'false' ?>;const version='<?=$version?>',build='<?= $build ?>';</script>
     <script src="//api.mapbox.com/mapbox-gl-js/v<?=$mapboxVersion?>/mapbox-gl.js"></script>
     <?if (!isset($_GET['version'])) {?>
     <script async src="//www.googletagmanager.com/gtag/js?id=G-J2PB456CE6"></script>

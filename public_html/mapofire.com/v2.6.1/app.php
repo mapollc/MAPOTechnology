@@ -122,7 +122,6 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
                 <span id="dd-close" data-action="dropdown-nav" class="far fa-xmark"></span>
                 <ul>
                     <li id="account" class="ttip light" data-tooltip="Your account" data-action="account"><i class="fas fa-user-circle"></i><span>Login</span></li>
-                    <li class="ttip light" data-tooltip="Go to dashboard" data-action="blazeboard"><i class="fas fa-chart-mixed"></i><span>Dashboard</span></li>
                     <li id="new_fires" class="ttip light" data-tooltip="New incidents" style="display:none"><i class="fas fa-fire-flame"></i><span>New Fires</span></li>
                     <li class="ttip light" data-tooltip="Basemaps" data-action="basemap"><i class="far fa-grid"></i><span>Maps</span></li>
                     <li id="layers" class="ttip light" data-tooltip="Map Layers" data-action="layers"><i class="far fa-layer-group"></i><span>Layers</span></li>
@@ -130,6 +129,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
                     <li id="my-fire" class="ttip light" data-tooltip="My Fires" data-action="myfires"><i class="far fa-display-chart-up"></i><span>My Fires</span></li>
                     <li id="refresh" class="ttip light" data-tooltip="Refresh Map" data-action="refresh"><i class="far fa-sync"></i><span>Refresh</span></li>
                     <li id="report" class="ttip light" data-tooltip="Report an incident" data-action="report" data-active="0"><i class="far fa-location-plus"></i><span>Report</span></li>
+                    <li class="ttip light" data-tooltip="Go to dashboard" data-action="blazeboard"><i class="fas fa-chart-mixed"></i><span>Dashboard</span></li>
                     <li id="save" class="ttip light" data-tooltip="Sync Settings" data-action="save"><i class="far fa-cloud-arrow-up"></i><span>Sync</span></li>
                 </ul>
                 <i class="fas fa-chevron-left" title="Toggle navigation" id="close-navbar" data-action="close-navbar" data-open="true"></i>
@@ -145,7 +145,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
             </div>
 
             <div class="filter-controls">
-                <span id="menuIcon" data-action="dropdown-nav" class="fas fa-bars"></span>
+                <span id="menuIcon" data-action="dropdown-nav" class="far fa-bars"></span>
                 <div class="search control">
                     <span class="far fa-magnifying-glass"></span>
                     <input type="text" id="q" autocomplete="off" disabled placeholder="Search wildfires, cities, or coordinates">

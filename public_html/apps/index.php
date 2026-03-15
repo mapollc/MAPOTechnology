@@ -1,7 +1,12 @@
 <?
-ini_set('display_errors', 1);
-error_reporting(E_PARSE & E_ERROR);
+ini_set('display_errors', 0);
+error_reporting(E_ERROR || E_PARSE);
 ini_set('session.cookie_domain', '.mapotechnology.com');
+
+if (function_exists('opcache_invalidate')) {
+    opcache_invalidate($_SERVER['SCRIPT_FILENAME'], true);
+}
+
 session_start();
 date_default_timezone_set('America/Los_Angeles');
 
@@ -11,43 +16,43 @@ class Apps
 {
     public $route;
     public $thisApp = null;
-    public $apps = array(
-        array(
-            'name' => 'WarnGEN',
-            'url' => 'warngen',
-            'path' => './wg',
+    public $apps = [
+        [
+            'name' => 'PolyGEN',
+            'url' => 'polygen',
+            'path' => './pg',
             'index' => 'index.php',
             'requiresAuth' => true
-        ),
-        array(
+        ],
+        [
             'name' => 'Winter Dashboards',
             'url' => 'winter',
             'path' => './snow',
             'index' => 'index.php',
             'requiresAuth' => false
-        ),
-        array(
+        ],
+        [
             'name' => 'TornadoIQ',
             'url' => 'tornadoiq',
             'path' => './toriq',
             'index' => 'app.php',
             'requiresAuth' => false
-        ),
-        array(
+        ],
+        [
             'name' => 'OregonRoads',
             'url' => 'oregonroads',
             'path' => './oreroads',
             'index' => 'app.php',
             'requiresAuth' => false
-        ),
-        array(
+        ],
+        [
             'name' => 'CrisisCoord',
             'url' => 'crisiscoord',
             'path' => './evac',
             'index' => 'index.php',
             'requiresAuth' => true
-        )
-    );
+        ]
+    ];
 
     public function __construct($route)
     {
@@ -156,6 +161,20 @@ if ($route == 'authenticate') {
                 if ($ext[1] == 'php') {
                     include_once $place;
                 } else {
+                    // set the content type header if directly accessing js/css/json etc
+                    if (preg_match('/\/([^\/]+)\.([a-z0-9]+)$/i', $place, $matches)) {
+                        $mimeTypes = [
+                            'css'     => 'text/css',
+                            'js'      => 'text/javascript',
+                            'json'    => 'application/json',
+                            'geojson' => 'application/geo+json',
+                            'txt'     => 'text/plain'
+                        ];
+
+                        $ext = strtolower($matches[2]);
+                        if (isset($mimeTypes[$ext])) header('Content-type: ' . $mimeTypes[$ext]);
+                    }
+
                     echo file_get_contents($place);
                 }
             } else {

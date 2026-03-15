@@ -77,6 +77,9 @@ if ($service == 'apps') {
     if ($prod == 'oregonroads') {
         $serviceName = 'Oregon Roads';
         $logo = 'oreroads/oreroads_square_logo.png';
+    } else if ($prod == 'polygen') {
+        $serviceName = 'PolyGEN';
+        $logo = 'polygen_logo.png';
     } else if ($prod == 'crisiscoord') {
         $serviceName = 'CrisisCoord';
     }

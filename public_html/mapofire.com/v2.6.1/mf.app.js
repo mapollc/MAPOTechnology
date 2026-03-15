@@ -8,9 +8,9 @@ const specificURL = window.location.origin + '/',
         return 'mapofire';
     },
     config = {
-        host: `https://${window.location.host}/`/*'https://www.mapofire.com/'*/,
-        domain: 'https://www.mapotechnology.com/',
-        apiURL: 'https://api.mapotechnology.com/v1/',
+        host: `//${window.location.host}/`/*'https://www.mapofire.com/'*/,
+        domain: '//mapotechnology.com/',
+        apiURL: '//api.mapotechnology.com/v1/',
         productName: 'Map of Fire',
         company: 'MAPO LLC',
         /*sub_id: 'price_1MgxhSIpCdpJm6cTaKp2dqf5',*/
@@ -59,7 +59,7 @@ const specificURL = window.location.origin + '/',
         firemedZoomLevel: 9,
         toolsInstance: null,
         workers: {
-            incident: new Worker(specificURL + (debugMode ? 'v' + version + '/incident.js' : 'src/js/incident-' + version + '.js')),
+            incident: new Worker(`${specificURL}${(debugMode ? `v${version}/incident.js` : `src/js/incident-${version}.js`)}`),
             fwf: null,
             wwas: null
         },
@@ -226,8 +226,8 @@ const specificURL = window.location.origin + '/',
                     clearInterval(radarAnim);
 
                     for (let i = 0; i < radarImgs.length; i++) {
-                        map.removeLayer('radar-layer-' + i);
-                        map.removeSource('radar-' + i);
+                        map.removeLayer(`radar-layer-${i}`);
+                        map.removeSource(`radar-${i}`);
                     }
                 }
             }
@@ -389,7 +389,7 @@ const specificURL = window.location.origin + '/',
         if (lu) return lu;
 
         try {
-            lu = await import(config.specificURL + (debugMode ? 'v' + version + '/mf.utils.js' : 'src/js/mf.utils-' + version + '.js'));
+            lu = await import(`${config.specificURL}${(debugMode ? `v${version}/mf.utils.js` : `src/js/mf.utils-${version}.js`)}`);
             return lu;
         } catch (e) {
             console.error('Failed to load utils', e);
@@ -595,6 +595,7 @@ function getbbox() {
 class ClickListener {
     constructor(target, sr) {
         this.target = target;
+        this.modalHeightFromTop = 0.3;
         this.sr = sr;
     }
 
@@ -678,7 +679,7 @@ class ClickListener {
 
         const handle = modal.querySelector('.close'),
             viewportHeight = window.innerHeight,
-            openPosition = viewportHeight * 0.3,    // 30 vh from top
+            openPosition = viewportHeight * this.modalHeightFromTop,    // 30 vh from top
             minTop = viewportHeight * 0.1,       // 10vh
             closedPosition = viewportHeight,     // 100%
             snapVelocity = 0.25,                 // px/ms
@@ -873,7 +874,7 @@ class ClickListener {
 
             // Loop through layers in each category
             layers.layers[categoryId].filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
-                content += `<li class="layer${layer.minZoom && layer.minZoom > zoom ? ' more-zoom' : ''}"${layer.minZoom ? ' data-min-zoom="' + layer.minZoom + '"' : ''} data-p="${layer.perms}" data-id="${layer.id}" title="${layer.minZoom && layer.minZoom > zoom ? 'You must be zoomed in more' : layer.name}">
+                content += `<li class="layer${layer.minZoom && layer.minZoom > zoom ? ' more-zoom' : ''}"${layer.minZoom ? ` data-min-zoom="${layer.minZoom}"` : ''} data-p="${layer.perms}" data-id="${layer.id}" title="${layer.minZoom && layer.minZoom > zoom ? 'You must be zoomed in more' : layer.name}">
                     <div class="checkbox">
                         <input type="checkbox" id="${layer.id}" class="layChkBx" data-action="toggle-layer">
                     </div>
@@ -904,7 +905,7 @@ class ClickListener {
         config.listOfLayers.filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
             const hasPermissions = settings.hasPermissions(layer.perms),
                 isChecked = (layer.default && !settings.checkboxes()) || (settings.checkboxes() && settings.isEnabled(layer.id)),
-                item = impact.querySelector('li.layer[data-id="' + layer.id + '"]'),
+                item = impact.querySelector(`li.layer[data-id="${layer.id}"]`),
                 filter = item.querySelector('.data-filter'),
                 box = item.querySelector('.checkbox');
 
@@ -1097,7 +1098,7 @@ class ClickListener {
             if (!hasPerms) img.style.opacity = '0.5';
 
             const label = document.createElement('label');
-            label.innerHTML = tile.name + (tile.permissions.length ? '<p>' + tile.permissions[0] + '</p>' : '');
+            label.innerHTML = `${tile.name}${(tile.permissions.length ? `<p>${tile.permissions[0]}</p>` : '')}`;
 
             // Assemble the list item
             descDiv.appendChild(img);
@@ -1190,7 +1191,7 @@ class ClickListener {
     async account() {
         if (!settings.user) {
             const guid = document.cookie.split('; ').find(row => row.startsWith('guid='))?.split('=')[1] || null,
-                url = config.domain.replace('www', 'auth') + 'login?service=' + getPlatform() + '&next=' + encodeURIComponent(window.location.href) + (guid ? '&guid=' + guid : '');
+                url = `${config.domain.replace('//', '//auth.')}login?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}${(guid ? `&guid=${guid}` : '')}`;
             ////console.log(url);
             window.location.href = url;
             return;
@@ -1224,7 +1225,7 @@ class ClickListener {
 
         impact.innerHTML = impactHeader + userProfile;
         impact.style.display = 'flex';
-        impact.querySelector('#a').innerHTML = 'Hello, ' + settings.getUser().getName().first();
+        impact.querySelector('#a').innerHTML = `Hello, ${settings.getUser().getName().first()}`;
 
         const prefs = {
             'saveFreq': settings.get().saveFreq(),
@@ -1281,7 +1282,7 @@ class ClickListener {
             let counter = document.querySelector('.radar input[type=range]').value,
                 ra = () => {
                     radarImgs.forEach((e, n) => {
-                        map.setLayoutProperty('radar-layer-' + n, 'visibility', (n == counter ? 'visible' : 'none'));
+                        map.setLayoutProperty(`radar-layer-${n}`, 'visibility', (n == counter ? 'visible' : 'none'));
                         document.querySelector('.radar input[type=range]').value = counter;
                     });
 
@@ -1349,7 +1350,7 @@ class ClickListener {
 
             /* if user is logged in, save to account, otherwise store in local storage */
             if (settings.user) {
-                await api(config.host + 'api/v1/trackFires/' + m, [['wfid', id]], false, true);
+                await api(`${config.host}api/v1/trackFires/${m}`, [['wfid', id]], false, true);
             } else {
                 storage('mapofire.tracked', JSON.stringify(tracked));
             }
@@ -1378,7 +1379,7 @@ class ClickListener {
 
         if (myf.querySelectorAll('li').length == 0) myf.parentElement.innerHTML = noneTracked;
 
-        notify('success', 'You\'re no longer following the ' + name + '.');
+        notify('success', `You're no longer following the ${name}.`);
     }
 
     archive() {
@@ -1388,9 +1389,11 @@ class ClickListener {
                 return `<option ${year === config.curTime.getFullYear() ? 'disabled ' : ''}value="${year}">${year}</option>`;
             }).join('');
 
-            new Popup('Historical Wildfires').create('<p style="font-size:14px;line-height:1.2">See historical wildfires by selecting a year in our archive.</p>' +
-                '<select id="archive_years" data-action="archive_years" style="border:1px solid #cfcfcf;margin-top:1em"><option>- Choose a year -</option>' + yrs + '</select>' +
-                '<div class="btn-group centered"><input type="button" class="btn btn-sm btn-gray" value="Cancel" onclick="this.parentElement.parentElement.parentElement.remove()"></div>');
+            new Popup('Historical Wildfires').create(`<p style="font-size:14px;line-height:1.2">See historical wildfires by selecting a year in our archive.</p>
+                <select id="archive_years" data-action="archive_years" style="border:1px solid #cfcfcf;margin-top:1em"><option>- Choose a year -</option>${yrs}</select>
+                <div class="btn-group centered">
+                    <input type="button" class="btn btn-sm btn-gray" value="Cancel" onclick="this.parentElement.parentElement.parentElement.remove()">
+                </div>`);
         }
     }
 
@@ -1425,7 +1428,7 @@ class ClickListener {
     }
 
     async myfires() {
-        impact.innerHTML = impactHeader + '<div class="content"><div id="spinner" class="centered"></div></div>';
+        impact.innerHTML = `${impactHeader}<div class="content"><div id="spinner" class="centered"></div></div>`;
         impact.style.display = 'flex';
         impact.querySelector('#a').innerHTML = 'My Fires';
 
@@ -1526,7 +1529,7 @@ class ClickListener {
                     .setLngLat([lon, lat])
                     .addTo(map);
 
-                new Popup(geoType).create(name[0] + ', ' + county + ' County, ' + name[1]);
+                new Popup(geoType).create(`${name[0]}, ${county} County, ${name[1]}`);
 
                 map.easeTo({
                     center: new maplibregl.LngLat(lon, lat),
@@ -1562,7 +1565,18 @@ class ClickListener {
             // zoom to a wildfire
             else {
                 const wfid = parseInt(p.dataset.wfid);
-                if (config.wildfire.findFire(wfid)) config.wildfire.incident(wfid, true);
+                const inc = config.wildfire.findFire(wfid);
+
+                if (inc) {
+                    config.wildfire.incident(wfid, true);
+                    /*map.easeTo({
+                        zoom: 10,
+                        center: inc.geometry.coordinates,
+                        duration: 1500,
+                        easing: t => t * (2 - t),
+                        essential: true
+                    });*/
+                }
             }
         }
 
@@ -1712,7 +1726,7 @@ function addDynamicControls() {
         t = ['Enter fullscreen', 'Zoom in', 'Zoom out', 'Reset bearing to north', 'Find my location'];
 
     for (let i = 0; i < c.length; i++) {
-        const it = document.querySelector('.maplibregl-ctrl-' + c[i]);
+        const it = document.querySelector(`.maplibregl-ctrl-${c[i]}`);
         if (!it) return;
 
         it.classList.add('ttip');
@@ -1787,7 +1801,7 @@ async function init() {
         /* preload sample images of the basemaps */
         tileConfig.forEach((item, index) => {
             const img = new Image();
-            img.src = config.domain + 'assets/images/icons/fire/basemaps/' + item.imgs + '.png';
+            img.src = `${config.domain}assets/images/icons/fire/basemaps/${item.imgs}.png`;
             tileConfig[index].cache = img;
         });
 
@@ -1804,7 +1818,9 @@ async function init() {
         if (settings.archive) {
             const b = document.createElement('div');
             b.classList.add('message', 'banner');
-            b.innerHTML = '<a href="#" title="Return to current fires" data-action="close-historical"><i class="fas fa-xmark"></i></a><span>You are viewing a historical wildfire map for <b><u>' + settings.archive + '</u></b></span>';
+            b.innerHTML = `<a href="#" title="Return to current fires" data-action="close-historical"><i class="fas fa-xmark"></i></a>
+            <span>You are viewing a historical wildfire map for <b><u>${settings.archive}</u></b></span>`;
+
             document.body.appendChild(b);
         }
 
@@ -1815,7 +1831,7 @@ async function init() {
         /* add fire icons */
         const loadMapIcons = () => {
             const queue = [
-                ...icons.map(i => ({ id: `fire-icon${i ? '-' + i : ''}`, path: `fire/fire-icon${i ? '-' + i : ''}.png` })),
+                ...icons.map(i => ({ id: `fire-icon${i ? `-${i}` : ''}`, path: `fire/fire-icon${i ? `-${i}` : ''}.png` })),
                 ...['helicopter', 'plane_tactical', 'plane_large', 'plane_small'].map(i => ({ id: i, path: `fire/${i}.png` })),
                 ...[1, 2, 3].map(i => ({ id: `modis${i}`, path: `fire/modis${i}.png` }))
             ];
@@ -1913,7 +1929,7 @@ async function init() {
 
         /* control whether modis hotspots show on the map based on the zoom level */
         [{ n: '24', w: 1 }, { n: '48', w: 2 }, { n: '72', w: 3 }].forEach(item => {
-            const name = 'modis' + item.n,
+            const name = `modis${item.n}`,
                 vis = map.getLayer(name) ? 'visible' : 'visible';
 
             if (settings.isEnabled(name)) {
@@ -1934,14 +1950,14 @@ async function init() {
         utils.contextMenu(e);
     });
 
-    map.getContainer().addEventListener('touchstart', async (e) => {
+    /*map.getContainer().addEventListener('touchstart', async (e) => {
         touchTimer = setTimeout(async () => {
             e.preventDefault();
             e.stopPropagation();
 
             utils.contextMenu(e, true);
-        }, 500);
-    });
+        }, 1000);
+    });*/
 
     map.getContainer().addEventListener('touchend', () => clearTimeout(touchTimer));
     map.getContainer().addEventListener('touchmove', () => clearTimeout(touchTimer));
@@ -2061,7 +2077,7 @@ document.onreadystatechange = async () => {
             const getAcct = await api(config.apiURL + 'user/get/mapofire', /*[['token', token[1]]]*/null, false, true);
 
             if (getAcct?.response) {
-                const loginURL = config.domain.replace('www', 'auth') + 'login?service=' + getPlatform() + '&next=' + encodeURIComponent(window.location.href);
+                const loginURL = `${config.domain.replace('//', '//auth.')}login?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}`;
                 (await loadUtils()).notify('info', `Your session has expired. Please <a href="${loginURL}">login again</a>.`, 3.25);
             } else {
                 usr = getAcct?.user;
@@ -2120,7 +2136,7 @@ document.onreadystatechange = async () => {
         // initialize map
         (window.requestIdleCallback || (cb => setTimeout(cb, 1)))(async () => {
             if (typeof maplibregl === 'undefined') return;
-             (await loadUtils()).loadDispatchCenters();
+            (await loadUtils()).loadDispatchCenters();
             init();
             popstate();
         }, { timeout: 3250 });
@@ -2191,7 +2207,7 @@ window.onload = async () => {
 
     /* add service worker to handle additional js execution */
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register(config.specificURL + (debugMode ? 'v' + version + '/service-worker.js' : 'src/js/service-worker-' + version + '.js'))
+        navigator.serviceWorker.register(`${config.specificURL}${(debugMode ? `v${version}/service-worker.js` : `src/js/service-worker-${version}.js`)}`)
             .then(registration => {
                 if (registration.active) {
                     registration.active.postMessage({
@@ -2415,6 +2431,8 @@ window.addEventListener('keyup', debounce((e) => {
         }
     })();
 }, 500));
+
+
 
 window.addEventListener('popstate', () => popstate());
 

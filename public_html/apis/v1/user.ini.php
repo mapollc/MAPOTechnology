@@ -11,6 +11,7 @@ class SSO
 {
     public $request;
     public $domain;
+    public $issuer;
     public $fields;
     public $ip;
     public $con;
@@ -32,6 +33,7 @@ class SSO
 
         $this->request = $request;
         $this->domain = 'https://www.mapotechnology.com/';
+        $this->issuer = 'https://api.mapotechnology.com/';
         $this->fields = $request;
         $this->ip = $_SERVER['REMOTE_ADDR'];
         $this->con = $con;
@@ -92,12 +94,11 @@ class SSO
     function createToken($payload, $expires = null)
     {
         $payload['iss'] = $this->domain;
-        $payload['aud'] = $this->domain;
+        $payload['aud'] = $this->issuer;
         $payload['iat'] = time();
         $payload['nbf'] = time();
         $payload['exp'] = $expires != null ? $expires : time() + 60 * 60 * 24 * 7;
-        ////$payload['host'] = $_SERVER['HTTP_USER_AGENT'];
-        ////$payload['ip'] = $_SERVER['REMOTE_ADDR'];
+
 
         return JWT::encode($payload, $this->secretKey, 'HS256');
     }
@@ -112,8 +113,10 @@ class SSO
     {
         try {
             $decoded = $this->decodeToken($token);
+            $iss = !isset($decoded['iss']) || $decoded['iss'] != $this->domain;
+            $aud = !isset($decoded['aud']) || ($decoded['aud'] != $this->domain && $decoded['aud'] != $this->issuer);
 
-            if (!isset($decoded['iss']) || $decoded['iss'] != $this->domain || !isset($decoded['aud']) || $decoded['aud'] != $this->domain) {
+            if ($iss || $aud) {
                 return ['status' => 'issuer'];
             } else {
                 return ['status' => 'valid', 'payload' => $decoded];
@@ -754,8 +757,6 @@ class SSO
                     $expires = time() + 600;
                     $token = $this->createToken(['uid' => $row['uid'], 'unique' => 'resetPassword-' . time()]);
 
-                    /*mysqli_query($this->con, "UPDATE password_reset SET expires = '0' WHERE uid = $row[uid]");
-                    mysqli_query($this->con, "INSERT INTO password_reset (uid,token,expires) VALUES($row[uid],'$token','$expires')");*/
                     executeQuery('i', [$row['uid']], "UPDATE password_reset SET expires = 0 WHERE uid = ?");
                     executeQuery('isi', [$row['uid'], $token, $expires], "INSERT INTO password_reset (uid,token,expires) VALUES(?,?,?)");
 

@@ -177,7 +177,7 @@ class NearbyEvacuations {
 
 class Popup {
     constructor(title, tall = false) {
-        this.header = '<div class="header"' + (!title ? ' style="margin-bottom:0"' : '') + '><h1>' + title + '</h1><span id="close-popup" data-action="close-popup" title="Close popup" class="far fa-xmark-large"></span></div>';
+        this.header = `<div class="header"${(!title ? ' style="margin-bottom:0"' : '')}><h1>${title}</h1><span id="close-popup" data-action="close-popup" title="Close popup" class="far fa-xmark-large"></span></div>`;
         this.tall = tall;
         this.dialog = null;
 
@@ -293,7 +293,7 @@ class Weather {
 
     currentConds(p) {
         if (!p) return;
-        setHeaders('Current Weather Conditions at ' + p.NAME, 'weather/current/' + p.STID, 'See current fire weather conditions at ' + p.NAME + '.');
+        setHeaders(`Current Weather Conditions at ${p.NAME}`, `weather/current/${p.STID}`, `See current fire weather conditions at ${p.NAME}.`);
 
         const hasPermissions = settings.hasPermissions('PRO'),
             popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>');
@@ -343,11 +343,11 @@ class Weather {
     fireWxFcst() {
         new ClickListener().openModal('wwa');
 
-        setHeaders('Daily Fire Weather Forecast for ' + this.lat + ', ' + this.lon, 'weather/forecast/' + this.lat + ',' + this.lon,
-            'Daily fire weather forecast from the National Weather Service for ' + this.lat + ', ' + this.lon + '.');
+        setHeaders(`Daily Fire Weather Forecast for ${this.lat}, ${this.lon}`, `weather/forecast/${this.lat},${this.lon}`,
+            `Daily fire weather forecast from the National Weather Service for ${this.lat}, ${this.lon}.`);
 
         if (config.workers.fwf == null) {
-            config.workers.fwf = new Worker(config.specificURL + (debugMode ? 'v' + version + '/fwf.js' : 'src/js/fwf-' + version + '.js'));
+            config.workers.fwf = new Worker(`${config.specificURL}${(debugMode ? `v${version}/fwf.js` : `src/js/fwf-${version}.js`)}`);
         }
 
         config.workers.fwf.postMessage({
@@ -371,13 +371,13 @@ class Weather {
         const holder = document.querySelector('#curwx');
         if (!holder) return;
 
-        const onError = (error) => {
-            if (error) console.error(error);
+        const onError = (/*error*/) => {
+            //if (error) { console.error(error); }
             holder.innerHTML = '<h2>Nearby Weather Conditions</h2><div class="message error">No current weather conditions are available near this incident.</div>';
         };
 
         try {
-            const wx = await api(config.apiURL + 'weather/nearby', [['radius', this.lat + ',' + this.lon + ',30'], ['latest', 1]]);
+            const wx = await api(config.apiURL + 'weather/nearby', [['radius', `${this.lat},${this.lon},30`], ['latest', 1]]);
 
             if (!wx?.weather?.obs) return showError();
 
@@ -519,17 +519,17 @@ class Weather {
     async raws(update = false) {
         const feat = [],
             b = JSON.parse(getbbox()),
-            bx = b.xmax + ',' + b.ymin + ',' + b.xmin + ',' + b.ymax,
-            vars = 'token=350409c14c544ec9957effb1c15bcb99' +
-                '&bbox=' + bx +
-                '&vars=air_temp,relative_humidity,wind_speed,wind_direction' +
-                '&units=temp|f,speed|mph' +
-                '&obtimezone=local' +
-                '&status=active' +
-                '&network=2,1' +
-                '&networkimportance=2,1';
+            bx = `${b.xmax},${b.ymin},${b.xmin},${b.ymax}`,
+            vars = `token=350409c14c544ec9957effb1c15bcb99
+                &bbox=${bx}
+                &vars=air_temp,relative_humidity,wind_speed,wind_direction
+                &units=temp|f,speed|mph
+                &obtimezone=local
+                &status=active
+                &network=2,1
+                &networkimportance=2,1`;
 
-        const data = await api('https://api.synopticlabs.org/v2/stations/latest?' + vars);
+        const data = await api(`https://api.synopticlabs.org/v2/stations/latest?${vars}`);
 
         if (data.STATION) {
             data.STATION.forEach((s) => {
@@ -653,7 +653,7 @@ class Weather {
         ];
 
         const range = ranges.find(r => v <= r.max);
-        return '#' + (range ? range.color : 'd9d9d9');
+        return `#${(range ? range.color : 'd9d9d9')}`;
     }
 
     airQDesc(aq) {
@@ -796,7 +796,7 @@ class ChangeListener {
             s = ay.options[ay.selectedIndex].value,
             win = window.location;
 
-        if (s != '- Choose a year -') win.href = config.host + 'archive/' + s + (win.search ? win.search : '') + (win.hash ? win.hash : '');
+        if (s != '- Choose a year -') win.href = `${config.host}archive/${s}${(win.search ? win.search : '')}${(win.hash ? win.hash : '')}`;
     }
 
     spcClimo() {
@@ -837,7 +837,7 @@ function timeAgo(t, w, c) {
     ];
 
     const range = ranges.find(r => d < r.limit);
-    let val = Math.floor(d / range.div) + ' ' + range.unit + plural(Math.floor(d / range.div));
+    let val = `${Math.floor(d / range.div)} ${range.unit}${plural(Math.floor(d / range.div))}`;
 
     if (range.sub) {
         const subVal = subUnit(d, range.div, range.sub.div);
@@ -872,12 +872,12 @@ function dateTime(it, time = false, timezone = false, longMonth = false) {
     let t = new Date(it.toString().length == 10 ? it * 1000 : it),
         h = (t.getHours() == 0 ? 12 : (t.getHours() > 12 ? t.getHours() - 12 : t.getHours())),
         m = (t.getMinutes() < 10 ? '0' : '') + t.getMinutes(),
-        a = h + ':' + m + ' ' + (t.getHours() >= 12 ? 'P' : 'A') + 'M',
+        a = `${h}:${m} ${(t.getHours() >= 12 ? 'P' : 'A')}M`,
         s = (/\((.*?)\)/g).exec(new Date().toString())[1].split(' '),
         tz = s[0].substring(0, 1) + s[1].substring(0, 1) + s[2].substring(0, 1),
         month = longMonth ? config.longMonths[t.getMonth()] : config.months[t.getMonth()];
 
-    return month + ' ' + t.getDate() + ',&nbsp;' + t.getFullYear() + (time ? ' at ' + a : '') + (timezone ? ' ' + tz : '');
+    return `${month} ${t.getDate()}, ${t.getFullYear()}${(time ? ` at ${a}` : '')}${(timezone ? ` ${tz}` : '')}`;
 }
 
 /* social media shares */
@@ -887,15 +887,15 @@ function socialShare(se) {
         clean = v => ucwords(String(v).replaceAll('-', ' ')).replaceAll(' ', '');
 
     if (se == 'tt') {
-        window.open('https://tiktok.com/search?q=' + s[4].replaceAll('-', '%20').toLowerCase());
+        window.open(`https://tiktok.com/search?q=${s[4].replaceAll('-', '%20').toLowerCase()}`);
     } else {
         const ref = config.host.substring(0, config.host.length - 1).replace('www.', '') + p;
 
         if (se == 'fb') {
-            url = 'https://www.facebook.com/sharer/sharer.php?u=' + ref + '&src=sdkpreparse';
+            url = `https://www.facebook.com/sharer/sharer.php?u=${ref}&src=sdkpreparse`;
         } else {
             const hashtags = `${clean(s[3])},${clean(s[4])}`;
-            url = 'https://x.com/intent/post?hashtags=' + hashtags + '&original_referer=' + ref + '&url=' + ref + '&ref_src=twsrc%5Etfw&tw_p=tweetbutton';
+            url = `https://x.com/intent/post?hashtags=${hashtags}&original_referer=${ref}&url=${ref}&ref_src=twsrc%5Etfw&tw_p=tweetbutton`;
         }
 
         const h = 425, w = 700,
@@ -991,7 +991,7 @@ function unsetHeaders() {
     if (h.search('fires') >= 0 || h.search('weather/') >= 0 || h.search('risk') >= 0) {
         window.history.pushState({
             "pageTitle": document.title
-        }, '', h.replace(window.location.pathname, (settings.archive == null ? '' : '/archive/' + settings.archive)));
+        }, '', h.replace(window.location.pathname, (settings.archive == null ? '' : `/archive/${settings.archive}`)));
 
         document.title = defaultTitle;
         document.querySelector('meta[property="og:title"]').setAttribute('content', defaultTitle);
@@ -1052,7 +1052,7 @@ function newFiresReport() {
         li.setAttribute('data-action', 'new-fires');
         li.setAttribute('data-lat', fire.geometry.coordinates[1]);
         li.setAttribute('data-lon', fire.geometry.coordinates[0]);
-        li.innerHTML = '<div class="pert"><h3>' + name + '</h3><span class="near">' + near + '</div></div><span class="disc">' + size + '</span>';
+        li.innerHTML = `<div class="pert"><h3>${name}</h3><span class="near">${near}</div></div><span class="disc">${size}</span>`;
         content.appendChild(li);
     });
 
@@ -1081,7 +1081,7 @@ async function createCSReport(data, lat, lon) {
 
     if (settings.user != null) {
         form.querySelector('input[name=authUser]').value = 1;
-        form.insertAdjacentHTML('afterbegin', '<input type="hidden" name="uid" value="' + settings.user.uid + '">');
+        form.insertAdjacentHTML('afterbegin', `<input type="hidden" name="uid" value="${settings.user.uid}">`);
     }
 
     form.querySelector('input[name=lat]').value = lat;
@@ -1090,10 +1090,10 @@ async function createCSReport(data, lat, lon) {
     form.querySelector('input[id=gl]').value = data.geocode.near;
     form.querySelector('input[id=gs]').value = data.geocode.state ? theState?.name : 'Undetermined';
     form.querySelector('input[name=geolocation]').value = data.geocode.near;
-    form.querySelector('input[name=state]').value = data.geocode.state + ' / ' + theState?.name;
+    form.querySelector('input[name=state]').value = `${data.geocode.state} / ${theState?.name}`;
 
     form.querySelector('input[name=size]').addEventListener('keyup', (e) => {
-        form.querySelector('#alab').innerHTML = 'acre' + (e.target.value != 1 ? 's' : '');
+        form.querySelector('#alab').innerHTML = `acre${(e.target.value != 1 ? 's' : '')}`;
     });
 
     config.disableClicks = false;
@@ -1117,7 +1117,11 @@ async function onRasterLayerClick(e) {
         const popup = new Popup('', true).create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>'),
             year = 25,
             getFuelType = async (year, where) => {
-                const url = 'https://lfps.usgs.gov/arcgis/rest/services/Landfire_LF' + year + '0/' + where + '_' + year + '0EVT/ImageServer/identify?geometry=' + encodeURIComponent('{"spatialReference":{"latestWkid":4326,"wkid":102100},"x":' + coords.lng + ',"y":' + coords.lat + '}') + '&geometryType=esriGeometryPoint&mosaicRule=' + encodeURIComponent('{"ascending":true,"mosaicMethod":"esriMosaicNorthwest","mosaicOperation":"MT_FIRST"}') + '&renderingRule=&renderingRules=' + encodeURIComponent('[{"rasterFunction":"' + where + '_' + year + '0EVT"}]') + '&pixelSize=' + encodeURIComponent('{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":152.87405657041106,"y":152.87405657041106}') + '&sliceId=&time=&returnGeometry=false&returnCatalogItems=false&returnPixelValues=true&processAsMultidimensional=false&maxItemCount=1&f=json';
+                const url = `https://lfps.usgs.gov/arcgis/rest/services/Landfire_LF${year}0/${where}_${year}0EVT/ImageServer/identify?geometry=${encodeURIComponent(`{"spatialReference":{"latestWkid":4326,"wkid":102100},"x":${coords.lng},"y":${coords.lat}}`)}
+                &geometryType=esriGeometryPoint&mosaicRule=${encodeURIComponent('{"ascending":true,"mosaicMethod":"esriMosaicNorthwest","mosaicOperation":"MT_FIRST"}')}
+                &renderingRule=&renderingRules=${encodeURIComponent(`[{"rasterFunction":"${where}_${year}0EVT"}]`)}
+                &pixelSize=${encodeURIComponent('{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":152.87405657041106,"y":152.87405657041106}')}
+                &sliceId=&time=&returnGeometry=false&returnCatalogItems=false&returnPixelValues=true&processAsMultidimensional=false&maxItemCount=1&f=json`;
 
                 try {
                     const data = await fetch(url);
@@ -1316,13 +1320,13 @@ async function onMapClick(e) {
                     zoom: 10
                 });
 
-                new Popup('Canadian Wildfire').create('<div class="item"><div class="t">Incident Name</div><div class="v">' + name + '</div></div>' +
-                    '<div class="item"><div class="t">Start Date</div><div class="v">' + timeAgo(time.discovered) + '</div></div>' +
-                    '<div class="item"><div class="t">Province</div><div class="v">' + state + '</div></div>' +
-                    '<div class="item"><div class="t">Size</div><div class="v">' + numberFormat(acres / 2.471, 2) + ' ha (' + acres + ' acres)</div></div>' +
-                    '<div class="item"><div class="t">Status</div><div class="v">' + status + '</div></div>' +
-                    (near != null ? '<div class="item"><div class="t">Near</div><div class="v">' + near + '</div></div>' : '') +
-                    '<span style="margin-top:1em;font-size:12px;color:#8d8d8d">Last update received ' + timeAgo(time.updated) + '</span>'
+                new Popup('Canadian Wildfire').create(`<div class="item"><div class="t">Incident Name</div><div class="v">${name}</div></div>
+                    <div class="item"><div class="t">Start Date</div><div class="v">${timeAgo(time.discovered)}</div></div>
+                    <div class="item"><div class="t">Province</div><div class="v">${state}</div></div>
+                    <div class="item"><div class="t">Size</div><div class="v">${numberFormat(acres / 2.471, 2)} ha (${acres} acres)</div></div>
+                    <div class="item"><div class="t">Status</div><div class="v">${status}</div></div>
+                    ${(near != null ? `<div class="item"><div class="t">Near</div><div class="v">${near}</div></div>` : '')}
+                    <span style="margin-top:1em;font-size:12px;color:#8d8d8d">Last update received ${timeAgo(time.updated)}</span>`
                 );
             }
 
@@ -1365,11 +1369,11 @@ async function onMapClick(e) {
                     click: true
                 });
 
-                new Popup('Austrailia Bushfire', true).create('<div class="item"><div class="t">Incident Name</div><div class="v">' + name + '</div></div>' +
-                    '<div class="item"><div class="t">State</div><div class="v">' + state + '</div></div>' +
-                    '<div class="item"><div class="t">Discovered</div><div class="v">' + discovered + '</div></div>' +
-                    '<div class="item"><div class="t">Perimeter Size</div><div class="v">' + size + '</div></div>' +
-                    '<div class="item"><div class="t">Last Mapped</div><div class="v">' + updated + '</div></div>');
+                new Popup('Austrailia Bushfire', true).create(`<div class="item"><div class="t">Incident Name</div><div class="v">${name}</div></div>
+                    <div class="item"><div class="t">State</div><div class="v">${state}</div></div>
+                    <div class="item"><div class="t">Discovered</div><div class="v">${discovered}</div></div>
+                    <div class="item"><div class="t">Perimeter Size</div><div class="v">${size}</div></div>
+                    <div class="item"><div class="t">Last Mapped</div><div class="v">${updated}</div></div>`);
 
                 if (settings.perimeters().zoom()) {
                     map.fitBounds(geojsonExtent(feature.geometry), {
@@ -1395,9 +1399,9 @@ async function onMapClick(e) {
                     click: true
                 });
 
-                new Popup('Wildfire Perimeter').create('<div class="item"><div class="t">Incident Name</div><div class="v">' + name + '</div></div>' +
-                    '<div class="item"><div class="t">Last Mapped</div><div class="v">' + ago + '</div></div>' +
-                    '<div class="item"><div class="t">Perimeter Size</div><div class="v">' + size + '</div></div>');
+                new Popup('Wildfire Perimeter').create(`<div class="item"><div class="t">Incident Name</div><div class="v">${name}</div></div>
+                    <div class="item"><div class="t">Last Mapped</div><div class="v">${ago}</div></div>
+                    <div class="item"><div class="t">Perimeter Size</div><div class="v">${size}</div></div>`);
 
                 if (settings.perimeters().zoom()) {
                     map.fitBounds(geojsonExtent(feature.geometry), {
@@ -1412,10 +1416,10 @@ async function onMapClick(e) {
                 const cityState = `${feature.properties.CITY}, ${feature.properties.STATE} ${feature.properties.ZIPCODE}`,
                     type = feature.properties.type == 'hosp' ? 'Hospital' : (feature.properties.type == 'ems' ? 'Emergency Medical Services' : 'Fire Department');
 
-                new Popup('Emergency Response').create('<div class="item"><div class="t">Type</div><div class="v">' + type + '</div></div>' +
-                    '<div class="item"><div class="t">Name</div><div class="v">' + feature.properties.NAME + '</div></div>' +
-                    '<div class="item"><div class="t">Address</div><div class="v">' + feature.properties.ADDRESS + '</div></div>' +
-                    '<div class="item"><div class="t">City/State</div><div class="v">' + cityState + '</div></div>'
+                new Popup('Emergency Response').create(`<div class="item"><div class="t">Type</div><div class="v">${type}</div></div>
+                    <div class="item"><div class="t">Name</div><div class="v">${feature.properties.NAME}</div></div>
+                    <div class="item"><div class="t">Address</div><div class="v">${feature.properties.ADDRESS}</div></div>
+                    <div class="item"><div class="t">City/State</div><div class="v">${cityState}</div></div>`
                 );
 
                 break;
@@ -1458,7 +1462,7 @@ async function onMapClick(e) {
                     </div>
                     <a href="#" data-action="readSPC" data-type="${settings.special().otlkType()}" data-day="${settings.special().otlkDay()}" onclick="return false" style="display:block;text-align:center">Read the forecast</a>`;
 
-                new Popup((settings.special().otlkType() == 'severe' ? 'Severe' : 'Fire') + ' Weather Outlook - Day ' + settings.special().otlkDay()).create(content);
+                new Popup(`${(settings.special().otlkType() == 'severe' ? 'Severe' : 'Fire')} Weather Outlook - Day ${settings.special().otlkDay()}`).create(content);
                 break;
             }
 
@@ -1488,21 +1492,21 @@ async function onMapClick(e) {
                     fcst_pct = p.avg_erc_fcast_percentile,
                     fcst_trend = p.avg_erc_fcast_trend.replace('ase', 'asing'),
                     chart = p.ERC_Chart_URL,
-                    time = p.update_time.substring(0, 2) + ':' + p.update_time.substring(2, 4),
+                    time = `${p.update_time.substring(0, 2)}:${p.update_time.substring(2, 4)}`,
                     dt = dateTime(new Date(`${p.update_date} ${time} UTC`).getTime(), true),
                     erc = '',
                     date = '',
-                    popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>' +
-                        '<p style="text-align:center;margin-top:0.5em;font-size:14px">Getting ERC data...</p>');;
+                    popup = new Popup('').create(`<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>
+                        '<p style="text-align:center;margin-top:0.5em;font-size:14px">Getting ERC data...</p>`);
 
                 if (settings.special().erc() == null || settings.special().erc() == 'obs') {
-                    date = 'Today (' + dateTime(new Date().getTime()) + ')';
-                    erc = '<div class="item"><div class="t">ERC Percentile</div><div class="v">' + obs_pct + '%</div></div>' +
-                        '<div class="item"><div class="t">ERC Trend</div><div class="v">' + obs_trend + '</div></div>';
+                    date = `Today (${dateTime(new Date().getTime())})`;
+                    erc = `<div class="item"><div class="t">ERC Percentile</div><div class="v">${obs_pct}%</div></div>
+                        <div class="item"><div class="t">ERC Trend</div><div class="v">${obs_trend}</div></div>`;
                 } else {
-                    date = 'Tomorrow (' + dateTime((new Date().getTime()) + 86400000) + ')';
-                    erc = '<div class="item"><div class="t">ERC Percentile</div><div class="v">' + fcst_pct + '%</div></div>' +
-                        '<div class="item"><div class="t">ERC Trend</div><div class="v">' + fcst_trend + '</div></div>';
+                    date = `Tomorrow (${dateTime((new Date().getTime()) + 86400000)})`;
+                    erc = `<div class="item"><div class="t">ERC Percentile</div><div class="v">${fcst_pct}%</div></div>
+                        <div class="item"><div class="t">ERC Trend</div><div class="v">${fcst_trend}</div></div>`;
                 }
 
                 const ercContent = `<div class="item"><div class="t">ERC Date</div><div class="v">${date}</div></div>
@@ -1536,10 +1540,10 @@ async function onMapClick(e) {
                         if (v > 348 && v <= 522) return 'Moderate';
                         return 'Minimal';
                     },
-                    content = '<div class="item"><div class="t">City</div><div class="v">' + p.City + '</div></div>' +
-                        '<div class="item"><div class="t">State</div><div class="v">' + (await loadUtils()).stateLabels[p.State].name + '</div></div>' +
-                        '<div class="item"><div class="t">Rank</div><div class="v">' + p.Overall_Vu + ' of 696</div></div>' +
-                        '<div class="item"><div class="t">Vulnerability</div><div class="v">' + (p.Overall_Vu / 6.96).toFixed(1) + '/100 (<b>' + rank(p.Overall_Vu) + '</b>)</div></div>';
+                    content = `<div class="item"><div class="t">City</div><div class="v">${p.City}</div></div>
+                        <div class="item"><div class="t">State</div><div class="v">${(await loadUtils()).stateLabels[p.State].name}</div></div>
+                        <div class="item"><div class="t">Rank</div><div class="v">${p.Overall_Vu} of 696</div></div>
+                        <div class="item"><div class="t">Vulnerability</div><div class="v">${(p.Overall_Vu / 6.96).toFixed(1)}/100 (<b>${rank(p.Overall_Vu)}</b>)</div></div>`;
 
                 new Popup('Evacuation Vulnerability').create(content);
             }
@@ -1547,7 +1551,7 @@ async function onMapClick(e) {
             /* FEMA NRI click */
             if (feature.source == 'nri') {
                 const p = feature.properties,
-                    name = p.COUNTY + ' County, ' + p.STATEABBRV,
+                    name = `${p.COUNTY} County, ${p.STATEABBRV}`,
                     value = {
                         build: numberFormat(p.BUILDVALUE, 0),
                         ag: numberFormat(p.AGRIVALUE, 0)
@@ -1668,11 +1672,13 @@ async function onMapClick(e) {
                     n = p.notes,
                     u = timeAgo(p.updated);
 
-                new Popup('Evacuations').create('<div class="item"><div class="t">Level</div><div class="v"><span class="evac-circ l' + p.level + '"></span>Level ' + p.level + '</div></div>' +
-                    '<div class="item"><div class="t">Status</div><div class="v">' + d + '</div></div>' +
-                    '<div class="item"><div class="t">' + (p.county ? 'County' : 'State') + '</div><div class="v">' + (p.county ? p.county + ' County, ' + p.state : (await loadUtils()).stateLabels[p.state].name) + '</div></div>' +
-                    '<div class="item"><div class="t">Last Updated</div><div class="v">' + u + '</div></div>' +
-                    (n ? '<div class="item"><div class="t">Notes</div><div class="v">' + n + '</div></div>' : '')
+                new Popup('Evacuations').create(`<div class="item"><div class="t">Level</div><div class="v"><span class="evac-circ l${p.level}"></span>Level ${p.level}</div></div>
+                    <div class="item"><div class="t">Status</div><div class="v">${d}</div></div>
+                    <div class="item">
+                        <div class="t">${(p.county ? 'County' : 'State')}</div>
+                        <div class="v">${(p.county ? `${p.county} County, ${p.state}` : (await loadUtils()).stateLabels[p.state].name)}</div></div>
+                    <div class="item"><div class="t">Last Updated</div><div class="v">${u}</div></div>
+                    ${(n ? `<div class="item"><div class="t">Notes</div><div class="v">${n}</div></div>` : '')}`
                 );
 
                 break;
@@ -1712,7 +1718,7 @@ window.addEventListener('submit', async (e) => {
         }
 
         if (error === true) {
-            form.insertAdjacentHTML('afterbegin', '<ul id="nrerrors" style="margin: 0 0 1em 1em;font-size:14px;color:var(--red)">' + errorMsg + '</ul>');
+            form.insertAdjacentHTML('afterbegin', `<ul id="nrerrors" style="margin: 0 0 1em 1em;font-size:14px;color:var(--red)">${errorMsg}</ul>`);
         } else {
             if (confirm('Are you sure this is a new incident? If so, click "OK." Otherwise, please click "Cancel."')) {
                 const sub = form.querySelector('input[type=submit]'),

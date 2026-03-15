@@ -64,7 +64,7 @@ function nextURL()
 
 function getUserFromAPI($apiKey, $token)
 {
-    $url = 'https://api.mapotechnology.com/v1/user/get?key=' . urlencode($apiKey) . '&token=' . urlencode($token);
+    $url = 'https://api.mapotechnology.com/v1/user/get?key=' . urlencode($apiKey)/* . '&token=' . urlencode($token)*/;
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -72,9 +72,10 @@ function getUserFromAPI($apiKey, $token)
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);  // 3 second connection timeout
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
     curl_setopt($ch, CURLOPT_FAILONERROR, true);  // return false on HTTP errors
+    curl_setopt($ch, CURLOPT_COOKIE, 'token=' . urlencode($token) . '; Path=/; Secure; HttpOnly; SameSite=None');
 
     $response = curl_exec($ch);
-    $error = curl_error($ch);
+    ////$error = curl_error($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
     if ($response === false || $httpCode >= 400) {
@@ -119,40 +120,40 @@ if (!$user) {
 
     $qs = preg_replace('/([&?])token=[^&]*/', '', $_SERVER['QUERY_STRING']);
     $redirectToFail(3, $qs ? "&$qs" : '');
-}
+} else {
+    // set session & cookie variables
+    $_SESSION['uid'] = $user['uid'];
+    $_SESSION['first_name'] = $user['first_name'];
+    $_SESSION['last_name'] = $user['last_name'];
+    $_SESSION['name'] = $user['first_name'] . ' ' . $user['last_name'];
+    $_SESSION['role'] = $user['role'];
+    $_SESSION['token'] = $user['token'];
+    $_SESSION['expires'] = $user['expires'];
+    $_SESSION['subscriptions'] = json_encode($subscribe ?? []);
 
-// set session & cookie variables
-$_SESSION['uid'] = $user['uid'];
-$_SESSION['first_name'] = $user['first_name'];
-$_SESSION['last_name'] = $user['last_name'];
-$_SESSION['name'] = $user['first_name'] . ' ' . $user['last_name'];
-$_SESSION['role'] = $user['role'];
-$_SESSION['token'] = $user['token'];
-$_SESSION['expires'] = $user['expires'];
-$_SESSION['subscriptions'] = json_encode($subscribe ?? []);
-
-setcookie('token', $user['token'], [
-    'expires' => $user['expires'],
-    'path' => '/',
-    'domain' => ".$domain",
-    'secure' => true,
-    'httponly' => true,
-    'samesite' => 'None'
-]);
-
-if ($_COOKIE['guid'] !== $user['guid']) {
-    setcookie('guid', $user['guid'], [
-        'expires' => time() + 31557600, // 60 * 60 * 24 * 365.25
+    setcookie('token', $user['token'], [
+        'expires' => $user['expires'],
         'path' => '/',
         'domain' => ".$domain",
         'secure' => true,
         'httponly' => true,
-        'samesite' => 'Lax'
+        'samesite' => 'None'
     ]);
+
+    if ($_COOKIE['guid'] !== $user['guid']) {
+        setcookie('guid', $user['guid'], [
+            'expires' => time() + 31557600, // 60 * 60 * 24 * 365.25
+            'path' => '/',
+            'domain' => ".$domain",
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+    }
+
+    $next = nextURL();
+
+    #echo $next;
+    header("Location: $next");
+    exit();
 }
-
-$next = nextURL();
-
-#echo $next;
-header("Location: $next");
-exit();

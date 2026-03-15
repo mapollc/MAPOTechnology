@@ -100,9 +100,9 @@ export const legend = {
             ['icon', '<div class="fire-icon big"><i class="fas fa-fire"></i></div>', '', 'Active Fire (0-100 acres)'],
             ['icon', '<div class="fire-icon"><i class="fas fa-fire"></i></div>', '', 'Active Fire (100-1000 acres)'],
             ['icon', '<div class="fire-icon large"><i class="fas fa-fire"></i></div>', '', 'Active Fire (>1000 acres)'],
-            ['icon', '<div class="fire-icon complex"><i class="fad fa-fire-flame-curved" aria-hidden="true" style="position:absolute;left:2px;top:2px;color:rgb(255 255 255 / 100%)"></i>' +
-                '<i class="fad fa-fire-flame-curved" aria-hidden="true" style="position:absolute;right:1px;bottom:2px;color:rgb(255 255 255 / 100%)"></i>' +
-                '<div style="position:absolute;width:25px;border-bottom:1px solid rgb(255 255 255 / 68%);top:50%;transform:rotate(-45deg)"></div></div>', '', 'Complex'],
+            ['icon', `<div class="fire-icon complex"><i class="fad fa-fire-flame-curved" aria-hidden="true" style="position:absolute;left:2px;top:2px;color:rgb(255 255 255 / 100%)"></i>
+                <i class="fad fa-fire-flame-curved" aria-hidden="true" style="position:absolute;right:1px;bottom:2px;color:rgb(255 255 255 / 100%)"></i>
+                <div style="position:absolute;width:25px;border-bottom:1px solid rgb(255 255 255 / 68%);top:50%;transform:rotate(-45deg)"></div></div>`, '', 'Complex'],
             ['icon', '<div class="fire-icon contain"><i class="fas fa-fire"></i></div>', '', 'Contained Fire'],
             ['icon', '<div class="fire-icon controlled"><i class="fas fa-fire"></i></div>', '', 'Controlled Fire'],
             ['icon', '<div class="fire-icon rx"><i class="fas fa-prescription"></i></div>', '', 'Prescribed Burn'],
@@ -493,9 +493,9 @@ export class UTM {
 export class Convert {
     coords(a, b) {
         if (!settings.get().coordsDisplay() || settings.get().coordsDisplay() == 'dec') {
-            return parseFloat(a).toFixed(4) + ',&nbsp;' + parseFloat(b).toFixed(4);
+            return `${parseFloat(a).toFixed(4)}, ${parseFloat(b).toFixed(4)}`;
         } else if (settings.get().coordsDisplay() == 'dms') {
-            return this.convertToDms(a, false) + ',&nbsp;' + this.convertToDms(b, true);
+            return `${this.convertToDms(a, false)}, ${this.convertToDms(b, true)}`;
         } else if (settings.get().coordsDisplay() == 'utm') {
             return this.utm(a, b);
         }
@@ -514,7 +514,7 @@ export class Convert {
             min = (frac * 60) | 0,
             sec = Math.round((frac * 3600 - min * 60) * 100) / 100;
 
-        return deg + "&deg; " + min + "' " + sec + '" ' + dir;
+        return `${deg}&deg; ${min}' ${sec}" ${dir}`;
     }
 
     rad2deg(r) {
@@ -881,31 +881,31 @@ export class Search {
                         }
                     };
 
-                    li.setAttribute('data-bbox', JSON.stringify(bbox));
+                    li.dataset.bbox = JSON.stringify(bbox);
                 }
 
                 if (p.type == 'state') {
                     pname = p.data.name;
                 } else if (p.type == 'county') {
-                    pname = p.data.name + ' County, ' + p.data.state;
+                    pname = `${p.data.name} County, ${p.data.state}`;
                 } else {
-                    pname = p.data.city + ', ' + stateLabels[p.data.state].name + (p.isZip ? ' ' + p.data.zip : '');
+                    pname = `${p.data.city}, ${stateLabels[p.data.state].name}${(p.isZip ? ` ${p.data.zip}` : '')}`;
                     if (p.type == 'gis') {
-                        pname = p.data.name + ', ' + stateLabels[p.data.state].name;
-                        li.setAttribute('data-geotype', p.data.type);
+                        pname = `${p.data.name}, ${stateLabels[p.data.state].name}`;
+                        li.dataset.geotype = p.data.type;
                     }
 
-                    li.setAttribute('data-lat', p.lat);
-                    li.setAttribute('data-lon', p.lon);
+                    li.dataset.lat = p.lat;
+                    li.dataset.lon = p.lon;
                 }
-                li.setAttribute('data-action', 'sr-onclick');
-                li.setAttribute('data-name', pname);
-                if (p.data.county) li.setAttribute('data-county', p.data.county);
-                li.setAttribute('data-type', p.type.toLowerCase());
+                li.dataset.action = 'sr-onclick';
+                li.dataset.name = pname;
+                if (p.data.county) li.dataset.county = p.data.county;
+                li.dataset.type = p.type.toLowerCase();
                 li.innerHTML = `<span class="icon fas fa-location-dot"></span>
-                <h3>${pname}
-                    <span>${p.type == 'gis' ? p.data.type + ' in ' : ''}${p.data.county ? p.data.county + ' County' : (p.type == 'county' ? 'County' : 'State')}${p.type == 'city' && p.data.population > 0 ? ` &middot; Population: ${numberFormat(p.data.population)}` : ''}</span>
-                </h3>`;
+                    <h3>${pname}
+                        <span>${p.type == 'gis' ? p.data.type + ' in ' : ''}${p.data.county ? p.data.county + ' County' : (p.type == 'county' ? 'County' : 'State')}${p.type == 'city' && p.data.population > 0 ? ` &middot; Population: ${numberFormat(p.data.population)}` : ''}</span>
+                    </h3>`;
                 this.results.appendChild(li);
 
                 count++;
@@ -1565,7 +1565,7 @@ export class Layers {
                     h = d.getHours(),
                     m = d.getMinutes();
 
-                return (h > 12 ? h - 12 : (h == 12 ? 12 : h)) + ':' + (m < 10 ? '0' : '') + m + (h >= 12 ? 'p' : 'a') + 'm';
+                return `${(h > 12 ? h - 12 : (h == 12 ? 12 : h))}:${(m < 10 ? '0' : '')}${m}${(h >= 12 ? 'p' : 'a')}${m}`;
             };
 
             const rl = `<div class="radar"><div><span class="radarControl fas fa-pause" title="Pause radar" data-action="radar-control"></span><div class="time">
@@ -1582,17 +1582,17 @@ export class Layers {
         let counter = 0;
 
         radarImgs.forEach((e, n) => {
-            map.addSource('radar-' + n, {
+            map.addSource(`radar-${n}`, {
                 type: 'raster',
-                tiles: ['https://tilecache.rainviewer.com/v2/radar/' + e + '/256/{z}/{x}/{y}/4/0_1.png'],
+                tiles: [`https://tilecache.rainviewer.com/v2/radar/${e}/256/{z}/{x}/{y}/4/0_1.png`],
                 tileSize: 256,
                 attribution: this.defaultAttr + '&copy; <a href="https://www.rainviewer.com">RainViewer</a>'
             });
 
             map.addLayer({
-                id: 'radar-layer-' + n,
+                id: `radar-layer-${n}`,
                 type: 'raster',
-                source: 'radar-' + n,
+                source: `radar-${n}`,
                 layout: {
                     visibility: 'none'
                 },
@@ -1605,7 +1605,7 @@ export class Layers {
 
         let ra = () => {
             radarImgs.forEach((e, n) => {
-                map.setLayoutProperty('radar-layer-' + n, 'visibility', (n == counter ? 'visible' : 'none'));
+                map.setLayoutProperty(`radar-layer-${n}`, 'visibility', (n == counter ? 'visible' : 'none'));
                 document.querySelector('.radar input[type=range]').value = counter;
             });
 
@@ -1627,12 +1627,15 @@ export class Layers {
     async modis(w, update = false) {
         const url = 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/Satellite_VIIRS_Thermal_Hotspots_and_Fire_Activity/FeatureServer/0/query',
             n = (w == 1 ? '24' : (w == 2 ? '48' : '72')),
-            ts = (d) => {
-                const dt = new Date(Date.now() - d * 86400000),
-                    pad = (n) => n.toString().padStart(2, '0');
-                return `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-            },
-            start = ts(w),
+            modisID = `modis${n}`;
+
+        const ts = (d) => {
+            const dt = new Date(Date.now() - d * 86400000),
+                pad = (n) => n.toString().padStart(2, '0');
+            return `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+        };
+            
+        const start = ts(w),
             end = w > 1 ? ts(w - 1) : null;
 
         if (map.getZoom() >= config.modisZoomLevel) {
@@ -1648,10 +1651,10 @@ export class Layers {
             ]);
 
             if (update && data) {
-                map.getSource('modis' + n).setData(data);
+                map.getSource(modisID).setData(data);
             } else {
-                if (!map.getSource('modis' + n)) {
-                    map.addSource('modis' + n, {
+                if (!map.getSource(modisID)) {
+                    map.addSource(modisID, {
                         type: 'geojson',
                         data: data,
                         cluster: true,
@@ -1661,13 +1664,13 @@ export class Layers {
                     });
                 }
 
-                if (!map.getLayer('modis' + n)) {
+                if (!map.getLayer(modisID)) {
                     map.addLayer({
-                        id: 'modis' + n,
+                        id: modisID,
                         type: 'symbol',
-                        source: 'modis' + n,
+                        source: modisID,
                         layout: {
-                            'icon-image': 'modis' + w,
+                            'icon-image': `modis${w}`,
                             'icon-size': 0.5,
                             'icon-allow-overlap': true
                         },
@@ -1686,11 +1689,11 @@ export class Layers {
                         }
                     });
 
-                    map.on('mouseenter', 'modis' + n, () => {
+                    map.on('mouseenter', modisID, () => {
                         map.getCanvas().style.cursor = 'pointer';
                     });
 
-                    map.on('mouseleave', 'modis' + n, () => {
+                    map.on('mouseleave', modisID, () => {
                         map.getCanvas().style.cursor = 'auto';
                     });
                 }
@@ -1952,7 +1955,7 @@ export class Layers {
         const ss = document.querySelector('#sfpDateSelect'),
             bkTime = ss ? ss.options[ss.selectedIndex].value : sfpTimes()[0].key,
             time = settings.special().sfpDate() && new Date(settings.special().sfpDate()) >= new Date() ? settings.special().sfpDate() : bkTime,
-            url = 'https://fsapps.nwcg.gov/psp/arcgis/services/npsg/current_forecast/MapServer/WMSServer?service=WMS&request=GetMap&layers=0&styles=&format=image%2Fpng&transparent=true&version=1.1.1&Index=1&height=512&width=512&TIME=' + time + '&srs=EPSG%3A3857&bbox={bbox-epsg-3857}';
+            url = `https://fsapps.nwcg.gov/psp/arcgis/services/npsg/current_forecast/MapServer/WMSServer?service=WMS&request=GetMap&layers=0&styles=&format=image%2Fpng&transparent=true&version=1.1.1&Index=1&height=512&width=512&TIME=${time}&srs=EPSG%3A3857&bbox={bbox-epsg-3857}`;
 
         if (update) {
             map.getSource('sfp').setTiles([
@@ -2885,7 +2888,7 @@ export class Layers {
             end = gmtime(+7200).replace('T', ' '),
             rounds = ['0 - 3', '3 - 25', '25 - 63', '63 - 158', '158 - 1000'],
             data = await api('https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NDGD_SmokeForecast_v1/FeatureServer/0/query', [
-                ['where', '1=1 AND todate > DATE \'' + start + '\' AND todate < DATE \'' + end + '\''],
+                ['where', `1=1 AND todate > DATE '${start}' AND todate < DATE '${end}'`],
                 ['outFields', '*'],
                 ['resultType', 'tile'],
                 ['geometry', getbbox()],
@@ -2954,7 +2957,7 @@ export class Layers {
                 map.addSource('sfcSmoke', {
                     type: 'raster',
                     tiles: [
-                        'https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=sfc_smoke&x={x}&y={y}&z={z}&time=' + fcstHour + '&modelrun=' + hrrrSmokeTime.init + '&level=0'
+                        `https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=sfc_smoke&x={x}&y={y}&z={z}&time=${fcstHour}&modelrun=${hrrrSmokeTime.init}&level=0`
                     ],
                     tileSize: 256
                 });
@@ -2975,7 +2978,7 @@ export class Layers {
             }
         } else {
             map.getSource('sfcSmoke').setTiles([
-                'https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=sfc_smoke&x={x}&y={y}&z={z}&time=' + fcstHour + '&modelrun=' + hrrrSmokeTime.init + '&level=0'
+                `https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=sfc_smoke&x={x}&y={y}&z={z}&time=${fcstHour}&modelrun=${hrrrSmokeTime.init}&level=0`
             ]);
         }
     }
@@ -2988,7 +2991,7 @@ export class Layers {
                 map.addSource('viSmoke', {
                     type: 'raster',
                     tiles: [
-                        'https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=vi_smoke&x={x}&y={y}&z={z}&time=' + fcstHour + '&modelrun=' + hrrrSmokeTime.init + '&level=0'
+                        `https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=vi_smoke&x={x}&y={y}&z={z}&time=${fcstHour}&modelrun=${hrrrSmokeTime.init}&level=0`
                     ],
                     tileSize: 256
                 });
@@ -3009,7 +3012,7 @@ export class Layers {
             }
         } else {
             map.getSource('viSmoke').setTiles([
-                'https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=vi_smoke&x={x}&y={y}&z={z}&time=' + fcstHour + '&modelrun=' + hrrrSmokeTime.init + '&level=0'
+                `https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=vi_smoke&x={x}&y={y}&z={z}&time=${fcstHour}&modelrun=${hrrrSmokeTime.init}&level=0`
             ]);
         }
     }
@@ -3464,7 +3467,7 @@ export class Layers {
         types.forEach(async (type) => {
             const icon = type == 'fire' ? 'fire_dept' : type;
             if (!map.hasImage(type)) {
-                const image = await map.loadImage(config.domain + 'assets/images/icons/fire/' + icon + '_icon.png');
+                const image = await map.loadImage(`${config.domain}assets/images/icons/fire/${icon}_icon.png`);
                 map.addImage(type, image.data);
             }
         });
@@ -3813,7 +3816,7 @@ export class Wildfires {
                 fmt = { year: 'numeric', month: 'long', day: 'numeric' },
                 date1 = Intl.DateTimeFormat('en-US', fmt).format(data[0][0]),
                 date2 = Intl.DateTimeFormat('en-US', fmt).format(data[data.length - 1][0]),
-                dates = date1 == date2 ? ' on ' + date1 : ' from ' + date1 + ' to ' + date2;
+                dates = date1 == date2 ? ` on ${date1}` : ` from ${date1} to ${date2}`;
 
             Highcharts.setOptions({
                 time: {
@@ -3847,7 +3850,7 @@ export class Wildfires {
                     }
                 },*/
                 subtitle: {
-                    text: '<b>' + fireName + ' (' + incID + ') growth history ' + dates + '.</b>',
+                    text: `<b>${fireName} (${incID}) growth history ${dates}.</b>`,
                     useHTML: true,
                     verticalAlign: 'bottom',
                     align: 'left',
@@ -4484,20 +4487,10 @@ export class Wildfires {
     async incident(wfid, zoomIn = true) {
         const TWO_MONTHS = 60 * 60 * 24 * (config.daysInYear() / 6);
 
-        //modal.addEventListener('modalOpened', () => {
         if (zoomIn) {
             const coords = this.findFire(wfid);
-            if (coords) {
-                map.easeTo({
-                    zoom: 10,
-                    center: coords.geometry.coordinates,
-                    duration: 1500,
-                    easing: t => t * (2 - t),
-                    essential: true
-                });
-            }
+            if (coords) modalZoom(coords.geometry.coordinates);
         }
-        //});
 
         new ClickListener().openModal('fire');
 
@@ -5832,6 +5825,28 @@ export function contextMenu(e, isTouch = false) {
     div.appendChild(ul);
 }
 
+export const modalZoom = (coordsOrLng, lat) => {
+    let coords;
+
+    if (Array.isArray(coordsOrLng) && coordsOrLng.length === 2) {
+        coords = coordsOrLng;
+    } else if (typeof coordsOrLng === 'number' && typeof lat === 'number') {
+        coords = [coordsOrLng, lat];
+    }
+
+    const mapHeight = map.getContainer().clientHeight,
+        modalHeight = mapHeight * new ClickListener().modalHeightFromTop,
+        visibleHeight = mapHeight - modalHeight,
+        offsetY = -visibleHeight / 2;
+
+    map.easeTo({
+        center: coords,
+        offset: [0, offsetY],
+        easing: t => t * (2 - t),
+        duration: 1000
+    });
+};
+
 export const mapClick = async (e) => {
     /* open new incident report form */
     if (document.querySelector('li#report').dataset.active == 1) {
@@ -5988,9 +6003,9 @@ export class MFAttribControl extends maplibregl.AttributionControl {
 
     _updateAttributions() {
         ////super._updateAttributions();
-        this._innerContainer.innerHTML = '<a target="blank" href="https://maplibre.org/">MapLibre</a> | ' +
-            '© <a target="blank" href="https://www.esri.com">Esri</a>, ' +
-            '© <a target="blank" href="https://carto.com/about-carto/" rel="noopener">CARTO</a>, ' +
-            '© <a target="blank" href="http://www.openstreetmap.org/about/">OpenStreetMap</a> contributors';
+        this._innerContainer.innerHTML = `<a target="blank" href="https://maplibre.org/">MapLibre</a> | 
+            © <a target="blank" href="https://www.esri.com">Esri</a>, 
+            © <a target="blank" href="https://carto.com/about-carto/" rel="noopener">CARTO</a>, 
+            © <a target="blank" href="http://www.openstreetmap.org/about/">OpenStreetMap</a> contributors`;
     }
 }
