@@ -393,6 +393,14 @@ form .inline select.small {
     color: #333;
 }
 
+.table tr.date-group td {
+    font-weight: 500;
+    background-color: #c4cbd5;
+    padding: 0.5rem 1rem;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
 .table tbody tr:last-child td {
     border-bottom: none;
 }

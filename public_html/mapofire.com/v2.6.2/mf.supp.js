@@ -988,7 +988,7 @@ function setHeaders(title, urlPath, description) {
 function unsetHeaders() {
     const h = window.location.href;
 
-    if (h.search('fires') >= 0 || h.search('weather/') >= 0 || h.search('risk') >= 0) {
+    if (h.search('fires') >= 0 || h.search('perimeter') >= 0 || h.search('weather/') >= 0 || h.search('risk') >= 0) {
         window.history.pushState({
             "pageTitle": document.title
         }, '', h.replace(window.location.pathname, (settings.archive == null ? '' : `/archive/${settings.archive}`)));
@@ -1398,6 +1398,12 @@ async function onMapClick(e) {
                 }, {
                     click: true
                 });
+
+                setHeaders(
+                    `Current ${name} Perimeter`,
+                    `perimeter/${feature.properties.attr_UniqueFireIdentifier}`,
+                    `Current fire perimeter for the ${name} in ${(await loadUtils()).stateLabels[feature.properties.attr_POOState.replace('US-', '')]?.name}.`
+                );
 
                 new Popup('Wildfire Perimeter').create(`<div class="item"><div class="t">Incident Name</div><div class="v">${name}</div></div>
                     <div class="item"><div class="t">Last Mapped</div><div class="v">${ago}</div></div>

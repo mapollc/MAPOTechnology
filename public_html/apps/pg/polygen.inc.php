@@ -5,13 +5,13 @@
     <input type="hidden" name="product" value="<?= $product['identifier'] ?>">
     <input type="hidden" name="features" value='<?= $previous['geojson'] ?>'>
 
-    <? if ($settings->validity == 0) {
-        echo '<p>This product does not have a valid or expire time.</p>';
-    } else { ?>
-        <div class="inline">
+    <div class="inline"<?= $settings->validity == 0 ? ' style="display:block"' : '' ?>>
+        <? if ($settings->validity == 0) {
+            echo '<p style="margin-bottom:0.5rem;font-size:14px;color:#888">This product does not have a valid or expire time.</p>';
+        } else { ?>
             <? if ($pgen->id() == 'update') {
                 echo '<div><label>Previous Author</label>';
-                echo "<input type=\"text\" class=\"field\" style=\"max-width:200px\" value=\"{$author['first_name']} {$author['last_name']}\" disabled>";
+                echo "<input type=\"text\" class=\"field\" style=\"max-width:200px\" value=\"$previous[author]\" disabled>";
                 echo '</div>';
             } ?>
             <div>
@@ -38,21 +38,20 @@
                 <? } else { ?>
                     <div style="display:inline-flex;gap:0.5rem">
                         <input type="date" name="validToDate" class="field" style="max-width:126px"
-                            min="<?= date('Y-m-d', strtotime('+12 hours')) ?>"
+                            min="<?= date('Y-m-d') ?>"
                             value="<?= date('Y-m-d', $previous ? $previous['expires'] : strtotime('+12 hours')) ?>">
 
                         <select name="validToTime">
-                            <?= timeOptions($previous['expires'] ?? null, true) ?>
+                            <?= timeOptions($previous['expires'] ?? null, false) ?>
                         </select>
                     </div>
                 <? } ?>
             </div>
-
-            <div>
-                <input type="submit" name="issue" class="btn btn-green" value="<?= $issOrUp ?> Product">
-            </div>
+        <? } ?>
+        <div>
+            <input type="submit" name="issue" class="btn btn-green" value="<?= $issOrUp ?> Product">
         </div>
-    <? } ?>
+    </div>
 
     <div class="prod-layout">
         <? if ($settings->textbox == '1') { ?>
@@ -67,9 +66,9 @@
             <div id="map" data-config='<?= json_encode(['colors' => $settings->colors, 'names' => $settings->names]) ?>'></div>
             <? if ($previous['demographics']) {
                 $demo = json_decode($previous['demographics']);
-                ?>
+            ?>
                 <span style="font-size:14px">
-                    <b>Population affected:</b> <?= number_format($demo->population, 0) ?><br>
+                    <b>Population affected:</b> <?= number_format($demo->affectedPopulation, 0) ?><br>
                     <b>Cities included: </b> <?= implode(', ', $demo->cities) ?><br>
                     <b>Counties included: </b> <?= implode(', ', $demo->counties) ?><br>
                     <b>States included: </b> <?= implode(', ', $demo->states) ?>

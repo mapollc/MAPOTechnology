@@ -28,9 +28,14 @@ if (!$pgen->method()) {
 
     // save product on issuance
     if (isset($_POST['issue'])) {
+        $author = $_SESSION['name'];
+        $demo = null;
         $geojson = $_POST['features'];
         $geo = json_decode($geojson);
-        $demo = json_encode($helper->getCities($geo->features[0]));
+
+        if ($geo && count($geo->features) == 1) {
+            $demo = json_encode($helper->getCities($geo->features[0]));
+        }
 
         $from = $_POST['validFromDate'] && $_POST['validFromTime'] ? strtotime("$_POST[validFromDate] $_POST[validFromTime]") : time();
         $to = strtotime("$_POST[validToDate] $_POST[validToTime]");
@@ -38,13 +43,14 @@ if (!$pgen->method()) {
         $replaces = $_POST['replaces'] ?? null;
 
         $helper->query(
-            'iisiiiisss',
-            [$replaces, $orgID, $_POST['product'], $_SESSION['uid'], time(), $from, $to, $disc, $demo, $geojson],
+            'iissiiisss',
+            [$replaces, $orgID, $_POST['product'], $author, time(), $from, $to, $disc, $demo, $geojson],
             "INSERT INTO products (replaces, oid, product, author, issued, valid, expires, discussion, demographics, geojson) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
 
         $pid = mysqli_insert_id($con);
-        $message = message(true, "Your product \"<b>$product[name]</b>\" was successfully issued. <a href=\"./$product[identifier]/update?id=$pid\">Update it</a> now.");
+        $dots = $pgen->id() == 'update' ? '..' : '.';
+        $message = message(true, "Your product \"<b>$product[name]</b>\" was successfully issued. <a href=\"$dots/$product[identifier]/update?id=$pid\">Update it</a> now.");
     }
 
     // if updating a product, get from database
@@ -62,10 +68,7 @@ if (!$pgen->method()) {
             "SELECT MAX(uqid) as latest FROM products WHERE oid = ? AND product = ? LIMIT 1"
         );
 
-        if ($get) {
-            $previous = $get[0];
-            $author = $pgen->getUser($previous['author']);
-        }
+        if ($get) $previous = $get[0];
     }
 }
 

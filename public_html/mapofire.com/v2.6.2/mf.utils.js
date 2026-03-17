@@ -1634,7 +1634,7 @@ export class Layers {
                 pad = (n) => n.toString().padStart(2, '0');
             return `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
         };
-            
+
         const start = ts(w),
             end = w > 1 ? ts(w - 1) : null;
 
@@ -2471,6 +2471,7 @@ export class Layers {
                 tileSize: 256
             });
         }
+
         if (!map.getSource('fuelsAK')) {
             map.addSource('fuelsAK', {
                 type: 'raster',
@@ -3966,8 +3967,14 @@ export class Wildfires {
         return this;
     }
 
-    findFire(id) {
-        return activeIncidents.get(parseInt(id)) ?? null;
+    findFire(id, incId) {
+        if (id != null) return activeIncidents.get(parseInt(id)) ?? null;
+
+        let found = null;
+        activeIncidents.forEach(i => {
+            if (i.properties.incidentId == incId) found = i;
+        });
+        return found;
     }
 
     async getTrackedFires() {
@@ -4220,69 +4227,75 @@ export class Wildfires {
         return this;
     }
 
-    /* get wildfires from API */
-    async getWildfires(update = false) {
-        const types = ['all', 'new', 'smk', 'rx'],
-            qInput = document.querySelector('#q');
+    processFires(fires, type, update) {
+        if (!fires?.features) return;
 
-        const processFires = (fires, type) => {
-            if (!fires?.features) return;
+        const sourceId = `${type}_fires`;
+        const source = map.getSource(sourceId);
 
-            fires.features.forEach(f => {
-                const p = f.properties;
+        fires.features.forEach(f => {
+            const p = f.properties;
 
-                ['Out', 'Contain', 'Control'].forEach(status => {
-                    if (p.status[status]) p[status] = true;
-                });
-
-                p.name = config.wildfire.fireName(p.name, p.type, p.incidentId);
-                activeIncidents.set(parseInt(p.wfid, 10), f);
-
-                if (type === 'new' && p.acres >= 100) newFires.push(f);
+            ['Out', 'Contain', 'Control'].forEach(status => {
+                if (p.status[status]) p[status] = true;
             });
 
-            const sourceId = `${type}_fires`,
-                source = map.getSource(sourceId);
+            p.name = config.wildfire.fireName(p.name, p.type, p.incidentId);
+            activeIncidents.set(parseInt(p.wfid, 10), f);
 
-            if (update) {
-                source.setData(fires);
-            } else {
-                if (!source) {
-                    map.addSource(sourceId, {
-                        type: 'geojson',
-                        data: fires,
-                        cluster: CLUSTER_FIRES,
-                        clusterMaxZoom: type === 'all' ? (window.innerWidth < 600 ? 6 : 7) : 8,
-                        clusterMinPoints: type === 'all' ? 20 : 5,
-                        clusterRadius: type === 'all' ? 50 : 20
-                    });
-                }
+            if (type === 'new' && p.acres >= 100) newFires.push(f);
+        });
+
+        if (update) {
+            source.setData(fires);
+        } else {
+            if (!source) {
+                map.addSource(sourceId, {
+                    type: 'geojson',
+                    data: fires,
+                    cluster: CLUSTER_FIRES,
+                    clusterMaxZoom: type === 'all' ? (window.innerWidth < 600 ? 6 : 7) : 8,
+                    clusterMinPoints: type === 'all' ? 20 : 5,
+                    clusterRadius: type === 'all' ? 50 : 20
+                });
             }
-        };
+        }
+    }
+
+    /* get wildfires from API */
+    async getWildfires(update = false) {
+        const qInput = document.querySelector('#q');
+        const types = ['all', 'new', 'smk', 'rx'];
 
         if (settings.archive) {
             const fires = await api(`${config.apiURL}wildfires/all`, [['archive', settings.archive], ['bbox', getbbox()]]);
 
-            processFires(fires, 'all');
+            this.processFires(fires, 'all', update);
             this.displayFires('all', 0);
         } else {
+            // get canadian wildfires
             this.canada();
 
+            // get fire types from API
             await Promise.all(types.map(async (type, i) => {
                 const fires = await api(`${config.apiURL}wildfires/${type}`);
-                processFires(fires, type);
+                this.processFires(fires, type, update);
 
-                if (type === 'new' && newFires.length > 0) {
-                    this.renderNewFiresUI(newFires.length);
-                }
+                if (type === 'new' && newFires.length > 0) this.renderNewFiresUI(newFires.length);
 
                 // Wait for source load before displaying
-                const poll = setInterval(() => {
-                    if (map.isSourceLoaded(`${type}_fires`)) {
-                        this.displayFires(type, i);
-                        clearInterval(poll);
-                    }
-                }, 500);
+                await new Promise(resolve => {
+                    const check = () => {
+                        if (map.isSourceLoaded(`${type}_fires`)) {
+                            this.displayFires(type, i);
+                            resolve();
+                        } else {
+                            requestAnimationFrame(check);
+                        }
+                    };
+
+                    check();
+                });
             }));
         }
 
@@ -4388,11 +4401,11 @@ export class Wildfires {
             }
         }
 
-        if (type == 'rx' && map.getSource('perimeters')) {
+        /*if (type == 'rx' && map.getSource('perimeters')) {
             map.moveLayer('perimeters_fill', 'all_fires');
             map.moveLayer('perimeters_outline', 'all_fires');
             map.moveLayer('perimeters_title', 'all_fires');
-        }
+        }*/
 
         return this;
     }
@@ -4689,12 +4702,12 @@ export class Wildfires {
                     ['returnGeometry', true],
                     ['f', 'geojson']
                 ]);
-
+ 
                 if (update && map.getSource(src)) {
                     map.getSource(src).setData(data);
                     return;
                 }
-
+ 
                 if (!map.getSource(src)) {
                     map.addSource(src, { type: 'geojson', data });
                 }*/
@@ -4764,14 +4777,10 @@ export class Wildfires {
             perimName = 'attr_IncidentName',
             w = `attr_FireDiscoveryDateTime>=TIMESTAMP '${y}-01-01 00:00:00'`;
 
-        if (!settings.archive) {
-            w += ' AND (poly_GISAcres > ' + min + ' OR poly_Acres_AutoCalc > ' + min + ') AND attr_FireOutDateTime IS NULL';
-        }
+        if (!settings.archive) w += ' AND (poly_GISAcres > ' + min + ' OR poly_Acres_AutoCalc > ' + min + ') AND attr_FireOutDateTime IS NULL';
 
         /* get Canada wildfire perimeters if not in archive mode */
-        if (!settings.archive) {
-            this.intlPerimeters(update);
-        }
+        if (!settings.archive) this.intlPerimeters(update);
 
         if (!map.getSource('perimeters')) {
             new this.ArcGISFeatureSource('perimeters', map, {
@@ -4781,29 +4790,6 @@ export class Wildfires {
                 outFields: o
             });
         }
-
-        /*const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0/query', [
-            ['where', w],
-            ['outFields', o],
-            ['resultType', 'tile'],
-            ['geometry', getbbox()],
-            ['geometryPrecision', 6],
-            ['geometryType', 'esriGeometryEnvelope'],
-            ['spatialRel', 'esriSpatialRelIntersects'],
-            ['returnGeometry', true],
-            ['f', 'geojson']
-        ]);
-
-        // when the map moves, update the source data
-        if (update && map.getSource('perimeters')) {
-            //map.getSource('perimeters').setData(data);
-        } else {
-            /*if (!map.getSource('perimeters')) {
-                map.addSource('perimeters', {
-                    type: 'geojson',
-                    data: data
-                });
-            }*/
 
         if (!map.getLayer('perimeters_outline')) {
             map.addLayer({
@@ -4875,7 +4861,6 @@ export class Wildfires {
                 map.getCanvas().style.cursor = 'auto';
             });
         }
-        //}
 
         return this;
     }
@@ -5019,6 +5004,11 @@ export class NWS {
         }
 
         const out = await api(config.apiURL + 'outlooks/' + ty, [['day', (dy ? dy : 1)]]);
+        if (!out) return;
+
+        if (out.features.length == 0) {
+            notify('info', `No ${ty == 'severe' ? 'severe thunderstorms are' : 'critical fire weather is'} expected, so no outlook is displayed on the map.`);
+        }
 
         if (update) {
             map.getSource('outlook').setData(out);

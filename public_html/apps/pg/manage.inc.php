@@ -8,7 +8,8 @@ if (isset($_POST['save'])) {
         'issuance' => $_POST['issuance'],
         'expires' => $_POST['expires'],
         'expiresAfter' => $_POST['expiresAfter'],
-        'textbox' => $_POST['textbox']
+        'textbox' => $_POST['textbox'],
+        'demographics' => $_POST['demographics']
     ]);
 }
 
@@ -122,6 +123,12 @@ if (!$pgen->id()) {
             <div class="radio-group">
                 <div class="radio"><input type="radio" id="e7" name="textbox" value="1"<?= $data->textbox == '1' ? ' checked' : '' ?>><label for="e7">Yes</label></div>
                 <div class="radio"><input type="radio" id="e8" name="textbox" value="0"<?= $data->textbox != '1' ? ' checked' : '' ?>><label for="e8">No</label></div>
+            </div>
+
+            <label>Calculate States/Counties/Cities for Polygon</label>
+            <div class="radio-group">
+                <div class="radio"><input type="radio" id="e9" name="demographics" value="1"<?= $data->demographics == '1' ? ' checked' : '' ?>><label for="e9">Yes</label></div>
+                <div class="radio"><input type="radio" id="e10" name="demographics" value="0"<?= $data->demographics != '1' ? ' checked' : '' ?>><label for="e10">No</label></div>
             </div>
 
             <label>Map Elements</label>

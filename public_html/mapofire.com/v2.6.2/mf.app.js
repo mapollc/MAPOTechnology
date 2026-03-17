@@ -486,7 +486,7 @@ let map,
             permissions: ['PREMIUM', 'PRO']
         }
     ],
-    icons = ['', 'out', 'big', 'controlled', 'contained', 'large', 'complex', 'new', 'new-big', 'rx', 'smoke'];
+    fireIcons = ['', 'out', 'big', 'controlled', 'contained', 'large', 'complex', 'new', 'new-big', 'rx', 'smoke'];
 
 Object.freeze(config.PERMISSION_LEVELS);
 
@@ -819,10 +819,18 @@ class ClickListener {
 
         unsetHeaders();
 
+        const sourceMap = {
+            caperim: 'ca_perimeters',
+            ausperim: 'aus_perimeters',
+            perim: 'perimeters'
+        };
+
         ['caperim', 'ausperim', 'perim', 'evac', 'nri', 'erc'].forEach(key => {
-            const source = key === 'caperim' ? 'ca_perimeters' : (key === 'ausperim' ? 'aus_perimeters' : key);
+            const source = sourceMap[key] || key;
+
             if (selected[key] && map.getSource(source)) {
                 map.removeFeatureState({ source, id: selected[key] });
+                selected[key] = null;
             }
         });
     }
@@ -1734,6 +1742,21 @@ function addDynamicControls() {
     }
 }
 
+function loadMapIcons() {
+    const queue = [
+        ...fireIcons.map(i => ({ id: `fire-icon${i ? `-${i}` : ''}`, path: `fire/fire-icon${i ? `-${i}` : ''}.png` })),
+        ...['helicopter', 'plane_tactical', 'plane_large', 'plane_small'].map(i => ({ id: i, path: `fire/${i}.png` })),
+        ...[1, 2, 3].map(i => ({ id: `modis${i}`, path: `fire/modis${i}.png` }))
+    ];
+
+    queue.forEach(async ({ id, path }) => {
+        if (!map.hasImage(id)) {
+            const img = await map.loadImage(`${config.domain}assets/images/icons/${path}`);
+            map.addImage(id, img.data);
+        }
+    });
+}
+
 async function init() {
     conversion = new (await loadUtils()).Convert();
 
@@ -1824,32 +1847,18 @@ async function init() {
             document.body.appendChild(b);
         }
 
-        getCounties();
-
         map.setSky(config.fog);
 
-        /* add fire icons */
-        const loadMapIcons = () => {
-            const queue = [
-                ...icons.map(i => ({ id: `fire-icon${i ? `-${i}` : ''}`, path: `fire/fire-icon${i ? `-${i}` : ''}.png` })),
-                ...['helicopter', 'plane_tactical', 'plane_large', 'plane_small'].map(i => ({ id: i, path: `fire/${i}.png` })),
-                ...[1, 2, 3].map(i => ({ id: `modis${i}`, path: `fire/modis${i}.png` }))
-            ];
-
-            queue.forEach(async ({ id, path }) => {
-                if (!map.hasImage(id)) {
-                    const img = await map.loadImage(`${config.domain}assets/images/icons/${path}`);
-                    map.addImage(id, img.data);
-                }
-            });
-        };
-
+        // add fire icons
         loadMapIcons();
+
+        // overlay counties
+        getCounties();
 
         // add terrain on contour lines
         new utils.Layers().addTerrain();
 
-        /* if user has settings saved, go to their saved location...not the mapbox hash location */
+        // if user has settings saved, go to their saved location...not the mapbox hash location
         if (window.location.hash) {
             const h = window.location.hash.replace('#', '').split('/');
 
@@ -1862,12 +1871,12 @@ async function init() {
             }
         }
 
-        /* function to provide a popup soliciting donations, subscriptions, etc. */
+        // function to provide a popup soliciting donations, subscriptions, etc.
         if (!settings.subscriptions().valid()) {
             setTimeout(async () => { utils.marketing(); }, 3000);
         }
 
-        /* zoom to that country if URL contains country/{theCountry} */
+        // zoom to that country if URL contains country/{theCountry}
         if (country) {
             const bounds = {
                 'austrailia': { c: [133.7751, -25.2744], z: 3.5 },
@@ -1991,54 +2000,77 @@ function upgrade() {
 
 async function popstate() {
     const utils = await loadUtils();
+    const pathName = window.location.pathname;
+    const pathParts = pathName.split('/').filter(Boolean);
+    const getPathPart = (index) => pathParts[index] ?? null;
+
+    async function goToPerimeter(incId) {
+        const data = await api('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0/query', [
+            ['where', `attr_UniqueFireIdentifier = '${incId}'`],
+            ['returnCentroid', true],
+            ['returnGeometry', false],
+            ['f', 'json']
+        ]);
+
+        const coords = data?.features?.[0]?.centroid;
+
+        if (coords) {
+            map.easeTo({
+                center: [coords.x, coords.y],
+                zoom: 9.5,
+                duration: 0
+            });
+        }
+    }
 
     // if user is trying to view historical fires without a subscription
     if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && window.location.href.match(/archive\/([0-9]+)/g) != null) {
         utils.notify('info', 'You must upgrade to view historical fires. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="archive_snackbar">Get access</a>', 6);
     }
 
+    // if loggedOut=1 is a query parameter
     if (/loggedOut=1/.test(window.location.href)) {
         utils.notify('success', 'You were successfully logged out.');
     }
 
-    /* if URL is supposed to open an incident */
-    if (window.location.pathname.search('/fires') >= 0) {
-        const id = window.location.pathname.split('/')[2];
-        config.wildfire.incident(id, false);
-    }
+    const category = pathParts[0];
 
-    /* if URL is supposed to open a weather alert */
-    if (window.location.pathname.search('/weather/alert') >= 0) {
-        const id = window.location.pathname.split('/')[3];
-        new utils.NWS().readWWA(id, false);
-    }
+    if (category === 'fires') {
+        const id = getPathPart(1);
+        if (id) config.wildfire.incident(id, false);
+    } else if (category === 'perimeter') {
+        const incId = getPathPart(1);
+        if (incId) goToPerimeter(incId);
+    } else if (category === 'weather') {
+        const id = getPathPart(2);
 
-    /* if URL is supposed to open current weather conditions at a wx stn */
-    if (window.location.pathname.search('/weather/current') >= 0) {
-        const stnid = window.location.pathname.split('/')[3];
-        new Weather().findWXStn(stnid);
-    }
+        switch (pathParts[1]) {
+            case 'alert': {
+                if (id) new utils.NWS().readWWA(id, false);
+                break;
+            }
+            case 'current': {
+                if (id) new Weather().findWXStn(id);
+                break;
+            }
+            case 'outlook': {
+                const day = getPathPart(3);
+                if (id && day) new utils.NWS().getOutlookText(id, day, false);
+                break;
+            }
+            case 'forecast': {
+                if (!id) return;
 
-    /* if URL is supposed to open a SPC outlook */
-    if (window.location.pathname.search('/weather/outlook') >= 0) {
-        const p = window.location.pathname.split('/'),
-            type = p[3],
-            day = p[4];
+                const [lat, lon] = id.split(',').map(Number);
+                const isValid = lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
 
-        new utils.NWS().getOutlookText(type, day, false);
-    }
-
-    /* if URL is supposed to open a fire weather forecast */
-    if (window.location.pathname.search('/weather/forecast') >= 0) {
-        const loc = window.location.pathname.split('/')[3].split(','),
-            lat = parseFloat(loc[0]),
-            lon = parseFloat(loc[1]),
-            isValid = (lat >= -90 && lat <= 90) && (lon >= -180 && lon <= 180);
-
-        if (isValid && settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
-            new Weather(lat, lon).fireWxFcst();
-        } else {
-            unsetHeaders();
+                if (isValid && settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
+                    new Weather(lat, lon).fireWxFcst();
+                } else {
+                    unsetHeaders();
+                }
+                break;
+            }
         }
     }
 

@@ -78,4 +78,4 @@ echo '<!--org: ' . $pgen->org() . ' / page: ' . $pgen->page() . ' / method: ' . 
 </body>
 
 </html>
-<? if ($con) mysqli_close($con); ?>
+<? if ($pgen->con2) mysqli_close($pgen->con2); if ($con) mysqli_close($con); ?>

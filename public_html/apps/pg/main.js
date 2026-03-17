@@ -1,12 +1,58 @@
 let map, draw;
-const ArcGISFeatureSource = window[""]["arcgis-featureserver"];
+let ArcGISFeatureSource;
 const urlParts = window.location.pathname.substring(1).split('/');
 
 const config = {
+    apiURL: 'https://api.apps.mapotechnology.com/v1/',
+    apiKey: () => { return 'c196d0958608ad2b7d4af2be078ecc54'; },
     page: urlParts[2] ?? null,
     method: urlParts[3] ?? null,
     id: urlParts[4] ?? null
 };
+
+async function api(uri, fields = null, v2 = false) {
+    if (!navigator.onLine) {
+        console.error('You are not connected to the internet');
+        return null;
+    }
+
+    let result,
+        url = v2 ? `${config.apiURL}${uri}`.replace('v1', 'v2') : `${config.apiURL}${uri}`;
+
+    const ops = {
+        method: 'POST'
+    },
+        fd = new FormData();
+
+    fd.append('key', config.apiKey());
+
+    if (fields && Array.isArray(fields)) {
+        for (const [k, v] of fields) {
+            fd.append(k, v);
+        }
+    }
+
+    ops['body'] = fd;
+
+    try {
+        const resp = await fetch(url, ops);
+
+        if (!resp.ok) {
+            const errorText = await resp.text();
+            console.error(`HTTP error! Status: ${resp.status}, URL: ${url}, Response: ${errorText}`);
+
+            return null;
+        }
+
+        // Attempt to parse JSON
+        result = await resp.json();
+    } catch (e) {
+        console.error(`Fetch or JSON parsing error for URL: ${url}`, e.message);
+        result = null
+    }
+
+    return result;
+}
 
 function showCurrentTime(timezone = 'UTC') {
     const now = new Date();
@@ -122,12 +168,44 @@ async function addRadar() {
 }
 
 function addCounties() {
-    if (!map.getSource('us_counties')) {
+    if (!map.getSource('counties')) {
+        map.addSource('counties', {
+            type: 'raster',
+            tiles: [
+                'https://mapservices.weather.noaa.gov/static/rest/services/nws_reference_maps/nws_reference_map/MapServer/export?service=WMS&request=GetMap&layers=show%3A2&styles=&format=png32&transparent=true&version=1.1.1&id=Counties&size=256,256&bboxSR=102100&imageSR=102100&f=image&srs=EPSG%3A3857&bbox={bbox-epsg-3857}'
+            ],
+            tileSize: 256
+        });
+    }
+
+    if (!map.getLayer('counties')) {
+        map.addLayer({
+            id: 'counties',
+            type: 'raster',
+            source: 'counties',
+            paint: {
+                'raster-opacity': [
+                    "step",
+                    ["zoom"],
+                    0,
+                    3,
+                    0.1,
+                    6.5,
+                    0.5
+                ]
+            },
+            layout: {
+                visibility: 'visible'
+            }
+        });
+    }
+
+    /*if (!map.getSource('us_counties')) {
         new ArcGISFeatureSource('us_counties', map, {
             url: 'https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0',
             precision: 6,
             where: '1=1',
-            minzoom: 5
+            minzoom: 3
         });
     }
 
@@ -143,35 +221,37 @@ function addCounties() {
             layout: {
                 visibility: 'visible'
             }
-        });*/
+        });*//*
 
-        map.addLayer({
-            id: 'county-boundaries',
-            type: 'line',
-            source: 'us_counties',
-            minzoom: 5,
-            paint: {
-                'line-opacity': [
-                    "step",
-                    ["zoom"],
-                    0,
-                    5,
-                    0.15,
-                    7,
-                    0.3,
-                    9.5,
-                    0.5,
-                    16,
-                    0.8
-                ],
-                'line-color': '#404040',
-                'line-width': 1.5
-            }
-        });
+map.addLayer({
+    id: 'county-boundaries',
+    type: 'line',
+    source: 'us_counties',
+    minzoom: 5,
+    paint: {
+        'line-opacity': [
+            "step",
+            ["zoom"],
+            0,
+            5,
+            0.15,
+            7,
+            0.3,
+            9.5,
+            0.5,
+            16,
+            0.8
+        ],
+        'line-color': '#404040',
+        'line-width': 1.5
     }
+});
+}*/
 }
 
 function createMap() {
+    ArcGISFeatureSource = window[""]["arcgis-featureserver"];
+
     const styles = [
         {
             "id": "gl-draw-polygon-fill-inactive",
@@ -671,7 +751,6 @@ function createMap() {
     );
 
     map.on('load', () => {
-        //addRadar();
         addCounties();
         generateColors();
 
@@ -704,7 +783,10 @@ function createMap() {
             });
 
             map.fitBounds(bounds, { padding: 175 });
+            setTimeout(() => addRadar(), 1000);
             updateFormGeometry();
+        } else {
+            addRadar();
         }
 
         map.on('draw.modechange', (e) => {
@@ -723,6 +805,8 @@ function createMap() {
 
             draw.add(feature);
 
+            //getDemographics(id, feature);
+
             activeColor = null;
             activeDesc = null;
 
@@ -734,11 +818,18 @@ function createMap() {
     });
 }
 
+/*async function getDemographics(id, feature) {
+    const data = await api('polygen/demographics', [['geojson', JSON.stringify(feature.geometry.coordinates)]]);
+
+    if (data.demographics) draw.setFeatureProperty(id, 'demographics', data.demographics);
+    updateFormGeometry();
+}*/
+
 document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
         const t = document.querySelector('#curtime');
 
-        t.textContent = showCurrentTime(window.timezone);
+        t.innerHTML = `${showCurrentTime()} &middot; ${showCurrentTime(window.timezone)}`;
     }, 1000);
 
     tasks();

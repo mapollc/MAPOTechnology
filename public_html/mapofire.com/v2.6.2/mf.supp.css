@@ -1361,6 +1361,7 @@ ul#search-results li.standby i {
     left: 50%;
     transform: translate(-50%, -50%);
     margin: 0;
+    font-weight: 400;
     z-index: 9;
     color: #fff !important;
 }

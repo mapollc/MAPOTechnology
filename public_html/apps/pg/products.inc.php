@@ -44,6 +44,7 @@ foreach ($getProds as $p) {
                 </div>
             </div>
         </form>
+
         <table class="table spacing">
             <thead>
                 <tr>
@@ -57,7 +58,10 @@ foreach ($getProds as $p) {
                 </tr>
             </thead>
             <tbody>
-                <? foreach ($prods as $prod) {
+                <?
+                $lastDate = null;
+
+                foreach ($prods as $prod) {
                     $tz = json_decode($prod['data'])->timezone;
                     date_default_timezone_set($tz);
 
@@ -68,16 +72,24 @@ foreach ($getProds as $p) {
 
                     $url = "../issue/$prod[product]/update?id=$prod[uqid]";
 
-                    //if ($expired) $valid = "<span style=\"color:#d32f2f\">$valid</span>";
+                    $currentDate = date('l, M j', $prod['issued']);
+
+                    if ($currentDate !== $lastDate) {
+                        echo "<tr class='date-group'><td colspan='7'>$currentDate</td></tr>";
+                        $lastDate = $currentDate;
+                    }
                 ?>
                     <tr>
                         <td><?= "$prod[product]-$prod[uqid]" ?></td>
                         <td><?= $prod['name'] ?></td>
                         <td><?= $prod['replaces'] !== null ? "$prod[product]-$prod[replaces]" : '' ?></td>
-                        <td><span class="help" title="<?= $iss ?>"><?= $helper->timeAgoOrUntil($prod['issued']) ?></span></td>
-                        <td><span class="help" title="<?= $validFrom ?>"><?= $helper->timeAgoOrUntil($prod['valid']) ?></td>
-                        <td><span class="help" title="<?= $validTo ?>"><?= $helper->timeAgoOrUntil($prod['expires']) ?></td>
-                        <td><?= $prod['replaces'] !== null && !$expired ? "<a href=\"$url\">update</a>" : '' ?></td>
+                        <td><span class="help" title="<?= $iss ?>"><?= $helper->timeAgo($prod['issued']) ?></span></td>
+                        <td><span <?= $prod['valid'] > time() ? 'class="help" ' : '' ?>title="<?= $validFrom ?>"><?= $prod['valid'] > time() ? $helper->until($prod['valid']) : $validFrom ?></td>
+                        <td>
+                            <span <?= $prod['expires'] > time() ? 'class="help" ' : '' ?>title="<?= $validTo ?>"><?= $prod['expires'] > time() ? $helper->until($prod['expires']) : $validTo ?>
+                                <?= time() > $prod['expires'] ? ' <small style="color:red">(expired)</span>' : '' ?>
+                        </td>
+                        <td><?= !$expired ? "<a href=\"$url\">update</a>" : '' ?></td>
                     </tr>
                 <? } ?>
             </tbody>
