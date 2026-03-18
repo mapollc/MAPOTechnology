@@ -877,7 +877,7 @@ function dateTime(it, time = false, timezone = false, longMonth = false) {
         tz = s[0].substring(0, 1) + s[1].substring(0, 1) + s[2].substring(0, 1),
         month = longMonth ? config.longMonths[t.getMonth()] : config.months[t.getMonth()];
 
-    return `${month} ${t.getDate()}, ${t.getFullYear()}${(time ? ` at ${a}` : '')}${(timezone ? ` ${tz}` : '')}`;
+    return `${month} ${t.getDate()}, ${t.getFullYear()}${(time ? `&nbsp;at ${a}` : '')}${(timezone ? ` ${tz}` : '')}`;
 }
 
 /* social media shares */

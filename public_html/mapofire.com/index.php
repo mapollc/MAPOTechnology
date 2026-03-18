@@ -186,4 +186,5 @@ if (file_exists($root . 'v' . $version . '/app.php')) {
     require_once $root . 'v' . $version . '/app.php';
 } else {
     http_response_code(404);
+    include_once '../error.php';
 }

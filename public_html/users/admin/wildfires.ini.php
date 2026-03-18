@@ -111,11 +111,63 @@ if (isset($_POST['create']) && $_POST['create'] == 'Save Incident') {
 
 // modify all wildfires
 if (isset($_POST['action']) && $_POST['action'] == 'Save Changes') {
+    $incidentNum = $_POST['incID'];
+    $uploadOk = true;
+    $errorMsg = '';
+    $newFileName = null;
+
+    if (!empty($_FILES['incPhoto']['tmp_name'])) {
+        $target_dir = '/home/mapo/public_html/images/mapofire/incidents/';
+        $extension = strtolower(pathinfo($_FILES['incPhoto']['name'], PATHINFO_EXTENSION));
+        $newFileName = "{$incidentNum}_" . date('YmdHis') . ".$extension";
+        $target_file = "{$target_dir}{$newFileName}";
+
+        // Validate image
+        if (!getimagesize($_FILES['incPhoto']['tmp_name'])) {
+            $errorMsg = 'The file you uploaded is not a valid image.';
+            $uploadOk = false;
+        }
+
+        // Validate size (20MB)
+        if ($_FILES['incPhoto']['size'] > 20000000) {
+            $errorMsg = 'File is too large (max 20MB).';
+            $uploadOk = false;
+        }
+
+        // Validate type
+        if (!in_array($extension, ['jpg', 'jpeg', 'png'])) {
+            $errorMsg = 'Only JPG, JPEG, and PNG files are allowed.';
+            $uploadOk = false;
+        }
+
+        // Upload file
+        if ($uploadOk && !move_uploaded_file($_FILES['incPhoto']['tmp_name'], $target_file)) {
+            $errorMsg = 'File upload failed. Please try again.';
+            $uploadOk = false;
+        }
+    }
+
     $acres = str_replace(',', '', $_POST['acres']);
+
+    // update acres and display on map fields
     mysqli_query($con, "UPDATE wildfires SET acres = '$acres', display = '$_POST[display]' WHERE wfid = '$_POST[wfid]'");
 
+    // if an image was uploaded, add to DB
+    if ($uploadOk && $newFileName != null) {
+        mysqli_query($con, "INSERT INTO wildfiresSupp (incidentID, fuels, causes, behavior, cost, people, image)
+            VALUES ('$incidentNum', '[]', '[]', '[]', NULL, NULL, '$newFileName') ON DUPLICATE KEY UPDATE image = VALUES(image)");
+    }
+
+    // if acres is different, add historical change
+    if ($_POST['acres'] != $_POST['previous_acres']) {
+        mysqli_query($con, "INSERT INTO acres_history (incidentID,acres,updated)
+            SELECT incidentID, acres, updated FROM wildfires WHERE incidentID = '$incidentNum' AND NOT EXISTS
+            (SELECT 1 FROM acres_history WHERE acres_history.acres = '$acres' AND acres_history.incidentID = '$incidentNum')");
+    }
+
     logEvent("Updated a wildfire incident: <a href=\"../wildfires/edit?wfid=$_POST[wfid]\">WFID #$_POST[wfid]</a>");
-    echo message(true, 'Changes to this wildfire incident were successfully saved.');
+
+    echo message($uploadOk, !$uploadOk ? $errorMsg : 'Changes to this wildfire incident were successfully saved.');
 }
 
 // clear API cache of wildfires

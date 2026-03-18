@@ -1160,7 +1160,7 @@ form label+.input {
     display: grid;
     grid-template-columns: repeat(2, minmax(200px, 1fr));
     justify-items: flex-start;
-    align-items: center;
+    align-items: flex-start;
     gap: 15px;
 }
 

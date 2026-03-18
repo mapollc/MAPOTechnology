@@ -67,6 +67,7 @@ a:visited:hover {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    margin-left: calc(var(--nav-width) / 2);
     flex-direction: column;
     align-items: center;
     gap: var(--spacing);
@@ -302,7 +303,7 @@ nav.hide .nav-wrapper .logo img {
     left: calc(var(--nav-width) + var(--container-space));
     display: flex;
     align-items: center;
-    width: calc(var(--search-results-width) - var(--container-space));
+    /*width: calc(var(--search-results-width) - var(--container-space));*/
     gap: var(--spacing);
     z-index: 998;
 }
@@ -313,6 +314,38 @@ nav.hide .nav-wrapper .logo img {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 0.125rem 0.3125rem rgb(0 0 0 / 14%), 0 0.0625rem 0.375rem rgb(0 0 0 / 12%);
+}
+
+.control.evacBtn:after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    content: '';
+    display: block;
+    margin-top: -1px;
+    width: 24px;
+    height: 24px;
+    background: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDE1IDE1IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGZpbGw9InJnYigyMjcgMzEgMzEgLyAzMCUpIiBzdHJva2U9InJnYigyMjcgMzEgMzEgLyA2MCUpIiBkPSJNNy41MzkgMmMtLjI5NSAwLS40ODkuMTc3LS42MTYuMzg1bC01Ljg0NiA5LjUzOEMxIDEyIDEgMTIuMTUzIDEgMTIuMzA4YzAgLjUzOC4zODUuNjkyLjY5Mi42OTJoMTEuNjE2Yy4zODQgMCAuNjkyLS4xNTQuNjkyLS42OTIgMC0uMTU0IDAtLjIzMS0uMDc3LS4zODVsLTUuNzctOS41MzhDOC4wMjkgMi4xNzcgNy43ODkgMiA3LjUzOSAyeiIvPjxnIGZpbGw9IiMzMzMiIHRyYW5zZm9ybT0ibWF0cml4KC42IDAgMCAuNiAuMzUgLjYpIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjE2Ljc1IiByPSIuNzUiLz48cGF0aCBkPSJNMTIgMTQuNjJhLjc1Ljc1IDAgMCAxLS43NS0uNzVWOS42NmEuNzUuNzUgMCAwIDEgMS41IDB2NC4yMWEuNzUuNzUgMCAwIDEtLjc1Ljc1Ii8+PC9nPjwvc3ZnPg==");
+    background-size: cover;
+}
+
+.control.evacBtn .notify {
+    top: -4px;
+    right: -4px;
+}
+
+.control.button {
+    position: relative;
+    flex: 1 0 auto;
+    width: var(--control-height);
+    cursor: pointer;
+    transition: var(--color-transition);
+    user-select: none;
+}
+
+.control.button:hover {
+    background-color: #eee;
 }
 
 /*.tools.control {
@@ -586,6 +619,10 @@ a.maplibregl-ctrl-logo {
     .notify {
         top: 0;
         left: 0;
+    }
+
+    .control.evacBtn {
+        display: none;
     }
 }
 

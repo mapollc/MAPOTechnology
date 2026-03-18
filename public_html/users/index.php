@@ -1,11 +1,10 @@
 <?
 ini_set('display_errors', 0);
 error_reporting(E_ERROR | E_PARSE);
-ini_set('session.cookie_domain', '.mapotechnology.com');
 
-if (function_exists('opcache_invalidate')) {
-    opcache_invalidate($path, true);
-}
+ini_set('session.cookie_domain', '.mapotechnology.com');
+ini_set('opcache.enable', 0);
+ini_set('opcache.enable_cli', 0);
 
 header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
 header('Expires: ' . gmdate('D, d M Y H:i:s', strtotime('-1 hour')) . ' GMT');

@@ -48,7 +48,10 @@ if (!$permission->fire()->edit()) {
         };
     }
 
-    $row = mysqli_fetch_assoc(mysqli_query($con, "SELECT w.*, ws.fuels AS fuelGroup, ws.causes, ws.behavior, d.agency AS jurisdiction, d.area AS jurisdiction_unit, c.name AS center_name FROM wildfires AS w LEFT JOIN dispatch_centers AS c ON c.agency LIKE w.agency OR c.agency LIKE CONCAT(SUBSTRING(w.agency, 1, 2), '-', SUBSTRING(w.agency, 3, 5)) LEFT JOIN wildfiresSupp AS ws ON ws.incidentID = w.incidentID LEFT JOIN dispatch_zones AS d ON d.unit = SUBSTRING_INDEX(SUBSTRING_INDEX(w.incidentID, '-', -2), '-', 1) WHERE wfid = $_GET[wfid]"));
+    $row = mysqli_fetch_assoc(mysqli_query($con, "SELECT w.*, ws.fuels AS fuelGroup, ws.causes, ws.behavior, ws.image AS incPhoto, d.agency AS jurisdiction, d.area AS jurisdiction_unit, c.name AS center_name FROM wildfires AS w 
+        LEFT JOIN dispatch_centers AS c ON c.agency LIKE w.agency OR c.agency LIKE CONCAT(SUBSTRING(w.agency, 1, 2), '-', SUBSTRING(w.agency, 3, 5))
+        LEFT JOIN wildfiresSupp AS ws ON ws.incidentID = w.incidentID
+        LEFT JOIN dispatch_zones AS d ON d.unit = SUBSTRING_INDEX(SUBSTRING_INDEX(w.incidentID, '-', -2), '-', 1) WHERE wfid = $_GET[wfid]"));
 
     if (!$row) {
         echo errorCode('Wildfire Not Found', 'The wildfire incident you are searching for does not exist.');
@@ -60,8 +63,10 @@ if (!$permission->fire()->edit()) {
         $status = getStatus(unserialize($row['status']), $row['notes'], $type, $acres);
 ?>
 
-        <form action="" method="post">
+        <form action="" method="post" enctype="multipart/form-data">
             <input type="hidden" name="wfid" value="<?= $row['wfid'] ?>">
+            <input type="hidden" name="incID" value="<?= $row['incidentID'] ?>">
+            <input type="hidden" name="previous_acres" value="<?= $acres ?>">
 
             <div class="cad-card">
                 <div class="header">
@@ -149,6 +154,14 @@ if (!$permission->fire()->edit()) {
                     <div class="item">
                         <div class="label">Captured</div>
                         <span><?= formatTime($row['captured']) ?></span>
+                    </div>
+                    <div class="item">
+                        <div class="label">Incident Photo</div>
+                        <input type="file" name="incPhoto" id="incPhoto" class="field" style="color:#444;font-size:14px;font-weight:400" accept="image/png, image/jpeg">
+                        <? if ($row['incPhoto'] != null) {
+                            $path = "../../../assets/images/mapofire/incidents/$row[incPhoto]";
+                            echo "<a target=\"_blank\" href=\"$path\"><img loading=\"lazy\" style=\"max-width:200px\" src=\"$path\"></a>";
+                        } ?>
                     </div>
                     <div class="item">
                         <div class="label">Display on Map</div>

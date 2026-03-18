@@ -33,7 +33,7 @@ const specificURL = window.location.origin + '/',
         donateLink: 'https://mapofire.com/donate',
         //defaultAttr: '&copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a> ',
         defaultAttr: '',
-        months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'],
+        months: ['Jan', 'Feb', 'March', 'April', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'],
         longMonths: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
         days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
         curTime: new Date(),
@@ -432,8 +432,8 @@ let map,
     tracked = [],
     trackedDone = false,
     airQualityStns = [],
-    activeEvacuations = null,
-    evacsLoaded = false,
+    evacuations = null,
+    clickListener = null,
     controlsAtBottom = null,
     premFeature = '<i class="fas fa-lock" style="color:#a1d5e9" title="Subscribe to Map of Fire to gain access to this feature"></i>',
     tileConfig = [
@@ -2202,6 +2202,7 @@ document.onreadystatechange = async () => {
     };
 
     if (document.readyState != 'complete') {
+        clickListener = new ClickListener();
         preload();
     } else {
         complete();
@@ -2261,86 +2262,87 @@ window.addEventListener('click', async (e) => {
         actionsThatOpenImpact = ['account', 'basemap', 'layers', 'legend', 'myfires', 'tools', 'back-my-content'],
         actionElement = target.closest('[data-action]'),
         action = actionElement ? actionElement.dataset.action : null,
-        canUse = settings.subscriptions().valid() || settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN,
-        clickListener = new ClickListener(target, searchResults),
-        actionHandlers = {
-            //'close-modal': () => clickListener.closeModal(),
-            'copy': () => clickListener.copy(),
-            'tools': () => clickListener.tools(),
-            'blazeboard': () => window.open(config.host + 'blazeboard?utm_campaign=blazeboard&utm_medium=mapofire.com&utm_source=menu'),
-            'close-android': () => clickListener.android(),
-            'back-my-content': () => clickListener.myContent(),
-            'close-historical': () => clickListener.closeArchive(),
-            'close-popup': () => clickListener.closePopup(),
-            'clear-search': () => clickListener.clearSearch(),
-            'close-data-form': () => clickListener.closeDataForm(),
-            'close-impact': () => clickListener.closeImpact(),
-            'sr-onclick': () => clickListener.searchResultClick(),
-            'close-navbar': () => clickListener.closeNavbar(),
-            'clear-layer-search': () => clickListener.clearLayerSearch(),
-            'dropdown-nav': () => document.querySelector('nav').classList.toggle('open'),
-            'new-fires': () => clickListener.newFire(),
-            'readSPC': async () => {
-                const ds = target.dataset;
-                new utils.NWS().getOutlookText(ds.type, ds.day);
-            },
-            'marketing-cta': () => clickListener.mcta(),
-            /*'upgrade-subscription': async () => {
-                gtag('event', 'subscription_cta_click', {
-                    'event_category': 'Subscription',
-                    'event_label': e.target.dataset.medium,
-                    'source': e.target.dataset.medium
-                });
+        canUse = settings.subscriptions().valid() || settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN;
 
-                window.location.href = utils.purchaseLink(e.target.dataset.medium);
-            },*/
-            'incident_wx-fwf': () => {
-                new Weather(e.target.dataset.lat, e.target.dataset.lon).fireWxFcst();
-            },
-            'sharer': () => clickListener.sharer(),
-            'radar-control': () => clickListener.radarPausePlay(),
-            'trackFire': () => clickListener.follow(),
-            'readWWA': async () => new utils.NWS().readWWA(target.dataset.id),
-            'my-fire-unfollow': () => clickListener.unfollow(),
-            'account': () => clickListener.account(),
-            'new_fires': () => newFiresReport(),
-            'basemap': () => clickListener.basemaps(),
-            'layers': () => clickListener.showLayers(),
-            'legend': () => clickListener.legend(),
-            'spc-climo': () => clickListener.spcClimo(),
-            'changeSPCDate': () => clickListener.changeSPCDate(),
-            'fwf': async () => {
-                if (canUse) {
-                    document.querySelector('li#fwf').setAttribute('data-active', '1');
-                    map.getCanvas().style.cursor = 'crosshair';
-                    utils.notify('info', 'Click anywhere on get the fire weather forecast.');
-                } else {
-                    utils.marketing(true, 'nav_fwf');
-                }
-            },
-            'myfires': () => clickListener.myfires(),
-            'refresh': () => location.reload(),
-            'archive': async () => {
-                if (canUse) clickListener.archive();
-                else utils.marketing(true, 'nav_archive');
-            },
-            'report': async () => {
-                document.querySelector('li#report').setAttribute('data-active', '1');
+    const clicks = new ClickListener(target, searchResults);
+
+    const actionHandlers = {
+        //'close-modal': () => clicks.closeModal(),
+        'copy': () => clicks.copy(),
+        'tools': () => clicks.tools(),
+        'blazeboard': () => window.open(config.host + 'blazeboard?utm_campaign=blazeboard&utm_medium=mapofire.com&utm_source=menu'),
+        'close-android': () => clicks.android(),
+        'back-my-content': () => clicks.myContent(),
+        'close-historical': () => clicks.closeArchive(),
+        'close-popup': () => clicks.closePopup(),
+        'clear-search': () => clicks.clearSearch(),
+        'close-data-form': () => clicks.closeDataForm(),
+        'close-impact': () => clicks.closeImpact(),
+        'sr-onclick': () => clicks.searchResultClick(),
+        'close-navbar': () => clicks.closeNavbar(),
+        'clear-layer-search': () => clicks.clearLayerSearch(),
+        'dropdown-nav': () => document.querySelector('nav').classList.toggle('open'),
+        'new-fires': () => clicks.newFire(),
+        'readSPC': async () => {
+            const ds = target.dataset;
+            new utils.NWS().getOutlookText(ds.type, ds.day);
+        },
+        'marketing-cta': () => clicks.mcta(),
+        /*'upgrade-subscription': async () => {
+            gtag('event', 'subscription_cta_click', {
+                'event_category': 'Subscription',
+                'event_label': e.target.dataset.medium,
+                'source': e.target.dataset.medium
+            });
+
+            window.location.href = utils.purchaseLink(e.target.dataset.medium);
+        },*/
+        'incident_wx-fwf': () => new Weather(e.target.dataset.lat, e.target.dataset.lon).fireWxFcst(),
+        'sharer': () => clicks.sharer(),
+        'radar-control': () => clicks.radarPausePlay(),
+        'trackFire': () => clicks.follow(),
+        'readWWA': async () => new utils.NWS().readWWA(target.dataset.id),
+        'my-fire-unfollow': () => clicks.unfollow(),
+        'account': () => clicks.account(),
+        'new_fires': () => newFiresReport(),
+        'evac_list': () => evacuations?.clickListener(),
+        'goToEvacPoly': () => evacuations?.zoomTo(target),
+        'basemap': () => clicks.basemaps(),
+        'layers': () => clicks.showLayers(),
+        'legend': () => clicks.legend(),
+        'spc-climo': () => clicks.spcClimo(),
+        'changeSPCDate': () => clicks.changeSPCDate(),
+        'fwf': async () => {
+            if (canUse) {
+                document.querySelector('li#fwf').setAttribute('data-active', '1');
                 map.getCanvas().style.cursor = 'crosshair';
-                utils.notify('info', 'Click anywhere on the map to report a <b>NEW</b> fire incident.');
-            },
-            'measure': () => new Tools().startMeasure(),
-            'save': () => saveSession(false, true)
-        };
+                utils.notify('info', 'Click anywhere on get the fire weather forecast.');
+            } else {
+                utils.marketing(true, 'nav_fwf');
+            }
+        },
+        'myfires': () => clicks.myfires(),
+        'refresh': () => location.reload(),
+        'archive': async () => {
+            if (canUse) clicks.archive();
+            else utils.marketing(true, 'nav_archive');
+        },
+        'report': async () => {
+            document.querySelector('li#report').setAttribute('data-active', '1');
+            map.getCanvas().style.cursor = 'crosshair';
+            utils.notify('info', 'Click anywhere on the map to report a <b>NEW</b> fire incident.');
+        },
+        'measure': () => new Tools().startMeasure(),
+        'save': () => saveSession(false, true)
+    };
 
+    // run default handlers for on click
     if (action != null && actionHandlers[action]) {
         actionHandlers[action]();
     }
 
     if (document.querySelector('body nav .nav-wrapper ul').contains(target)) {
-        if (target.closest('li')) {
-            document.querySelector('nav').classList.toggle('open');
-        }
+        if (target.closest('li')) document.querySelector('nav').classList.toggle('open');
     }
 
     if (contextMenu && !target.contains(contextMenu) && e.target !== contextMenu) {
@@ -2357,9 +2359,7 @@ window.addEventListener('click', async (e) => {
 
     /* hide impact panel if outside of container */
     if (impact != null && impact.style.display == 'flex' && !impact.contains(e.target) && e.target !== impact && impact.dataset.display !== 'my-content') {
-        if (!actionsThatOpenImpact.includes(action) && !document.querySelector('nav').contains(e.target)) {
-            clickListener.closeImpact();
-        }
+        if (!actionsThatOpenImpact.includes(action) && !document.querySelector('nav').contains(e.target)) clicks.closeImpact();
     }
 });
 
@@ -2392,7 +2392,7 @@ window.addEventListener('keydown', (e) => {
 
     // if the user presses the esc key
     if (e.code == 'Escape') {
-        if (isVisible('#modal')) new ClickListener().closeModal();
+        if (isVisible('#modal')) clickListener.closeModal();
 
         if (isVisible('.popup')) {
             marker?.remove();

@@ -270,7 +270,7 @@ span.evac-circ.l3 {
     height: auto;
     padding: var(--spacing);
     overflow: hidden;
-    z-index: 999;
+    z-index: 996;
 }
 
 .popup a {
@@ -371,6 +371,13 @@ span.evac-circ.l3 {
     display: block;
     width: 100%;
     height: auto;
+}
+
+#modal img.mapoIncPhoto {
+    width: auto;
+    max-width: 100%;
+    max-height: 225px;
+    margin: 0 auto;
 }
 
 .graph-svg-tip ul.data-point-list li {
@@ -1187,8 +1194,8 @@ ul#search-results li.standby i {
     display: grid;
     width: 100%;
     grid-auto-rows: 1fr;
-    gap: 1rem;
-    margin-bottom: calc(var(--spacing) * 2);
+    gap: 1.5rem;
+    margin-bottom: calc(var(--spacing) * 1.5);
 }
 
 #modal .grid.cols-2 {
@@ -1292,7 +1299,7 @@ ul#search-results li.standby i {
     justify-content: space-between;
     gap: var(--spacing);
     width: 100%;
-    margin-bottom: calc(var(--spacing) * 2);
+    /*margin-bottom: calc(var(--spacing) * 2);*/
 }
 
 #modal .content header .title {
@@ -1303,13 +1310,33 @@ ul#search-results li.standby i {
 
 .incident .timestamps,
 .wwa .timestamps {
-    display: block;
+    display: inline-flex;
+    width: 100%;
+    flex-wrap: wrap;
+    column-gap: 6px;
+    margin: calc(var(--spacing) * 2) 0;
     color: #cbd5e1;
-    margin-top: 0.25rem;
     font-size: 15px;
     font-weight: 300;
-    line-height: 1.3;
     border-radius: 4px;
+}
+
+.incident .timestamps>span,
+.wwa .timestamps>span {
+    flex: 0 1 auto;
+    line-height: 1.3;
+}
+
+.incident .timestamps>span:after,
+.wwa .timestamps>span:after {
+    content: '\00B7';
+    padding-left: 6px;
+}
+
+.incident .timestamps>span:last-child:after,
+.wwa .timestamps>span:last-child:after {
+    content: '';
+    padding-left: 0;
 }
 
 #modal .content header .tr {
@@ -1427,7 +1454,7 @@ ul#search-results li.standby i {
 
 .incident img.logo {
     width: 100%;
-    max-width: 25px;
+    max-width: 30px;
     height: auto;
     user-select: none;
 }
@@ -1441,7 +1468,9 @@ ul#search-results li.standby i {
 
 #modal .content .desc span {
     display: block;
-    line-height: 1.2;
+    font-size: 18px;
+    font-weight: 100;
+    line-height: 1.3;
     letter-spacing: 0.25px;
 }
 
@@ -2567,6 +2596,14 @@ span.status.out {
         bottom: var(--spacing);
         top: unset;
     }
+
+    #modal .grid.cols-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #modal .grid.cols-3>.card:nth-child(3) {
+        grid-column: 1 / -1;
+    }
 }
 
 @media (max-width: 850px) {
@@ -2629,13 +2666,25 @@ span.status.out {
     }
 
     .incident .timestamps,
-    .wwa .timestamps,
+    .wwa .timestamps {
+        justify-content: center;
+    }
+
     .wwa .headline {
         text-align: center;
     }
 
     #modal .grid {
         grid-auto-rows: unset;
+    }
+
+    #modal .grid {
+        gap: 1rem;
+        margin-bottom: var(--spacing);
+    }
+
+    .grid.cols-3 {
+        grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
     }
 
     .grid.cols-2 {
@@ -2660,12 +2709,25 @@ span.status.out {
 }
 
 @media (max-width: 640px) {
-    .grid.cols-3 {
-        grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
-    }
-
     #modal .grid.stats>div {
         align-items: center;
+    }
+
+    .incident .timestamps,
+    .wwa .timestamps {
+        row-gap: 2px;
+    }
+
+    .incident .timestamps>span,
+    .wwa .timestamps>span {
+        flex: 1 1 100%;
+        text-align: center;
+    }
+
+    .incident .timestamps>span:after,
+    .wwa .timestamps>span:after {
+        content: '';
+        padding-left: 0;
     }
 }
 
@@ -2762,6 +2824,10 @@ span.status.out {
         left: calc(var(--container-space) - var(--spacing));
         padding: 0.75em;
         font-size: 14px;
+    }
+
+    #modal .content .desc span {
+        font-size: 16px;
     }
 }
 

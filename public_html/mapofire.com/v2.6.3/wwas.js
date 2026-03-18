@@ -15,12 +15,14 @@ self.onmessage = (e) => {
                         <i class="fas fa-location-dot"></i>
                         <span>${wwa.area}</span>
                     </div>
-
-                    <p class="timestamps">
-                        Issued <b>${wwa.issued}</b> &middot; Valid ${valid} &middot; Issued by <a target="blank" href="https://weather.gov/${wwa.wfo.toLowerCase()}" title="Issued by the National Weather Service in ${wwa.office}"><b>NWS ${wwa.office}</b></a>
-                    </p>
                 </div>
             </header>
+
+            <p class="timestamps">
+                <span>Issued <b>${wwa.issued}</b></span>
+                <span>Valid ${valid}</span>
+                <span>Issued by <a target="blank" href="https://weather.gov/${wwa.wfo.toLowerCase()}" title="Issued by the National Weather Service in ${wwa.office}"><b>NWS ${wwa.office}</b></a></span>
+            </p>
 
             <div class="headline">
                 ${wwa.headline}

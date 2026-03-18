@@ -10,7 +10,7 @@ $cache = $memcache->get($cachefilename);
 if (!$cache || filemtime(root() . 'fire-info.ini.php') > $memcache->get($cachefilename . '-time')) {
     $where = $incID ? "w.incidentID = ?" : "w.wfid = ?";
 
-    $sql = "SELECT w.*, dc.name AS dcname, dc.location AS dcloc, dc.gacc AS gacc, d.agency AS org, d.area, d.unit, d.logo, ws.fuels AS fuelGroups, ws.causes, ws.behavior, ws.cost, ws.people FROM wildfires AS w 
+    $sql = "SELECT w.*, dc.name AS dcname, dc.location AS dcloc, dc.gacc AS gacc, d.agency AS org, d.area, d.unit, d.logo, ws.fuels AS fuelGroups, ws.causes, ws.behavior, ws.cost, ws.people, ws.image AS incPhoto FROM wildfires AS w 
         LEFT JOIN dispatch_centers AS dc ON dc.agency = w.agency
         LEFT JOIN wildfiresSupp AS ws ON ws.incidentID = w.incidentID
         LEFT JOIN dispatch_zones AS d ON d.unit = w.unit WHERE $where LIMIT 1";
@@ -79,6 +79,7 @@ if (!$cache || filemtime(root() . 'fire-info.ini.php') > $memcache->get($cachefi
                 'notes' => $notes,
                 'status' => $status,
                 'url' => $url,
+                'image' => $row['incPhoto'],
                 'display' => $row['display']
             ]
         ];

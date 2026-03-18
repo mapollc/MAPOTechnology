@@ -898,14 +898,16 @@ export class Search {
                     li.dataset.lat = p.lat;
                     li.dataset.lon = p.lon;
                 }
+
                 li.dataset.action = 'sr-onclick';
                 li.dataset.name = pname;
                 if (p.data.county) li.dataset.county = p.data.county;
                 li.dataset.type = p.type.toLowerCase();
                 li.innerHTML = `<span class="icon fas fa-location-dot"></span>
                     <h3>${pname}
-                        <span>${p.type == 'gis' ? p.data.type + ' in ' : ''}${p.data.county ? p.data.county + ' County' : (p.type == 'county' ? 'County' : 'State')}${p.type == 'city' && p.data.population > 0 ? ` &middot; Population: ${numberFormat(p.data.population)}` : ''}</span>
+                        <span>${p.type == 'gis' ? p.data.type + ' in ' : ''}${p.data.county ? p.data.county + ' County' : (p.type == 'county' ? 'County' : 'State')}${p.type == 'city' && p.data.population > 0 ? `&nbsp;&middot;&nbsp;Population:&nbsp;${numberFormat(p.data.population)}` : ''}</span>
                     </h3>`;
+
                 this.results.appendChild(li);
 
                 count++;
@@ -1254,6 +1256,243 @@ class Subscription {
     }
 }
 
+export class Evacuations {
+    constructor() {
+        this.activeEvacuations = null;
+        this.evacCount = 0;
+        this.evacsLoaded = false;
+    }
+
+    async get() {
+        if (!this.evacsLoaded) {
+            const data = await api(`${config.apiURL}evacuations`);
+
+            /* store active evacuations for use elsewhere within the map */
+            if (data.features && data.features.length) {
+                this.activeEvacuations = data.features;
+                this.evacCount = data.features.length;
+            }
+
+            this.evacsLoaded = true;
+            this.evacHelper();
+            this.displayEvacs(data);
+        }
+    }
+
+    filterListener() {
+        let useThisState = '', useThisCounty = '';
+        const state = document.querySelector('#evac_states'),
+            county = document.querySelector('#evac_county'),
+            list = document.querySelectorAll('.evacs .evac');
+
+        const filter = () => {
+            list.forEach(item => {
+                const stateMatch = !useThisState || item.dataset.state === useThisState;
+                const countyMatch = !useThisCounty || item.dataset.county === useThisCounty;
+
+                item.style.display = (stateMatch && countyMatch) ? 'block' : 'none';
+            });
+        };
+
+        state.addEventListener('change', (e) => {
+            useThisState = e.target.value;
+            filter();
+        });
+
+        county.addEventListener('change', (e) => {
+            useThisCounty = e.target.value;
+            filter();
+        });
+    }
+
+    evacHelper() {
+        const btn = document.querySelector('.control.evacBtn');
+        if (!btn) return;
+
+        btn.style.display = 'block';
+        btn.dataset.tooltip = `Evacuations (${this.evacCount})`;
+        if (this.evacCount > 0) btn.innerHTML = `<span class="notify${this.evacCount > 9 ? ' m10' : ''}">${this.evacCount > 9 ? '9+' : this.evacCount}</span>`;
+    }
+
+    clickListener() {
+        let content = '';
+        const states = [];
+        const counties = [];
+
+        this.activeEvacuations
+            .sort((a, b) => a - b)
+            .forEach(e => {
+                const z = e.properties;
+                const nomen = z.level == 1 ? 'Be Ready' : (z.level == 2 ? 'Be Set' : 'Leave Immediately');
+
+                if (!z.county || !z.state) return;
+
+                if (!states.includes(z.state)) states.push(z.state);
+                if (!counties.includes(`${z.county}, ${z.state}`)) counties.push(`${z.county}, ${z.state}`);
+
+                content += `<div class="evac level${z.level}" data-action="goToEvacPoly" data-id="${z.id}" data-state="${z.state}" data-county="${z.county}">
+                    <h3><span class="evac-circ l${z.level}"></span>Level ${z.level}: ${nomen}</h3>
+                    <details>
+                        <summary style="font-weight:400">${stateLabels[z.state]?.name} &ndash; ${z.county} County</summary>
+                        <span style="font-size:15px">${z.notes}</span>
+                    </details>
+                    <p class="updated" style="text-align:left;color:#4a4a4a">Last updated ${timeAgo(z.updated)} by ${stateLabels[z.state]?.name} OEM</p>
+                </div>`;
+            });
+
+        const filters = () => {
+            let a = '', b = '';
+
+            states.sort((a, b) => a.localeCompare(b)).forEach(s => a += `<option value="${s}">${stateLabels[s]?.name}</option>`);
+            counties.sort((a, b) => a.localeCompare(b)).forEach(i => {
+                const c = i.split(', ');
+                b += `<option value="${c[0]}">${c[0]} County, ${c[1]}</option>`
+            });
+
+            return `<div class="filterEvacs"><select id="evac_states"><option value="">- All States -</option>${a}</select>
+                <select id="evac_county"><option value="">- All Counties -</option>${b}</select></div>`;
+        };
+
+        createDataForm('Active Evacuations', `${filters()}<div class="evacs" style="margin:0">${content}</div>`);
+        this.filterListener();
+    }
+
+    zoomTo(e) {
+        const id = e.dataset.id;
+        const layer = map.getLayer('evac');
+
+        if (!layer) return;
+        if (layer.visibility != 'visible') {
+            ['evac', 'evac_outline', 'evac_title'].forEach(n => map.setLayoutProperty(n, 'visibility', 'visible'));
+        }
+
+        const feature = evacuations.activeEvacuations.find(i => i.id == id),
+            bounds = geojsonExtent(feature?.geometry);
+
+        if (bounds) {
+            map.fitBounds(bounds, {
+                padding: 100
+            });
+
+            clickListener.closeDataForm();
+        }
+    }
+
+    displayEvacs(data) {
+        if (!map.getSource('evac')) {
+            map.addSource('evac', {
+                type: 'geojson',
+                data: data
+            });
+        }
+
+        if (!map.getLayer('evac')) {
+            map.addLayer({
+                id: 'evac',
+                type: 'fill',
+                source: 'evac',
+                paint: {
+                    'fill-color': [
+                        'case',
+                        ['==', ['to-number', ['get', 'level']], 2], '#edd601',
+                        ['==', ['to-number', ['get', 'level']], 3], '#e60000',
+                        '#02823a'
+                    ],
+                    'fill-opacity': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        4,
+                        0.6,
+                        8,
+                        0.3,
+                        11,
+                        0.25
+                    ]
+                },
+                layout: {
+                    visibility: settings.isEnabled('evac') ? 'visible' : 'none'
+                }
+            });
+
+            map.on('mouseenter', 'evac', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'evac', () => {
+                map.getCanvas().style.cursor = 'auto';
+            });
+        }
+
+        if (!map.getLayer('evac_outline')) {
+            map.addLayer({
+                id: 'evac_outline',
+                type: 'line',
+                source: 'evac',
+                paint: {
+                    'line-color': '#333'/*[
+                        'case',
+                        ['boolean', ['feature-state', 'click'], false],
+                        '#00a6ed',
+                        '#222'
+                    ]*/,
+                    'line-width': [
+                        'case',
+                        ['boolean', ['feature-state', 'click'], false],
+                        3,
+                        1
+                    ]/*2,
+                    'line-dasharray': [0, 2, 3]*/
+                },
+                layout: {
+                    visibility: settings.isEnabled('evac') ? 'visible' : 'none'
+                }
+            });
+        }
+
+        if (!map.getLayer('evac_title')) {
+            map.addLayer({
+                id: 'evac_title',
+                type: 'symbol',
+                source: 'evac',
+                minzoom: 9,
+                paint: {
+                    'text-color': '#333',
+                    'text-halo-color': '#fff',
+                    'text-halo-blur': 1,
+                    'text-halo-width': 1
+                },
+                layout: {
+                    'symbol-placement': 'line',
+                    'symbol-spacing': 400,
+                    'text-font': config.fonts.roboto(),
+                    'text-field': [
+                        'case',
+                        ['==', ['to-number', ['get', 'level']], 2], 'Level 2: BE SET',
+                        ['==', ['to-number', ['get', 'level']], 3], 'Level 3: GO NOW',
+                        'Level 1: Be Ready'
+                    ],
+                    'text-justify': 'center',
+                    'text-size': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        10,
+                        10,
+                        12,
+                        15
+                    ],
+                    'text-max-width': 8,
+                    'text-anchor': 'center',
+                    'text-offset': [0, 1],
+                    'text-letter-spacing': 0.05,
+                    visibility: settings.isEnabled('evac') ? 'visible' : 'none'
+                }
+            });
+        }
+    }
+}
+
 export class Layers {
     constructor() {
         this.spcClimoDate = Date.parse('1/1/2026');
@@ -1267,7 +1506,8 @@ export class Layers {
         this.airQuality();
 
         /* get evacuations */
-        this.evacuations();
+        evacuations = new Evacuations();
+        evacuations.get();
     }
 
     contours(demSource) {
@@ -3325,131 +3565,6 @@ export class Layers {
         }
     }
 
-    async evacuations() {
-        if (!evacsLoaded) {
-            const data = await api(config.apiURL + 'evacuations'),
-                color = [
-                    'case',
-                    ['==', ['to-number', ['get', 'level']], 2], '#edd601',
-                    ['==', ['to-number', ['get', 'level']], 3], '#e60000',
-                    '#02823a'
-                ];
-
-            /* store active evacuations for use elsewhere within the map */
-            evacsLoaded = true;
-            if (data.features && data.features.length > 0) {
-                activeEvacuations = data.features;
-            }
-
-            if (!map.getSource('evac')) {
-                map.addSource('evac', {
-                    type: 'geojson',
-                    data: data
-                });
-            }
-
-            if (!map.getLayer('evac')) {
-                map.addLayer({
-                    id: 'evac',
-                    type: 'fill',
-                    source: 'evac',
-                    paint: {
-                        'fill-color': color,
-                        'fill-opacity': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
-                            4,
-                            0.6,
-                            8,
-                            0.3,
-                            11,
-                            0.25
-                        ]
-                    },
-                    layout: {
-                        visibility: settings.isEnabled('evac') ? 'visible' : 'none'
-                    }
-                });
-
-                map.on('mouseenter', 'evac', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'evac', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
-            }
-
-            if (!map.getLayer('evac_outline')) {
-                map.addLayer({
-                    id: 'evac_outline',
-                    type: 'line',
-                    source: 'evac',
-                    paint: {
-                        'line-color': '#333'/*[
-                                'case',
-                                ['boolean', ['feature-state', 'click'], false],
-                                '#00a6ed',
-                                '#222'
-                            ]*/,
-                        'line-width': [
-                            'case',
-                            ['boolean', ['feature-state', 'click'], false],
-                            3,
-                            1
-                        ]/*2,
-                            'line-dasharray': [0, 2, 3]*/
-                    },
-                    layout: {
-                        visibility: settings.isEnabled('evac') ? 'visible' : 'none'
-                    }
-                });
-            }
-
-            if (!map.getLayer('evac_title')) {
-                map.addLayer({
-                    id: 'evac_title',
-                    type: 'symbol',
-                    source: 'evac',
-                    minzoom: 9,
-                    paint: {
-                        'text-color': '#333',
-                        'text-halo-color': '#fff',
-                        'text-halo-blur': 1,
-                        'text-halo-width': 1
-                    },
-                    layout: {
-                        'symbol-placement': 'point',
-                        'symbol-spacing': 200,
-                        'text-font': config.fonts.roboto(),
-                        'text-field': [
-                            'case',
-                            ['==', ['to-number', ['get', 'level']], 2], 'Level 2: BE SET',
-                            ['==', ['to-number', ['get', 'level']], 3], 'Level 3: GO NOW',
-                            'Level 1: Be Ready'
-                        ],
-                        'text-justify': 'center',
-                        'text-size': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
-                            10,
-                            10,
-                            12,
-                            15
-                        ],
-                        'text-max-width': 8,
-                        'text-anchor': 'center',
-                        'text-offset': [0, 1],
-                        'text-letter-spacing': 0.05,
-                        visibility: settings.isEnabled('evac') ? 'visible' : 'none'
-                    }
-                });
-            }
-        }
-    }
-
     async firemed(update = false) {
         const types = ['hosp', 'ems', 'fire'],
             baseURL = 'https://services2.arcgis.com/FiaPA4ga0iQKduv3/ArcGIS/rest/services/Structures_Medical_Emergency_Response_v1/FeatureServer/',
@@ -3680,8 +3795,7 @@ export class Wildfires {
         return r;
     }
 
-    largestGrowthTime(it) {
-        const date = new Date(it * 1000);
+    /*largestGrowthTime(it) {
         const now = new Date();
 
         const getMidnight = (d) => {
@@ -3709,6 +3823,18 @@ export class Wildfires {
             const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
             return `on ${dateFormatter.format(date)}`;
         }
+    }*/
+
+    largestGrowthTime(it) {
+        const when = new Date(it * 1000);
+        const now = new Date();
+        const yesterday = new Date(now.getTime() - 86400000);
+        const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+        if (when.getMonth() == now.getMonth() && when.getDate() == now.getDate()) return 'today';
+        if (when.getMonth() == yesterday.getMonth() && yesterday.getDate() == now.getDate()) return 'yesterday';
+
+        return `on ${dateFormatter.format(when)}`;
     }
 
     fireStats(history, incID = null) {
@@ -4459,19 +4585,20 @@ export class Wildfires {
 
     async cacheIncident(wfid) {
         const cache = await caches.open('mapofire-v' + version);
+        const cacheKey = new Request('/' + wfid);
 
         try {
             // if user has in-app caching enabled
             if (settings.fire().cache()) {
-                const cachedResponse = await cache.match(wfid);
+                const cachedResponse = await cache.match(cacheKey);
 
                 if (cachedResponse) {
                     const cachedData = await cachedResponse.json();
 
-                    if (Date.now() - cachedData.timestamp < (10 * 60 * 1000)) {
+                    if (Date.now() - cachedData.timestamp < 10 * 60 * 1000) {
                         return cachedData.data;
                     } else {
-                        cache.delete(wfid);
+                        cache.delete(cacheKey);
                     }
                 }
             }
@@ -4479,8 +4606,8 @@ export class Wildfires {
             const data = await api(config.apiURL + 'wildfires/incident', [['wfid', wfid], ['history', 1]]);
 
             // if user has in-app caching enabled
-            if (settings.fire().cache()) {
-                await cache.put(wfid, new Response(JSON.stringify({ data: data, timestamp: Date.now() })));
+            if (settings.fire().cache() && !data.error) {
+                await cache.put(cacheKey, new Response(JSON.stringify({ data: data, timestamp: Date.now() })));
             }
 
             return data;
@@ -4505,12 +4632,19 @@ export class Wildfires {
             if (coords) modalZoom(coords.geometry.coordinates);
         }
 
-        new ClickListener().openModal('fire');
+        clickListener.openModal('fire');
 
         // get incident json from cache or API
-        const incident = await this.cacheIncident(wfid),
-            fire = incident.fire,
-            fireLat = fire.geometry.lat,
+        const incident = await this.cacheIncident(wfid);
+        const fire = incident.fire;
+
+        if (fire?.error == 404) {
+            clickListener.closeModal();
+            notify('error', 'The incident you\'re looking for does not exist.');
+            return;
+        }
+
+        const fireLat = fire.geometry.lat,
             fireLon = fire.geometry.lon,
             prop = fire.properties,
             nearbyEvacs = await new NearbyEvacuations(fireLat, fireLon).get(),
@@ -4567,30 +4701,22 @@ export class Wildfires {
             /* if nearby evacuations exist, show them on the modal */
             if (nearbyEvacs) {
                 let theEvacs = '';
-                const formatArray = (arr) => {
-                    if (arr.length === 2) {
-                        return arr.join(' & ');
-                    } else if (arr.length >= 3) {
-                        const lastTwo = arr.slice(-2).join(' & '),
-                            firstPart = arr.slice(0, -2);
-                        return firstPart.join(', ') + ', ' + lastTwo;
-                    } else if (arr.length === 1) {
-                        return arr[0];
-                    } else {
-                        return '';
-                    }
-                };
 
                 if (nearbyEvacs.length > 0) {
                     nearbyEvacs.reverse().forEach((z) => {
                         const nomen = (z.level == 1 ? 'Be Ready' : (z.level == 2 ? 'Be Set' : 'Leave Immediately'));
 
-                        theEvacs += '<div class="evac level' + z.level + '"><h3><span class="evac-circ l' + z.level + '"></span>Level ' + z.level + ': ' + nomen + '</h3><details><summary>' +
-                            formatArray(z.counties) + ' Count' + (z.counties.length == 1 ? 'y' : 'ies') +
-                            '</summary><span style="font-size:15px">' + z.notes.join(', ') + '</span></details></div>';
+                        theEvacs += `<div class="evac level${z.level}">
+                            <h3><span class="evac-circ l${z.level}"></span>Level ${z.level}: ${nomen}</h3>
+                            <details>
+                                <summary>${formatArray(z.counties)} Count${(z.counties.length == 1 ? 'y' : 'ies')}</summary>
+                                <span style="font-size:15px">${z.notes.join(', ')}</span>
+                            </details>
+                            <p class="updated" style="text-align:left;color:#4a4a4a">Last updated ${timeAgo(z.updated)} by ${stateLabels[z.state]?.name} OEM</p>
+                        </div>`;
                     });
 
-                    document.querySelector('.incident #incWX').insertAdjacentHTML('beforebegin', '<div class="evacs">' + theEvacs + '</div>');
+                    document.querySelector('.incident #incWX').insertAdjacentHTML('beforebegin', `<div class="evacs">${theEvacs}</div>`);
                 }
             }
 
@@ -4702,12 +4828,12 @@ export class Wildfires {
                     ['returnGeometry', true],
                     ['f', 'geojson']
                 ]);
- 
+     
                 if (update && map.getSource(src)) {
                     map.getSource(src).setData(data);
                     return;
                 }
- 
+     
                 if (!map.getSource(src)) {
                     map.addSource(src, { type: 'geojson', data });
                 }*/
@@ -4879,84 +5005,80 @@ export class NWS {
             ['f', 'geojson']
         ]);
 
-        if (wwa && wwa.features.length > 0) {
-            if (update) {
-                map.getSource('wwas').setData(wwa);
-            } else {
-                if (wwa && wwa.features.length > 0) {
-                    if (!map.getSource('wwas')) {
-                        map.addSource('wwas', {
-                            type: 'geojson',
-                            data: wwa
-                        });
+        if (!map.getSource('wwas')) {
+            map.addSource('wwas', {
+                type: 'geojson',
+                data: wwa
+            });
+        }
+
+        if (update) {
+            map.getSource('wwas').setData(wwa);
+        } else {
+            if (!map.getLayer('wwas_outline')) {
+                map.addLayer({
+                    id: 'wwas_outline',
+                    type: 'line',
+                    source: 'wwas',
+                    paint: {
+                        'line-color': wwaColors,
+                        'line-width': 2
+                    },
+                    layout: {
+                        visibility: 'visible'
                     }
+                });
+            }
 
-                    if (!map.getLayer('wwas_outline')) {
-                        map.addLayer({
-                            id: 'wwas_outline',
-                            type: 'line',
-                            source: 'wwas',
-                            paint: {
-                                'line-color': wwaColors,
-                                'line-width': 2
-                            },
-                            layout: {
-                                visibility: 'visible'
-                            }
-                        });
+            if (!map.getLayer('wwas_fill')) {
+                map.addLayer({
+                    id: 'wwas_fill',
+                    type: 'fill',
+                    source: 'wwas',
+                    paint: {
+                        'fill-color': wwaColors,
+                        'fill-opacity': 0.35
+                    },
+                    layout: {
+                        visibility: 'visible'
                     }
+                });
 
-                    if (!map.getLayer('wwas_fill')) {
-                        map.addLayer({
-                            id: 'wwas_fill',
-                            type: 'fill',
-                            source: 'wwas',
-                            paint: {
-                                'fill-color': wwaColors,
-                                'fill-opacity': 0.35
-                            },
-                            layout: {
-                                visibility: 'visible'
-                            }
-                        });
+                map.on('mouseenter', 'wwas_fill', () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
 
-                        map.on('mouseenter', 'wwas_fill', () => {
-                            map.getCanvas().style.cursor = 'pointer';
-                        });
+                map.on('mouseleave', 'wwas_fill', () => {
+                    map.getCanvas().style.cursor = 'auto';
+                });
+            }
 
-                        map.on('mouseleave', 'wwas_fill', () => {
-                            map.getCanvas().style.cursor = 'auto';
-                        });
+            if (!map.getLayer('wwas_title')) {
+                map.addLayer({
+                    id: 'wwas_title',
+                    type: 'symbol',
+                    source: 'wwas',
+                    minzoom: 8.9,
+                    paint: {
+                        'text-color': '#000',
+                        'text-halo-color': '#fff',
+                        'text-halo-blur': 1,
+                        'text-halo-width': 1
+                    },
+                    layout: {
+                        'symbol-placement': 'line',
+                        'symbol-spacing': 450,
+                        'text-font': config.fonts.din(),
+                        'text-field': ['get', 'Event'],
+                        'text-justify': 'auto',
+                        'text-size': 14,
+                        'text-max-width': 12,
+                        'text-max-angle': 30,
+                        'text-anchor': 'bottom',
+                        'text-offset': [0, 1.3],
+                        'text-letter-spacing': 0.05
                     }
-
-                    if (!map.getLayer('wwas_title')) {
-                        map.addLayer({
-                            id: 'wwas_title',
-                            type: 'symbol',
-                            source: 'wwas',
-                            minzoom: 8.9,
-                            paint: {
-                                'text-color': '#000',
-                                'text-halo-color': '#fff',
-                                'text-halo-blur': 1,
-                                'text-halo-width': 1
-                            },
-                            layout: {
-                                'symbol-placement': 'line',
-                                'symbol-spacing': 450,
-                                'text-font': config.fonts.din(),
-                                'text-field': ['get', 'Event'],
-                                'text-justify': 'auto',
-                                'text-size': 14,
-                                'text-max-width': 12,
-                                'text-max-angle': 30,
-                                'text-anchor': 'bottom',
-                                'text-offset': [0, 1.3],
-                                'text-letter-spacing': 0.05
-                            }
-                        });
-                    }
-                }
+                });
             }
         }
     }
@@ -5225,7 +5347,7 @@ export class NWS {
             return;
         }
 
-        new ClickListener().openModal('wwa');
+        clickListener.openModal('wwa');
         const type = otlkType == 'severe' ? 'Convective Outlook' : 'Fire Weather Outlook';
 
         setHeaders('Day ' + day + ' ' + type, 'weather/outlook/' + otlkType + '/' + day,
@@ -5235,7 +5357,7 @@ export class NWS {
             request = await api(config.apiURL + 'outlooks/' + otlkType + '/text', [['day', day]]);
 
         if (!request) {
-            new ClickListener().closeModal();
+            clickListener.closeModal();
             notify('error', 'There was an error getting outlook text');
         }
 
@@ -5303,7 +5425,7 @@ export class NWS {
     }
 
     async readWWA(id, click = true) {
-        new ClickListener().openModal('wwa');
+        clickListener.openModal('wwa');
 
         const request = await api(config.apiURL + 'getWWA', [['id', id]]),
             a = request.wwa;
@@ -5327,14 +5449,6 @@ export class NWS {
         };
     }
 }
-
-export function purchaseLink(utm, next = null) {
-    if (settings.subscriptions().valid() && config.TIERS[settings.subscriptions().plan()] == config.PERMISSION_LEVELS.PREMIUM) {
-        return config.domain + 'account/billing#upgrade=true&sid=' + settings.subscriptions().subID()
-    } else {
-        return config.domain + 'purchase/mapofire' + (utm ? '?utm_campaign=Locked%20Features&utm_source=mapofire&utm_medium=' + utm : '') + (next ? '&next=' + next : '');
-    }
-};
 
 export class Tooltips {
     constructor(options = {}) {
@@ -5454,6 +5568,28 @@ export class Tooltips {
     }
 }
 
+function formatArray(arr) {
+    if (arr.length === 2) {
+        return arr.join(' & ');
+    } else if (arr.length >= 3) {
+        const lastTwo = arr.slice(-2).join(' & '),
+            firstPart = arr.slice(0, -2);
+        return firstPart.join(', ') + ', ' + lastTwo;
+    } else if (arr.length === 1) {
+        return arr[0];
+    } else {
+        return '';
+    }
+}
+
+export function purchaseLink(utm, next = null) {
+    if (settings.subscriptions().valid() && config.TIERS[settings.subscriptions().plan()] == config.PERMISSION_LEVELS.PREMIUM) {
+        return config.domain + 'account/billing#upgrade=true&sid=' + settings.subscriptions().subID()
+    } else {
+        return config.domain + 'purchase/mapofire' + (utm ? '?utm_campaign=Locked%20Features&utm_source=mapofire&utm_medium=' + utm : '') + (next ? '&next=' + next : '');
+    }
+}
+
 export function notify(t, m, time = 0) {
     const timing = time === 0 ? (((m.split(' ').length / 5) + 0.5) * 1000) + 500 : time * 1000,
         el = document.createElement('div'),
@@ -5555,7 +5691,7 @@ export function marketing(override = false, utm = null) {
             });
 
             window.location.href = config.purchaseLink(utm ? utm : 'popup');
-            new ClickListener().closeDataForm();
+            clickListener.closeDataForm();
         });
 
         // dismiss CTA
@@ -5577,7 +5713,7 @@ export function marketing(override = false, utm = null) {
                 'variant': pick
             });
 
-            new ClickListener().closeDataForm();
+            clickListener.closeDataForm();
         });
     }
 }
@@ -5721,8 +5857,7 @@ export async function startReportProcess(e) {
 }
 
 export function contextMenu(e, isTouch = false) {
-    const click = new ClickListener(),
-        menu = document.querySelector('.context-menu');
+    const menu = document.querySelector('.context-menu');
 
     if (menu) menu.remove();
 
@@ -5744,14 +5879,14 @@ export function contextMenu(e, isTouch = false) {
         ul = document.createElement('ul'),
         options = [
             { text: coords.lat.toFixed(4) + ', ' + coords.lng.toFixed(4), hasPerms: true },
-            { text: 'Copy coordinates', task: () => { click.copy(coords.lat + ', ' + coords.lng) }, hasPerms: true },
+            { text: 'Copy coordinates', task: () => { clickListener.copy(coords.lat + ', ' + coords.lng) }, hasPerms: true },
             {
                 text: 'Copy elevation',
                 task: async () => {
                     if (elevation == null) {
                         (await loadUtils()).notify('info', 'Unable to get elevation here')
                     } else {
-                        click.copy(numberFormat(elevation, 1) + ' ft.', 'Elevation copied to clipboard');
+                        clickListener.copy(numberFormat(elevation, 1) + ' ft.', 'Elevation copied to clipboard');
                     }
                 },
                 hasPerms: settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)
@@ -5825,7 +5960,7 @@ export const modalZoom = (coordsOrLng, lat) => {
     }
 
     const mapHeight = map.getContainer().clientHeight,
-        modalHeight = mapHeight * new ClickListener().modalHeightFromTop,
+        modalHeight = mapHeight * clickListener.modalHeightFromTop,
         visibleHeight = mapHeight - modalHeight,
         offsetY = -visibleHeight / 2;
 

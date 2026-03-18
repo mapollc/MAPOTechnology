@@ -50,8 +50,8 @@ for ($i = 0; $i < count($json->features); $i++) {
     // Only insert if at least one JSON array or numeric field has real data
     if ($fuels !== '[]' || $behave !== '[]' || $cause !== '[]' || $cost !== 'NULL' || $ppl !== 'NULL') {
         $sqlQueries .= "
-            INSERT INTO wildfiresSupp (incidentID, fuels, causes, behavior, cost, people)
-            VALUES ('$id', '$fuels', '$cause', '$behave', $cost, $ppl)
+            INSERT INTO wildfiresSupp (incidentID, fuels, causes, behavior, cost, people, image)
+            VALUES ('$id', '$fuels', '$cause', '$behave', $cost, $ppl, NULL)
             ON DUPLICATE KEY UPDATE
                 fuels = VALUES(fuels),
                 causes = VALUES(causes),

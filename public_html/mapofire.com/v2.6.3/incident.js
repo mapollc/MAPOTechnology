@@ -198,15 +198,17 @@ self.onmessage = (e) => {
                         ${logo}
                         <span>${object.geoLocate}</span>
                     </div>
-
-                    <p class="timestamps">
-                        Last updated <b>${updated}</b> &middot; Reported <b>${vars.reported.useAgo ? vars.reported.ago : dt(fire.time.discovered)}</b> &middot; Incident <b>#${incID}</b>
-                    </p>
                 </div>
                 <div class="tr">
                     <a href="#" class="btn btn-${isTracked ? 'black' : 'yellow'} btn-sm" onclick="return false" style="margin:0" id="trackFire" data-action="trackFire" data-mode="${isTracked ? 'unfollow' : 'follow'}" data-id="${wfid}" title="${isTracked ? 'You\'re following this incident' : 'Start following this incident'}"><i class="far fa-${isTracked ? 'check' : 'plus'}"></i>Follow${isTracked ? 'ing' : ''} this incident</a>
                 </div>
             </header>
+
+            <p class="timestamps">
+                <span>Last updated <b>${updated}</b></span>
+                <span>Reported <b>${vars.reported.useAgo ? vars.reported.ago : dt(fire.time.discovered)}</b></span>
+                <span>Incident <b>#${incID}</b></span>
+            </p>
 
             <div class="grid cols-4 stats">
                 <div class="card">
@@ -232,7 +234,7 @@ self.onmessage = (e) => {
                 </div>
             </div>
 
-            <div class="grid cols-2 top-align">
+            <div class="grid cols-${fr.image != null && !inciweb ? 3 : 2} top-align">
                 <div class="card initial">
                     <dt class="label icon fa-location-dot">Initial Location</dt>
                     <dd>${near}</dd>
@@ -259,6 +261,11 @@ self.onmessage = (e) => {
                     <dt class="label icon fa-cloud-question">Cause</dt>
                     <dd>${cause == null ? 'Unknown' : cause}</dd>
                 </div>
+                ${fr.image != null && !inciweb ? `<div class="card">
+                    <a target="_blank" href="../../../src/images/incident?mapo=1&path=${fr.image}">
+                        <img loading="lazy" class="mapoIncPhoto" src="../../../src/images/incident?mapo=1&path=${fr.image}&small=1">
+                    </a>
+                </div>` : ''}
             </div>
 
             <div class="grid cols-2">
