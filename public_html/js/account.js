@@ -211,7 +211,7 @@ class QueryWildfires {
         this.numberFormat = new Intl.NumberFormat('en-US');
     }
 
-    async search(fields = null) { console.log(fields);
+    async search(fields = null) {
         const body = [];
 
         window.history.pushState(
@@ -261,11 +261,10 @@ class QueryWildfires {
         document.querySelector('#resultsNum').innerHTML = `Showing results ${this.numberFormat.format(curResults)} to ${this.numberFormat.format(max)} of ${this.numberFormat.format(total)}`;
 
         const links = Math.ceil(total / perPage);
-
         const container = document.querySelector('.pagination > div');
         container.innerHTML = '';
 
-        for (let i = 1; i <= links; i++) {
+        const createPage = (i) => {
             let el;
 
             if (i === resultsPage) {
@@ -281,6 +280,31 @@ class QueryWildfires {
 
             el.textContent = i;
             container.appendChild(el);
+        };
+
+        const createDots = () => {
+            const span = document.createElement('span');
+            span.textContent = '...';
+            container.appendChild(span);
+        };
+
+        if (links <= 20) {
+            for (let i = 1; i <= links; i++) {
+                createPage(i);
+            }
+        } else {
+            const range = 4;
+
+            createPage(1);
+            if (resultsPage > 1 + range + 1) createDots();
+
+            for (let i = Math.max(2, resultsPage - range); i <= Math.min(links - 1, resultsPage + range); i++) {
+                createPage(i);
+            }
+
+            if (resultsPage < links - range - 1) createDots();
+
+            createPage(links);
         }
     }
 
@@ -1340,16 +1364,16 @@ newMarker.setLatLng(L.latLng(lat, lon));
 });
 
 /* on popup save button *//*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       /* get values from popup and store them in hidden input fields *//*
-                                                                                                                                                                                                                                                                        wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
-                                                                                                                                                                                                                                                                        wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
-                                                                                                                                                                                                                                                                        wrap.querySelector('input[name="waypoint[name][]"]').value = name;
-                                                                                                                                                                                                                                                                        wrap.querySelector('input[name="waypoint[note][]"]').value = notes;
-                                                                                                                                                                                                                                                                        wrap.querySelector('input[name="waypoint[icon][]"]').value = icon;
-                                                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                                        map.closePopup();
-                                                                                                                                                                                                                                                                        });
-                                                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                                        /* on popup delete button *//*
+                                                                                                                                                                                                                                                                                    wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
+                                                                                                                                                                                                                                                                                    wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
+                                                                                                                                                                                                                                                                                    wrap.querySelector('input[name="waypoint[name][]"]').value = name;
+                                                                                                                                                                                                                                                                                    wrap.querySelector('input[name="waypoint[note][]"]').value = notes;
+                                                                                                                                                                                                                                                                                    wrap.querySelector('input[name="waypoint[icon][]"]').value = icon;
+                                                                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                                                    map.closePopup();
+                                                                                                                                                                                                                                                                                    });
+                                                                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                                                    /* on popup delete button *//*
 const markerDataContainer = document.createElement('div');
 markerDataContainer.id = 'waypoint-' + markerCounter;
  

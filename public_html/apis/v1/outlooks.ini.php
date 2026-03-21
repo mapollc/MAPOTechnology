@@ -127,13 +127,13 @@ if ($function == 'text') {
             } else {
                 $image[] = 'outlook/day' . $_REQUEST['day'] . 'otlk.png';
 
-                /*if ($_REQUEST['day'] == 3) {
-                    $image[] = 'outlook/day' . $_REQUEST['day'] . 'prob.gif';
+                if ($_REQUEST['day'] == 3) {
+                    $image[] = 'outlook/day' . $_REQUEST['day'] . 'prob.png';
                 } else {
                     $image[] = 'outlook/day' . $_REQUEST['day'] . 'probotlk_torn.png';
                     $image[] = 'outlook/day' . $_REQUEST['day'] . 'probotlk_wind.png';
                     $image[] = 'outlook/day' . $_REQUEST['day'] . 'probotlk_hail.png';
-                }*/
+                }
             }
         }
 

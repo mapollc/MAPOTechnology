@@ -1,304 +1,156 @@
-const specificURL = window.location.origin + '/',
-    mfFonts = specificURL + 'data/maps/fonts/{fontstack}/{range}.pbf',
-    debugMode = window.location.search.search('version') >= 0,
-    getPlatform = () => {
-        const h = window.location.host;
-        if (h.includes('wildfiremap.org')) return 'wildfiremap';
-        if (h.includes('fireweatheravalanche.org')) return 'fireweatheravalanche';
-        return 'mapofire';
-    },
-    config = {
-        host: `//${window.location.host}/`/*'https://www.mapofire.com/'*/,
-        domain: '//mapotechnology.com/',
-        apiURL: '//api.mapotechnology.com/v1/',
-        productName: 'Map of Fire',
-        company: 'MAPO LLC',
-        /*sub_id: 'price_1MgxhSIpCdpJm6cTaKp2dqf5',*/
-        apiKey: () => {
-            const keys = {
-                'fireweatheravalanche': '191eab18c50c8f5653bdeba13f219bed',
-                'wildfiremap': '85f58fa255efe0f779e0dfcd62d87e6d',
-                'mapofire': '50e2c43f8f63ff0ed20127ee2487f15e'
-            };
+let utilsPromise = null;
 
-            return keys[getPlatform()];
+const ENV = {
+    origin: window.location.origin,
+    host: `//${window.location.host.replace('www.', '')}/`,
+    baseURL: `${window.location.origin}/`,
+    domain: '//mapotechnology.com/',
+    apiURL: '//api.mapotechnology.com/v1/',
+    debug: window.location.search.includes('version'),
+    PLATFORM_MAP: {
+        'wlidfiremap.org': 'wildfiremap',
+        'fireweatheravalanche.org': 'fireweatheravalanche'
+    }
+};
+
+const mfFonts = `${ENV.baseURL}data/maps/fonts/{fontstack}/{range}.pbf`,
+    debugMode = ENV.debug,
+    API_KEYS = {
+        'fireweatheravalanche': '191eab18c50c8f5653bdeba13f219bed',
+        'wildfiremap': '85f58fa255efe0f779e0dfcd62d87e6d',
+        'mapofire': '50e2c43f8f63ff0ed20127ee2487f15e'
+    };
+
+const getPlatform = () => {
+    return ENV.PLATFORM_MAP[ENV.host] || 'mapofire';
+};
+
+const getFont = (type) => {
+    const mapType = settings.getBasemap();
+    const fontMap = {
+        din: {
+            dark: ['Noto Sans Regular'],
+            voyager: ['Noto Sans Regular'],
+            satellite: ['Noto Sans Bold'],
+            default: ['DIN Pro Medium']
         },
-        disableClicks: false,
-        wildfire: null,
-        layersHandler: null,
-        layersMenu: null,
-        listOfLayers: [],
-        fuelsData: null,
-        specificURL: specificURL,
-        donateLink: 'https://mapofire.com/donate',
-        //defaultAttr: '&copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a> ',
-        defaultAttr: '',
-        months: ['Jan', 'Feb', 'March', 'April', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'],
-        longMonths: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-        days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-        curTime: new Date(),
-        daysInYear: (y = null) => { const year = y ?? config.curTime.getFullYear(); return (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 366 : 365; },
-        runSearch: false,
-        TIERS: {
-            'ignite_monthly': 'PREMIUM',
-            'ignite_annual': 'PREMIUM',
-            'hotshot_monthly': 'PRO',
-            'hotshot_annual': 'PRO'
+        source: {
+            dark: ['Noto Sans Regular'],
+            voyager: ['Noto Sans Regular'],
+            satellite: ['Noto Sans Bold'],
+            osm: ['Source Sans Pro SemiBold'],
+            default: ['Source Sans Pro SemiBold']
         },
-        PERMISSION_LEVELS: {
-            ADMIN: 'ADMIN',
-            PREMIUM: 'PREMIUM',
-            PRO: 'PRO'
-        },
-        RANKS: {
-            PREMIUM: 1,
-            PRO: 2,
-            ADMIN: 3
-        },
-        modisZoomLevel: 7,
-        firemedZoomLevel: 9,
-        toolsInstance: null,
-        workers: {
-            incident: new Worker(`${specificURL}${(debugMode ? `v${version}/incident.js` : `src/js/incident-${version}.js`)}`),
-            fwf: null,
-            wwas: null
-        },
-        fog: {
-            'sky-color': '#33bbff',
-            'sky-horizon-blend': +0.5,
-            'horizon-color': '#b1ddec',
-            'horizon-fog-blend': +0.5,
-            'fog-color': '#c7c7c7',
-            'fog-ground-blend': +0.1
-        },
-        tiles: null,
-        fonts: {
-            din: () => {
-                const fontMap = {
-                    'dark': ['Noto Sans Regular'],
-                    'voyager': ['Noto Sans Regular'],
-                    'satellite': ['Noto Sans Bold'],
-                    'default': ['DIN Pro Medium']
-                };
-                return fontMap[settings.getBasemap()] || fontMap['default'];
-            },
-            source: () => {
-                const fontMap = {
-                    'dark': ['Noto Sans Regular'],
-                    'voyager': ['Noto Sans Regular'],
-                    'satellite': ['Noto Sans Bold'],
-                    'osm': ['Source Sans Pro SemiBold'],
-                    'default': ['Source Sans Pro SemiBold']
-                };
-                return fontMap[settings.getBasemap()] || fontMap['default'];
-            },
-            roboto: () => {
-                const fontMap = {
-                    'dark': ['Montserrat Medium'],
-                    'voyager': ['Montserrat Medium'],
-                    'satellite': ['Noto Sans Bold'],
-                    'default': ['Roboto Medium']
-                };
-                return fontMap[settings.getBasemap()] || fontMap['default'];
-            }
+        roboto: {
+            dark: ['Montserrat Medium'],
+            voyager: ['Montserrat Medium'],
+            satellite: ['Noto Sans Bold'],
+            default: ['Roboto Medium']
         }
+    };
+
+    return fontMap[type][mapType] || fontMap[type].default;
+};
+
+const loadUtils = async () => {
+    if (utilsPromise) return utilsPromise;
+
+    try {
+        utilsPromise = await import(`${ENV.baseURL}${(debugMode ? `v${version}/mf.utils.js` : `src/js/mf.utils-${version}.js`)}`);
+        return utilsPromise;
+    } catch (e) {
+        console.error('Failed to load utils', e);
+        utilsPromise = null;
+        throw e;
+    }
+};
+
+const config = {
+    productName: 'Map of Fire',
+    company: 'MAPO LLC',
+    apiKey: () => API_KEYS[getPlatform()],
+    disableClicks: false,
+    clusterFires: true,
+    RADAR_OPACITY: 0.7,
+    ANIMATION_DELAY_MS: 500,
+    wildfire: null,
+    layersHandler: null,
+    layersMenu: null,
+    listOfLayers: [],
+    fuelsData: null,
+    defaultAttr: '',
+    months: ['Jan', 'Feb', 'March', 'April', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'],
+    longMonths: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    curTime: new Date(),
+    daysInYear: (y = null) => { const year = y ?? config.curTime.getFullYear(); return (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 366 : 365; },
+    runSearch: false,
+    TIERS: {
+        'ignite_monthly': 'PREMIUM',
+        'ignite_annual': 'PREMIUM',
+        'hotshot_monthly': 'PRO',
+        'hotshot_annual': 'PRO'
     },
-    layerActions = {
-        'newFires': { layers: ['new_fires_layer', 'new_fire_title'] },
-        'allFires': { layers: ['all_fires_layer', 'all_fire_title', 'ca_fires', 'ca_fire_title'] },
-        'smokeChecks': { layers: ['smk_fires_layer', 'smk_fire_title'] },
-        'rxBurns': { layers: ['rx_fires_layer', 'rx_fire_title'] },
-        'perimeters': {
-            layers: ['perimeters_outline', 'perimeters_fill', 'perimeters_title', 'ca_perimeters_outline',
-                'ca_perimeters_fill', 'ca_perimeters_title', 'aus_perimeters_outline', 'aus_perimeters_fill', 'aus_perimeters_title']
-        },
-        'modis24': { layers: ['modis24'], exe: () => { config.layersHandler.modis(1); } },
-        'modis48': { layers: ['modis48'], exe: () => { config.layersHandler.modis(2); } },
-        'modis72': { layers: ['modis72'], exe: () => { config.layersHandler.modis(3); } },
-
-        'evac': { layers: ['evac', 'evac_outline', 'evac_title'] },
-        'firemed': { layers: ['firemed'], exe: () => { config.layersHandler.firemed(); } },
-
-        'lightning1': { layers: ['lightning1'] },
-        'lightning24': { layers: ['lightning24'] },
-        'wwas': { layers: ['wwas_fill', 'wwas_outline', 'wwas_title'], exe: async () => { new (await loadUtils()).NWS().get(); } },
-        'stns': { layers: ['stns', 'stns_text'], exe: () => { new Weather().raws(); } },
-        'visSatellite': { layers: ['satellite1'], exe: async () => { new (await loadUtils()).NWS().satellite(1); } },
-        'irSatellite': { layers: ['satellite2'], exe: async () => { new (await loadUtils()).NWS().satellite(2); } },
-        'wvSatellite': { layers: ['satellite3'], exe: async () => { new (await loadUtils()).NWS().satellite(3); } },
-
-        'ev': { layers: ['ev'], exe: () => { config.layersHandler.pnwVulnerability(); } },
-        'spcClimo': {
-            run: (checked) => {
-                if (checked) {
-                    config.layersHandler.spcClimo();
-                } else {
-                    map.removeLayer('spc_climo_fill');
-                    map.removeLayer('spc_climo_outline');
-                    map.removeLayer('spc_climo_prob');
-                    map.removeSource('spc_climo');
-                    document.querySelector('.spcTimeline').remove();
-                }
-            }
-        },
-        'nri': { layers: ['nri_outline', 'nri_fill'], exe: () => { config.layersHandler.nri(); } },
-        'rth': { layers: ['rth'], exe: () => { config.layersHandler.rth(); } },
-        'bp': { layers: ['bp'], exe: () => { config.layersHandler.bp(); } },
-        'whp': { layers: ['whp'], exe: () => { config.layersHandler.whp(); } },
-        'wet': { layers: ['wet'], exe: () => { config.layersHandler.wet(); } },
-        'drought': { layers: ['drought', 'drought_outline', 'drought_title'], exe: () => { config.layersHandler.drought(); } },
-        'power': { layers: ['power'], exe: () => { config.layersHandler.power(); } },
-        'fuels': { layers: ['fuels', 'fuelsAK'], exe: () => { config.layersHandler.fuels(); } },
-
-        'nwsCWAs': { layers: ['nwsCWAs'], exe: () => { config.layersHandler.nwsCWAs(); } },
-        'roads': { layers: ['roads'], exe: () => { config.layersHandler.roads(); } },
-        'lands': { layers: ['lands'], exe: () => { config.layersHandler.lands(); } },
-        'plss': { layers: ['plss'], exe: () => { config.layersHandler.plss(); } },
-        'dispatch': { layers: ['dispatch_outline', 'dispatch_title'], exe: () => { config.layersHandler.dispatch(); } },
-        'gaccBounds': { layers: ['gaccBounds', 'gaccBounds_title'], exe: () => { config.layersHandler.gaccBounds(); } },
-
-        'hms': { layers: ['hms', 'hms_title'], exe: () => { config.layersHandler.hms(); } },
-        'smokeFcst': { layers: ['smokeFcst'], exe: () => { config.layersHandler.smokeFcst(); } },
-        'sfcSmoke': {
-            run: async (checked) => {
-                if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
-                    document.querySelector('#sfc_smoke_time').disabled = !checked;
-                }
-
-                if (map.getSource('sfcSmoke')) {
-                    map.setLayoutProperty('sfcSmoke', 'visibility', checked ? 'visible' : 'none');
-                } else if (checked) {
-                    config.layersHandler.sfcSmoke();
-                }
-            }
-        },
-        'viSmoke': {
-            run: async (checked) => {
-                if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
-                    document.querySelector('#vi_smoke_time').disabled = !checked;
-                }
-
-                if (map.getSource('viSmoke')) {
-                    map.setLayoutProperty('viSmoke', 'visibility', checked ? 'visible' : 'none');
-                } else if (checked) {
-                    config.layersHandler.viSmoke();
-                }
-            }
-        },
-
-        'countyBounds': { layers: ['countyBounds'], exe: () => { config.layersHandler.countyBounds(); } },
-        'odfFDR': { layers: ['odfFDR', 'odfFDR_outline', 'odfFDR_title'], exe: () => { config.layersHandler.odfFDR(); } },
-        'calfireUnits': { layers: ['calfireUnits', 'calfireUnits_title'], exe: () => { config.layersHandler.calfireUnits(); } },
-        'cdfFHSZ': { layers: ['cdfFHSZ', 'cdfFHSZ_title'], exe: () => { config.layersHandler.cdfFHSZ(); } },
-        'calfireAircraft': { layers: ['calfireAircraft', 'calfireAircraft_title'], exe: () => { config.layersHandler.calfireAircraft(); } },
-
-        'airq': {
-            run: (checked) => {
-                const i = setInterval(() => {
-                    if (map.getSource('airq')) {
-                        clearInterval(i);
-                        ['airQuality', 'airQuality_text'].forEach(n => map.setLayoutProperty(n, 'visibility', checked ? 'visible' : 'none'));
-                    }
-                }, 500);
-            }
-        },
-        'spc': {
-            run: async (checked) => {
-                if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
-                    document.querySelector('#otlkType').disabled = !checked;
-                    document.querySelector('#otlkDay').disabled = !checked;
-                }
-
-                if (map.getSource('outlook')) {
-                    ['outlook_fill', 'outlook_outline', 'outlook_title'].forEach(n => map.setLayoutProperty(n, 'visibility', checked ? 'visible' : 'none'));
-                } else if (checked) {
-                    new (await loadUtils()).NWS().spc();
-                }
-            }
-        },
-        'radar': {
-            run: (checked) => {
-                if (checked) {
-                    config.layersHandler.radarInit();
-                } else {
-                    radarPlay = true;
-                    document.querySelector('.radar').remove();
-                    clearInterval(radarAnim);
-
-                    for (let i = 0; i < radarImgs.length; i++) {
-                        map.removeLayer(`radar-layer-${i}`);
-                        map.removeSource(`radar-${i}`);
-                    }
-                }
-            }
-        },
-        'ndfd': {
-            run: async (checked) => {
-                const visibility = checked ? 'visible' : 'none';
-
-                if (impact.style.display == 'flex') {
-                    document.querySelector('#forecastModel').disabled = !checked;
-                    document.querySelector('#fcstTime').disabled = !checked;
-                }
-
-                if (map.getSource('ndfd')) {
-                    map.setLayoutProperty('ndfd', 'visibility', visibility);
-
-                    if (!checked) document.querySelector('.ndfdLegend')?.remove();
-                } else if (checked) {
-                    new (await loadUtils()).NWS().ndfd();
-                }
-            }
-        },
-        'erc': {
-            run: (checked) => {
-                if (impact.style.display == 'flex') document.querySelector('#erc_time').disabled = !checked;
-
-                if (map.getSource('erc')) {
-                    ['erc_fill', 'erc_outline'].forEach(n => map.setLayoutProperty(n, 'visibility', checked ? 'visible' : 'none'));
-                } else if (checked) {
-                    config.layersHandler.erc();
-                }
-            }
-        },
-        'sfp': {
-            run: (checked) => {
-                if (impact.style.display == 'flex') document.querySelector('#sfpDateSelect').disabled = !checked;
-
-                if (map.getSource('sfp')) {
-                    map.setLayoutProperty('sfp', 'visibility', checked ? 'visible' : 'none');
-                } else if (checked) {
-                    config.layersHandler.sfp();
-                }
-            }
-        }
+    PERMISSION_LEVELS: {
+        ADMIN: 'ADMIN',
+        PREMIUM: 'PREMIUM',
+        PRO: 'PRO'
     },
-    osm = {
-        version: 8,
-        glyphs: mfFonts,
-        sources: {
-            'openstreetmap': {
-                type: 'raster',
-                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                tileSize: 256,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }
-        },
-        layers: [{
-            id: 'osm',
+    RANKS: {
+        PREMIUM: 1,
+        PRO: 2,
+        ADMIN: 3
+    },
+    modisZoomLevel: 7,
+    firemedZoomLevel: 9,
+    toolsInstance: null,
+    workers: {
+        incident: null,
+        fwf: null,
+        wwas: null
+    },
+    fog: {
+        'sky-color': '#33bbff',
+        'sky-horizon-blend': +0.5,
+        'horizon-color': '#b1ddec',
+        'horizon-fog-blend': +0.5,
+        'fog-color': '#c7c7c7',
+        'fog-ground-blend': +0.1
+    },
+    tiles: null,
+    fonts: {
+        din: () => getFont('din'),
+        source: () => getFont('source'),
+        roboto: () => getFont('roboto')
+    }
+};
+
+const osm = {
+    version: 8,
+    glyphs: mfFonts,
+    sources: {
+        'openstreetmap': {
             type: 'raster',
-            source: 'openstreetmap',
-            minzoom: 0,
-            maxzoom: 19
-        }]
+            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }
     },
+    layers: [{
+        id: 'osm',
+        type: 'raster',
+        source: 'openstreetmap',
+        minzoom: 0,
+        maxzoom: 19
+    }]
+},
     topofire = {
         version: 8,
         glyphs: mfFonts,
         sources: {
             'topofire': {
                 type: 'raster',
-                tiles: [config.domain + 'assets/images/tiles/6/{z}/{x}/{y}.png'],
+                tiles: [`${ENV.domain}assets/images/tiles/6/{z}/{x}/{y}.png`],
                 tileSize: 256,
                 attribution: '&copy; <a href="umt.edu">UMT</a>, USFS, NOAA, NIDIS, NASA'
             }
@@ -336,7 +188,7 @@ const specificURL = window.location.origin + '/',
         sources: {
             'ct': {
                 type: 'raster',
-                tiles: [config.domain + 'assets/images/tiles/2/{z}/{x}/{y}.png'],
+                tiles: [`${ENV.domain}assets/images/tiles/2/{z}/{x}/{y}.png`],
                 tileSize: 256,
                 attribution: '&copy; <a href="https://caltopo.com">CalTopo</a>'
             }
@@ -355,7 +207,7 @@ const specificURL = window.location.origin + '/',
         sources: {
             'usfs2016': {
                 type: 'raster',
-                tiles: [config.domain + 'assets/images/tiles/3/{z}/{x}/{y}.png'],
+                tiles: [`${ENV.domain}assets/images/tiles/3/{z}/{x}/{y}.png`],
                 tileSize: 256
             }
         },
@@ -366,8 +218,9 @@ const specificURL = window.location.origin + '/',
             minzoom: 5,
             maxzoom: 16
         }]
-    },
-    activeIncidents = new Map(),
+    };
+
+const activeIncidents = new Map(),
     modal = document.querySelector('#modal'),
     impact = document.querySelector('#impact'),
     searchResults = document.querySelector('#search-results'),
@@ -375,66 +228,7 @@ const specificURL = window.location.origin + '/',
     impactHeader = `<header><h3 id="a" class="title"><div class="placeholder" style="width:225px;height:28px"></div></h3><div id="mclose" data-action="close-impact" title="Close window">
     <i class="far fa-xmark" data-action="close-impact"></i></div></header>`,
     noneTracked = '<p class="message error">You aren\'t following any wildfires yet. Click on a fire to start following an incident.</p>',
-    risk = {
-        'whp': [
-            ['N/A', '#fff'],
-            ['Very Low', '#38a800'],
-            ['Low', '#d1ff73'],
-            ['Moderate', '#ffff00'],
-            ['High', '#ffaa00'],
-            ['Very High', '#ff0000']
-        ]
-    },
-    loadUtils = async () => {
-        if (lu) return lu;
-
-        try {
-            lu = await import(`${config.specificURL}${(debugMode ? `v${version}/mf.utils.js` : `src/js/mf.utils-${version}.js`)}`);
-            return lu;
-        } catch (e) {
-            console.error('Failed to load utils', e);
-            lu = null;
-            throw e;
-        }
-    },
-    mapControls = [];
-
-let map,
-    conversion,
-    settings,
-    lu,
-    trending = false,
-    newFires = [],
-    CLUSTER_FIRES = true,
-    highchartsLoad = false,
-    chart,
-    hrrrSmokeTime = {
-        'init': gmtime(-3600),
-        'fcst': gmtime(+3600)
-    },
-    dispatchCenters,
-    selected = {
-        caperim: null,
-        ausperim: null,
-        perim: null,
-        evac: null,
-        nri: null,
-        erc: null
-    },
-    marker,
-    touchTimer,
-    topFires = [],
-    clicks = [],
-    radarImgs = [],
-    radarAnim,
-    RADAR_INT = 500,
-    radarPlay = true,
-    tracked = [],
-    trackedDone = false,
-    airQualityStns = [],
-    evacuations = null,
-    clickListener = null,
-    controlsAtBottom = null,
+    mapControls = [],
     premFeature = '<i class="fas fa-lock" style="color:#a1d5e9" title="Subscribe to Map of Fire to gain access to this feature"></i>',
     tileConfig = [
         {
@@ -486,23 +280,259 @@ let map,
             permissions: ['PREMIUM', 'PRO']
         }
     ],
-    fireIcons = ['', 'out', 'big', 'controlled', 'contained', 'large', 'complex', 'new', 'new-big', 'rx', 'smoke'];
+    fireIcons = ['', 'out', 'big', 'controlled', 'contained', 'large', 'complex', 'new', 'new-big', 'rx', 'smoke'],
+    risk = {
+        'whp': [
+            ['N/A', '#fff'],
+            ['Very Low', '#38a800'],
+            ['Low', '#d1ff73'],
+            ['Moderate', '#ffff00'],
+            ['High', '#ffaa00'],
+            ['Very High', '#ff0000']
+        ]
+    };
 
+let map,
+    marker,
+    chart;
+
+let conversion,
+    settings,
+    dispatchCenters;
+
+let inits = {
+    trending: false,
+    highchartsLoad: false,
+    evacuations: null,
+    clickListener: null,
+    controlsAtBottom: null,
+    trackedDone: false
+};
+
+let dataView = {
+    newFires: [],
+    topFires: [],
+    trackedFires: [],
+    airQualityStns: null
+};
+
+let radar = {
+    mapFrames: [],
+    animationPosition: 0,
+    animationTimer: false,
+    currentLayerId: null,
+    isLoading: false,
+    loadedPositions: new Set()
+};
+
+let hrrrSmokeTime = {
+    init: gmtime(-3600),
+    fcst: gmtime(+3600)
+};
+
+let selected = {
+    caperim: null,
+    ausperim: null,
+    perim: null,
+    evac: null,
+    nri: null,
+    erc: null
+};
+
+let touchTimer,
+    radarAnim;
+
+const layerActions = {
+    // wildfire related
+    'newFires': { layers: ['new_fires', 'new_fires_title'] },
+    'allFires': { layers: ['all_fires', 'all_fires_title', 'ca_fires', 'ca_fire_title'] },
+    'smokeChecks': { layers: ['smk_fires', 'smk_fires_title'] },
+    'rxBurns': { layers: ['rx_fires', 'rx_fires_title'] },
+    'perimeters': {
+        layers: ['perimeters_outline', 'perimeters_fill', 'perimeters_title', 'ca_perimeters_outline',
+            'ca_perimeters_fill', 'ca_perimeters_title', 'aus_perimeters_outline', 'aus_perimeters_fill', 'aus_perimeters_title']
+    },
+
+    // modis
+    'modis24': { layers: ['modis24'], exe: () => { config.layersHandler.modis(1); } },
+    'modis48': { layers: ['modis48'], exe: () => { config.layersHandler.modis(2); } },
+    'modis72': { layers: ['modis72'], exe: () => { config.layersHandler.modis(3); } },
+
+    // evacuations & firemed
+    'evac': { layers: ['evac', 'evac_outline', 'evac_title'] },
+    'firemed': { layers: ['firemed'], exe: () => { config.layersHandler.firemed(); } },
+
+    // weather
+    'lightning1': { layers: ['lightning1'] },
+    'lightning24': { layers: ['lightning24'] },
+    'wwas': { layers: ['wwas_fill', 'wwas_outline', 'wwas_title'], exe: async () => { new (await loadUtils()).NWS().get(); } },
+    'stns': { layers: ['stns', 'stns_text'], exe: () => { new Weather().raws(); } },
+    'visSatellite': { layers: ['satellite1'], exe: async () => { new (await loadUtils()).NWS().satellite(1); } },
+    'irSatellite': { layers: ['satellite2'], exe: async () => { new (await loadUtils()).NWS().satellite(2); } },
+    'wvSatellite': { layers: ['satellite3'], exe: async () => { new (await loadUtils()).NWS().satellite(3); } },
+    'airq': { layers: ['airQuality', 'airQuality_text'], exe: () => { config.layersHandler.airQuality(); } },
+    'spc': {
+        run: async (checked) => {
+            if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
+                document.querySelector('#otlkType').disabled = !checked;
+                document.querySelector('#otlkDay').disabled = !checked;
+            }
+
+            if (map.getSource('outlook')) {
+                ['outlook_fill', 'outlook_outline', 'outlook_title'].forEach(n => map.setLayoutProperty(n, 'visibility', checked ? 'visible' : 'none'));
+            } else if (checked) {
+                new (await loadUtils()).NWS().spc();
+            }
+        }
+    },
+    'radar': {
+        run: (checked) => {
+            if (checked) {
+                config.layersHandler.radarInit();
+            } else {
+                document.querySelector('.radar').remove();
+
+                for (let i = 0; i < radar.mapFrames.length; i++) {
+                    if (map.getLayer(`radar-layer-${i}`)) map.removeLayer(`radar-layer-${i}`);
+                    if (map.getSource(`radar-${i}`)) map.removeSource(`radar-${i}`);
+                }
+
+                radar = {
+                    mapFrames: [],
+                    animationPosition: 0,
+                    animationTimer: false,
+                    currentLayerId: null,
+                    isLoading: false,
+                    loadedPositions: new Set()
+                };
+            }
+        }
+    },
+    'ndfd': {
+        run: async (checked) => {
+            const visibility = checked ? 'visible' : 'none';
+
+            if (impact.style.display == 'flex') {
+                document.querySelector('#forecastModel').disabled = !checked;
+                document.querySelector('#fcstTime').disabled = !checked;
+            }
+
+            if (map.getSource('ndfd')) {
+                map.setLayoutProperty('ndfd', 'visibility', visibility);
+
+                if (!checked) document.querySelector('.ndfdLegend')?.remove();
+            } else if (checked) {
+                new (await loadUtils()).NWS().ndfd();
+            }
+        }
+    },
+    'erc': {
+        run: (checked) => {
+            if (impact.style.display == 'flex') document.querySelector('#erc_time').disabled = !checked;
+
+            if (map.getSource('erc')) {
+                ['erc_fill', 'erc_outline'].forEach(n => map.setLayoutProperty(n, 'visibility', checked ? 'visible' : 'none'));
+            } else if (checked) {
+                config.layersHandler.erc();
+            }
+        }
+    },
+
+    // planning, hazard & vunerability
+    'ev': { layers: ['ev'], exe: () => { config.layersHandler.pnwVulnerability(); } },
+    'spcClimo': {
+        run: (checked) => {
+            if (checked) {
+                config.layersHandler.spcClimo();
+            } else {
+                ['spc_climo_fill', 'spc_climo_outline', 'spc_climo_prob'].forEach(a => map.removeLayer(a));
+                map.removeSource('spc_climo');
+                document.querySelector('.spcTimeline').remove();
+            }
+        }
+    },
+    'nri': { layers: ['nri_outline', 'nri_fill'], exe: () => { config.layersHandler.nri(); } },
+    'rth': { layers: ['rth'], exe: () => { config.layersHandler.rth(); } },
+    'bp': { layers: ['bp'], exe: () => { config.layersHandler.bp(); } },
+    'whp': { layers: ['whp'], exe: () => { config.layersHandler.whp(); } },
+    'wet': { layers: ['wet'], exe: () => { config.layersHandler.wet(); } },
+    'drought': { layers: ['drought', 'drought_outline', 'drought_title'], exe: () => { config.layersHandler.drought(); } },
+    'power': { layers: ['power'], exe: () => { config.layersHandler.power(); } },
+    'fuels': { layers: ['fuels', 'fuelsAK'], exe: () => { config.layersHandler.fuels(); } },
+    'sfp': {
+        run: (checked) => {
+            if (impact.style.display == 'flex') document.querySelector('#sfpDateSelect').disabled = !checked;
+
+            if (map.getSource('sfp')) {
+                map.setLayoutProperty('sfp', 'visibility', checked ? 'visible' : 'none');
+            } else if (checked) {
+                config.layersHandler.sfp();
+            }
+        }
+    },
+
+    // administrative bounds
+    'nwsCWAs': { layers: ['nwsCWAs'], exe: () => { config.layersHandler.nwsCWAs(); } },
+    'roads': { layers: ['roads'], exe: () => { config.layersHandler.roads(); } },
+    'lands': { layers: ['lands'], exe: () => { config.layersHandler.lands(); } },
+    'plss': { layers: ['plss'], exe: () => { config.layersHandler.plss(); } },
+    'dispatch': { layers: ['dispatch_outline', 'dispatch_title'], exe: () => { config.layersHandler.dispatch(); } },
+    'gaccBounds': { layers: ['gaccBounds', 'gaccBounds_title'], exe: () => { config.layersHandler.gaccBounds(); } },
+    'countyBounds': { layers: ['countyBounds'], exe: () => { config.layersHandler.countyBounds(); } },
+
+    // smoke
+    'hms': { layers: ['hms', 'hms_title'], exe: () => { config.layersHandler.hms(); } },
+    'smokeFcst': { layers: ['smokeFcst'], exe: () => { config.layersHandler.smokeFcst(); } },
+    'sfcSmoke': {
+        run: async (checked) => {
+            if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
+                document.querySelector('#sfc_smoke_time').disabled = !checked;
+            }
+
+            if (map.getSource('sfcSmoke')) {
+                map.setLayoutProperty('sfcSmoke', 'visibility', checked ? 'visible' : 'none');
+            } else if (checked) {
+                config.layersHandler.sfcSmoke();
+            }
+        }
+    },
+    'viSmoke': {
+        run: async (checked) => {
+            if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
+                document.querySelector('#vi_smoke_time').disabled = !checked;
+            }
+
+            if (map.getSource('viSmoke')) {
+                map.setLayoutProperty('viSmoke', 'visibility', checked ? 'visible' : 'none');
+            } else if (checked) {
+                config.layersHandler.viSmoke();
+            }
+        }
+    },
+
+    // state-specific
+    'odfFDR': { layers: ['odfFDR', 'odfFDR_outline', 'odfFDR_title'], exe: () => { config.layersHandler.odfFDR(); } },
+    'calfireUnits': { layers: ['calfireUnits', 'calfireUnits_title'], exe: () => { config.layersHandler.calfireUnits(); } },
+    'cdfFHSZ': { layers: ['cdfFHSZ', 'cdfFHSZ_title'], exe: () => { config.layersHandler.cdfFHSZ(); } },
+    'calfireAircraft': { layers: ['calfireAircraft', 'calfireAircraft_title'], exe: () => { config.layersHandler.calfireAircraft(); } }
+};
+
+Object.freeze(layerActions);
 Object.freeze(config.PERMISSION_LEVELS);
 
 config.tiles = {
     //outdoors: 'https://api.maptiler.com/maps/0198ce67-b3a9-7754-9811-60e2bf25e13a/style.json?key=ZeQEIVoqyieC6wk8qxJH',
-    outdoors: config.host + 'data/maps/terrain.json',
+    outdoors: `${ENV.host}data/maps/terrain.json`,
     //outdoors: 'https://tiles.openfreemap.org/styles/liberty',
-    satellite: config.host + 'data/maps/satellite.json',
+    satellite: `${ENV.host}data/maps/satellite.json`,
     osm: osm,
     //fs16: fs16,
-    fs16: config.host + 'data/maps/usfs.json',
+    fs16: `${ENV.host}data/maps/usfs.json`,
     caltopo: caltopo,
     terrain: terrain,
     topofire: topofire,
-    voyager: config.host + 'data/maps/voyager.json',
-    dark: config.host + 'data/maps/dark.json'
+    voyager: `${ENV.host}data/maps/voyager.json`,
+    dark: `${ENV.host}data/maps/dark.json`
     //dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
 };
 
@@ -518,6 +548,14 @@ function storage(key, data = null) {
     return data ? localStorage.setItem(key, data) : localStorage.getItem(key);
 }
 
+function getWorker(name) {
+    if (!config.workers[name]) {
+        const path = `${ENV.baseURL}${(debugMode ? `v${version}/${name}.js` : `src/js/${name}-${version}.js`)}`;
+        config.workers[name] = new Worker(path);
+    }
+    return config.workers[name];
+}
+
 async function api(uri, fields = null, v2 = false, forAuth = false) {
     if (!navigator.onLine) {
         console.error('You are not connected to the internet');
@@ -527,8 +565,8 @@ async function api(uri, fields = null, v2 = false, forAuth = false) {
     let result,
         url = v2 ? uri.replace('v1', 'v2') : uri;
 
-    const isExternal = url.includes('weather.gov') || url.includes('unl.edu'),
-        isInternal = url.includes(config.apiURL) || url.includes(config.apiURL.replace('v1', 'v2')) || url.includes(config.host),
+    const isExternal = url.includes('weather.gov') || url.includes('unl.edu') || url.includes('rainviewer.com'),
+        isInternal = url.includes(ENV.apiURL) || url.includes(ENV.apiURL.replace('v1', 'v2')) || url.includes(ENV.host),
         ops = {
             method: isExternal ? 'GET' : 'POST'
         },
@@ -582,9 +620,9 @@ function getbbox() {
         ne = b.getNorthEast();
 
     return (b ? JSON.stringify({
-        xmin: ne.lng,
+        xmin: sw.lng,
         ymin: sw.lat,
-        xmax: sw.lng,
+        xmax: ne.lng,
         ymax: ne.lat,
         spatialReference: {
             wkid: 4326
@@ -592,1015 +630,13 @@ function getbbox() {
     }) : false);
 }
 
-class ClickListener {
-    constructor(target, sr) {
-        this.target = target;
-        this.modalHeightFromTop = 0.3;
-        this.sr = sr;
-    }
-
-    android() {
-        sessionStorage.setItem('recommend_google_play', 1);
-        document.querySelector('.android-banner').remove();
-    }
-
-    tools() {
-        config.toolsInstance.clickListener(this.target);
-    }
-
-    myContent() {
-        config.toolsInstance.myContent();
-    }
-
-    async mcta() {
-        (await loadUtils()).marketing(true, this.target.dataset.utm);
-    }
-
-    async copy(text = null, msg = null) {
-        await navigator.clipboard.writeText(text != null ? text : this.target.innerText);
-        (await loadUtils()).notify('info', msg ? msg : 'Coordinates copied to clipboard');
-    }
-
-    closeDataForm() {
-        const r = document.querySelector('li#report'),
-            fw = document.querySelector('li#fwf');
-
-        document.querySelector('#data-form')?.remove();
-        document.querySelector('.shadow')?.remove();
-
-        if (r?.dataset.active === '1') r.removeAttribute('data-active');
-        if (fw.dataset.active === '1') fw.removeAttribute('data-active');
-    }
-
-    closeArchive() {
-        window.location.href = window.location.href.replace(/archive\/([0-9]+)/g, '');
-    }
-
-    async clearSearch() {
-        const q = document.querySelector('#q');
-        if (!q) return;
-
-        q.value = '';
-        document.querySelector('#clearSearch')?.style.setProperty('display', 'none');
-        new (await loadUtils()).Search('').do();
-        q.focus();
-    }
-
-    clearLayerSearch() {
-        document.querySelectorAll('.layers-list li.layer').forEach(layer => layer.style.display = 'flex');
-        impact.querySelector('#layerSearch').setProperty('value', '');
-    }
-
-    closeImpact() {
-        if (map.getSource('user-features')) {
-            map.removeSource('user-features');
-            map.removeLayer('user-features-markers');
-        }
-
-        impact.removeAttribute('data-display');
-        impact.style.display = 'none';
-        impact.innerHTML = '';
-    }
-
-    openModal(aClass) {
-        if (modal.hasAttribute('open')) return;
-
-        modal.className = aClass || '';
-        modal.querySelector('.content').innerHTML = '<div class="loading"><div class="s"></div></div>';
-
-        const onTransitionEnd = (e) => {
-            if (e.propertyName === 'top') {
-                modal.removeEventListener('transitionend', onTransitionEnd);
-
-                const event = new CustomEvent('modalOpened', { detail: { top: openPosition } });
-                modal.dispatchEvent(event);
-            }
-        };
-
-        const handle = modal.querySelector('.close'),
-            viewportHeight = window.innerHeight,
-            openPosition = viewportHeight * this.modalHeightFromTop,    // 30 vh from top
-            minTop = viewportHeight * 0.1,       // 10vh
-            closedPosition = viewportHeight,     // 100%
-            snapVelocity = 0.25,                 // px/ms
-            throwStartThreshold = viewportHeight * 0.9; // only throw if near bottom
-
-        let isDragging = false, startY = 0, startTop = 0, lastY = 0, lastTime = 0;
-
-        modal.onModalChanged = function (callback, { once = true } = {}) {
-            if (!this) return;
-
-            const observer = new MutationObserver((mutations, obs) => {
-                if (once) obs.disconnect();
-
-                requestAnimationFrame(() => {
-                    try {
-                        callback();
-                    } catch (err) {
-                        console.error('onModalChanged error', err);
-                    }
-                });
-            });
-
-            observer.observe(this, {
-                childList: true,
-                subtree: true,
-                characterData: true
-            });
-
-            return observer;
-        };
-
-        modal.onModalChanged(() => {
-            const content = modal.querySelector('.content');
-
-            requestAnimationFrame(() => {
-                if (content.scrollHeight > content.clientHeight) {
-                    content.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-            });
-        });
-        modal.setAttribute('open', '');
-        modal.style.top = `${closedPosition}px`;
-        modal.style.transition = 'top 0.85s ease';
-
-        // add event listener for when modal has finished opening
-        modal.addEventListener('transitionend', onTransitionEnd);
-
-        requestAnimationFrame(() => {
-            modal.style.top = `${openPosition}px`;
-        });
-
-        if (handle) {
-            handle.addEventListener('dblclick', () => {
-                this.closeModal();
-            });
-
-            handle.addEventListener('pointerdown', (e) => {
-                isDragging = true;
-                startY = e.clientY;
-                startTop = parseFloat(modal.style.top) || openPosition;
-                lastY = startY;
-                lastTime = performance.now();
-                modal.style.transition = '';
-                handle.setPointerCapture(e.pointerId);
-            });
-
-            handle.addEventListener('pointermove', (e) => {
-                if (!isDragging) return;
-                let deltaY = e.clientY - startY;
-                let newTop = startTop + deltaY;
-
-                newTop = Math.max(minTop, Math.min(closedPosition, newTop));
-                modal.style.top = `${newTop}px`;
-
-                lastY = e.clientY;
-                lastTime = performance.now();
-            });
-
-            handle.addEventListener('pointerup', (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                handle.releasePointerCapture(e.pointerId);
-
-                const currentTop = parseFloat(modal.style.top);
-                const deltaY = e.clientY - startY;
-                const deltaTime = performance.now() - lastTime;
-                const velocity = deltaTime > 0 ? deltaY / deltaTime : 0;
-
-                modal.style.transition = 'top 0.2s ease';
-
-                // 1. Fast downward flick AND dragged past threshold → close
-                if (velocity > snapVelocity && currentTop > throwStartThreshold) {
-                    modal.style.top = `${closedPosition}px`;
-                    setTimeout(() => { this.closeModal(); }, 200);
-                    return;
-                }
-
-                if (velocity < -snapVelocity) {
-                    modal.style.top = `${minTop}px`;
-                    return;
-                }
-
-                if (currentTop > viewportHeight * 0.7) {
-                    modal.style.top = `${closedPosition}px`;
-                    setTimeout(() => { this.closeModal(); }, 200);
-                } else if (currentTop < viewportHeight * 0.3) {
-                    modal.style.top = `${minTop}px`;
-                } else {
-                    modal.style.top = `${openPosition}px`;
-                }
-
-                setTimeout(() => (modal.style.transition = ''), 200);
-            });
-        }
-    }
-
-    closeModal() {
-        modal.style.top = '100%';
-        setTimeout(() => {
-            modal.removeAttribute('open');
-            modal.className = '';
-            modal.innerHTML = '<div class="close" data-action="close-modal"><div class="handle"></div></div><div class="content"></div>';
-        }, 200);
-
-        unsetHeaders();
-    }
-
-    closePopup() {
-        if (marker) marker.remove();
-        if (!settings.isEnabled('stns') && map.getSource('stns')) {
-            map.removeLayer('stns');
-            map.removeLayer('stns_text');
-            map.removeSource('stns');
-        }
-
-        document.querySelector('.popup')?.remove();
-
-        unsetHeaders();
-
-        const sourceMap = {
-            caperim: 'ca_perimeters',
-            ausperim: 'aus_perimeters',
-            perim: 'perimeters'
-        };
-
-        ['caperim', 'ausperim', 'perim', 'evac', 'nri', 'erc'].forEach(key => {
-            const source = sourceMap[key] || key;
-
-            if (selected[key] && map.getSource(source)) {
-                map.removeFeatureState({ source, id: selected[key] });
-                selected[key] = null;
-            }
-        });
-    }
-
-    closeNavbar() {
-        if (!this.target) return;
-        const nav = document.querySelector('nav'),
-            isOpen = this.target.dataset.open === 'true',
-            left = 'fa-chevron-left',
-            right = 'fa-chevron-right';
-
-        this.target.dataset.open = (!isOpen).toString();
-        this.target.classList.replace(isOpen ? left : right, isOpen ? right : left);
-
-        document.documentElement.style.setProperty('--nav-width', isOpen ? '40px' : '89px');
-        nav?.classList.toggle('hide', isOpen);
-    }
-
-    newFire() {
-        const dataset = this.target?.closest('li')?.dataset;
-        if (!dataset) return;
-
-        this.closeDataForm();
-
-        map.easeTo({
-            center: [dataset.lon, dataset.lat],
-            zoom: 12,
-            duration: 0
-        });
-    }
-
-    sharer() {
-        if (!navigator.share) return;
-
-        navigator.share({
-            title: (this.target.getAttribute('title') ? this.target.getAttribute('title') : document.title),
-            text: "",
-            url: (this.target.dataset.href ? this.target.dataset.href.split('#')[0] : window.location.href.split('#')[0])
-        }).catch(console.error);
-    }
-
-    createLayers() {
-        const zoom = map.getZoom();
-        let content = '<div class="content"><div class="dark-input"><input type="text" id="layerSearch" placeholder="Filter through layers..."><i data-action="clear-layer-search" class="fat fa-xmark clearSearch"></i></div>';
-
-        // Loop through layer categories
-        Object.entries(layers.categories).forEach(([categoryId, categoryTitle]) => {
-            content += `<div class="group"><h3 class="group-title">${categoryTitle}</h3><ul class="layers-list">`;
-
-            // Loop through layers in each category
-            layers.layers[categoryId].filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
-                content += `<li class="layer${layer.minZoom && layer.minZoom > zoom ? ' more-zoom' : ''}"${layer.minZoom ? ` data-min-zoom="${layer.minZoom}"` : ''} data-p="${layer.perms}" data-id="${layer.id}" title="${layer.minZoom && layer.minZoom > zoom ? 'You must be zoomed in more' : layer.name}">
-                    <div class="checkbox">
-                        <input type="checkbox" id="${layer.id}" class="layChkBx" data-action="toggle-layer">
-                    </div>
-                    <div class="desc">
-                        <label for="${layer.id}">${layer.name}</label>
-                        <span>${layer.desc}</span>
-                        ${this.layerExtras(layer)}
-                    </div>
-                </li>`;
-            });
-
-            content += '</ul></div>';
-        });
-
-        content += '</div>';
-        config.layersMenu = content;
-    }
-
-    // show/open layers menu
-    showLayers() {
-        const scrollPosition = storage('mapofire.impactScroll');
-
-        if (config.layersMenu == null) this.createLayers();
-
-        impact.innerHTML = impactHeader + config.layersMenu;
-        impact.querySelector('#a').innerHTML = 'Layers';
-
-        config.listOfLayers.filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
-            const hasPermissions = settings.hasPermissions(layer.perms),
-                isChecked = (layer.default && !settings.checkboxes()) || (settings.checkboxes() && settings.isEnabled(layer.id)),
-                item = impact.querySelector(`li.layer[data-id="${layer.id}"]`),
-                filter = item.querySelector('.data-filter'),
-                box = item.querySelector('.checkbox');
-
-            if (box) box.querySelector('input[type=checkbox]').checked = isChecked;
-
-            if (layer.minZoom) {
-                if (map.getZoom() >= item.dataset.minZoom) {
-                    item.classList.remove('more-zoom');
-                    item.setAttribute('title', String(item.querySelector('label').innerHTML));
-                } else {
-                    item.classList.add('more-zoom');
-                    item.setAttribute('title', 'You must be zoomed in more');
-                }
-            }
-
-            if (!hasPermissions) {
-                item.classList.add('locked');
-
-                if (filter) filter.style.display = 'none';
-
-                box.innerHTML = premFeature;
-                item.addEventListener('click', () => {
-                    notify('info', `This is a ${layer.perms.includes('PREMIUM') ? 'premium' : 'pro'} layer. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="layers_snackbar">Get access</a>`, 4);
-                });
-            } else {
-                if (filter) {
-                    const adjust = {
-                        spc: [{
-                            q: 'otlkType',
-                            v: settings.special().otlkType()
-                        }, {
-                            q: 'otlkDay',
-                            v: settings.special().otlkDay()
-                        }],
-                        erc: [{
-                            q: 'erc_time',
-                            v: settings.special().erc()
-                        }],
-                        sfp: [{
-                            q: 'sfpDateSelect',
-                            v: settings.special().sfpDate()
-                        }],
-                        ndfd: [{
-                            q: 'forecastModel',
-                            v: settings.special().forecastModel()
-                        }/*, {
-                            q: 'fcstTime',
-                            v: settings.special().fcstTime()
-                        }*/]
-                    };
-
-                    if (isChecked) filter.querySelectorAll('select').forEach(select => select.disabled = false);
-
-                    const filterLayer = adjust[layer.id];
-
-                    if (filterLayer) {
-                        for (let i = 0; i < filterLayer.length; i++) {
-                            const s = filter.querySelector(`#${filterLayer[i].q}`);
-                            s.value = filterLayer[i].v;
-
-                            if (!s.value) s.selectedIndex = 1;
-                        }
-                    }
-                }
-            }
-        });
-
-        impact.setAttribute('data-display', 'layers');
-        impact.style.display = 'flex';
-
-        if (scrollPosition !== null && scrollPosition !== '0') impact.scrollTop = scrollPosition;
-    }
-
-    // creates dropdowns for some layers
-    layerExtras(l) {
-        const spec = settings.special?.() || {},
-            icon = (cls) => `<i class="${cls}" style="color:#9caab3"></i>`,
-            wrap = (id, content) => `<div class="data-filter" id="${id}">${icon('far fa-filter-list')}<div>${content}</div></div>`,
-            sel = (val, target) => val === target ? 'selected' : '',
-            smokeOptions = () => Array.from({ length: 15 }, (_, i) => {
-                const timeVal = gmtime(++i * 3600),
-                    date = new Date(timeVal + '+00:00'),
-                    hrs = date.getHours(),
-                    isMid = hrs === 0,
-                    day = date.getDate() === config.curTime.getDate() + 1 ? 'Tomorrow' : 'Today',
-                    label = isMid ? 'Midnight' : `${day} at ${hrs % 12 || 12} ${hrs >= 12 ? 'PM' : 'AM'}`;
-
-                return `<option value="${timeVal}">${label}</option>`;
-            }).join('');
-
-        const filters = {
-            perimeters: () => {
-                const size = settings.perimeters().minSize();
-
-                return `<div class="data-filter" id="perimeterSize" data-action="change-perim-size">
-                    ${icon('fad fa-filters')}
-                    <input type="range" class="slider" min="0" max="1000" step="25" value="${size}">
-                    <div id="pSize" style="width:69.11px">${size} acres</div>
-                </div>`;
-            },
-
-            ndfd: () => {
-                const model = spec.forecastModel || 'air_temperature',
-                    opts = [
-                        ['air_temperature', 'Temperature'],
-                        ['relative_humidity', 'Humidity'],
-                        ['wind_speed', 'Wind Speed'],
-                        ['total_sky_cover', 'Cloud Cover'],
-                        ['12hr_precipitation_probability', '12-hr POPs']
-                    ].map(([v, n]) => `<option ${sel(v, model)} value="${v}">${n}</option>`).join('');
-
-                return wrap('models', `<select id="forecastModel" data-action="ndfd" style="min-width:170px" disabled>${opts}</select>
-                <select id="fcstTime" data-action="ndfd" data-type="reg" style="min-width:100px;max-width:35%" disabled>${initNDFDTimes().join('')}</select>`);
-            },
-
-            sfp: () => wrap('sfpDate', `<select id="sfpDateSelect" data-action="sfp-date" disabled>
-                ${sfpTimes().map(i => `<option value="${i.key}">${i.value}</option>`).join('')}</select>`
-            ),
-
-            spc: () => {
-                const type = spec.otlkType?.() || 'fire', day = spec.otlkDay?.() || 1;
-
-                return wrap('otlks', `<select id="otlkType" data-action="spc-outlook" style="min-width:170px" disabled>
-                    <option ${sel('fire', type)} value="fire">Fire Weather</option>
-                    <option ${sel('severe', type)} value="severe">Severe/Convective</option></select>
-                    <select id="otlkDay" data-action="spc-outlook" style="min-width:100px" disabled>
-                    <option ${sel(1, day)} value="1">Day 1</option><option ${sel(2, day)} value="2">Day 2</option>
-                    ${type !== 'fire' ? `<option ${sel(3, day)} value="3">Day 3</option>` : ''}</select>`
-                );
-            },
-
-            erc: () => wrap('ercs', `<select id="erc_time" data-action="erc_time" style="min-width:197px" disabled>
-                <option ${sel('obs', spec.erc?.())} value="obs">Observed (Today)</option>
-                <option ${sel('fcst', spec.erc?.())} value="fcst">Forecasted (Tomorrow)</option></select>`
-            ),
-
-            viSmoke: () => wrap('viSmokes', `<select id="vi_smoke_time" data-action="vi_smoke_time" style="min-width:160px" disabled>${smokeOptions()}</select>`),
-
-            sfcSmoke: () => wrap('sfcSmokes', `<select id="sfc_smoke_time" data-action="sfc_smoke_time" style="min-width:160px" disabled>${smokeOptions()}</select>`)
-        };
-
-        return filters[l.id]?.() || '';
-    }
-
-    basemaps() {
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'content';
-
-        const basemapListUl = document.createElement('ul');
-        basemapListUl.className = 'layers-list bm';
-
-        tileConfig.forEach(tile => {
-            const hasPerms = settings.hasPermissions(tile.permissions),
-                isChecked = tile.id === settings.getBasemap(),
-                listItem = document.createElement('li'),
-                radioDiv = document.createElement('div'),
-                descDiv = document.createElement('div');
-
-            // Create the list item for the basemap
-            listItem.dataset.tile = tile.id;
-
-            // Create the radio and description containers
-            radioDiv.className = 'radio';
-            descDiv.className = 'desc';
-
-            // Add the radio button or premium feature
-            if (hasPerms) {
-                const radioInput = document.createElement('input');
-                Object.assign(radioInput, {
-                    type: 'radio',
-                    className: 'basemap-option',
-                    name: 'bsmo',
-                    checked: isChecked
-                });
-                radioInput.setAttribute('data-action', 'change-basemap');
-                radioInput.setAttribute('data-tile', tile.id);
-                radioDiv.appendChild(radioInput);
-            } else {
-                radioDiv.innerHTML = premFeature;
-
-                radioDiv.addEventListener('click', () => {
-                    const tier = tile.permissions.includes('PREMIUM') ? 'premium' : 'pro';
-                    notify('info', `This is a ${tier} basemap. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="basemaps_snackbar">Get access</a>`, 4);
-                });
-            }
-
-            // Add the icon and label
-            const img = document.createElement('img');
-            img.src = `${config.domain}assets/images/icons/fire/basemaps/${tile.imgs}.png`;
-            if (!hasPerms) img.style.opacity = '0.5';
-
-            const label = document.createElement('label');
-            label.innerHTML = `${tile.name}${(tile.permissions.length ? `<p>${tile.permissions[0]}</p>` : '')}`;
-
-            // Assemble the list item
-            descDiv.appendChild(img);
-            descDiv.appendChild(label);
-            listItem.appendChild(radioDiv);
-            listItem.appendChild(descDiv);
-            basemapListUl.appendChild(listItem);
-        });
-
-        // Update the DOM in a single, efficient operation
-        impact.innerHTML = impactHeader;
-        contentDiv.appendChild(basemapListUl);
-        impact.appendChild(contentDiv);
-        impact.style.display = 'flex';
-        impact.querySelector('#a').innerHTML = 'Basemaps';
-
-        // Use event delegation on the parent element
-        basemapListUl.addEventListener('click', e => {
-            const listItem = e.target.closest('li');
-            if (!listItem) return;
-
-            const radio = listItem.querySelector('input.basemap-option');
-            if (radio) {
-                radio.checked = true;
-                radio.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-        });
-    }
-
-    acctSettings() {
-        let content = '';
-        const settings = [
-            {
-                t: 'Save Frequency',
-                i: 'saveFreq',
-                o: { 60000: '1 min', 300000: '5 mins', 600000: '10 mins', 900000: '15 mins', 1800000: '30 mins' }
-            },
-            {
-                t: 'Perimeter Color',
-                i: 'perimColor',
-                o: { 'default': 'Default', 'red': 'Red', 'blue': 'Blue', 'orange': 'Orange', 'green': 'Green', 'purple': 'Purple', 'brown': 'Brown', 'black': 'Black' }
-            },
-            {
-                t: 'Perimeter Tooltip',
-                i: 'perimTtip',
-                o: { 1: 'Yes', 0: 'No' }
-            },
-            {
-                t: 'Perimeter Zoom',
-                i: 'perimZoom',
-                o: { 1: 'Yes', 0: 'No' }
-            },
-            {
-                t: 'Coordinates',
-                i: 'coordsDisplay',
-                o: { 'dec': 'Decimal', 'dms': 'Degs, Mins, Secs', 'utm': 'UTM' }
-            },
-            {
-                t: 'Temperature Unit',
-                i: 'tempUnit',
-                o: { 'f': '&deg;F', 'c': '&deg;C' }
-            },
-            {
-                t: 'Wind Speed Unit',
-                i: 'windUnit',
-                o: { 'mph': 'mph', 'm/s': 'm/s', 'kts': 'kts', 'km/h': 'km/h' }
-            },
-            {
-                t: 'Fire Size Unit',
-                i: 'acresUnit',
-                o: { 'acres': 'acres', 'hectares': 'hectares', 'sqmi': 'sq. mi.', 'sqkm': 'sq. km.' }
-            },
-            {
-                t: 'Cache Fire Data',
-                i: 'locallySave',
-                o: { 'y': 'Yes', 'n': 'No' }
-            }
-        ];
-
-        settings.forEach(setting => {
-            const options = Object.entries(setting.o)
-                .map(([val, label]) => `<option value="${val}">${label}</option>`)
-                .join('');
-            content += `<div class="r"><div class="var">${setting.t}</div><div class="input"><select id="${setting.i}" data-action="user-setting">${options}</select></div></div>`;
-        });
-
-        return content;
-    }
-
-    async account() {
-        if (!settings.user) {
-            const guid = document.cookie.split('; ').find(row => row.startsWith('guid='))?.split('=')[1] || null,
-                url = `${config.domain.replace('//', '//auth.')}login?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}${(guid ? `&guid=${guid}` : '')}`;
-            ////console.log(url);
-            window.location.href = url;
-            return;
-        }
-
-        let ms = '';
-        const userProfile = `<div class="content">
-            <div id="sync">
-                <i class="fa-regular fa-arrow-down-to-line" aria-hidden="true"></i>
-                <span title="${dateTime(settings.getUser().synced(), true, true, true).toString()}">Account last synced ${timeAgo(settings.user.settings.synced)}</span>
-            </div>
-            <div id="settings">
-                <div class="my-subs">
-                    <h2>My Subscriptions</h2>
-                    <div id="subs"></div>
-                </div>
-                <h2>Map Settings</h2>
-                ${this.acctSettings()}
-                <div class="btn-group centered" style="margin:var(--spacing) 0 0">
-                    <a target="blank" class="btn btn-black" style="width:100%" href="${config.domain}account/settings">Manage account</a>
-                </div>
-                <div style="margin-top:5em;font-size:12px;text-align:center;color:var(--blue-gray);line-height:1.3">
-                    &copy; ${new Date().getFullYear()} ${config.company}<br>Version ${version}<br>
-                    <a class="footer-link" href="${config.specificURL}logout?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}">Logout</a>&nbsp;&middot;&nbsp;
-                    <a class="footer-link" href="${config.host}release-notes" target="blank">Change Log</a>&nbsp;&middot;&nbsp;
-                    <a class="footer-link" href="${config.domain}about/legal/terms" target="blank">Terms</a>&nbsp;&middot;&nbsp;
-                    <a class="footer-link" href="${config.domain}about/legal/privacy" target="blank">Privacy</a>
-                </div>
-            </div>
-        </div>`;
-
-        impact.innerHTML = impactHeader + userProfile;
-        impact.style.display = 'flex';
-        impact.querySelector('#a').innerHTML = `Hello, ${settings.getUser().getName().first()}`;
-
-        const prefs = {
-            'saveFreq': settings.get().saveFreq(),
-            'perimColor': settings.perimeters().color() ?? 'default',
-            'perimTtip': settings.perimeters().ttip() ?? 1,
-            'perimZoom': settings.perimeters().zoom() ? 1 : 0,
-            'coordsDisplay': settings.get().coordsDisplay() ?? 'dec',
-            'tempUnit': settings.weather().temp() ?? 'f',
-            'windSpeedUnit': settings.weather().wind() ?? 'mph',
-            'acresUnit': settings.get().acres() ?? 'acres',
-            'locallySave': settings.get().locallySave() ?? 'n'
-        };
-
-        Object.entries(prefs).forEach(([id, val]) => {
-            const el = document.querySelector(`select#${id}`);
-            if (el) el.value = val;
-        });
-
-        if (!settings.subscriptions().valid()) {
-            const buy = (await loadUtils()).purchaseLink('account', encodeURIComponent(window.location.href));
-            ms = `<p style="color:var(--box-text-color)">
-                You don\'t have a subscription to Map of Fire.
-                <a class="btn btn-yellow" style="width:100%;margin:1em 0 0 0" href="${buy}">Try it for free!</a>
-            </p>`;
-        } else {
-            let theEnd = 'Your subscription will automatically renew';
-
-            if (settings.subscriptions().isTrial()) {
-                theEnd = 'Your free trial ends ';
-            }
-
-            ms = `<div style="display:inline-flex;width:100%;justify-content:space-between;gap:1em">
-                <div style="display:inline-flex;flex-direction:column;gap:0.45em">
-                    <span>${settings.subscriptions().name()}</span>
-                    <small style="line-height:1.1;color:#999">${theEnd} on ${settings.subscriptions().expires()}.</small>
-                </div>
-                <a class="btn btn-sm btn-black" style="margin:0;height:fit-content" target="blank" href="${config.domain}account/billing#cid=${settings.subscriptions().customerID()}">Manage</a>
-            </div>`;
-        }
-
-        document.querySelector('#subs').innerHTML = ms;
-    }
-
-    radarPausePlay() {
-        const c = document.querySelector('.radarControl');
-
-        if (radarPlay) {
-            clearInterval(radarAnim);
-            c.classList.remove('fa-pause');
-            c.classList.add('fa-play');
-            c.title = 'Start radar';
-            radarPlay = false;
-        } else {
-            let counter = document.querySelector('.radar input[type=range]').value,
-                ra = () => {
-                    radarImgs.forEach((e, n) => {
-                        map.setLayoutProperty(`radar-layer-${n}`, 'visibility', (n == counter ? 'visible' : 'none'));
-                        document.querySelector('.radar input[type=range]').value = counter;
-                    });
-
-                    if (counter == radarImgs.length - 1) {
-                        counter = 0;
-                        clearInterval(radarAnim);
-
-                        setTimeout(() => {
-                            radarAnim = setInterval(ra, RADAR_INT);
-                        }, RADAR_INT);
-                    } else {
-                        counter++;
-                    }
-                };
-
-            radarAnim = setInterval(ra, RADAR_INT);
-
-            c.classList.add('fa-pause');
-            c.classList.remove('fa-play');
-            c.title = 'Pause radar';
-            radarPlay = true;
-        }
-    }
-
-    spcClimo() {
-        if (this.target.classList.contains('disabled')) return;
-
-        const select = document.querySelector('.spcTimeline #spcDates');
-        let newIndex = select.selectedIndex;
-
-        if (this.target.dataset.dir === 'back') newIndex -= 1;
-        if (this.target.dataset.dir === 'next') newIndex += 1;
-
-        newIndex = Math.max(0, Math.min(364, newIndex));
-
-        config.layersHandler.spcClimo(newIndex, true, true);
-    }
-
-    async follow() {
-        let id = parseInt(this.target.dataset.id),
-            fire = config.wildfire.findFire(id),
-            name = fire.properties.name.replace(' Fire', '') + (fire.properties.type != 'Smoke Check' ? ' Fire' : '');
-
-        if (fire != null) {
-            const isRemove = this.target.dataset.mode == 'unfollow' && tracked.includes(id),
-                tf = document.querySelector('#trackFire');
-
-            // remove, otherwise add
-            const m = isRemove ? 'remove' : 'add';
-            if (isRemove) tracked.splice(tracked.indexOf(id), 1); else tracked.push(id);
-
-            if (m == 'add') {
-                tf.setAttribute('data-mode', 'unfollow');
-                tf.setAttribute('title', 'You\'re following this incident');
-                tf.classList.add('btn-black');
-                tf.classList.remove('btn-yellow');
-                tf.innerHTML = '<i class="far fa-check"></i>Following this incident';
-            } else {
-                tf.setAttribute('data-mode', 'follow');
-                tf.setAttribute('title', 'Start following this incident');
-                tf.classList.remove('btn-black');
-                tf.classList.add('btn-yellow');
-                tf.innerHTML = '<i class="far fa-plus"></i>Follow this incident';
-            }
-
-            /* if user is logged in, save to account, otherwise store in local storage */
-            if (settings.user) {
-                await api(`${config.host}api/v1/trackFires/${m}`, [['wfid', id]], false, true);
-            } else {
-                storage('mapofire.tracked', JSON.stringify(tracked));
-            }
-
-            notify('success', (m == 'add' ? 'You\'re now following the ' : 'You\'re no longer following the ') + name + '.');
-        }
-    }
-
-    async unfollow() {
-        const id = this.target.dataset.wfid,
-            name = this.target.dataset.name,
-            myf = document.querySelector('ul.my-fires');
-
-        this.target.parentElement.parentElement.remove();
-
-        if (settings.user) {
-            await api(config.host + 'api/v1/trackFires/remove', [['wfid', id]], false, true);
-        } else {
-            const t = JSON.parse(storage('mapofire.tracked')),
-                n = t.splice(t.indexOf(id), 1);
-
-            storage('mapofire.tracked', JSON.stringify(n));
-        }
-
-        tracked.splice(tracked.indexOf(id), 1);
-
-        if (myf.querySelectorAll('li').length == 0) myf.parentElement.innerHTML = noneTracked;
-
-        notify('success', `You're no longer following the ${name}.`);
-    }
-
-    archive() {
-        if (settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
-            const yrs = Array.from({ length: config.curTime.getFullYear() - 2014 }, (_, idx) => {
-                const year = config.curTime.getFullYear() - idx;
-                return `<option ${year === config.curTime.getFullYear() ? 'disabled ' : ''}value="${year}">${year}</option>`;
-            }).join('');
-
-            new Popup('Historical Wildfires').create(`<p style="font-size:14px;line-height:1.2">See historical wildfires by selecting a year in our archive.</p>
-                <select id="archive_years" data-action="archive_years" style="border:1px solid #cfcfcf;margin-top:1em"><option>- Choose a year -</option>${yrs}</select>
-                <div class="btn-group centered">
-                    <input type="button" class="btn btn-sm btn-gray" value="Cancel" onclick="this.parentElement.parentElement.parentElement.remove()">
-                </div>`);
-        }
-    }
-
-    async legend() {
-        const { legend } = await loadUtils();
-
-        if (!legend || !legend.categories || !legend.items) return;
-
-        let legCont = '';
-
-        legend.categories.forEach(cat => {
-            const key = Object.keys(cat)[0];
-            legCont += `<div class="group"><h3 class="group-title">${cat[key]}</h3>`;
-
-            const items = legend.items[key];
-            if (items && items.length) {
-                items.forEach(item => {
-                    const icon = item[0] === 'icon' ? item[1] : `<div class="color" style="background-color:${item[2]}">${item[1] ?? ''}</div>`;
-
-                    legCont += `<div class="row"><div class="ic">${icon}</div><div class="desc">${item[3] ?? ''}</div></div>`;
-                });
-            }
-
-            legCont += '</div>';
-        });
-
-        impact.innerHTML = impactHeader + `<div class="content"><div class="legend">${legCont}</div></div>`;
-        impact.setAttribute('data-display', 'legend');
-        impact.style.display = 'flex';
-        const aEl = impact.querySelector('#a');
-        if (aEl) aEl.innerHTML = 'Legend';
-    }
-
-    async myfires() {
-        impact.innerHTML = `${impactHeader}<div class="content"><div id="spinner" class="centered"></div></div>`;
-        impact.style.display = 'flex';
-        impact.querySelector('#a').innerHTML = 'My Fires';
-
-        await new Promise(resolve => {
-            const check = setInterval(() => {
-                if (trackedDone) {
-                    clearInterval(check);
-                    resolve();
-                }
-            }, 100);
-        });
-
-        const content = impact.querySelector('.content'),
-            myFires = tracked.map(id => config.wildfire.findFire(id)).filter(fire => fire != null);
-
-        if (myFires.length === 0) {
-            content.innerHTML = tracked.length > 0 ? '<div class="message error">The wildfires you were following are no longer available.</div>' : noneTracked;
-            return;
-        }
-
-        // build the list of "my fires"
-        const ul = document.createElement('ul');
-        ul.className = 'my-fires';
-
-        myFires.forEach(fire => {
-            const { properties: p, geometry } = fire,
-                name = p.name,
-                size = conversion.sizeFormat(p.acres),
-                fstat = p.status,
-                st = p.time.year < config.curTime.getFullYear() ? 'out' : config.wildfire.getStatus(fstat, p.notes) || 'active',
-                state = p.near/*,
-                up = timeAgo(p.time.updated)*/;
-
-            const li = document.createElement('li');
-            li.id = 'my-fire-incident';
-            li.dataset.coords = JSON.stringify(geometry.coordinates);
-
-            li.innerHTML = `<div class="header">
-                <h3>${name}</h3>
-                <i class="fas fa-circle-check" data-action="my-fire-unfollow" title="Unfollow this incident" data-name="${name}" data-wfid="${p.wfid}"></i>
-            </div>
-            <span class="state">${state}</span>
-            <div class="inf">
-                <p style="color:#fff;font-size:18px">${size}</p>
-                <span class="status ${st}">${st.toUpperCase()}</span>
-            </div>`;
-
-            ul.appendChild(li);
-        });
-
-        // Use event delegation for clicks
-        ul.addEventListener('click', event => {
-            const li = event.target.closest('li#my-fire-incident');
-            if (!li) return;
-
-            const coords = JSON.parse(li.dataset.coords);
-            if (coords) map.flyTo({ center: coords, zoom: 11.5 });
-        });
-
-        // Replace spinner with list
-        content.innerHTML = '';
-        content.appendChild(ul);
-    }
-
-    searchResultClick() {
-        const p = this.target.closest('li'),
-            type = p.dataset.type;
-
-        if (marker) marker.remove();
-
-        if (!p.classList.contains('standby')) {
-            const lat = p.dataset.lat,
-                lon = p.dataset.lon;
-
-            // zoom to a marker of a city location
-            if (type == 'city') {
-                const name = p.dataset.name.split(', ');
-
-                marker = new maplibregl.Marker()
-                    .setLngLat([lon, lat])
-                    .addTo(map);
-
-                new Popup('City').create(`<p style="margin-bottom:6px;color:#fff">${name[0]}, ${p.dataset.county} County, ${name[1]}</p>
-                    <span style="display:block;font-size:14px">${lat}, ${lon}</span>`);
-
-                map.easeTo({
-                    center: new maplibregl.LngLat(lon, lat),
-                    zoom: 10
-                });
-            }
-            // zoom to marker of a GIS feature (POI)
-            else if (type == 'gis') {
-                const name = p.dataset.name.split(', '),
-                    county = p.dataset.county,
-                    geoType = p.dataset.geotype;
-
-                marker = new maplibregl.Marker()
-                    .setLngLat([lon, lat])
-                    .addTo(map);
-
-                new Popup(geoType).create(`${name[0]}, ${county} County, ${name[1]}`);
-
-                map.easeTo({
-                    center: new maplibregl.LngLat(lon, lat),
-                    zoom: 11.25
-                });
-            }
-            // zoom to boundaries of a state or a county
-            else if (type == 'state' || type == 'county') {
-                const bbox = JSON.parse(p.dataset.bbox);
-
-                map.fitBounds([
-                    [bbox.x.min, bbox.y.min],
-                    [bbox.x.max, bbox.y.max]
-                ], {
-                    padding: 50
-                });
-            }
-            // zoom in on coordinates
-            else if (type == 'coordinates') {
-                marker = new maplibregl.Marker()
-                    .setLngLat([lon, lat])
-                    .addTo(map);
-
-                new Popup('Coordinates').create(`<p style="padding-bottom:8px;color:#fff">${lat},&nbsp;${lon}</p>
-                    <span style="display:block;padding-bottom:4px;font-size:14px">${String(conversion.convertToDms(lat, false) + '&nbsp;' + conversion.convertToDms(lon, true)).replace(/\s/g, '')}</span>
-                    <span style="display:block;font-size:14px">${conversion.utm(lat, lon)}</span>`);
-
-                map.easeTo({
-                    center: [lon, lat],
-                    zoom: 10
-                });
-            }
-            // zoom to a wildfire
-            else {
-                const wfid = parseInt(p.dataset.wfid);
-                const inc = config.wildfire.findFire(wfid);
-
-                if (inc) {
-                    config.wildfire.incident(wfid, true);
-                    /*map.easeTo({
-                        zoom: 10,
-                        center: inc.geometry.coordinates,
-                        duration: 1500,
-                        easing: t => t * (2 - t),
-                        essential: true
-                    });*/
-                }
-            }
-        }
-
-        this.sr.innerHTML = '<li class="standby" style="gap:.5em"><i class="fa-duotone fa-spinner-third" aria-hidden="true"></i><span>Searching...</span></li>';
-        this.sr.style.display = 'none';
-
-        return this;
-    }
-}
-
 function toggleLayer(e) {
     const { id: layerId, checked } = e,
         action = layerActions[layerId],
         getLayer = config.listOfLayers.find(layer => layer.id === layerId),
-        layerPerms = getLayer ? getLayer.perms : false,
-        executeToggle = (sourceId, action, checked) => {
+        layerPerms = getLayer ? getLayer.perms : false;
+
+        const executeToggle = (sourceId, action, checked) => {
             const visibility = checked ? 'visible' : 'none';
 
             if (sourceId == 'visSatellite') sourceId = 'satellite1';
@@ -1722,9 +758,17 @@ async function getCounties() {
 
 function addDynamicControls() {
     const useBottom = window.innerWidth <= 500;
+    let evacBtn = document.querySelector('.evacBtn');
 
-    if (useBottom === controlsAtBottom) return;
-    controlsAtBottom = useBottom;
+    if (!evacBtn) {
+        evacBtn = document.createElement('button');
+        evacBtn.className = 'control evacBtn ttip';
+        evacBtn.dataset.action = 'evac_list';
+        evacBtn.dataset.tooltip = 'Evacuations';
+    }
+
+    if (useBottom === inits.controlsAtBottom) return;
+    inits.controlsAtBottom = useBottom;
 
     const list = useBottom ? [...mapControls].reverse() : mapControls;
     mapControls.filter(c => map.hasControl(c)).forEach(c => map.removeControl(c));
@@ -1735,11 +779,30 @@ function addDynamicControls() {
 
     for (let i = 0; i < c.length; i++) {
         const it = document.querySelector(`.maplibregl-ctrl-${c[i]}`);
-        if (!it) return;
+        if (!it) continue;
 
         it.classList.add('ttip');
         it.dataset.tooltip = t[i];
     }
+
+    evacBtn.remove();
+
+    if (useBottom) {
+        const parent = document.querySelector('.maplibregl-ctrl-bottom-right');
+        let container = parent.querySelector('.custom-ctrl');
+
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'maplibregl-ctrl maplibregl-ctrl-group custom-ctrl';
+        }
+
+        container.prepend(evacBtn);
+        parent.prepend(container);
+    } else {
+        document.querySelector('.filter-controls').appendChild(evacBtn);
+    }
+
+    if (inits.evacuations?.evacsLoaded) inits.evacuations?.evacHelper();
 }
 
 function loadMapIcons() {
@@ -1751,7 +814,7 @@ function loadMapIcons() {
 
     queue.forEach(async ({ id, path }) => {
         if (!map.hasImage(id)) {
-            const img = await map.loadImage(`${config.domain}assets/images/icons/${path}`);
+            const img = await map.loadImage(`${ENV.domain}assets/images/icons/${path}`);
             map.addImage(id, img.data);
         }
     });
@@ -1777,18 +840,21 @@ async function init() {
         attributionControl: false
     });
 
-    /* add map controls */
+    // add map controls
     map.once('load', async () => {
         map.getCanvas().setAttribute('role', 'region');
         map.getCanvas().ariaLabel = document.querySelector('meta[name=description]').content;
+
         mapControls.push(new maplibregl.FullscreenControl({
             container: document.body
         }));
+
         mapControls.push(new maplibregl.NavigationControl({
             showCompass: true,
             showZoom: true,
             visualizePitch: true
         }));
+
         mapControls.push(new maplibregl.GeolocateControl({
             positionOptions: {
                 enableHighAccuracy: true
@@ -1821,23 +887,23 @@ async function init() {
     map.once('styledata', () => {
         const loading = document.querySelector('.loading');
 
-        /* preload sample images of the basemaps */
+        // preload sample images of the basemaps
         tileConfig.forEach((item, index) => {
             const img = new Image();
-            img.src = `${config.domain}assets/images/icons/fire/basemaps/${item.imgs}.png`;
+            img.src = `${ENV.domain}assets/images/icons/fire/basemaps/${item.imgs}.png`;
             tileConfig[index].cache = img;
         });
 
-        /* hide loading div once map is rendered */
+        // hide loading div once map is rendered
         if (loading) {
             loading.remove();
             document.querySelector('.filter-controls .search').style.display = 'inline-flex';
         }
     });
 
-    /* handle on map style loaded event */
+    // handle on map style loaded event
     map.on('style.load', async () => {
-        /* add banner for archived maps to let the user know */
+        // add banner for archived maps to let the user know
         if (settings.archive) {
             const b = document.createElement('div');
             b.classList.add('message', 'banner');
@@ -1886,7 +952,7 @@ async function init() {
             map.easeTo({ center: bounds.c, zoom: bounds.z, duration: 1000 });
         }
 
-        /* zoom to that state if URL contains state/{theState} */
+        // zoom to that state if URL contains state/{theState}
         if (state) {
             Object.keys(utils.stateLabels).forEach(async (e) => {
                 if (utils.stateLabels[e].name == state) {
@@ -1898,7 +964,7 @@ async function init() {
         // attach the layers handler
         config.layersHandler = new utils.Layers();
 
-        /* processing layers on startup */
+        // processing layers on startup
         config.layersHandler.init();
         config.wildfire.getWildfires();
         config.wildfire.perimeters();
@@ -1912,15 +978,18 @@ async function init() {
         }
     });
 
-    /* handle on map error event */
+    // handle on map error event
     map.on('error', (e) => {
         if (e && e.error.status != 500) { }
     });
 
-    /* handle on map zoom end event */
+    // re-load map icons if they're missing on initialize load
+    map.on('styleimagemissing', () => loadMapIcons());
+
+    // handle on map zoom end event
     map.on('zoomend', () => {
         // if a layer requires a minimum zoom, and the layers menu is open, toggle opacity
-        if (impact.style.display != 'none') {
+        if (impact.style.display != 'none' && impact.dataset.display == 'layers') {
             impact.querySelectorAll('.content li').forEach(li => {
                 const isLow = map.getZoom() < li.dataset.minZoom;
 
@@ -1929,14 +998,14 @@ async function init() {
             });
         }
 
-        /* control whether FS roads show on the map based on the zoom level */
+        // control whether FS roads show on the map based on the zoom level
         if (settings.isEnabled('roads')) {
             if (!map.getLayer('roads')) config.layersHandler.roads();
 
             if (map.getLayer('roads')) map.setLayoutProperty('roads', 'visibility', map.getZoom() <= 11 ? 'none' : 'visible');
         }
 
-        /* control whether modis hotspots show on the map based on the zoom level */
+        // control whether modis hotspots show on the map based on the zoom level
         [{ n: '24', w: 1 }, { n: '48', w: 2 }, { n: '72', w: 3 }].forEach(item => {
             const name = `modis${item.n}`,
                 vis = map.getLayer(name) ? 'visible' : 'visible';
@@ -1949,7 +1018,7 @@ async function init() {
         });
     });
 
-    /* handle on map click events */
+    // handle on map click events
     map.on('click', async (e) => {
         utils.mapClick(e);
     });
@@ -1971,15 +1040,34 @@ async function init() {
     map.getContainer().addEventListener('touchend', () => clearTimeout(touchTimer));
     map.getContainer().addEventListener('touchmove', () => clearTimeout(touchTimer));
 
-    /* handle on start map move event */
+    // handle on start map move event
     map.on('movestart', () => {
+        async function clearRadarCache() {
+            new (await loadUtils()).ClickListener().radarStop();
+            radar.loadedPositions.forEach(pos => {
+                if (pos !== radar.animationPosition) {
+                    var layerId = 'radar-layer-' + pos;
+                    var sourceId = 'radar-' + pos;
+
+                    if (map.getLayer(layerId)) map.removeLayer(layerId);
+                    if (map.getSource(sourceId)) map.removeSource(sourceId);
+                }
+            });
+            radar.loadedPositions.clear();
+            radar.loadedPositions.add(radar.animationPosition);
+        }
+
+        if (settings.checkboxes().includes('radar')) clearRadarCache();
+
         map.getCanvas().style.cursor = 'grabbing';
         startLat = map.getCenter().lat;
         startLon = map.getCenter().lng;
     });
 
-    /* handle on end map move event */
+    // handle on end map move event
     map.on('moveend', async () => {
+
+
         map.getCanvas().style.cursor = 'auto';
         utils.moveEnd();
     });
@@ -2099,23 +1187,23 @@ document.onreadystatechange = async () => {
 
         // get the user's IP address and UUID from the server (DONT BLOCK UI THREAD)
         if (!sessionStorage.getItem('mapofire.user_session')) {
-            api(`${config.host}api/v1/session/get`).then(sess => {
+            api(`${ENV.host}api/v1/session/get`).then(sess => {
                 delete sess.metadata;
                 sessionStorage.setItem('mapofire.user_session', JSON.stringify(sess));
             });
         }
 
         if (window.isAuthUser) {
-            const getAcct = await api(config.apiURL + 'user/get/mapofire', /*[['token', token[1]]]*/null, false, true);
+            const getAcct = await api(`${ENV.apiURL}user/get/mapofire`, null, false, true);
 
             if (getAcct?.response) {
-                const loginURL = `${config.domain.replace('//', '//auth.')}login?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}`;
+                const loginURL = `${ENV.domain.replace('//', '//auth.')}login?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}`;
                 (await loadUtils()).notify('info', `Your session has expired. Please <a href="${loginURL}">login again</a>.`, 3.25);
             } else {
                 usr = getAcct?.user;
             }
 
-            /* change menu button */
+            // change menu button
             if (usr) document.querySelector('#account span').textContent = 'Account';
         } else {
             document.querySelector('#save').remove();
@@ -2134,7 +1222,7 @@ document.onreadystatechange = async () => {
         // if user is admin, load the tools functions
         if (settings.hasPermissions(config.PERMISSION_LEVELS.ADMIN)) {
             setTimeout(() => {
-                (await loadUtils()).loadScript(config.specificURL + (debugMode ? 'v' + version + '/mf.tools.js' : 'src/js/mf.tools-' + version + '.js')).then(() => {
+                (await loadUtils()).loadScript(ENV.baseURL + (debugMode ? 'v' + version + '/mf.tools.js' : 'src/js/mf.tools-' + version + '.js')).then(() => {
                     config.toolsInstance = new Tools();
                     config.toolsInstance.use();
                 });
@@ -2177,7 +1265,7 @@ document.onreadystatechange = async () => {
     const complete = async () => {
         const q = document.querySelector('#q');
 
-        /* if the user is on an Android device, show the download app banner */
+        // if the user is on an Android device, show the download app banner
         if (/android/.test(navigator.userAgent.toLowerCase()) && !sessionStorage.getItem('recommend_google_play')) {
             document.querySelector('.android-banner').style.display = 'flex';
         }
@@ -2186,12 +1274,10 @@ document.onreadystatechange = async () => {
             storage('mapofire.impactScroll', impact.scrollTop);
         });
 
-        q.addEventListener('blur', () => {
-            trending = false;
-        });
-
+        q.disabled = false;
+        q.addEventListener('blur', () => inits.trending = false);
         q.addEventListener('focus', async () => {
-            if (q.value == '' && !trending && searchResults.querySelectorAll('li.trending').length == 0) {
+            if (q.value == '' && !inits.trending && searchResults.querySelectorAll('li.trending').length == 0) {
                 (await loadUtils()).addTrending();
             }
         });
@@ -2199,10 +1285,13 @@ document.onreadystatechange = async () => {
         // attach tooltip binders to class
         const tooltip = new (await loadUtils()).Tooltips({ followMouse: false });
         tooltip.attach('.ttip', (el) => el.dataset.tooltip);
+
+        // add incident worker
+        getWorker('incident');
     };
 
     if (document.readyState != 'complete') {
-        clickListener = new ClickListener();
+        inits.clickListener = new (await loadUtils()).ClickListener();
         preload();
     } else {
         complete();
@@ -2210,11 +1299,11 @@ document.onreadystatechange = async () => {
 };
 
 window.onload = async () => {
-    /* get top clicked fires */
-    const getTopFires = await api(config.apiURL + 'events?test=1', [['limit', 6]]);
-    if (top) topFires = getTopFires.top;
+    // get top clicked fires
+    const getTopFires = await api(`${ENV.apiURL}events?test=1`, [['limit', 6]]);
+    if (top) dataView.topFires = getTopFires.top;
 
-    /* save settings automatically after the first 10 seconds, then every 5 minutes, whether to the session or user account */
+    // save settings automatically after the first 10 seconds, then every 5 minutes, whether to the session or user account
     setTimeout(function () {
         saveSession(true, false);
 
@@ -2225,7 +1314,7 @@ window.onload = async () => {
         }, settings.get().saveFreq());
     }, 90000);
 
-    /* send fire click data to server for processing every 20 secs */
+    // send fire click data to server for processing every 20 secs
     setInterval(() => {
         config.wildfire.commitLog();
     }, 20000);
@@ -2233,20 +1322,20 @@ window.onload = async () => {
     upgrade();
     //storage('mapofire.refresh', new Date().getTime());
 
-    /* reload the map automatically every 5 minutes */
+    // reload the map automatically every 5 minutes
     setInterval(() => {
         window.location.href = window.location.href;
     }, 60 * 5 * 1000);
 
-    /* add service worker to handle additional js execution */
+    // add service worker to handle additional js execution
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register(`${config.specificURL}${(debugMode ? `v${version}/service-worker.js` : `src/js/service-worker-${version}.js`)}`)
+        navigator.serviceWorker.register(`${ENV.baseURL}${(debugMode ? `v${version}/service-worker.js` : `src/js/service-worker-${version}.js`)}`)
             .then(registration => {
                 if (registration.active) {
                     registration.active.postMessage({
                         'version': version,
                         'mbVersion': mbVersion,
-                        'host': config.specificURL
+                        'host': ENV.baseURL
                     });
                 }
             })
@@ -2254,7 +1343,7 @@ window.onload = async () => {
     }
 };
 
-/* click event listener */
+// click event listener
 window.addEventListener('click', async (e) => {
     const utils = await loadUtils(),
         target = e.target,
@@ -2264,13 +1353,13 @@ window.addEventListener('click', async (e) => {
         action = actionElement ? actionElement.dataset.action : null,
         canUse = settings.subscriptions().valid() || settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN;
 
-    const clicks = new ClickListener(target, searchResults);
+    const clicks = new (await loadUtils()).ClickListener(target, searchResults);
 
     const actionHandlers = {
         //'close-modal': () => clicks.closeModal(),
         'copy': () => clicks.copy(),
         'tools': () => clicks.tools(),
-        'blazeboard': () => window.open(config.host + 'blazeboard?utm_campaign=blazeboard&utm_medium=mapofire.com&utm_source=menu'),
+        'blazeboard': () => window.open(`${ENV.host}blazeboard?utm_campaign=blazeboard&utm_medium=mapofire.com&utm_source=menu`),
         'close-android': () => clicks.android(),
         'back-my-content': () => clicks.myContent(),
         'close-historical': () => clicks.closeArchive(),
@@ -2302,11 +1391,10 @@ window.addEventListener('click', async (e) => {
         'radar-control': () => clicks.radarPausePlay(),
         'trackFire': () => clicks.follow(),
         'readWWA': async () => new utils.NWS().readWWA(target.dataset.id),
-        'my-fire-unfollow': () => clicks.unfollow(),
         'account': () => clicks.account(),
         'new_fires': () => newFiresReport(),
-        'evac_list': () => evacuations?.clickListener(),
-        'goToEvacPoly': () => evacuations?.zoomTo(target),
+        'evac_list': () => inits.evacuations?.clickListener(),
+        'goToEvacPoly': () => inits.evacuations?.zoomTo(target),
         'basemap': () => clicks.basemaps(),
         'layers': () => clicks.showLayers(),
         'legend': () => clicks.legend(),
@@ -2314,7 +1402,7 @@ window.addEventListener('click', async (e) => {
         'changeSPCDate': () => clicks.changeSPCDate(),
         'fwf': async () => {
             if (canUse) {
-                document.querySelector('li#fwf').setAttribute('data-active', '1');
+                document.querySelector('li#fwf').dataset.active = '1';
                 map.getCanvas().style.cursor = 'crosshair';
                 utils.notify('info', 'Click anywhere on get the fire weather forecast.');
             } else {
@@ -2328,7 +1416,7 @@ window.addEventListener('click', async (e) => {
             else utils.marketing(true, 'nav_archive');
         },
         'report': async () => {
-            document.querySelector('li#report').setAttribute('data-active', '1');
+            document.querySelector('li#report').dataset.active = '1';
             map.getCanvas().style.cursor = 'crosshair';
             utils.notify('info', 'Click anywhere on the map to report a <b>NEW</b> fire incident.');
         },
@@ -2349,7 +1437,7 @@ window.addEventListener('click', async (e) => {
         contextMenu.remove();
     }
 
-    /* hide search results if outside search result container */
+    // hide search results if outside search result container
     if (!target.contains(searchResults) && (target.parentElement && !target.parentElement.contains(searchResults)) && !target.contains(document.querySelector('#q'))) {
         searchResults.style.display = 'none';
         document.querySelector('#q').value = '';
@@ -2357,7 +1445,7 @@ window.addEventListener('click', async (e) => {
         searchResults.querySelectorAll('li:not(.standby)').forEach(li => li.remove());
     }
 
-    /* hide impact panel if outside of container */
+    // hide impact panel if outside of container
     if (impact != null && impact.style.display == 'flex' && !impact.contains(e.target) && e.target !== impact && impact.dataset.display !== 'my-content') {
         if (!actionsThatOpenImpact.includes(action) && !document.querySelector('nav').contains(e.target)) clicks.closeImpact();
     }
@@ -2392,7 +1480,7 @@ window.addEventListener('keydown', (e) => {
 
     // if the user presses the esc key
     if (e.code == 'Escape') {
-        if (isVisible('#modal')) clickListener.closeModal();
+        if (isVisible('#modal')) inits.clickListener.closeModal();
 
         if (isVisible('.popup')) {
             marker?.remove();

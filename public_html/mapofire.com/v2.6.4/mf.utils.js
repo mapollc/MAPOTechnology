@@ -577,7 +577,7 @@ export class Convert {
 
             // Use the original number 'v' to check for pluralization
             const isOne = (v >= 0.995 && v < 1.005);
-            const unitPlural = (isOne || unit === 'sqkm') ? displayUnit : displayUnit + 's';
+            const unitPlural = (isOne || unit === 'sqkm') ? displayUnit : `${displayUnit}s`;
 
             return (returnSize ? formattedSize : '') + (returnUnit ? ` ${unitPlural}` : '');
         } else {
@@ -785,13 +785,13 @@ export class Search {
                 if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
                     const h = map.getCenter(),
                         dist = numberFormat(conversion.distance(h.lat, h.lng, lat, lon), 1),
-                        dms = String(conversion.convertToDms(lat, false) + '&nbsp;' + conversion.convertToDms(lon, true)).replace(/\s/g, '');
+                        dms = String(`${conversion.convertToDms(lat, false)}&nbsp;${conversion.convertToDms(lon, true)}`).replace(/\s/g, '');
 
                     const li = document.createElement('li');
-                    li.setAttribute('data-action', 'sr-onclick');
-                    li.setAttribute('data-type', 'coordinates');
-                    li.setAttribute('data-lat', lat);
-                    li.setAttribute('data-lon', lon);
+                    li.dataset.action = 'sr-onclick';
+                    li.dataset.type = 'coordinates';
+                    li.dataset.lat = lat;
+                    li.dataset.lon = lon;
                     li.innerHTML = `<span class="icon fas fa-map-location"></span><h3>${parseFloat(lat).toFixed(6).replace(/[0]+$/, '')},&nbsp;${parseFloat(lon).toFixed(6).replace(/[0]+$/, '')} <span style="color:#788695">${dms}</span><span>${dist} mile${dist != 1 ? 's' : ''} away</span></h3>`;
                     this.results.appendChild(li);
 
@@ -819,10 +819,10 @@ export class Search {
 
                     if (use) {
                         const li = document.createElement('li');
-                        li.setAttribute('data-action', 'sr-onclick');
-                        li.setAttribute('data-type', 'incident');
-                        li.setAttribute('data-wfid', p.wfid);
-                        li.setAttribute('title', name);
+                        li.dataset.action = 'sr-onclick';
+                        li.dataset.type = 'incident';
+                        li.dataset.wfid = p.wfid;
+                        li.title = name;
                         li.innerHTML = `<span class="icon fire fas fa-fire"></span><h3>${name}<span>${p.type} in ${stateLabels[p.state]?.name}${isAustralia ? ', Australia' : ''} &middot;
                             <b>${acresDisp}</b>${status != '' ? ` &middot; <span class="fstatus ${status}">${ucfirst(status)}` : ''}</span></span></h3>`;
                         this.results.appendChild(li);
@@ -862,7 +862,7 @@ export class Search {
 
     async apiSearch() {
         let count = 0;
-        const search = await api(config.apiURL + 'search', [['q', this.query]], true);
+        const search = await api(`${ENV.apiURL}search`, [['q', this.query]], true);
 
         if (search.results != null && search.results.length > 0) {
             search.results.forEach((p) => {
@@ -905,7 +905,7 @@ export class Search {
                 li.dataset.type = p.type.toLowerCase();
                 li.innerHTML = `<span class="icon fas fa-location-dot"></span>
                     <h3>${pname}
-                        <span>${p.type == 'gis' ? p.data.type + ' in ' : ''}${p.data.county ? p.data.county + ' County' : (p.type == 'county' ? 'County' : 'State')}${p.type == 'city' && p.data.population > 0 ? `&nbsp;&middot;&nbsp;Population:&nbsp;${numberFormat(p.data.population)}` : ''}</span>
+                        <span>${p.type == 'gis' ? `${p.data.type} in ` : ''}${p.data.county ? `${p.data.county} County` : (p.type == 'county' ? 'County' : 'State')}${p.type == 'city' && p.data.population > 0 ? `&nbsp;&middot;&nbsp;Population:&nbsp;${numberFormat(p.data.population)}` : ''}</span>
                     </h3>`;
 
                 this.results.appendChild(li);
@@ -1265,16 +1265,15 @@ export class Evacuations {
 
     async get() {
         if (!this.evacsLoaded) {
-            const data = await api(`${config.apiURL}evacuations`);
+            const data = await api(`${ENV.apiURL}evacuations`);
 
-            /* store active evacuations for use elsewhere within the map */
+            // store active evacuations for use elsewhere within the map
             if (data.features && data.features.length) {
                 this.activeEvacuations = data.features;
                 this.evacCount = data.features.length;
             }
 
             this.evacsLoaded = true;
-            this.evacHelper();
             this.displayEvacs(data);
         }
     }
@@ -1374,7 +1373,7 @@ export class Evacuations {
                 padding: 100
             });
 
-            clickListener.closeDataForm();
+            inits.clickListener.closeDataForm();
         }
     }
 
@@ -1495,19 +1494,18 @@ export class Evacuations {
 
 export class Layers {
     constructor() {
-        this.spcClimoDate = Date.parse('1/1/2026');
+        this.spcClimoDate = Date.now()/*Date.parse('1/1/2026')*/;
+        this.loadedPositions = new Set();
+        this.animationPosition = 0;
     }
 
     init() {
-        /* add lightning layers to the map */
+        // add lightning layers to the map
         this.lightning();
 
-        /* get air quality */
-        this.airQuality();
-
-        /* get evacuations */
-        evacuations = new Evacuations();
-        evacuations.get();
+        // get evacuations
+        inits.evacuations = new Evacuations();
+        inits.evacuations.get();
     }
 
     contours(demSource) {
@@ -1653,7 +1651,7 @@ export class Layers {
             ['f', 'geojson']
         ]);
 
-        airQualityStns = data;
+        dataView.airQualityStns = data;
 
         if (!data.error) {
             if (!map.getSource('airq')) {
@@ -1754,7 +1752,7 @@ export class Layers {
             type: 'raster',
             maxzoom: 15,
             tiles: [
-                //config.host + 'api/v1/lightning?key=' + config.apiKey() + '&x={x}&y={y}&z={z}&t=5'
+                //ENV.host + 'api/v1/lightning?key=' + config.apiKey() + '&x={x}&y={y}&z={z}&t=5'
                 //'https://tiles.lightningmaps.org/?x={x}&y={y}&z={z}&s=256&t=5'
                 'https://www.firewxavy.org/apis/lightning/5/{z}/{x}/{y}'
                 //'https://nowcoast.noaa.gov/geoserver/observations/lightning_detection/ows?request=GetMap&service=WMS&layers=ldn_lightning_strike_density&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=256&height=256&time=' + ltime() + '&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
@@ -1775,7 +1773,7 @@ export class Layers {
             type: 'raster',
             maxzoom: 15,
             tiles: [
-                //config.host + 'api/v1/lightning?key=' + config.apiKey() + '&x={x}&y={y}&z={z}&t=6'
+                //ENV.host + 'api/v1/lightning?key=' + config.apiKey() + '&x={x}&y={y}&z={z}&t=6'
                 //'https://tiles.lightningmaps.org/?x={x}&y={y}&z={z}&s=256&t=6'
                 'https://www.firewxavy.org/apis/lightning/6/{z}/{x}/{y}'
             ],
@@ -1793,75 +1791,120 @@ export class Layers {
     }
 
     async radarInit() {
-        await fetch('https://api.rainviewer.com/public/weather-maps.json').then(async (resp) => {
-            const imgs = await resp.json();
+        const imgs = await api('https://api.rainviewer.com/public/weather-maps.json');
+        if (!imgs) return;
 
-            imgs.radar.past.forEach((e) => {
-                radarImgs.push(e.time);
-            });
+        radar.mapFrames = imgs.radar.past;
 
-            let time = (n) => {
-                const d = new Date(radarImgs[n] * 1000),
-                    h = d.getHours(),
-                    m = d.getMinutes();
-
-                return `${(h > 12 ? h - 12 : (h == 12 ? 12 : h))}:${(m < 10 ? '0' : '')}${m}${(h >= 12 ? 'p' : 'a')}${m}`;
-            };
-
-            const rl = `<div class="radar"><div><span class="radarControl fas fa-pause" title="Pause radar" data-action="radar-control"></span><div class="time">
-                <input type="range" steps="12" min="0" max="12" value="0">
-                <div class="tr"><span>${time(0)}</span><span>${time(6)}</span><span>${time(12)}</span></div></div></div></div>`;
-
-            document.body.insertAdjacentHTML('beforeend', rl);
-
-            this.radar();
-        });
-    }
-
-    radar() {
-        let counter = 0;
-
-        radarImgs.forEach((e, n) => {
-            map.addSource(`radar-${n}`, {
-                type: 'raster',
-                tiles: [`https://tilecache.rainviewer.com/v2/radar/${e}/256/{z}/{x}/{y}/4/0_1.png`],
-                tileSize: 256,
-                attribution: this.defaultAttr + '&copy; <a href="https://www.rainviewer.com">RainViewer</a>'
-            });
-
-            map.addLayer({
-                id: `radar-layer-${n}`,
-                type: 'raster',
-                source: `radar-${n}`,
-                layout: {
-                    visibility: 'none'
-                },
-                paint: {
-                    'raster-fade-duration': 0,
-                    'raster-opacity': 0.7
-                }
-            });
-        });
-
-        let ra = () => {
-            radarImgs.forEach((e, n) => {
-                map.setLayoutProperty(`radar-layer-${n}`, 'visibility', (n == counter ? 'visible' : 'none'));
-                document.querySelector('.radar input[type=range]').value = counter;
-            });
-
-            if (counter == radarImgs.length - 1) {
-                counter = 0;
-                clearInterval(radarAnim);
-
-                setTimeout(() => {
-                    radarAnim = setInterval(ra, RADAR_INT);
-                }, RADAR_INT);
-            } else {
-                counter++;
-            }
+        let formatTime = (n) => {
+            return Intl.DateTimeFormat('en-US', {
+                hour: 'numeric'
+            }).format(radar.mapFrames[n].time * 1000).replace(' ', '').toLowerCase();
         };
 
-        radarAnim = setInterval(ra, RADAR_INT);
+        // build radar control once
+        if (!document.querySelector('.radar')) {
+            const len = radar.mapFrames.length,
+                mid = Math.floor(len / 2),
+                ticks = Array.from({ length: len }, (_, i) => {
+                    const isMajor = i === 0 || i === mid || i === len - 1;
+
+                    return `<div class="tick${isMajor ? '' : ' short'}" style="left:calc(${i} * (100% / ${len}))"></div>`;
+                }).join('');
+
+            const rl = `<div class="radar">
+                <div>
+                    <span class="radarControl fas fa-play ttip" data-tooltip="Start radar" data-action="radar-control"></span>
+                    <div class="time">
+                        <input type="range" step="1" min="0" max="${radar.mapFrames.length - 1}" value="${radar.mapFrames.length - 1}">
+                        <div class="tr" style="align-items:center;height:8px">
+                            ${ticks}
+                        </div>
+                        <div class="tr">
+                            <span>${formatTime(0)}</span>
+                            <span>${formatTime(Math.floor(radar.mapFrames.length / 2))}</span>
+                            <span>${formatTime(radar.mapFrames.length - 1)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            document.body.insertAdjacentHTML('beforeend', rl);
+        }
+
+        this.showRadarFrame(radar.mapFrames.length - 1);
+    }
+
+    showRadarFrame(position) {
+        if (radar.isLoading) return;
+
+        const cl = new ClickListener();
+        const len = radar.mapFrames.length;
+
+        position = (position + len) % len;
+
+        const isLast = position === len - 1;
+        const DELAY_MS = config.ANIMATION_DELAY_MS * (isLast ? 2 : 1);
+
+        const frame = radar.mapFrames[position];
+        const newSourceId = `radar-${position}`;
+        const newLayerId = `radar-layer-${position}`;
+        const oldLayerId = radar.currentLayerId;
+
+        const setActiveLayer = () => {
+            if (oldLayerId && oldLayerId !== newLayerId && map.getLayer(oldLayerId)) {
+                map.setPaintProperty(oldLayerId, 'raster-opacity', 0);
+            }
+
+            map.setPaintProperty(newLayerId, 'raster-opacity', config.RADAR_OPACITY);
+
+            radar.currentLayerId = newLayerId;
+            radar.animationPosition = position;
+
+            if (radar.animationTimer) radar.animationTimer = setTimeout(() => cl.radarPlay(), DELAY_MS);
+        };
+
+        if (radar.loadedPositions.has(position)) {
+            setActiveLayer();
+            return;
+        }
+
+        radar.isLoading = true;
+
+        map.addSource(newSourceId, {
+            type: 'raster',
+            tiles: [`https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/4/0_1.png`],
+            tileSize: 256,
+            maxzoom: 7
+        });
+
+        map.addLayer({
+            id: newLayerId,
+            type: 'raster',
+            source: newSourceId,
+            paint: {
+                'raster-opacity': 0.001,
+                'raster-opacity-transition': { duration: 0, delay: 0 },
+                'raster-fade-duration': 0
+            }
+        });
+
+        radar.currentLayerId = newLayerId;
+
+        const onSourceData = (e) => {
+            if (e.sourceId !== newSourceId || !map.isSourceLoaded(newSourceId)) return;
+
+            map.off('sourcedata', onSourceData);
+            map.once('idle', function () {
+                setActiveLayer();
+
+                radar.loadedPositions.add(position);
+                radar.animationPosition = position;
+                radar.isLoading = false;
+            });
+        };
+
+        map.on('sourcedata', onSourceData);
     }
 
     async modis(w, update = false) {
@@ -2104,7 +2147,7 @@ export class Layers {
                 ['f', 'geojson']
             ]);
 
-            /* add ID to features for mapbox */
+            // add ID to features for mapbox
             data.features.forEach((f, n) => {
                 data.features[n].id = f.properties.OBJECTID;
             });
@@ -2175,7 +2218,7 @@ export class Layers {
                 'tileSize': 256
             });
         }
- 
+     
         if (!map.getLayer('nfdrs')) {
             map.addLayer({
                 id: 'nfdrs',
@@ -2261,9 +2304,13 @@ export class Layers {
             const options = () => {
                 let ops = '';
                 const start = new Date('1/1/2026').getTime();
+                const now = new Date();
+
                 for (let i = 0; i < 365; i++) {
-                    const date = new Date(start + (86400 * 1000 * i));
-                    ops += `<option value="${i}">${config.longMonths[date.getMonth()]} ${date.getDate()}</option>`;
+                    const date = new Date(start + (86400 * 1000 * i)),
+                        isToday = date.getMonth() == now.getMonth() && date.getDate() == now.getDate();
+
+                    ops += `<option ${isToday ? 'selected ' : ''}value="${i}">${config.longMonths[date.getMonth()]} ${date.getDate()}</option>`;
                 }
                 return ops;
             };
@@ -2282,8 +2329,8 @@ export class Layers {
             const select = control.querySelector('#spcDates');
             select.selectedIndex = day;
 
-            control.querySelector('#tlb').setAttribute('data-date', doy - 1);
-            control.querySelector('#tlf').setAttribute('data-date', doy + 1);
+            control.querySelector('#tlb').dataset.date = doy - 1;
+            control.querySelector('#tlf').dataset.date = doy + 1;
 
             control.querySelector('#tlb').classList.toggle('disabled', doy === 0);
             control.querySelector('#tlf').classList.toggle('disabled', doy === 364);
@@ -2291,7 +2338,7 @@ export class Layers {
 
         // Fetch geojson using day of year
         const name = 'spc_climo',
-            geojson = await api(config.host + 'api/v1/climo', [['day', doy]]);
+            geojson = await api(`${ENV.host}api/v1/climo`, [['day', doy]]);
 
         if (update) {
             map.getSource(name).setData(geojson);
@@ -2303,9 +2350,9 @@ export class Layers {
                 });
             }
 
-            if (!map.getLayer(name + '_outline')) {
+            if (!map.getLayer(`${name}_outline`)) {
                 map.addLayer({
-                    id: name + '_outline',
+                    id: `${name}_outline`,
                     type: 'line',
                     source: name,
                     paint: {
@@ -2317,9 +2364,9 @@ export class Layers {
                 });
             }
 
-            if (!map.getLayer(name + '_fill')) {
+            if (!map.getLayer(`${name}_fill`)) {
                 map.addLayer({
-                    id: name + '_fill',
+                    id: `${name}_fill`,
                     type: 'fill',
                     source: name,
                     paint: {
@@ -2330,9 +2377,9 @@ export class Layers {
                 });
             }
 
-            if (!map.getSource(name + '_prob')) {
+            if (!map.getSource(`${name}_prob`)) {
                 map.addLayer({
-                    id: name + '_prob',
+                    id: `${name}_prob`,
                     type: 'symbol',
                     source: name,
                     minzoom: 6.75,
@@ -2679,7 +2726,7 @@ export class Layers {
                 tileSize: 256
             });
         }
-
+    
         if (!map.getLayer('drought')) {
             map.addLayer({
                 id: 'drought',
@@ -2813,7 +2860,7 @@ export class Layers {
                 tileSize: 256
             });
         }
- 
+     
         if (!map.getLayer('usfs')) {
             map.addLayer({
                 id: 'usfs',
@@ -3567,7 +3614,7 @@ export class Layers {
 
     async firemed(update = false) {
         const types = ['hosp', 'ems', 'fire'],
-            baseURL = 'https://services2.arcgis.com/FiaPA4ga0iQKduv3/ArcGIS/rest/services/Structures_Medical_Emergency_Response_v1/FeatureServer/',
+            url = 'https://services2.arcgis.com/FiaPA4ga0iQKduv3/ArcGIS/rest/services/Structures_Medical_Emergency_Response_v1/FeatureServer/',
             fields = [
                 ['where', '1=1'],
                 ['outFields', 'OBJECTID,NAME,ADDRESS,CITY,STATE,ZIPCODE'],
@@ -3583,12 +3630,12 @@ export class Layers {
         types.forEach(async (type) => {
             const icon = type == 'fire' ? 'fire_dept' : type;
             if (!map.hasImage(type)) {
-                const image = await map.loadImage(`${config.domain}assets/images/icons/fire/${icon}_icon.png`);
+                const image = await map.loadImage(`${ENV.domain}assets/images/icons/fire/${icon}_icon.png`);
                 map.addImage(type, image.data);
             }
         });
 
-        const results = await Promise.allSettled(types.map((_, i) => api(`${baseURL}${i}/query`, fields)));
+        const results = await Promise.allSettled(types.map((_, i) => api(`${url}${i}/query`, fields)));
         const mergedFeatures = results.flatMap((res, i) => {
             if (res.status !== 'fulfilled' || !res.value?.features) return [];
 
@@ -3641,6 +3688,7 @@ export class Layers {
 export class Wildfires {
     constructor() {
         this.store = storage('mapofire.clicks');
+        this.clicks = [];
         this.ArcGISFeatureSource = window[""]["arcgis-featureserver"];
         this.agencies = {
             'US Forest Service': 'USFS',
@@ -3673,19 +3721,27 @@ export class Wildfires {
 
         const config = {
             size: {
-                z7: [isBig, 13, 11],
-                z14: [isBig, 15, 12]
+                z5: [isBig, 12, 10],
+                z10: [isBig, 15, 13]
             },
             offset: {
-                z7: [isBig, ['literal', [0, 1.2]], ['literal', [0, 1.0]]],
-                z14: [isBig, ['literal', [0, 1.3]], ['literal', [0, 1.0]]]
+                z5: [
+                    isBig,
+                    ['literal', [0, 1.3]],
+                    ['literal', [0, 1.0]]
+                ],
+                z10: [
+                    isBig,
+                    ['literal', [0, 1.1]],
+                    ['literal', [0, 1.0]]
+                ]
             }
         }[which];
 
         return [
             'interpolate', ['linear'], ['zoom'],
-            7, ['case', ...config.z7],
-            14, ['case', ...config.z14]
+            5, ['case', ...config.z5],
+            10, ['case', ...config.z10]
         ];
     }
 
@@ -3735,11 +3791,11 @@ export class Wildfires {
     }
 
     async commitLog() {
-        if (this.store != null && this.store != '') {
-            const send = await api(config.apiURL + 'logFire', [['data', this.store]]);
+        if (this.store && this.store != '') {
+            const send = await api(`${ENV.apiURL}logFire`, [['data', this.store]]);
 
             if (send.success) {
-                clicks = [];
+                this.clicks = [];
                 localStorage.removeItem('mapofire.clicks');
             }
         }
@@ -3748,16 +3804,16 @@ export class Wildfires {
     }
 
     logFire(id, json) {
-        const item = clicks.find(e => e.wfid == id);
+        const item = this.clicks.find(e => e.wfid == id);
 
         if (item) {
             item.count++;
             item.data = json;
         } else {
-            clicks.push({ wfid: id, count: 1, data: json });
+            this.clicks.push({ wfid: id, count: 1, data: json });
         }
 
-        storage('mapofire.clicks', JSON.stringify(clicks));
+        storage('mapofire.clicks', JSON.stringify(this.clicks));
         return this;
     }
 
@@ -4105,31 +4161,22 @@ export class Wildfires {
 
     async getTrackedFires() {
         if (settings.user) {
-            const g = await api(config.host + 'api/v1/trackFires/list', null/*[['token', settings.getUser().token()]]*/, false, true);
-
-            trackedDone = true;
-
-            if (g.fires != null) {
-                g.fires.forEach(function (f) {
-                    tracked.push(f.wfid);
-                });
-            }
+            const resp = await api(`${ENV.host}api/v1/trackFires/list`, null, false, true);
+            dataView.trackedFires = resp.fires?.map(f => f.wfid) ?? [];
         } else {
-            const tr = storage('mapofire.tracked');
-            trackedDone = true;
-
-            if (tr != null) {
-                tracked = JSON.parse(tr);
-            }
+            const stored = storage('mapofire.tracked');
+            dataView.trackedFires = stored ? JSON.parse(stored) : [];
         }
 
-        /* if modal is already open with wildfire data, change the follow button now */
+        inits.trackedDone = true;
+
+        // if modal is already open with wildfire data, change the follow button now
         if (document.querySelector('#modal').classList.contains('opened', 'fire')) {
             const tf = document.querySelector('#trackFire');
 
-            if (tf && tracked.includes(tf.dataset.id)) {
-                tf.setAttribute('data-following', '1');
-                tf.setAttribute('title', 'You\'re following this fire');
+            if (tf && dataView.trackedFires.includes(tf.dataset.id)) {
+                tf.dataset.following = '1';
+                tf.title = 'You\'re following this fire';
                 tf.classList.add('fas', 'follow');
                 tf.classList.remove('far');
             }
@@ -4171,7 +4218,7 @@ export class Wildfires {
     async canada() {
         const statuses = ['Out of control', 'Being held', 'Under Control', 'Out'],
             now = new Date().getTime() / 1000,
-            fires = await api(config.apiURL + 'wildfires/canada');
+            fires = await api(`${ENV.apiURL}wildfires/canada`);
 
         if (fires != null && fires.features != null) {
             fires.features.forEach((f, n) => {
@@ -4189,7 +4236,7 @@ export class Wildfires {
             map.addSource('ca_fires', {
                 type: 'geojson',
                 data: fires,
-                cluster: CLUSTER_FIRES,
+                cluster: config.clusterFires,
                 clusterMaxZoom: window.innerWidth < 600 || window.outerWidth < 600 ? 6 : 7,
                 clusterMinPoints: 20,
                 clusterRadius: 50
@@ -4369,7 +4416,7 @@ export class Wildfires {
             p.name = config.wildfire.fireName(p.name, p.type, p.incidentId);
             activeIncidents.set(parseInt(p.wfid, 10), f);
 
-            if (type === 'new' && p.acres >= 100) newFires.push(f);
+            if (type === 'new' && p.acres >= 100) dataView.newFires.push(f);
         });
 
         if (update) {
@@ -4379,7 +4426,7 @@ export class Wildfires {
                 map.addSource(sourceId, {
                     type: 'geojson',
                     data: fires,
-                    cluster: CLUSTER_FIRES,
+                    cluster: config.clusterFires,
                     clusterMaxZoom: type === 'all' ? (window.innerWidth < 600 ? 6 : 7) : 8,
                     clusterMinPoints: type === 'all' ? 20 : 5,
                     clusterRadius: type === 'all' ? 50 : 20
@@ -4388,13 +4435,13 @@ export class Wildfires {
         }
     }
 
-    /* get wildfires from API */
+    // get wildfires from API
     async getWildfires(update = false) {
         const qInput = document.querySelector('#q');
         const types = ['all', 'new', 'smk', 'rx'];
 
         if (settings.archive) {
-            const fires = await api(`${config.apiURL}wildfires/all`, [['archive', settings.archive], ['bbox', getbbox()]]);
+            const fires = await api(`${ENV.apiURL}wildfires/all`, [['archive', settings.archive], ['bbox', getbbox()]]);
 
             this.processFires(fires, 'all', update);
             this.displayFires('all', 0);
@@ -4404,10 +4451,10 @@ export class Wildfires {
 
             // get fire types from API
             await Promise.all(types.map(async (type, i) => {
-                const fires = await api(`${config.apiURL}wildfires/${type}`);
+                const fires = await api(`${ENV.apiURL}wildfires/${type}`);
                 this.processFires(fires, type, update);
 
-                if (type === 'new' && newFires.length > 0) this.renderNewFiresUI(newFires.length);
+                if (type === 'new' && dataView.newFires.length > 0) this.renderNewFiresUI(dataView.newFires.length);
 
                 // Wait for source load before displaying
                 await new Promise(resolve => {
@@ -4445,10 +4492,10 @@ export class Wildfires {
     // display wildfires on the map
     async displayFires(type, n) {
         const lay = ['allFires', 'newFires', 'smokeChecks', 'rxBurns'],
-            fireLayerName = type + '_fires',
+            fireLayerName = `${type}_fires`,
             vis = settings.isEnabled(lay[n]) || !settings.checkboxes() && type != 'rx' ? 'visible' : 'none';
 
-        /* add fires to map */
+        // add fires to map
         if (map.getSource(fireLayerName)) {
             if (!map.getLayer(fireLayerName)) {
                 map.addLayer({
@@ -4477,9 +4524,9 @@ export class Wildfires {
                 });
             }
 
-            if (!map.getLayer(fireLayerName + '_title')) {
+            if (!map.getLayer(`${fireLayerName}_title`)) {
                 map.addLayer({
-                    id: fireLayerName + '_title',
+                    id: `${fireLayerName}_title`,
                     type: 'symbol',
                     source: fireLayerName,
                     minzoom: window.innerWidth < 600 || window.outerWidth < 600 ? 4 : 5,
@@ -4508,20 +4555,29 @@ export class Wildfires {
                         'text-field': ['get', 'name'],
                         'text-justify': 'center',
                         'text-size': this.fireTextSize(type, 'size'),
-                        'text-max-width': 10,
+                        'text-max-width': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            5,
+                            7,
+                            8,
+                            10
+                        ],
+                        'text-line-height': 1.0,
                         'text-anchor': 'top',
                         'text-offset': this.fireTextSize(type, 'offset'),
-                        'text-allow-overlap': true,
+                        'text-allow-overlap': false,
                         'text-letter-spacing': 0.05,
                         visibility: vis
                     }
                 });
 
-                map.on('mouseenter', fireLayerName + '_fire', () => {
+                map.on('mouseenter', `${fireLayerName}_fire`, () => {
                     map.getCanvas().style.cursor = 'pointer';
                 });
 
-                map.on('mouseleave', fireLayerName + '_fire', () => {
+                map.on('mouseleave', `${fireLayerName}_fire`, () => {
                     map.getCanvas().style.cursor = 'auto';
                 });
             }
@@ -4569,15 +4625,15 @@ export class Wildfires {
         let o = '';
 
         if (t == 'Prescribed Fire') {
-            o = (n.toLowerCase().includes('rx') ? n : n + ' RX');
+            o = (n.toLowerCase().includes('rx') ? n : `${n} RX`);
         } else if (t == 'Smoke Check') {
-            o = 'Smoke Check' + (i !== undefined ? ' #' + i.split('-')[1] + '-' + parseInt(i.split('-')[2]) : '');
+            o = 'Smoke Check' + (i !== undefined ? ` #${i.split('-')[1]}-${parseInt(i.split('-')[2])}` : '');
         } else {
             if (n === undefined || n == '') {
                 o = 'Incident #' + parseInt(i.split('-')[2]);
             } else {
                 const cleanedName = n.replace(/^\d+(?=\D)\s?/, '');
-                o = ucwords(cleanedName.toLowerCase()) + ' Fire';
+                o = `${ucwords(cleanedName.toLowerCase())} Fire`;
             }
         }
         return o;
@@ -4603,7 +4659,7 @@ export class Wildfires {
                 }
             }
 
-            const data = await api(config.apiURL + 'wildfires/incident', [['wfid', wfid], ['history', 1]]);
+            const data = await api(`${ENV.apiURL}wildfires/incident`, [['wfid', wfid], ['history', 1]]);
 
             // if user has in-app caching enabled
             if (settings.fire().cache() && !data.error) {
@@ -4632,14 +4688,14 @@ export class Wildfires {
             if (coords) modalZoom(coords.geometry.coordinates);
         }
 
-        clickListener.openModal('fire');
+        inits.clickListener.openModal('fire');
 
         // get incident json from cache or API
         const incident = await this.cacheIncident(wfid);
         const fire = incident.fire;
 
         if (fire?.error == 404) {
-            clickListener.closeModal();
+            inits.clickListener.closeModal();
             notify('error', 'The incident you\'re looking for does not exist.');
             return;
         }
@@ -4654,8 +4710,8 @@ export class Wildfires {
             nearbyPerims = this.getAssociatedPerim(prop.fireName)*/;
 
         // change the URL in the browser
-        setHeaders(fname + ' near ' + near.split(' of ')[1] + ' - Current Incident Information and Wildfire Map', prop.url,
-            'See current information on the ' + fname + ' near ' + near.split(' of ')[1] + '.');
+        setHeaders(`${fname} near ${near.split(' of ')[1]} - Current Incident Information and Wildfire Map`, prop.url,
+            `See current information on the ${fname} near ${near.split(' of ')[1]}.`);
 
         if (fire.inciweb && fire.inciweb.photo) {
             document.querySelector('meta[property="og:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
@@ -4677,10 +4733,10 @@ export class Wildfires {
             role: settings.getUser().role(),
             hasPermissions: settings.hasPermissions(),
             vars: {
-                domain: config.domain,
+                domain: ENV.domain,
                 center: this.getDispatchCenter(fire.protection.dispatch),
                 agencies: this.agencies,
-                tracked: tracked,
+                tracked: dataView.trackedFires,
                 acres: conversion.sizeFormat(prop.acres, true, false),
                 sizeUnit: conversion.sizeUnit(),
                 reported: {
@@ -4691,19 +4747,19 @@ export class Wildfires {
             }
         });
 
-        /* add content to modal after service worker finishes */
+        // add content to modal after service worker finishes
         config.workers.incident.onmessage = (event) => {
             modal.querySelector('.content').innerHTML = event.data;
 
             const acHis = modal.querySelector('#acres_history'),
                 scrd = modal.querySelector('span.coords');
 
-            /* if nearby evacuations exist, show them on the modal */
+            // if nearby evacuations exist, show them on the modal
             if (nearbyEvacs) {
                 let theEvacs = '';
 
                 if (nearbyEvacs.length > 0) {
-                    nearbyEvacs.reverse().forEach((z) => {
+                    nearbyEvacs.reverse().forEach(z => {
                         const nomen = (z.level == 1 ? 'Be Ready' : (z.level == 2 ? 'Be Set' : 'Leave Immediately'));
 
                         theEvacs += `<div class="evac level${z.level}">
@@ -4720,30 +4776,30 @@ export class Wildfires {
                 }
             }
 
-            /* get incident weather */
+            // get incident weather
             this.doWeather([fireLon, fireLat]);
 
-            /* remove any features that require a user to be subscribed */
+            // remove any features that require a user to be subscribed
             if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
                 acHis.style.height = 'unset';
                 acHis.innerHTML = '<a href="#" data-action="marketing-cta" data-utm="acres_history" class="btn btn-orange btn-lg" onclick="return false"><i class="fas fa-lock"></i>Upgrade to see growth history</a>';
                 /*document.querySelector('#acres_history').parentElement.parentElement.remove();*/
 
-                /* blur coordinates */
+                // blur coordinates
                 scrd.innerHTML = '0.0000 -0.0000';
                 scrd.style.cursor = 'default';
                 scrd.classList.add('blur');
             } else {
                 scrd.style.cursor = 'pointer';
 
-                /* load the script for the chart, then create the acreage chart */
+                // load the script for the chart, then create the acreage chart
                 if (acresHistory != null) {
                     const c = this;
 
-                    if (!highchartsLoad) {
+                    if (!inits.highchartsLoad) {
                         loadScript('https://code.highcharts.com/highcharts.js')
                             .then(() => {
-                                highchartsLoad = true;
+                                inits.highchartsLoad = true;
 
                                 loadScript('https://code.highcharts.com/modules/exporting.js').then(() => {
                                     c.createChart(fname, prop.incidentId, acresHistory);
@@ -4882,12 +4938,12 @@ export class Wildfires {
             loadPerimeter({
                 id: 'ca',
                 url: 'https://services.arcgis.com/wjcPoefzjpzCgffS/ArcGIS/rest/services/Active_Wildfire_Perimeters_in_Canada_View/FeatureServer/0',
-                where: '1=1 AND LASTDATE >= TIMESTAMP \'' + new Date().getFullYear() + '-01-01 00:00:00\' AND AREA >= ' + min
+                where: `1=1 AND LASTDATE >= TIMESTAMP \'${new Date().getFullYear()}-01-01 00:00:00\' AND AREA >= ${min}`
             }),
             loadPerimeter({
                 id: 'aus',
                 url: 'https://services-ap1.arcgis.com/ypkPEy1AmwPKGNNv/arcgis/rest/services/Near_Real_Time_Bushfire_Boundaries_view/FeatureServer/3',
-                where: '1=1 AND fire_name IS NOT NULL AND area_ha >= ' + min
+                where: `1=1 AND fire_name IS NOT NULL AND area_ha >= ${min}`
             })
         ]);
 
@@ -4903,9 +4959,9 @@ export class Wildfires {
             perimName = 'attr_IncidentName',
             w = `attr_FireDiscoveryDateTime>=TIMESTAMP '${y}-01-01 00:00:00'`;
 
-        if (!settings.archive) w += ' AND (poly_GISAcres > ' + min + ' OR poly_Acres_AutoCalc > ' + min + ') AND attr_FireOutDateTime IS NULL';
+        if (!settings.archive) w += ` AND (poly_GISAcres > ${min} OR poly_Acres_AutoCalc > ${min}) AND attr_FireOutDateTime IS NULL`;
 
-        /* get Canada wildfire perimeters if not in archive mode */
+        // get Canada wildfire perimeters if not in archive mode
         if (!settings.archive) this.intlPerimeters(update);
 
         if (!map.getSource('perimeters')) {
@@ -5083,34 +5139,31 @@ export class NWS {
         }
     }
 
-    /* get current weather alerts at the lat/lon of the users' click point */
+    // get current weather alerts at the lat/lon of the users' click point
     async find(lat, lon) {
         let out = '<p>There are no valid weather alerts at this location</p>',
             popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>' +
                 '<p style="text-align:center;margin-top:0.5em;font-size:14px">Getting weather alerts...</p>');
 
-        /*new maplibregl.Popup()
-            .setLngLat([lon, lat])
-            .setHTML('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div><p style="text-align:center;margin-top:0.5em">Getting weather alerts...</p>')
-            .addTo(map);*/
-
-        const data = await api(config.apiURL + 'nws', [['lat', lat], ['lon', lon]]);
+        const data = await api(`${ENV.apiURL}nws`, [['lat', lat], ['lon', lon]]);
 
         if (data.alerts && data.alerts.length > 0) {
-            let c = '';
+            let c = [];
 
-            data.alerts.forEach((a) => {
-                c += '<li style="line-height:1.3"><a href="#" data-action="readWWA" onclick="return false" data-id="' + a.id + '">' + a.event + '</a> until ' + a.expires + '</li>';
+            data.alerts.forEach(a => {
+                c.push(`<li style="line-height:1.3">
+                    <a href="#" data-action="readWWA" onclick="return false" data-id="${a.id}">${a.event}</a> until ${a.expires}
+                </li>`);
             });
 
-            /* update the popup with valid alerts */
-            out = '<ul style="padding-inline-start:1em;display:inline-flex;flex-direction:column;gap:.5em">' + c + '</ul>';
+            // update the popup with valid alerts
+            out = `<ul style="padding-inline-start:1em;display:inline-flex;flex-direction:column;gap:.5em">${c.join('')}</ul>`;
         }
 
         popup.update(out, 'Current Alerts');
     }
 
-    /* get SPC convective and fire weather outlooks */
+    // get SPC convective and fire weather outlooks
     async spc(update = false) {
         let od = document.querySelector('#otlkDay'),
             ot = document.querySelector('#otlkType'),
@@ -5125,7 +5178,7 @@ export class NWS {
             ty = settings.special().otlkType();
         }
 
-        const out = await api(config.apiURL + 'outlooks/' + ty, [['day', (dy ? dy : 1)]]);
+        const out = await api(`${ENV.apiURL}outlooks/${ty}`, [['day', (dy ? dy : 1)]]);
         if (!out) return;
 
         if (out.features.length == 0) {
@@ -5227,7 +5280,7 @@ export class NWS {
             t = '12';
         }
 
-        return config.curTime.getUTCFullYear() + '-' + m + '-' + d + 'T' + t + ':00:00.000Z';
+        return `${config.curTime.getUTCFullYear()}-${m}-${d}T${t}:00:00.000Z`;
     }
 
     ndfd(update = false, tid) {
@@ -5243,18 +5296,6 @@ export class NWS {
             if (fcstTime) [...fcstTime.options].forEach(o => o.selected = o.value === ft);
             settings.settings.special.fcstTime = ft;
         }
-
-        /*if (fcstMod) {
-            fm = fcstMod.options[fcstMod.selectedIndex].value;
-            ft = fcstTime.options[fcstTime.selectedIndex].value;
-        } else {
-            fm = settings.special().forecastModel();
-            ft = settings.special().fcstTime();
-        }
-
-        if (!ft) {
-            ft = config.curTime.getUTCFullYear() + '-' + ((config.curTime.getUTCMonth() + 1) < 10 ? '0' : '') + (config.curTime.getUTCMonth() + 1) + '-' + (config.curTime.getUTCDate() < 10 ? '0' : '') + config.curTime.getUTCDate() + 'T' + ((config.curTime.getUTCHours() + 1) < 10 ? '0' : '') + (config.curTime.getUTCHours() + 1) + ':00:00.000Z';
-        }*/
 
         const ops = {
             '12hr_precipitation_probability': ['ndfd_precipitation', 'forecasts/ndfd_precipitation/ows?layer=conus_12hr_precipitation_probability'],
@@ -5278,14 +5319,14 @@ export class NWS {
 
         if (update) {
             map.getSource('ndfd').setTiles([
-                'https://nowcoast.noaa.gov/geoserver/' + ur + '/wms?service=WMS&layers=' + fm + '&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=1920&height=626&time=' + ft + '&dim_time_reference=' + this.fcstHour() + '&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
+                `https://nowcoast.noaa.gov/geoserver/${ur}/wms?service=WMS&layers=${fm}&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=1920&height=626&time=${ft}&dim_time_reference=${this.fcstHour()}&crs=EPSG%3A3857&bbox={bbox-epsg-3857}`
             ]);
         } else {
             if (!map.getSource('ndfd')) {
                 map.addSource('ndfd', {
                     'type': 'raster',
                     'tiles': [
-                        'https://nowcoast.noaa.gov/geoserver/' + ur + '/wms?service=WMS&layers=' + fm + '&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=1920&height=626&time=' + ft + '&dim_time_reference=' + this.fcstHour() + '&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
+                        `https://nowcoast.noaa.gov/geoserver/${ur}/wms?service=WMS&layers=${fm}&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=1920&height=626&time=${ft}&dim_time_reference=${this.fcstHour()}&crs=EPSG%3A3857&bbox={bbox-epsg-3857}`
                     ],
                     'tileSize': 256
                 });
@@ -5320,7 +5361,7 @@ export class NWS {
             map.addSource('satellite' + w, {
                 'type': 'raster',
                 'tiles': [
-                    'https://nowcoast.noaa.gov/geoserver/satellite/wms?service=WMS&layers=' + layer + '&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=256&height=256&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
+                    `https://nowcoast.noaa.gov/geoserver/satellite/wms?service=WMS&layers=${layer}&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=256&height=256&crs=EPSG%3A3857&bbox={bbox-epsg-3857}`
                 ],
                 'tileSize': 256
             });
@@ -5347,99 +5388,86 @@ export class NWS {
             return;
         }
 
-        clickListener.openModal('wwa');
-        const type = otlkType == 'severe' ? 'Convective Outlook' : 'Fire Weather Outlook';
+        inits.clickListener.openModal('wwa');
+        const type = otlkType == 'severe' ? 'Severe Weather' : 'Fire Weather';
 
-        setHeaders('Day ' + day + ' ' + type, 'weather/outlook/' + otlkType + '/' + day,
-            'Read the Day ' + day + ' ' + type + ' from the NWS Storm Prediction Center.');
+        setHeaders(`Day ${day} ${type} Outlook`, `weather/outlook/${otlkType}/${day}`,
+            `Read the Day ${day} ${type} Outlook from the NWS Storm Prediction Center.`);
 
-        let graphics = '',
-            request = await api(config.apiURL + 'outlooks/' + otlkType + '/text', [['day', day]]);
+        let graphics = '';
+        const request = await api(`${ENV.apiURL}outlooks/${otlkType}/text`, [['day', day]]);
 
         if (!request) {
-            clickListener.closeModal();
+            inits.clickListener.closeModal();
             notify('error', 'There was an error getting outlook text');
         }
 
         const valid1 = dateTime(request.outlook.valid, true, true),
             valid2 = dateTime(request.outlook.expires, true, true);
 
-        setHeaders('Day ' + day + ' ' + type, 'weather/outlook/' + otlkType + '/' + day,
-            'Read the Day ' + day + ' ' + type + ' from the NWS Storm Prediction Center for ' + valid1 + ' until ' + valid2 + '.');
+        setHeaders(`Day ${day} ${type} Outlook`, `weather/outlook/${otlkType}/${day}`,
+            `Read the Day ${day} ${type} Outlook from the NWS Storm Prediction Center for ${valid1} until ${valid2}.`);
 
-        request.outlook.graphics.forEach((g) => {
-            graphics += `<div class="g"><a target="blank" href="https://www.spc.noaa.gov/products/${g}"><img alt="Day ${day} ${type}" title="Day ${day} ${type}" src="https://www.spc.noaa.gov/products/${g}"></a></div>`;
+        request.outlook.graphics.forEach(g => {
+            const gt = g.includes('torn') ? 'Tornado' : (g.includes('hail') ? 'Hail' : (g.includes('wind') ? 'Wind' : type));
+            graphics += `<div class="g">
+                <a target="blank" href="${ENV.baseURL}src/images/spc?path=${g}">
+                    <img alt="Day ${day} ${gt} Outlook" class="ttip" data-tooltip="Day ${day} ${gt} Outlook" src="https://www.spc.noaa.gov/products/${g}">
+                </a>
+            </div>`;
         });
 
-        /*let content = `<div class="container">
-            <h1 class="title">
-                Day ${day} ${type}
-            </h1>
-            <div class="bar">
-                <p class="times">
-                    <span>Issued <b>${timeAgo(request.outlook.issued)}</b></span>
-                    <span>Valid from <b>${valid1}</b> until <b>${valid2}</b></span>
-                    <span>Issued by <a target="blank" href="https://www.spc.noaa.gov/" title="NOAA/NWS Storm Prediction Center">NOAA/NWS Storm Prediction Center</a></span>
-                </p>
-            </div>
-            <div class="wwa-details">
-                ${request.outlook.text}
-                <p style="color:#561717"><b>Forecaster:</b> ${request.outlook.forecaster}</p>
-            </div>
-            <div class="graphics">
-                ${graphics}
-            </div>
-        </div>`;*/
+        const forecastText = request.outlook.text.replace(/<p><b>(<u>)?(.*?)(<\/u>)?<\/b><\/p>/gm, `<p style="padding-bottom:.75em"><b>$1$2$3</b></p>`);
 
-        let content = `<div class="container">
-                <div class="wwa">
-                    <header>
-                        <div class="title">
-                            <div class="tray">
-                                <h1>Day ${day} ${type}</h1>
-                            </div>
-
-                            <p class="timestamps">
-                                Issued <b>${timeAgo(request.outlook.issued)}</b> &middot; Valid from <b>${valid1}</b> until <b>${valid2}</b> &middot; Issued by <a target="blank" href="https://www.spc.noaa.gov/" title="NOAA/NWS Storm Prediction Center">NOAA/NWS Storm Prediction Center</a>
-                            </p>
-                        </div>
-                    </header>
-
-                    <div class="block">
-                        <div class="card row">
-                            <div class="col wwa-details" data-width="100">
-                                ${request.outlook.text}
-
-                                <b>Forecaster:</b> ${request.outlook.forecaster}
-                            </div>
+        const content = `<div class="container">
+            <div class="wwa">
+                <header>
+                    <div class="title">
+                        <div class="tray">
+                            <h1>Day ${day} ${type} Outlook</h1>
                         </div>
 
-                        <div class="graphics">
-                            ${graphics}
+                        <p class="timestamps">
+                            <span>Issued <b>${timeAgo(request.outlook.issued)}</b></span>
+                            <span>Valid from <b>${valid1}</b> until <b>${valid2}</b></span>
+                            <span>Issued by <a target="blank" href="https://www.spc.noaa.gov/" title="NOAA/NWS Storm Prediction Center">NOAA/NWS Storm Prediction Center</a></span>
+                        </p>
+                    </div>
+                </header>
+
+                <div class="block">
+                    <div class="card row">
+                        <div class="col wwa-details" data-width="100">
+                            ${forecastText}
+
+                            <span style="display:block;margin-top:1em"><b>Forecaster:</b> ${request.outlook.forecaster}</span>
                         </div>
                     </div>
+
+                    <div class="graphics">
+                        ${graphics}
+                    </div>
                 </div>
-            </div>`;
+            </div>
+        </div>`;
 
         modal.querySelector('.content').innerHTML = content;
     }
 
     async readWWA(id, click = true) {
-        clickListener.openModal('wwa');
+        inits.clickListener.openModal('wwa');
 
-        const request = await api(config.apiURL + 'getWWA', [['id', id]]),
+        const request = await api(`${ENV.apiURL}getWWA`, [['id', id]]),
             a = request.wwa;
 
-        if (config.workers.wwas == null) {
-            config.workers.wwas = new Worker(config.specificURL + (debugMode ? 'v' + version + '/wwas.js' : 'src/js/wwas-' + version + '.js'));
-        }
+        getWorker('wwas');
 
-        setHeaders(a.title + ' issued by the National Weather Service in ' + a.office, 'weather/alert/' + id,
-            'The National Weather Service in ' + a.office + ' has issued a ' + a.title + ' for ' + a.area + ' until ' + a.expires + '.');
+        setHeaders(`${a.title} issued by the National Weather Service in ${a.office}`, `weather/alert/${id}`,
+            `The National Weather Service in ${a.office} has issued a ${a.title} for ${a.area} until ${a.expires}.`);
 
         config.workers.wwas.postMessage(a);
 
-        /* add content to modal after service worker finishes */
+        // add content to modal after service worker finishes
         config.workers.wwas.onmessage = (event) => {
             modal.querySelector('.content').innerHTML = event.data;
 
@@ -5447,6 +5475,996 @@ export class NWS {
                 modal.querySelector('h1.title').style.color = a.color;
             }
         };
+    }
+}
+
+export class ClickListener {
+    constructor(target, sr) {
+        this.target = target;
+        this.modalHeightFromTop = 0.3;
+        this.sr = sr;
+    }
+
+    android() {
+        sessionStorage.setItem('recommend_google_play', 1);
+        document.querySelector('.android-banner').remove();
+    }
+
+    tools() {
+        config.toolsInstance.clickListener(this.target);
+    }
+
+    myContent() {
+        config.toolsInstance.myContent();
+    }
+
+    async mcta() {
+        (await loadUtils()).marketing(true, this.target.dataset.utm);
+    }
+
+    async copy(text = null, msg = null) {
+        await navigator.clipboard.writeText(text != null ? text : this.target.innerText);
+        (await loadUtils()).notify('info', msg ? msg : 'Coordinates copied to clipboard');
+    }
+
+    closeDataForm() {
+        const r = document.querySelector('li#report'),
+            fw = document.querySelector('li#fwf');
+
+        document.querySelector('#data-form')?.remove();
+        document.querySelector('.shadow')?.remove();
+
+        if (r?.dataset.active === '1') r.removeAttribute('data-active');
+        if (fw.dataset.active === '1') fw.removeAttribute('data-active');
+    }
+
+    closeArchive() {
+        window.location.href = window.location.href.replace(/archive\/([0-9]+)/g, '');
+    }
+
+    async clearSearch() {
+        const q = document.querySelector('#q');
+        if (!q) return;
+
+        q.value = '';
+        document.querySelector('#clearSearch')?.style.setProperty('display', 'none');
+        new (await loadUtils()).Search('').do();
+        q.focus();
+    }
+
+    clearLayerSearch() {
+        document.querySelectorAll('.layers-list li.layer').forEach(layer => layer.style.display = 'flex');
+        impact.querySelector('#layerSearch').setProperty('value', '');
+    }
+
+    closeImpact() {
+        if (map.getSource('user-features')) {
+            map.removeSource('user-features');
+            map.removeLayer('user-features-markers');
+        }
+
+        impact.removeAttribute('data-display');
+        impact.style.display = 'none';
+        impact.innerHTML = '';
+    }
+
+    openModal(aClass) {
+        modal.className = aClass || '';
+        if (modal.hasAttribute('open')) return;
+
+        modal.querySelector('.content').innerHTML = '<div class="loading"><div class="s"></div></div>';
+
+        const onTransitionEnd = (e) => {
+            if (e.propertyName === 'top') {
+                modal.removeEventListener('transitionend', onTransitionEnd);
+
+                const event = new CustomEvent('modalOpened', { detail: { top: openPosition } });
+                modal.dispatchEvent(event);
+            }
+        };
+
+        const handle = modal.querySelector('.close'),
+            viewportHeight = window.innerHeight,
+            openPosition = viewportHeight * this.modalHeightFromTop,    // 30 vh from top
+            minTop = viewportHeight * 0.1,       // 10vh
+            closedPosition = viewportHeight,     // 100%
+            snapVelocity = 0.25,                 // px/ms
+            throwStartThreshold = viewportHeight * 0.9; // only throw if near bottom
+
+        let isDragging = false, startY = 0, startTop = 0, lastY = 0, lastTime = 0;
+
+        modal.onModalChanged = function (callback, { once = true } = {}) {
+            if (!this) return;
+
+            const observer = new MutationObserver((mutations, obs) => {
+                if (once) obs.disconnect();
+
+                requestAnimationFrame(() => {
+                    try {
+                        callback();
+                    } catch (err) {
+                        console.error('onModalChanged error', err);
+                    }
+                });
+            });
+
+            observer.observe(this, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+
+            return observer;
+        };
+
+        modal.onModalChanged(() => {
+            const content = modal.querySelector('.content');
+
+            requestAnimationFrame(() => {
+                if (content.scrollHeight > content.clientHeight) {
+                    content.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+        });
+        modal.setAttribute('open', '');
+        modal.style.top = `${closedPosition}px`;
+        modal.style.transition = 'top 0.85s ease';
+
+        // add event listener for when modal has finished opening
+        modal.addEventListener('transitionend', onTransitionEnd);
+
+        requestAnimationFrame(() => {
+            modal.style.top = `${openPosition}px`;
+        });
+
+        if (handle) {
+            handle.addEventListener('dblclick', () => {
+                this.closeModal();
+            });
+
+            handle.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                startY = e.clientY;
+                startTop = parseFloat(modal.style.top) || openPosition;
+                lastY = startY;
+                lastTime = performance.now();
+                modal.style.transition = '';
+                handle.setPointerCapture(e.pointerId);
+            });
+
+            handle.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                let deltaY = e.clientY - startY;
+                let newTop = startTop + deltaY;
+
+                newTop = Math.max(minTop, Math.min(closedPosition, newTop));
+                modal.style.top = `${newTop}px`;
+
+                lastY = e.clientY;
+                lastTime = performance.now();
+            });
+
+            handle.addEventListener('pointerup', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                handle.releasePointerCapture(e.pointerId);
+
+                const currentTop = parseFloat(modal.style.top);
+                const deltaY = e.clientY - startY;
+                const deltaTime = performance.now() - lastTime;
+                const velocity = deltaTime > 0 ? deltaY / deltaTime : 0;
+
+                modal.style.transition = 'top 0.2s ease';
+
+                // 1. Fast downward flick AND dragged past threshold → close
+                if (velocity > snapVelocity && currentTop > throwStartThreshold) {
+                    modal.style.top = `${closedPosition}px`;
+                    setTimeout(() => { this.closeModal(); }, 200);
+                    return;
+                }
+
+                if (velocity < -snapVelocity) {
+                    modal.style.top = `${minTop}px`;
+                    return;
+                }
+
+                if (currentTop > viewportHeight * 0.7) {
+                    modal.style.top = `${closedPosition}px`;
+                    setTimeout(() => { this.closeModal(); }, 200);
+                } else if (currentTop < viewportHeight * 0.3) {
+                    modal.style.top = `${minTop}px`;
+                } else {
+                    modal.style.top = `${openPosition}px`;
+                }
+
+                setTimeout(() => (modal.style.transition = ''), 200);
+            });
+        }
+    }
+
+    closeModal() {
+        modal.style.top = '100%';
+        setTimeout(() => {
+            modal.removeAttribute('open');
+            modal.className = '';
+            modal.innerHTML = '<div class="close" data-action="close-modal"><div class="handle"></div></div><div class="content"></div>';
+        }, 200);
+
+        unsetHeaders();
+    }
+
+    closePopup() {
+        if (marker) marker.remove();
+        if (!settings.isEnabled('stns') && map.getSource('stns')) {
+            map.removeLayer('stns');
+            map.removeLayer('stns_text');
+            map.removeSource('stns');
+        }
+
+        document.querySelector('.popup')?.remove();
+
+        unsetHeaders();
+
+        const sourceMap = {
+            caperim: 'ca_perimeters',
+            ausperim: 'aus_perimeters',
+            perim: 'perimeters'
+        };
+
+        ['caperim', 'ausperim', 'perim', 'evac', 'nri', 'erc'].forEach(key => {
+            const source = sourceMap[key] || key;
+
+            if (selected[key] && map.getSource(source)) {
+                map.removeFeatureState({ source, id: selected[key] });
+                selected[key] = null;
+            }
+        });
+    }
+
+    closeNavbar() {
+        if (!this.target) return;
+        const nav = document.querySelector('nav'),
+            isOpen = this.target.dataset.open === 'true',
+            left = 'fa-chevron-left',
+            right = 'fa-chevron-right';
+
+        this.target.dataset.open = (!isOpen).toString();
+        this.target.classList.replace(isOpen ? left : right, isOpen ? right : left);
+
+        document.documentElement.style.setProperty('--nav-width', isOpen ? '40px' : '89px');
+        nav?.classList.toggle('hide', isOpen);
+    }
+
+    newFire() {
+        const dataset = this.target?.closest('li')?.dataset;
+        if (!dataset) return;
+
+        this.closeDataForm();
+
+        map.easeTo({
+            center: [dataset.lon, dataset.lat],
+            zoom: 12,
+            duration: 0
+        });
+    }
+
+    sharer() {
+        if (!navigator.share) return;
+
+        navigator.share({
+            title: (this.target.getAttribute('title') ? this.target.getAttribute('title') : document.title),
+            text: "",
+            url: (this.target.dataset.href ? this.target.dataset.href.split('#')[0] : window.location.href.split('#')[0])
+        }).catch(console.error);
+    }
+
+    renderLayerItem(layer, zoom) {
+        return `<li class="layer${layer.minZoom && layer.minZoom > zoom ? ' more-zoom' : ''}"${layer.minZoom ? ` data-min-zoom="${layer.minZoom}"` : ''} data-p="${layer.perms}" data-id="${layer.id}" title="${layer.minZoom && layer.minZoom > zoom ? 'You must be zoomed in more' : layer.name}">
+            <div class="checkbox">
+                <input type="checkbox" id="${layer.id}" class="layChkBx" data-action="toggle-layer">
+            </div>
+            <div class="desc">
+                <label for="${layer.id}">${layer.name}</label>
+                <span>${layer.desc}</span>
+                ${this.layerExtras(layer)}
+            </div>
+        </li>`;
+    }
+
+    createLayers() {
+        const zoom = map.getZoom();
+        let content = ['<div class="content"><div class="dark-input"><input type="text" id="layerSearch" placeholder="Filter through layers..."><i data-action="clear-layer-search" class="fat fa-xmark clearSearch"></i></div>'];
+
+        // Loop through layer categories
+        Object.entries(layers.categories).forEach(([categoryId, categoryTitle]) => {
+            content.push(`<div class="group"><h3 class="group-title">${categoryTitle}</h3><ul class="layers-list">`);
+
+            // Loop through layers in each category
+            layers.layers[categoryId].filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
+                content.push(this.renderLayerItem(layer, zoom));
+            });
+
+            content.push('</ul></div>');
+        });
+
+        config.layersMenu = `${content.join('')}</div>`;
+    }
+
+    // show/open layers menu
+    showLayers() {
+        const scrollPosition = storage('mapofire.impactScroll');
+
+        if (config.layersMenu == null) this.createLayers();
+
+        impact.innerHTML = impactHeader + config.layersMenu;
+        impact.querySelector('#a').innerHTML = 'Layers';
+
+        config.listOfLayers.filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
+            const hasPermissions = settings.hasPermissions(layer.perms),
+                isChecked = (layer.default && !settings.checkboxes()) || (settings.checkboxes() && settings.isEnabled(layer.id)),
+                item = impact.querySelector(`li.layer[data-id="${layer.id}"]`),
+                filter = item.querySelector('.data-filter'),
+                box = item.querySelector('.checkbox');
+
+            if (box) box.querySelector('input[type=checkbox]').checked = isChecked;
+
+            if (layer.minZoom) {
+                if (map.getZoom() >= item.dataset.minZoom) {
+                    item.classList.remove('more-zoom');
+                    item.title = String(item.querySelector('label').innerHTML);
+                } else {
+                    item.classList.add('more-zoom');
+                    item.title = 'You must be zoomed in more';
+                }
+            }
+
+            if (!hasPermissions) {
+                item.classList.add('locked');
+
+                if (filter) filter.style.display = 'none';
+
+                box.innerHTML = premFeature;
+                item.addEventListener('click', () => {
+                    notify('info', `This is a ${layer.perms.includes('PREMIUM') ? 'premium' : 'pro'} layer. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="layers_snackbar">Get access</a>`, 4);
+                });
+            } else {
+                if (filter) {
+                    const adjust = {
+                        spc: [{
+                            q: 'otlkType',
+                            v: settings.special().otlkType()
+                        }, {
+                            q: 'otlkDay',
+                            v: settings.special().otlkDay()
+                        }],
+                        erc: [{
+                            q: 'erc_time',
+                            v: settings.special().erc()
+                        }],
+                        sfp: [{
+                            q: 'sfpDateSelect',
+                            v: settings.special().sfpDate()
+                        }],
+                        ndfd: [{
+                            q: 'forecastModel',
+                            v: settings.special().forecastModel()
+                        }/*, {
+                            q: 'fcstTime',
+                            v: settings.special().fcstTime()
+                        }*/]
+                    };
+
+                    if (isChecked) filter.querySelectorAll('select').forEach(select => select.disabled = false);
+
+                    const filterLayer = adjust[layer.id];
+
+                    if (filterLayer) {
+                        for (let i = 0; i < filterLayer.length; i++) {
+                            const s = filter.querySelector(`#${filterLayer[i].q}`);
+                            s.value = filterLayer[i].v;
+
+                            if (!s.value) s.selectedIndex = 1;
+                        }
+                    }
+                }
+            }
+        });
+
+        impact.dataset.display = 'layers';
+        impact.style.display = 'flex';
+
+        if (scrollPosition !== null && scrollPosition !== '0') impact.scrollTop = scrollPosition;
+    }
+
+    // creates dropdowns for some layers
+    layerExtras(l) {
+        const spec = settings.special?.() || {},
+            icon = (cls) => `<i class="${cls}" style="color:#9caab3"></i>`,
+            wrap = (id, content) => `<div class="data-filter" id="${id}">${icon('far fa-filter-list')}<div>${content}</div></div>`,
+            sel = (val, target) => val === target ? 'selected' : '',
+            smokeOptions = () => Array.from({ length: 15 }, (_, i) => {
+                const timeVal = gmtime(++i * 3600),
+                    date = new Date(`${timeVal}+00:00`),
+                    hrs = date.getHours(),
+                    isMid = hrs === 0,
+                    day = date.getDate() === config.curTime.getDate() + 1 ? 'Tomorrow' : 'Today',
+                    label = isMid ? 'Midnight' : `${day} at ${hrs % 12 || 12} ${hrs >= 12 ? 'PM' : 'AM'}`;
+
+                return `<option value="${timeVal}">${label}</option>`;
+            }).join('');
+
+        const filters = {
+            perimeters: () => {
+                const size = settings.perimeters().minSize();
+
+                return `<div class="data-filter" id="perimeterSize" data-action="change-perim-size">
+                    ${icon('fad fa-filters')}
+                    <input type="range" class="slider" min="0" max="1000" step="25" value="${size}">
+                    <div id="pSize" style="width:69.11px">${size} acres</div>
+                </div>`;
+            },
+
+            ndfd: () => {
+                const model = spec.forecastModel || 'air_temperature',
+                    opts = [
+                        ['air_temperature', 'Temperature'],
+                        ['relative_humidity', 'Humidity'],
+                        ['wind_speed', 'Wind Speed'],
+                        ['total_sky_cover', 'Cloud Cover'],
+                        ['12hr_precipitation_probability', '12-hr POPs']
+                    ].map(([v, n]) => `<option ${sel(v, model)} value="${v}">${n}</option>`).join('');
+
+                return wrap('models', `<select id="forecastModel" data-action="ndfd" style="min-width:170px" disabled>${opts}</select>
+                <select id="fcstTime" data-action="ndfd" data-type="reg" style="min-width:100px;max-width:35%" disabled>${initNDFDTimes().join('')}</select>`);
+            },
+
+            sfp: () => wrap('sfpDate', `<select id="sfpDateSelect" data-action="sfp-date" disabled>
+                ${sfpTimes().map(i => `<option value="${i.key}">${i.value}</option>`).join('')}</select>`
+            ),
+
+            spc: () => {
+                const type = spec.otlkType?.() || 'fire', day = spec.otlkDay?.() || 1;
+
+                return wrap('otlks', `<select id="otlkType" data-action="spc-outlook" style="min-width:170px" disabled>
+                    <option ${sel('fire', type)} value="fire">Fire Weather</option>
+                    <option ${sel('severe', type)} value="severe">Severe/Convective</option></select>
+                    <select id="otlkDay" data-action="spc-outlook" style="min-width:100px" disabled>
+                    <option ${sel(1, day)} value="1">Day 1</option><option ${sel(2, day)} value="2">Day 2</option>
+                    ${type !== 'fire' ? `<option ${sel(3, day)} value="3">Day 3</option>` : ''}</select>`
+                );
+            },
+
+            erc: () => wrap('ercs', `<select id="erc_time" data-action="erc_time" style="min-width:197px" disabled>
+                <option ${sel('obs', spec.erc?.())} value="obs">Observed (Today)</option>
+                <option ${sel('fcst', spec.erc?.())} value="fcst">Forecasted (Tomorrow)</option></select>`
+            ),
+
+            viSmoke: () => wrap('viSmokes', `<select id="vi_smoke_time" data-action="vi_smoke_time" style="min-width:160px" disabled>${smokeOptions()}</select>`),
+
+            sfcSmoke: () => wrap('sfcSmokes', `<select id="sfc_smoke_time" data-action="sfc_smoke_time" style="min-width:160px" disabled>${smokeOptions()}</select>`)
+        };
+
+        return filters[l.id]?.() || '';
+    }
+
+    basemaps() {
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'content';
+
+        const basemapListUl = document.createElement('ul');
+        basemapListUl.className = 'layers-list bm';
+
+        tileConfig.forEach(tile => {
+            const hasPerms = settings.hasPermissions(tile.permissions),
+                isChecked = tile.id === settings.getBasemap(),
+                listItem = document.createElement('li'),
+                radioDiv = document.createElement('div'),
+                descDiv = document.createElement('div');
+
+            // Create the list item for the basemap
+            listItem.dataset.tile = tile.id;
+
+            // Create the radio and description containers
+            radioDiv.className = 'radio';
+            descDiv.className = 'desc';
+
+            // Add the radio button or premium feature
+            if (hasPerms) {
+                const radioInput = document.createElement('input');
+                Object.assign(radioInput, {
+                    type: 'radio',
+                    className: 'basemap-option',
+                    name: 'bsmo',
+                    checked: isChecked
+                });
+                radioInput.dataset.action = 'change-basemap';
+                radioInput.dataset.tile = tile.id;
+                radioDiv.appendChild(radioInput);
+            } else {
+                radioDiv.innerHTML = premFeature;
+
+                radioDiv.addEventListener('click', () => {
+                    const tier = tile.permissions.includes('PREMIUM') ? 'premium' : 'pro';
+                    notify('info', `This is a ${tier} basemap. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="basemaps_snackbar">Get access</a>`, 4);
+                });
+            }
+
+            // Add the icon and label
+            const img = document.createElement('img');
+            img.src = `${ENV.domain}assets/images/icons/fire/basemaps/${tile.imgs}.png`;
+            if (!hasPerms) img.style.opacity = '0.5';
+
+            const label = document.createElement('label');
+            label.innerHTML = `${tile.name}${(tile.permissions.length ? `<p>${tile.permissions[0]}</p>` : '')}`;
+
+            // Assemble the list item
+            descDiv.appendChild(img);
+            descDiv.appendChild(label);
+            listItem.appendChild(radioDiv);
+            listItem.appendChild(descDiv);
+            basemapListUl.appendChild(listItem);
+        });
+
+        // Update the DOM in a single, efficient operation
+        impact.innerHTML = impactHeader;
+        contentDiv.appendChild(basemapListUl);
+        impact.appendChild(contentDiv);
+        impact.style.display = 'flex';
+        impact.querySelector('#a').innerHTML = 'Basemaps';
+
+        // Use event delegation on the parent element
+        basemapListUl.addEventListener('click', e => {
+            const listItem = e.target.closest('li');
+            if (!listItem) return;
+
+            const radio = listItem.querySelector('input.basemap-option');
+            if (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+    }
+
+    acctSettings() {
+        let content = '';
+        const settings = [
+            {
+                t: 'Save Frequency',
+                i: 'saveFreq',
+                o: { 60000: '1 min', 300000: '5 mins', 600000: '10 mins', 900000: '15 mins', 1800000: '30 mins' }
+            },
+            {
+                t: 'Perimeter Color',
+                i: 'perimColor',
+                o: { 'default': 'Default', 'red': 'Red', 'blue': 'Blue', 'orange': 'Orange', 'green': 'Green', 'purple': 'Purple', 'brown': 'Brown', 'black': 'Black' }
+            },
+            {
+                t: 'Perimeter Tooltip',
+                i: 'perimTtip',
+                o: { 1: 'Yes', 0: 'No' }
+            },
+            {
+                t: 'Perimeter Zoom',
+                i: 'perimZoom',
+                o: { 1: 'Yes', 0: 'No' }
+            },
+            {
+                t: 'Coordinates',
+                i: 'coordsDisplay',
+                o: { 'dec': 'Decimal', 'dms': 'Degs, Mins, Secs', 'utm': 'UTM' }
+            },
+            {
+                t: 'Temperature Unit',
+                i: 'tempUnit',
+                o: { 'f': '&deg;F', 'c': '&deg;C' }
+            },
+            {
+                t: 'Wind Speed Unit',
+                i: 'windUnit',
+                o: { 'mph': 'mph', 'm/s': 'm/s', 'kts': 'kts', 'km/h': 'km/h' }
+            },
+            {
+                t: 'Fire Size Unit',
+                i: 'acresUnit',
+                o: { 'acres': 'acres', 'hectares': 'hectares', 'sqmi': 'sq. mi.', 'sqkm': 'sq. km.' }
+            },
+            {
+                t: 'Cache Fire Data',
+                i: 'locallySave',
+                o: { 'y': 'Yes', 'n': 'No' }
+            }
+        ];
+
+        settings.forEach(setting => {
+            const options = Object.entries(setting.o)
+                .map(([val, label]) => `<option value="${val}">${label}</option>`)
+                .join('');
+            content += `<div class="r"><div class="var">${setting.t}</div><div class="input"><select id="${setting.i}" data-action="user-setting">${options}</select></div></div>`;
+        });
+
+        return content;
+    }
+
+    async account() {
+        if (!settings.user) {
+            const guid = document.cookie.split('; ').find(row => row.startsWith('guid='))?.split('=')[1] || null,
+                url = `${ENV.domain.replace('//', '//auth.')}login?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}${(guid ? `&guid=${guid}` : '')}`;
+            ////console.log(url);
+            window.location.href = url;
+            return;
+        }
+
+        let ms = '';
+        const userProfile = `<div class="content">
+            <div id="sync">
+                <i class="fa-regular fa-arrow-down-to-line" aria-hidden="true"></i>
+                <span title="${dateTime(settings.getUser().synced(), true, true, true).toString()}">Account last synced ${timeAgo(settings.user.settings.synced)}</span>
+            </div>
+            <div id="settings">
+                <div class="my-subs">
+                    <h2>My Subscriptions</h2>
+                    <div id="subs"></div>
+                </div>
+                <h2>Map Settings</h2>
+                ${this.acctSettings()}
+                <div class="btn-group centered" style="margin:var(--spacing) 0 0">
+                    <a target="blank" class="btn btn-black" style="width:100%" href="${ENV.domain}account/settings">Manage account</a>
+                </div>
+                <div style="margin-top:5em;font-size:12px;text-align:center;color:var(--blue-gray);line-height:1.3">
+                    &copy; ${new Date().getFullYear()} ${config.company}<br>Version ${version}<br>
+                    <a class="footer-link" href="${ENV.baseURL}logout?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}">Logout</a>&nbsp;&middot;&nbsp;
+                    <a class="footer-link" href="${ENV.host}release-notes" target="blank">Change Log</a>&nbsp;&middot;&nbsp;
+                    <a class="footer-link" href="${ENV.domain}about/legal/terms" target="blank">Terms</a>&nbsp;&middot;&nbsp;
+                    <a class="footer-link" href="${ENV.domain}about/legal/privacy" target="blank">Privacy</a>
+                </div>
+            </div>
+        </div>`;
+
+        impact.innerHTML = impactHeader + userProfile;
+        impact.style.display = 'flex';
+        impact.querySelector('#a').innerHTML = `Hello, ${settings.getUser().getName().first()}`;
+
+        const prefs = {
+            'saveFreq': settings.get().saveFreq(),
+            'perimColor': settings.perimeters().color() ?? 'default',
+            'perimTtip': settings.perimeters().ttip() ?? 1,
+            'perimZoom': settings.perimeters().zoom() ? 1 : 0,
+            'coordsDisplay': settings.get().coordsDisplay() ?? 'dec',
+            'tempUnit': settings.weather().temp() ?? 'f',
+            'windSpeedUnit': settings.weather().wind() ?? 'mph',
+            'acresUnit': settings.get().acres() ?? 'acres',
+            'locallySave': settings.get().locallySave() ?? 'n'
+        };
+
+        Object.entries(prefs).forEach(([id, val]) => {
+            const el = document.querySelector(`select#${id}`);
+            if (el) el.value = val;
+        });
+
+        if (!settings.subscriptions().valid()) {
+            const buy = (await loadUtils()).purchaseLink('account', encodeURIComponent(window.location.href));
+            ms = `<p style="color:var(--box-text-color)">
+                You don\'t have a subscription to Map of Fire.
+                <a class="btn btn-yellow" style="width:100%;margin:1em 0 0 0" href="${buy}">Try it for free!</a>
+            </p>`;
+        } else {
+            let theEnd = 'Your subscription will automatically renew';
+
+            if (settings.subscriptions().isTrial()) {
+                theEnd = 'Your free trial ends ';
+            }
+
+            ms = `<div style="display:inline-flex;width:100%;justify-content:space-between;gap:1em">
+                <div style="display:inline-flex;flex-direction:column;gap:0.45em">
+                    <span>${settings.subscriptions().name()}</span>
+                    <small style="line-height:1.1;color:#999">${theEnd} on ${settings.subscriptions().expires()}.</small>
+                </div>
+                <a class="btn btn-sm btn-black" style="margin:0;height:fit-content" target="blank" href="${ENV.domain}account/billing#cid=${settings.subscriptions().customerID()}">Manage</a>
+            </div>`;
+        }
+
+        document.querySelector('#subs').innerHTML = ms;
+    }
+
+    radarStop() {
+        if (radar.animationTimer) {
+            clearTimeout(radar.animationTimer);
+            radar.animationTimer = false;
+            return true;
+        }
+        return false;
+    }
+
+    radarPlay() {
+        radar.animationTimer = true;
+        config.layersHandler.showRadarFrame(radar.animationPosition + 1);
+        const range = document.querySelector('.radar input[type=range]');
+        range.value = radar.animationPosition;
+
+        const percent = (range.value - range.min) / (range.max - range.min) * 100;
+        range.style.setProperty('--val', percent + '%');
+    }
+
+    radarPausePlay() {
+        const c = document.querySelector('.radarControl');
+
+        c.classList.toggle('fa-play');
+        c.classList.toggle('fa-pause');
+        c.dataset.tooltip = c.classList.contains('fa-play') ? 'Start radar' : 'Pause radar';
+
+        if (!this.radarStop()) this.radarPlay();
+    }
+
+    spcClimo() {
+        if (this.target.classList.contains('disabled')) return;
+
+        const select = document.querySelector('.spcTimeline #spcDates');
+        let newIndex = select.selectedIndex;
+
+        if (this.target.dataset.dir === 'back') newIndex -= 1;
+        if (this.target.dataset.dir === 'next') newIndex += 1;
+
+        newIndex = Math.max(0, Math.min(364, newIndex));
+
+        config.layersHandler.spcClimo(newIndex, true, true);
+    }
+
+    async follow() {
+        const id = parseInt(this.target.dataset.id);
+        const fire = config.wildfire.findFire(id);
+
+        if (!fire) return;
+
+        const name = fire.properties.name.replace(' Fire', '') + (fire.properties.type != 'Smoke Check' ? ' Fire' : '');
+        const isRemove = this.target.dataset.mode == 'unfollow' && dataView.trackedFires.includes(id);
+        const tf = document.querySelector('#trackFire');
+
+        if (isRemove) {
+            dataView.trackedFires.splice(dataView.trackedFires.indexOf(id), 1);
+        } else {
+            dataView.trackedFires.push(id);
+        }
+
+        if (tf) {
+            const m = isRemove ? 'remove' : 'add';
+
+            tf.dataset.mode = isRemove ? 'follow' : 'unfollow';
+            tf.title = isRemove ? 'Start following this incident' : 'You\'re following this incident';
+            tf.classList.toggle('btn-black', !isRemove);
+            tf.classList.toggle('btn-yellow', isRemove);
+            tf.innerHTML = isRemove ? '<i class="far fa-plus"></i>Follow this incident' : '<i class="far fa-check"></i>Following this incident';
+
+            // if user is logged in, save to account, otherwise store in local storage
+            if (settings.user) {
+                await api(`${ENV.host}api/v1/trackFires/${isRemove ? 'remove' : 'add'}`, [['wfid', id]], false, true);
+            } else {
+                storage('mapofire.tracked', JSON.stringify(dataView.trackedFires));
+            }
+
+            notify('success', `You're ${isRemove ? 'no longer following' : 'now following'} the ${name}.`);
+        }
+    }
+
+    async unfollow(tar) {
+        const id = Number(tar.dataset.wfid),
+            name = tar.dataset.name,
+            myf = document.querySelector('ul.my-fires');
+
+        tar.closest('li')?.remove();
+
+        const index = dataView.trackedFires.indexOf(id); console.log(index);
+        if (index > -1) dataView.trackedFires.splice(index, 1);
+
+        if (settings.user) {
+            await api(`${ENV.host}api/v1/trackFires/remove`, [['wfid', id]], false, true);
+        } else {
+            const stored = JSON.parse(storage('mapofire.tracked') || '[]');
+            stored.splice(stored.indexOf(id), 1);
+            storage('mapofire.tracked', JSON.stringify(stored));
+        }
+
+        if (myf?.querySelectorAll('li').length == 0) myf.parentElement.innerHTML = noneTracked;
+
+        notify('success', `You're no longer following the ${name}.`);
+    }
+
+    archive() {
+        if (settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
+            const yrs = Array.from({ length: config.curTime.getFullYear() - 2014 }, (_, idx) => {
+                const year = config.curTime.getFullYear() - idx;
+                return `<option ${year === config.curTime.getFullYear() ? 'disabled ' : ''}value="${year}">${year}</option>`;
+            }).join('');
+
+            new Popup('Historical Wildfires').create(`<p style="font-size:14px;line-height:1.2">See historical wildfires by selecting a year in our archive.</p>
+                <select id="archive_years" data-action="archive_years" style="border:1px solid #cfcfcf;margin-top:1em"><option>- Choose a year -</option>${yrs}</select>
+                <div class="btn-group centered">
+                    <input type="button" class="btn btn-sm btn-gray" value="Cancel" onclick="this.parentElement.parentElement.parentElement.remove()">
+                </div>`);
+        }
+    }
+
+    async legend() {
+        const { legend } = await loadUtils();
+        if (!legend?.categories?.length || !legend?.items) return;
+
+        let legCont = legend.categories.map(cat => {
+            const key = Object.keys(cat)[0];
+
+            const itemsHtml = (legend.items[key] || [])
+                .map(item => {
+                    const icon = item[0] === 'icon'
+                        ? item[1]
+                        : `<div class="color" style="background-color:${item[2]}">${item[1] ?? ''}</div>`;
+                    return `<div class="row"><div class="ic">${icon}</div><div class="desc">${item[3] ?? ''}</div></div>`;
+                }).join('');
+
+            return `<div class="group"><h3 class="group-title">${cat[key]}</h3>${itemsHtml}</div>`;
+        }).join('');
+
+        impact.innerHTML = `${impactHeader}<div class="content"><div class="legend">${legCont}</div></div>`;
+        impact.dataset.display = 'legend';
+        impact.style.display = 'flex';
+
+        const aEl = impact.querySelector('#a');
+        if (aEl) aEl.innerHTML = 'Legend';
+    }
+
+    async myfires() {
+        impact.innerHTML = `${impactHeader}<div class="content"><div id="spinner" class="centered"></div></div>`;
+        impact.style.display = 'flex';
+        impact.querySelector('#a').innerHTML = 'My Fires';
+
+        await new Promise(resolve => {
+            const check = setInterval(() => {
+                if (inits.trackedDone) {
+                    clearInterval(check);
+                    resolve();
+                }
+            }, 100);
+        });
+
+        const content = impact.querySelector('.content'),
+            myFires = dataView.trackedFires.map(id => config.wildfire.findFire(id)).filter(fire => fire != null);
+
+        if (myFires.length === 0) {
+            content.innerHTML = dataView.trackedFires.length > 0 ? '<div class="message error">The wildfires you were following are no longer available.</div>' : noneTracked;
+            return;
+        }
+
+        // build the list of "my fires"
+        const ul = document.createElement('ul');
+        ul.className = 'my-fires';
+
+        myFires.forEach(fire => {
+            const { properties: p, geometry } = fire,
+                name = p.name,
+                size = conversion.sizeFormat(p.acres),
+                fstat = p.status,
+                st = p.time.year < config.curTime.getFullYear() ? 'out' : config.wildfire.getStatus(fstat, p.notes) || 'active',
+                state = p.near/*,
+                up = timeAgo(p.time.updated)*/;
+
+            const li = document.createElement('li');
+            li.id = 'my-fire-incident';
+            li.dataset.coords = JSON.stringify(geometry.coordinates);
+
+            li.innerHTML = `<div class="header">
+                <h3>${name}</h3>
+                <i class="fas fa-circle-check" data-action="my-fire-unfollow" title="Unfollow this incident" data-name="${name}" data-wfid="${p.wfid}"></i>
+            </div>
+            <span class="state">${state}</span>
+            <div class="inf">
+                <p style="color:#fff;font-size:18px">${size}</p>
+                <span class="status ${st}">${st.toUpperCase()}</span>
+            </div>`;
+
+            ul.appendChild(li);
+        });
+
+        // Use event delegation for clicks
+        ul.addEventListener('click', (event) => {
+            const unfollowBtn = event.target.closest('[data-action="my-fire-unfollow"]');
+
+            if (unfollowBtn) {
+                event.stopPropagation();
+                this.unfollow(unfollowBtn);
+                return;
+            }
+
+            const li = event.target.closest('li#my-fire-incident');
+            if (!li) return;
+
+            const coords = JSON.parse(li.dataset.coords);
+            if (coords) map.flyTo({ center: coords, zoom: 11.5 });
+        });
+
+        // Replace spinner with list
+        content.innerHTML = '';
+        content.appendChild(ul);
+    }
+
+    searchResultClick() {
+        const p = this.target.closest('li'),
+            type = p.dataset.type;
+
+        if (marker) marker.remove();
+
+        if (!p.classList.contains('standby')) {
+            const lat = p.dataset.lat,
+                lon = p.dataset.lon;
+
+            // zoom to a marker of a city location
+            if (type == 'city') {
+                const name = p.dataset.name.split(', ');
+
+                marker = new maplibregl.Marker()
+                    .setLngLat([lon, lat])
+                    .addTo(map);
+
+                new Popup('City').create(`<p style="margin-bottom:6px;color:#fff">${name[0]}, ${p.dataset.county} County, ${name[1]}</p>
+                    <span style="display:block;font-size:14px">${lat}, ${lon}</span>`);
+
+                map.easeTo({
+                    center: new maplibregl.LngLat(lon, lat),
+                    zoom: 10
+                });
+            }
+            // zoom to marker of a GIS feature (POI)
+            else if (type == 'gis') {
+                const name = p.dataset.name.split(', '),
+                    county = p.dataset.county,
+                    geoType = p.dataset.geotype;
+
+                marker = new maplibregl.Marker()
+                    .setLngLat([lon, lat])
+                    .addTo(map);
+
+                new Popup(geoType).create(`${name[0]}, ${county} County, ${name[1]}`);
+
+                map.easeTo({
+                    center: new maplibregl.LngLat(lon, lat),
+                    zoom: 11.25
+                });
+            }
+            // zoom to boundaries of a state or a county
+            else if (type == 'state' || type == 'county') {
+                const bbox = JSON.parse(p.dataset.bbox);
+
+                map.fitBounds([
+                    [bbox.x.min, bbox.y.min],
+                    [bbox.x.max, bbox.y.max]
+                ], {
+                    padding: 50
+                });
+            }
+            // zoom in on coordinates
+            else if (type == 'coordinates') {
+                marker = new maplibregl.Marker()
+                    .setLngLat([lon, lat])
+                    .addTo(map);
+
+                new Popup('Coordinates').create(`<p style="padding-bottom:8px;color:#fff">${lat},&nbsp;${lon}</p>
+                    <span style="display:block;padding-bottom:4px;font-size:14px">${String(`${conversion.convertToDms(lat, false)}&nbsp;${conversion.convertToDms(lon, true)}`).replace(/\s/g, '')}</span>
+                    <span style="display:block;font-size:14px">${conversion.utm(lat, lon)}</span>`);
+
+                map.easeTo({
+                    center: [lon, lat],
+                    zoom: 10
+                });
+            }
+            // zoom to a wildfire
+            else {
+                const wfid = parseInt(p.dataset.wfid);
+                const inc = config.wildfire.findFire(wfid);
+
+                if (inc) config.wildfire.incident(wfid, true);
+            }
+        }
+
+        this.sr.innerHTML = '<li class="standby" style="gap:.5em"><i class="fa-duotone fa-spinner-third" aria-hidden="true"></i><span>Searching...</span></li>';
+        this.sr.style.display = 'none';
+
+        return this;
     }
 }
 
@@ -5574,7 +6592,7 @@ function formatArray(arr) {
     } else if (arr.length >= 3) {
         const lastTwo = arr.slice(-2).join(' & '),
             firstPart = arr.slice(0, -2);
-        return firstPart.join(', ') + ', ' + lastTwo;
+        return `${firstPart.join(', ')}, ${lastTwo}`;
     } else if (arr.length === 1) {
         return arr[0];
     } else {
@@ -5584,9 +6602,9 @@ function formatArray(arr) {
 
 export function purchaseLink(utm, next = null) {
     if (settings.subscriptions().valid() && config.TIERS[settings.subscriptions().plan()] == config.PERMISSION_LEVELS.PREMIUM) {
-        return config.domain + 'account/billing#upgrade=true&sid=' + settings.subscriptions().subID()
+        return `${ENV.domain}account/billing#upgrade=true&sid=${settings.subscriptions().subID()}`;
     } else {
-        return config.domain + 'purchase/mapofire' + (utm ? '?utm_campaign=Locked%20Features&utm_source=mapofire&utm_medium=' + utm : '') + (next ? '&next=' + next : '');
+        return `${ENV.domain}purchase/mapofire${(utm ? `?utm_campaign=Locked%20Features&utm_source=mapofire&utm_medium=${utm}` : '')}${(next ? '&next=' + next : '')}`;
     }
 }
 
@@ -5602,7 +6620,7 @@ export function notify(t, m, time = 0) {
     if (modal.classList.contains('open')) el.classList.add('mo');
 
     el.style.display = 'flex';
-    el.innerHTML = '<i class="fas ' + icon + '"></i><p>' + m + '</p>';
+    el.innerHTML = `<i class="fas ${icon}"></i><p>${m}</p>`;
     document.body.append(el);
 
     setTimeout(() => { el.remove(); }, timing);
@@ -5691,7 +6709,7 @@ export function marketing(override = false, utm = null) {
             });
 
             window.location.href = config.purchaseLink(utm ? utm : 'popup');
-            clickListener.closeDataForm();
+            inits.clickListener.closeDataForm();
         });
 
         // dismiss CTA
@@ -5713,14 +6731,14 @@ export function marketing(override = false, utm = null) {
                 'variant': pick
             });
 
-            clickListener.closeDataForm();
+            inits.clickListener.closeDataForm();
         });
     }
 }
 
 export async function loadDispatchCenters() {
     if (storage('mapofire.dispatch') == null || Date.now() - storage('mapofire.dispatch_time') > 60 * 60 * 24 * 1000) {
-        const dc = await api(config.apiURL + 'dispatch/all');
+        const dc = await api(`${ENV.apiURL}dispatch/all`);
         storage('mapofire.dispatch', JSON.stringify(dc.dispatch));
         storage('mapofire.dispatch_time', Date.now());
         dispatchCenters = dc.dispatch;
@@ -5744,7 +6762,7 @@ export function addTrending() {
     const fragment = document.createDocumentFragment();
     let count = 0;
 
-    trending = true;
+    inits.trending = true;
 
     searchResults.style.display = 'flex';
     searchResults.querySelector('li.standby').innerHTML = '<h6 style="color:var(--box-border);font-size:18px;cursor:auto;user-select:none">Trending incidents...</h6>';
@@ -5753,33 +6771,35 @@ export function addTrending() {
         searchResults.querySelector('li.standby').style.display = 'inline-flex';
     }
 
-    if (topFires != null && topFires.length > 0) {
-        for (let i = 0; i < topFires.length; i++) {
-            const p = topFires[i].data,
+    if (dataView.topFires?.length) {
+        for (let i = 0; i < dataView.topFires.length; i++) {
+            const p = dataView.topFires[i].data,
                 fire = config.wildfire.findFire(p.wfid);
 
             if (fire) {
                 const fireName = fire.properties.name,
                     acres = conversion.sizeFormat(fire.properties.acres),
-                    who = numberFormat(topFires[i].count, 0) + ' ' + (topFires[i].count == 1 ? 'person is' : 'people are') + ' looking at the ' + fireName,
+                    who = `${numberFormat(dataView.topFires[i].count, 0)} ${(dataView.topFires[i].count == 1 ? 'person is' : 'people are')} looking at the ${fireName}`,
                     li = document.createElement('li');
 
                 li.classList.add('trending');
-                li.setAttribute('data-action', 'sr-onclick');
-                li.setAttribute('data-type', 'incident');
-                li.setAttribute('data-wfid', p.wfid);
-                li.setAttribute('title', who);
+                li.dataset.action = 'sr-onclick';
+                li.dataset.type = 'incident';
+                li.dataset.wfid = p.wfid;
+                li.title = who;
 
-                li.innerHTML = '<div><span class="icon fire fas fa-fire"></span><h3>' + fireName +
-                    '<span>' + fire.properties.type + ' in ' + stateLabels[fire.properties.state]?.name + ' &middot; <b>' + acres + '</b></span></h3></div>' +
-                    (topFires[i].trending ? '<span class="trend fas fa-arrow-trend-up" style="color:var(--green)"></span>' : '');
+                li.innerHTML = `<div>
+                    <span class="icon fire fas fa-fire"></span>
+                    <h3>
+                        ${fireName}
+                        <span>${fire.properties.type} in ${stateLabels[fire.properties.state]?.name} &middot; <b>${acres}</b></span>
+                    </h3>
+                </div>
+                ${(dataView.topFires[i].trending ? '<span class="trend fas fa-arrow-trend-up" style="color:var(--green)"></span>' : '')}`;
 
                 fragment.appendChild(li);
 
                 count++;
-                /*if (count >= 5) {
-                    break;
-                }*/
             }
         }
     }
@@ -5804,7 +6824,7 @@ export async function startReportProcess(e) {
         }
     });
 
-    const geocode = await api(config.apiURL + 'geocode/incident' + (data != null ? '/near' : ''), [['lat', e.lngLat.lat], ['lon', e.lngLat.lng]], true);
+    const geocode = await api(`${ENV.apiURL}geocode/incident${(data != null ? '/near' : '')}`, [['lat', e.lngLat.lat], ['lon', e.lngLat.lng]], true);
 
     if (data == null) {
         data = geocode;
@@ -5878,15 +6898,15 @@ export function contextMenu(e, isTouch = false) {
     const div = document.createElement('div'),
         ul = document.createElement('ul'),
         options = [
-            { text: coords.lat.toFixed(4) + ', ' + coords.lng.toFixed(4), hasPerms: true },
-            { text: 'Copy coordinates', task: () => { clickListener.copy(coords.lat + ', ' + coords.lng) }, hasPerms: true },
+            { text: `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`, hasPerms: true },
+            { text: 'Copy coordinates', task: () => { inits.clickListener.copy(`${coords.lat}, ${coords.lng}`) }, hasPerms: true },
             {
                 text: 'Copy elevation',
                 task: async () => {
                     if (elevation == null) {
                         (await loadUtils()).notify('info', 'Unable to get elevation here')
                     } else {
-                        clickListener.copy(numberFormat(elevation, 1) + ' ft.', 'Elevation copied to clipboard');
+                        inits.clickListener.copy(`${numberFormat(elevation, 1)} ft.`, 'Elevation copied to clipboard');
                     }
                 },
                 hasPerms: settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)
@@ -5960,12 +6980,13 @@ export const modalZoom = (coordsOrLng, lat) => {
     }
 
     const mapHeight = map.getContainer().clientHeight,
-        modalHeight = mapHeight * clickListener.modalHeightFromTop,
+        modalHeight = mapHeight * inits.clickListener.modalHeightFromTop,
         visibleHeight = mapHeight - modalHeight,
         offsetY = -visibleHeight / 2;
 
     map.easeTo({
         center: coords,
+        zoom: 8.75,
         offset: [0, offsetY],
         easing: t => t * (2 - t),
         duration: 1000
@@ -5973,7 +6994,7 @@ export const modalZoom = (coordsOrLng, lat) => {
 };
 
 export const mapClick = async (e) => {
-    /* open new incident report form */
+    // open new incident report form
     if (document.querySelector('li#report').dataset.active == 1) {
         config.disableClicks = true;
 
@@ -5983,11 +7004,11 @@ export const mapClick = async (e) => {
         startReportProcess(e);
     }
 
-    /* get fire weather forecast */
+    // get fire weather forecast
     if (document.querySelector('li#fwf')) {
         if (document.querySelector('li#fwf').dataset.active == 1) {
             config.disableClicks = true;
-            document.querySelector('li#fwf').setAttribute('data-active', '0');
+            document.querySelector('li#fwf').dataset.active = '0';
 
             map.getCanvas().style.cursor = 'auto';
 
@@ -5995,7 +7016,7 @@ export const mapClick = async (e) => {
         }
     }
 
-    /* click listener for when the user isn't submitting a report or getting a fwf */
+    // click listener for when the user isn't submitting a report or getting a fwf
     if (!config.disableClicks) {
         onMapClick(e);
     }

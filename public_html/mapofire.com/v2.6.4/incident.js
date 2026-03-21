@@ -262,7 +262,7 @@ self.onmessage = (e) => {
                     <dd>${cause == null ? 'Unknown' : cause}</dd>
                 </div>
                 ${fr.image != null && !inciweb ? `<div class="card">
-                    <a target="_blank" href="../../../src/images/incident?mapo=1&path=${fr.image}">
+                    <a class="figure" target="_blank" href="../../../src/images/incident?mapo=1&path=${fr.image}">
                         <img loading="lazy" class="mapoIncPhoto" src="../../../src/images/incident?mapo=1&path=${fr.image}&small=1">
                     </a>
                 </div>` : ''}

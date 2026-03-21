@@ -123,7 +123,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
                 <ul>
                     <li id="account" class="ttip light" data-tooltip="Your account" data-action="account"><i class="fas fa-user-circle"></i><span>Login</span></li>
                     <li id="new_fires" class="ttip light" data-tooltip="New incidents" style="display:none"><i class="fas fa-fire-flame"></i><span>New Fires</span></li>
-                    <li class="ttip light" data-tooltip="Basemaps" data-action="basemap"><i class="far fa-grid"></i><span>Maps</span></li>
+                    <li class="ttip light" data-tooltip="Basemaps" data-action="basemap"><i class="far fa-grid"></i><span>Basemaps</span></li>
                     <li id="layers" class="ttip light" data-tooltip="Map Layers" data-action="layers"><i class="far fa-layer-group"></i><span>Layers</span></li>
                     <li id="legend" class="ttip light" data-tooltip="Map Legend" data-action="legend"><i class="far fa-list"></i><span>Legend</span></li>
                     <li id="my-fire" class="ttip light" data-tooltip="My Fires" data-action="myfires"><i class="far fa-display-chart-up"></i><span>My Fires</span></li>
@@ -154,8 +154,8 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
                         <li class="standby" style="gap:.5em"><i class="fa-duotone fa-spinner-third"></i><span>Searching...</span></li>
                     </ul>
                 </div>
-                <!--<div class="tools control"></div>-->
-                <div class="control button evacBtn ttip" data-action="evac_list" data-tooltip="Evacuations" style="display:none"></div>
+                <!--<div class="tools control"></div>
+                <div class="control button evacBtn ttip" data-action="evac_list" data-tooltip="Evacuations" style="display:none"></div>-->
             </div>
         </div>
 

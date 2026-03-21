@@ -55,7 +55,7 @@ RewriteRule ^api/v([^/]*)/([^/]*)/([^/]*)$ /apis/index.php?version=$1&api=$2&met
 RewriteRule ^api/v([^/]*)/([^/]*)/([^/]*)/([^/]*)$ /apis/index.php?version=$1&api=$2&method=$3&function=$4 [L,QSA]
 
 # ASSETS REWRITES
-RewriteRule ^src/images/incident$ /image.php?path=$1 [L,QSA]
+RewriteRule ^src/images/([^/]*)$ /image.php?type=$1&path=$2 [L,QSA]
 RewriteRule ^src/([^/]*)/([^/]*)/([^/]*)$ /assets.php?type=$1&folder=$2&file=$3 [L,QSA]
 RewriteRule ^src/([^/]*)/([^/]*)-([^/]*)$ /assets.php?type=$1&file=$2&version=$3 [L,QSA]
 RewriteRule ^src/([^/]*)/([^/]*)$ /assets.php?type=$1&file=$2 [L,QSA]

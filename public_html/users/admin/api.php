@@ -82,118 +82,163 @@ function getMapbox($datasetID)
 function defaultIncName($inc)
 {
     preg_match('/-([0-9]+)/', $inc, $last);
-    return 'Incident ' . ltrim($last[1], 0);
+    return 'Incident ' . ltrim($last[1] ?? '0', '0'); // added: safety check
 }
 
 function incidentName($name, $inc, $type = null)
 {
-    if ($type == 'Smoke Check') {
+    // --- Smoke Check special case ---
+    if ($type === 'Smoke Check') {
         $ps = explode('-', $inc);
-        return 'Smoke Check #' . $ps[1] . '-' . ltrim($ps[2], '0');
+        return "Smoke Check #$ps[1]-" . ltrim($ps[2], '0');
+    }
+
+    $a = explode('-', $inc);
+
+    // --- Normalize base name ---
+    $name = trim($name);
+
+    // removed redundant substr strlen usage
+    if (str_starts_with($name, 'Loc-')) {
+        $name = substr($name, 4);
+    }
+
+    $name = str_replace(['/ ', '  ', ' Fire'], ['/', ' ', ''], ucwords(strtolower($name)));
+    $name = ltrim($name, '.');
+    $name = preg_replace('/^([\/])*/', '', $name);
+    $name = preg_replace('/#[0-9+]/', ' $0', $name);
+
+    // normalize "Inc"
+    if (str_starts_with($name, 'Inc ') || str_starts_with($name, 'INC ')) {
+        $name = preg_replace('/^Inc /i', 'Incident ', $name);
+    }
+
+    // --- Remove agency prefixes/suffixes ---
+    $things = ['Rn','Pr','Nw','Rs','Rv','Pv','Od','Ne','Cs','Fa','Cr','Cf','Gp','Sc'];
+
+    foreach ($things as $t) {
+        if (str_ends_with($name, " $t")) {
+            $name = substr($name, 0, -3);
+        }
+        if (str_starts_with($name, "$t - ")) {
+            $name = substr($name, 5);
+        } elseif (str_starts_with($name, "$t ")) {
+            $name = substr($name, 3);
+        }
+    }
+
+    // --- Fallback cases ---
+    if (str_contains($name, 'Outside Investigation')) {
+        $name = defaultIncName($inc);
+    }
+
+    if (substr($name, 0, 3) === substr($inc, -3)) {
+        $name = preg_replace("/[0-9]{3}\s/", "", $name); // simplified regex
+    }
+
+    if (str_starts_with(strtolower($name), 'nfca') || $name === '') {
+        $name = defaultIncName($inc);
+    }
+
+    if (str_starts_with($name, 'Fa/')) {
+        $name = substr($name, 3);
+    }
+
+    // --- RX normalization ---
+    if (str_ends_with($name, ' Rx')) {
+        $name = substr($name, 0, -3) . ' RX';
     } else {
-        $a = explode('-', $inc);
-        $things = array('Rn', 'Pr', 'Nw', 'Rs', 'Rv', 'Pv', 'Od', 'Ne', 'Cs', 'Fa', 'Cr', 'Cf', 'Gp', 'Sc');
-        $name = substr($name, 0, 4) == 'Loc-' ? substr($name, 4, strlen($name)) : $name;
-        $name = preg_replace('/#[0-9+]/', ' $0', preg_replace('/^([\/])*/', '', ltrim(/*preg_replace("/(\w+)/e", "ucfirst('\\1')",*/trim(str_replace(array('/ ', '  ', ' Fire'), array('/', ' ', ''), ucwords(strtolower($name))/*)*/)), '.')));
-        $name = substr($name, 0, 4) == 'Inc ' ? str_replace('Inc ', 'Incident ', $name) : (substr($name, 0, 4) == 'INC ' ? str_replace('INC ', 'Incident ', $name) : $name);
+        $name = str_replace(' Rx ', ' RX ', $name);
+    }
 
-        foreach ($things as $t) {
-            $name = substr($name, -3) == ' ' . $t ? substr($name, 0, strlen($name) - 3) : $name;
-            $name = substr($name, 0, 5) == $t . ' - ' ? substr($name, 5, strlen($name)) : (substr($name, 0, 3) == $t . ' ' ? substr($name, 3, strlen($name)) : $name);
+    // --- Mc / Mac fixes ---
+    if (str_starts_with($name, 'Mc')) {
+        $name = 'Mc' . ucfirst(substr($name, 2));
+    } elseif (str_starts_with($name, 'Mac')) {
+        $name = 'Mac' . ucfirst(substr($name, 3));
+    }
+
+    if (str_starts_with($name, 'Loc ')) {
+        $name = substr($name, 4);
+    }
+
+    // --- Remove trailing incident numbers ---
+    if (isset($a[1]) && (str_ends_with($name, ' ' . $a[1]) || str_ends_with($name, ' 0' . $a[1]))) {
+        $name = substr($name, 0, -5);
+    }
+
+    // --- Invalid names fallback ---
+    if (
+        (is_numeric($name) && isset($a[1]) && $name == $a[1]) ||
+        $name === 'Incident' ||
+        $name === '*******'
+    ) {
+        $name = "Incident $a[1]-" . ltrim($a[2], '0');
+    }
+
+    // --- Slash handling ---
+    if (str_contains($name, '/')) {
+        $name = str_replace(['//', '/ ', ' /', '  /'], ' / ', $name);
+        $parts = explode('/', $name);
+        if (isset($parts[1])) {
+            $name = $parts[0] . '/' . ucfirst($parts[1]);
+        }
+    }
+
+    // --- Too many dashes ---
+    if (substr_count($name, '-') > 1) {
+        $name = str_replace('-', ' ', $name);
+    }
+
+    // --- Trim trailing period ---
+    $name = rtrim($name, '.');
+
+    // --- Apostrophe / dash capitalization ---
+    if (str_contains($name, '\'') || str_contains($name, '-')) {
+        $a = explode('\'', $name);
+        if (isset($a[1])) {
+            $name = "$a[0]'" . ucfirst($a[1]);
         }
 
-        if (strpos($name, 'Outside Investigation') !== false) {
-            $name = defaultIncName($inc);
+        $b = explode('-', $name);
+        if (isset($b[1])) {
+            $name = "$b[0]-" . ucfirst($b[1]);
         }
+    }
 
-        if (substr($name, 0, 3) == substr($inc, -3)) {
-            $name = preg_replace("/[0-9][0-9][0-9][ ]/", "", $name);
-        }
-
-        if (substr($name, 0, 4) == 'Nfca' || substr($name, 0, 4) == 'NFCA' || $name == '') {
-            $name = defaultIncName($inc);
-        }
-
-        if (substr($name, 0, 3) == 'Fa/') {
-            $name = substr($name, 3, strlen($name));
-        }
-
-        if (substr($name, -3) == ' Rx') {
-            $name = substr($name, 0, strlen($name) - 3) . ' RX';
-        } else {
-            $name = str_replace(' Rx ', ' RX ', $name);
-        }
-
-        if (substr($name, 0, 2) == 'Mc') {
-            $name = 'Mc' . ucfirst(substr($name, 2, strlen($name)));
-        } else if (substr($name, 0, 3) == 'Mac') {
-            $name = 'Mac' . ucfirst(substr($name, 3, strlen($name)));
-        }
-
-        if (substr($name, 0, 4) == 'Loc ') {
-            $name = substr($name, 4, strlen($name));
-        }
-
-        if (substr($name, strlen($name) - 5) == ' ' . $a[1] || substr($name, strlen($name) - 5) == ' 0' . $a[1]) {
-            $name = substr($name, 0, -5);
-        }
-
-        if ((is_numeric($name) && ($name == $a[1])) || $name == 'Incident' || $name == '*******') {
-            $name = 'Incident ' . $a[1] . '-' . ltrim($a[2], 0);
-        }
-
-        if (strpos($name, '/') !== FALSE) {
-            $name = str_replace(array('//', '/ ', ' /', '  /'), array(' / ', ' / ', ' / ', ' /'), $name);
-            $a = explode('/', $name);
-            $name = $a[0] . '/' . ucfirst($a[1]);
-        }
-
-        if (substr_count($name, '-') > 1) {
-            $name = str_replace('-', ' ', $name);
-        }
-
-        if (substr($name, -1) == '.') {
-            $name = substr($name, 0, -1);
-        }
-
-        if (strpos($name, '\'') !== false || strpos($name, '-') !== false) {
-            $a = explode('\'', $name);
-            $name = $a[0] . '\'' . ucfirst($a[1]);
-            $b = explode('-', $name);
-            $name = $b[0] . '-' . ucfirst($b[1]);
-        }
-
-        preg_match('/(.*)\s([0-9]+)/', $name, $output1);
-
-        //if (strpos($inc, $output1[2]) !== false) {
-        if ($output1 && str_contains($output1[2], $inc)) {
+    // --- Remove duplicate numbers ---
+    if (preg_match('/(.*)\s([0-9]+)/', $name, $output1)) {
+        if (isset($output1[2]) && str_contains($inc, $output1[2])) {
             $name = str_replace($output1[2], '', $name);
         }
-
-        preg_match('/([A-Z][a-z])([0-9]+)/', $name, $output);
-
-        if ($output) {
-            preg_match('/([0]{2,})([0-9]+)/', $output[2], $match);
-            $name = 'Incident ' . $match[2];
-        }
-
-        if ($name == 'Utl') {
-            $name = 'UTL';
-        }
-
-        $name = preg_replace('/Lac-(.*)/', 'LAC-$1', $name);
-
-        $name = str_replace('\'S ', '\'s ', rtrim($name, '-'));
-        $name = rtrim(ucwords(preg_replace('/\s?\'$/', '', str_replace(['  ', '&amp;', 'Utl-'], [' ', '&', ''], preg_replace('/Mm([0-9]+)/', 'MM$1', $name)))));
-
-        if ($name == 'Incident' || $name == 'Inc.' || $name == 'Inc') {
-            $name = defaultIncName($inc);
-        }
-
-        $name = str_replace('\'S', '\'s', $name);
-
-        return $name;
     }
+
+    // --- Weird numeric edge case ---
+    if (preg_match('/([A-Z][a-z])([0-9]+)/', $name, $output)) {
+        if (preg_match('/([0]{2,})([0-9]+)/', $output[2], $match)) {
+            $name = "Incident $match[2]";
+        }
+    }
+
+    if ($name === 'Utl') $name = 'UTL';
+
+    // --- Final cleanup ---
+    $name = preg_replace('/Lac-(.*)/', 'LAC-$1', $name);
+    $name = str_replace('\'S ', '\'s ', rtrim($name, '-'));
+
+    $name = preg_replace('/Mm([0-9]+)/', 'MM$1', $name);
+    $name = str_replace(['  ', '&amp;', 'Utl-'], [' ', '&', ''], $name);
+    $name = preg_replace('/\s?\'$/', '', $name);
+
+    $name = ucwords($name);
+    $name = rtrim($name);
+
+    if (in_array($name, ['Incident', 'Inc.', 'Inc'])) $name = defaultIncName($inc);
+
+    //$name = preg_replace('/^\d+\s+(?=[A-Za-z])/', '', str_replace('\'S', '\'s', $name));
+    $name = preg_replace('/^0+\d*\s+/', '', str_replace('\'S', '\'s', $name));
+
+    return $name;
 }
 
 include_once '../../db.ini.php';

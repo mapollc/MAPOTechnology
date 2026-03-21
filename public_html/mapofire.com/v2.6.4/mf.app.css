@@ -1,6 +1,7 @@
 :root {
     --nav-width: 89px;
-    --mb-button-width: 35px;
+    --mb-button-width: 37px;
+    --mb-button-radius: 8px;
     --container-space: 0.7em;
     --modal-height: 8vh;
     --search-results-width: 400px;
@@ -21,6 +22,7 @@
     --box-text-color: #94a3b8;
     --box-header-color: #ed4d00;
     --box-orange: #f97316;
+    --box-compliment: #222c3c;
     --box-orange-hover: rgb(249 115 22 / 0.5);
 }
 
@@ -303,7 +305,7 @@ nav.hide .nav-wrapper .logo img {
     left: calc(var(--nav-width) + var(--container-space));
     display: flex;
     align-items: center;
-    /*width: calc(var(--search-results-width) - var(--container-space));*/
+    width: calc(100% - var(--nav-width) - calc(var(--container-space) * 2) - var(--mb-button-width) - var(--spacing));
     gap: var(--spacing);
     z-index: 998;
 }
@@ -312,8 +314,63 @@ nav.hide .nav-wrapper .logo img {
     height: var(--control-height);
     border: 0;
     background-color: #fff;
-    border-radius: 8px;
+    border-radius: var(--mb-button-radius);
     box-shadow: 0 0.125rem 0.3125rem rgb(0 0 0 / 14%), 0 0.0625rem 0.375rem rgb(0 0 0 / 12%);
+}
+
+button.control {
+    position: relative;
+    flex-grow: 0;
+    min-width: var(--control-height);
+    height: var(--control-height);
+    cursor: pointer;
+    transition: var(--color-transition);
+    user-select: none;
+}
+
+button.control:hover {
+    background-color: #eee;
+}
+
+.filter-controls .search {
+    display: none;
+    width: var(--search-results-width);
+    align-items: center;
+    font-size: 18px;
+}
+
+.filter-controls .search>span {
+    padding: 0 calc(var(--spacing) * .75);
+    color: var(--box-text-color);
+    font-size: 17px;
+    user-select: none;
+}
+
+.filter-controls .search #clearSearch {
+    display: none;
+    padding: 0 calc(var(--spacing) * .75);
+    cursor: pointer;
+}
+
+.filter-controls .search input {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-family: var(--roboto);
+    font-size: 16px;
+}
+
+.filter-controls .search input::placeholder {
+    font-weight: 300;
+    color: #6f777e;
+}
+
+.filter-controls .search input:disabled {
+    cursor: not-allowed;
+    background-color: transparent;
 }
 
 .control.evacBtn:after {
@@ -333,19 +390,6 @@ nav.hide .nav-wrapper .logo img {
 .control.evacBtn .notify {
     top: -4px;
     right: -4px;
-}
-
-.control.button {
-    position: relative;
-    flex: 1 0 auto;
-    width: var(--control-height);
-    cursor: pointer;
-    transition: var(--color-transition);
-    user-select: none;
-}
-
-.control.button:hover {
-    background-color: #eee;
 }
 
 /*.tools.control {
@@ -394,11 +438,12 @@ nav.hide .nav-wrapper .logo img {
     color: #b9b9b9;
 }
 
-/* OVERRIDE MAPLIBRE CONTROL STYLES */
+/* START OVERRIDE MAPLIBRE CONTROL STYLES */
 .maplibregl-ctrl-attrib-inner {
     padding: 4px 0;
     max-width: 400px;
     overflow: hidden;
+    color: rgb(0 0 0 / 75%);
     text-overflow: ellipsis;
     white-space: nowrap;
     text-align: left;
@@ -433,14 +478,15 @@ a.maplibregl-ctrl-logo {
 }
 
 .maplibregl-ctrl-scale {
-    font-family: var(--roboto);
-    border: 1px solid #333 !important;
-    border-top: transparent !important;
     padding: 1px 5px !important;
     margin: 0 0 var(--spacing) 0 !important;
-    font-weight: 500;
+    font-family: var(--roboto);
+    font-size: 11px;
+    font-weight: 400;
     color: #202020;
     background-color: rgb(245 245 245 / 50%) !important;
+    border: 2px solid #444 !important;
+    border-top: transparent !important;
 }
 
 .maplibregl-ctrl-group button {
@@ -467,6 +513,7 @@ a.maplibregl-ctrl-logo {
 
 .maplibregl-ctrl-group:not(:empty) {
     box-shadow: 0 0 var(--spacing) rgb(0 0 0 / 15%);
+    border-radius: var(--mb-button-radius);
 }
 
 .maplibregl-ctrl button span {
@@ -497,6 +544,7 @@ a.maplibregl-ctrl-logo {
         background-size: 90%;
     }
 }
+/* END OVERRIDE MAPLIBRE CONTROL STYLES */
 
 .tooltip {
     position: absolute;
@@ -506,6 +554,7 @@ a.maplibregl-ctrl-logo {
     line-height: 1.2;
     background: rgb(0 0 0 / 90%);
     color: #fff;
+    text-align: center;
     border-radius: 3px;
     pointer-events: none;
     opacity: 0;
@@ -616,13 +665,9 @@ a.maplibregl-ctrl-logo {
         display: none;
     }
 
-    .notify {
+    nav .notify {
         top: 0;
         left: 0;
-    }
-
-    .control.evacBtn {
-        display: none;
     }
 }
 
@@ -639,6 +684,11 @@ a.maplibregl-ctrl-logo {
         width: calc(100% - var(--container-space) - 10px);
         left: var(--container-space);
         gap: 0.7em;
+    }
+
+    .control.button {
+        min-width: var(--mb-button-width);
+        height: var(--mb-button-width);
     }
 
     #menuIcon,
@@ -685,7 +735,7 @@ a.maplibregl-ctrl-logo {
         height: 43px;
     }
 
-    .notify {
+    nav .notify {
         top: 50%;
         left: unset;
         transform: translateY(-50%);
@@ -705,6 +755,12 @@ a.maplibregl-ctrl-logo {
 @media (max-width: 400px) {
     :root {
         --mb-button-width: 28px;
+        --control-height: 35px;
+    }
+
+    .control.evacBtn:after {
+        width: 20px;
+        height: 20px;
     }
 
     .maplibregl-ctrl-attrib-inner {

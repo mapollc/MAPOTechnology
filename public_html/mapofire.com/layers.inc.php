@@ -353,7 +353,8 @@ $lay = array(
             'perms' => false,
             'perms2' => ['PREMIUM', 'PRO'],
             'default' => false,
-            'app' => true
+            'app' => false,
+            'testing' => true
         ],
         [
             'id' => 'viSmoke',
@@ -361,7 +362,8 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PRO'],
             'default' => false,
-            'app' => true
+            'app' => false,
+            'testing' => true
         ]
     ],
     'state' => [
