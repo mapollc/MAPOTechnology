@@ -4,34 +4,27 @@
 
 // set the base URL for this app
 $host = preg_replace('/(www\.)?([a-z]+)\.([a-z]+)/', '$2.$3', $_SERVER['HTTP_HOST']);
-$rootURL = 'https://www.' . $host . '/';
+$rootURL = "https://www.$host/";
 $baseURL = '//mapofire.com/';
 $root = '/home/mapo/public_html/mapofire.com/';
 
 // get the current map version to load all relevant files
-if (!isset($_GET['version']) || empty($_GET['version'])) {
-    $version = file_get_contents('/home/mapo/public_html/mapofire.com/version.txt');
-} else {
-    $version = $_GET['version'];
-}
+$version = !isset($_GET['version']) || empty($_GET['version']) ? file_get_contents('/home/mapo/public_html/mapofire.com/version.txt') : $_GET['version'];
 
-ini_set('session.cookie_domain', '.' . $host);
+ini_set('session.cookie_domain', ".$host");
+
 header('Cache-Control: must-revalidate, public, max-age=3600');
 header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + 3600));
 header('Pragma: cache');
-header('Last-Modified: ' . gmdate('D, d M Y H:i:s \G\M\T', filemtime($root . 'index.php')));
+header('Last-Modified: ' . gmdate('D, d M Y H:i:s \G\M\T', filemtime("{$root}index.php")));
 header('Content-type: text/html');
+
+require_once "{$root}layers.inc.php";
+include_once '/home/mapo/guid.inc.php';
 
 session_start();
 
-include_once '/home/mapo/guid.inc.php';
 setupGUID('mapofire.com');
-
-// if the user's token is still in a cookie, but the session is gone, redirect to login to reset the session
-/*if (isset($_COOKIE['token']) && !isset($_SESSION['uid'])) {
-    header("Location: https://www.mapotechnology.com/secure/login?fail=2&service=".explode('.', $host)[0]."&next=".urlencode('https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']));
-    exit();
-}*/
 
 // use the script to update user's last active time
 if (isset($_SESSION['visited']) && time() - $_SESSION['visited'] > 600) {
@@ -145,17 +138,16 @@ $ga_id = /*$host == 'wildfiremap.org' ? 'G-2DNCL70GJF' : */ 'G-X03WWLX3BJ';
 
 $files = ['index.php', 'mf.app.css', 'mf.app.js', 'mf.supp.css', 'mf.supp.js', 'mf.utils.js'];
 foreach ($files as $file) {
-    $times[] = filemtime($root . 'v' . $version . '/' . $file);
+    $times[] = filemtime("{$root}v$version/$file");
 }
 $buildDate = date('Y-m-d\TH:i:sO', max($times));
 
-// load the php config file of all map layers
-require_once $root . 'layers.inc.php';
+// parse layers json from layers.inc.php
 $jsLayers = json_encode($layers);
 $jsLayers = str_replace('perms2', 'perms', preg_replace('/(,"perms":(true|false))/', '', $jsLayers));
 
 // load the current index.php file for the version
-if (file_exists($root . 'v' . $version . '/app.php')) {
+if (file_exists("{$root}v$version/app.php")) {
     //$dark_mode = $_COOKIE['dark_mode'] && $_COOKIE['dark_mode'] == 'true' ? true : false;
 
     $country = ucwords(str_replace('-', ' ', $_GET['country']));
@@ -183,7 +175,7 @@ if (file_exists($root . 'v' . $version . '/app.php')) {
 
     $javascript = preg_replace('/(\n|\r|\s{2,})/', '', $javascript);
 
-    require_once $root . 'v' . $version . '/app.php';
+    require_once "{$root}v$version/app.php";
 } else {
     http_response_code(404);
     include_once '../error.php';

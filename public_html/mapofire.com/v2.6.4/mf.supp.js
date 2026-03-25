@@ -213,7 +213,7 @@ class Popup {
     }
 
     close() {
-        if (document.querySelector('.popup') != null) document.querySelector('.popup').remove();
+        if ($('.popup') != null) $('.popup').remove();
     }
 }
 
@@ -362,7 +362,7 @@ class Weather {
     }
 
     async incidentWX() {
-        const holder = document.querySelector('#curwx');
+        const holder = $('#curwx');
         if (!holder) return;
 
         const onError = (/*error*/) => {
@@ -418,7 +418,7 @@ class Weather {
     }
 
     async incidentForecast() {
-        const holder = document.querySelector('#fcstwx');
+        const holder = $('#fcstwx');
         if (!holder) return;
 
         const onError = (error) => {
@@ -589,13 +589,7 @@ class Weather {
                         }
                     });
 
-                    map.on('mouseenter', 'stns', () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'stns', () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
+                    mapMouseOver('stns');
                 }
 
                 if (!map.getLayer('stns_text')) {
@@ -622,13 +616,7 @@ class Weather {
                         }
                     });
 
-                    map.on('mouseenter', 'stns_text', () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'stns_text', () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
+                    mapMouseOver('stns_text');
                 }
             }
         }
@@ -721,7 +709,7 @@ class ChangeListener {
         const v = this.target.value;
 
         settings.updatePSize(v);
-        document.querySelector('#pSize').innerHTML = `${v} acres`;
+        $('#pSize').innerHTML = `${v} acres`;
 
         ['perimeters_outline', 'perimeters_fill', 'perimeters_title'].forEach(lay => map.removeLayer(lay));
         map.removeSource('perimeters');
@@ -750,8 +738,8 @@ class ChangeListener {
     }
 
     async spc() {
-        const type = document.querySelector('#otlkType'),
-            days = document.querySelector('#otlkDay'),
+        const type = $('#otlkType'),
+            days = $('#otlkDay'),
             day3 = days.querySelector('option[value="3"]');
 
         // add or remove day 3 depending on if the user is looking at severe or fire wx outlooks
@@ -771,7 +759,7 @@ class ChangeListener {
     }
 
     personalize() {
-        if (document.querySelector('#impact #settings') != null) {
+        if ($('#impact #settings') != null) {
             document.querySelectorAll('#impact #settings select').forEach(s => settings.updatePersonal(s));
 
             saveSession(true);
@@ -779,7 +767,7 @@ class ChangeListener {
     }
 
     archive() {
-        const ay = document.querySelector('#archive_years'),
+        const ay = $('#archive_years'),
             s = ay.options[ay.selectedIndex].value,
             win = window.location;
 
@@ -792,8 +780,13 @@ class ChangeListener {
     }
 }
 
+function mapMouseOver(layer) {
+    map.on('mouseenter', layer, () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseleave', layer, () => map.getCanvas().style.cursor = 'auto');
+}
+
 function isVisible(div) {
-    const element = document.querySelector(div);
+    const element = $(div);
 
     if (element != null) {
         const rect = element.getBoundingClientRect(),
@@ -967,8 +960,8 @@ function setHeaders(title, urlPath, description) {
     ];
 
     metaTags.forEach(tag => {
-        if (tag.property) document.querySelector(`meta[property="${tag.property}"]`).setAttribute('content', tag.content);
-        if (tag.name) document.querySelector(`meta[name="${tag.name}"]`).setAttribute('content', tag.content);
+        if (tag.property) $(`meta[property="${tag.property}"]`).setAttribute('content', tag.content);
+        if (tag.name) $(`meta[name="${tag.name}"]`).setAttribute('content', tag.content);
     });
 }
 
@@ -983,16 +976,16 @@ function unsetHeaders() {
         document.title = defaultTitle;
 
         ['meta[property="og:title"]', 'meta[name="twitter:title"]']
-            .forEach(n => document.querySelector(n).setAttribute('content', defaultTitle));
+            .forEach(n => $(n).setAttribute('content', defaultTitle));
         ['meta[name="description"]', 'meta[property="og:description"]', 'meta[name="twitter:description"]']
-            .forEach(n => document.querySelector(n).setAttribute('content', defaultDesc));
+            .forEach(n => $(n).setAttribute('content', defaultDesc));
     }
 }
 
 async function saveSession(method = true) {
     if (!navigator.onLine) return (await loadUtils()).notify('error', 'Unable to sync due to no internet.');
 
-    const sy = document.querySelector('li#save span'),
+    const sy = $('li#save span'),
         syncStatus = impact.querySelector('#sync span'),
         set = {
             ...settings.settings,
@@ -1044,7 +1037,7 @@ function newFiresReport() {
 }
 
 function createDataForm(title, content, center = false) {
-    const df = document.querySelector('#data-form');
+    const df = $('#data-form');
 
     df?.classList.remove('bg');
     df?.remove();
@@ -1060,7 +1053,7 @@ function createDataForm(title, content, center = false) {
 
 // allow user to submit report to MAPO of a new wildfire incident
 async function createCSReport(data, lat, lon) {
-    const form = document.querySelector('#newReport'),
+    const form = $('#newReport'),
         theState = (await loadUtils()).stateLabels[data.geocode.state];
 
     if (settings.user != null) {
@@ -1680,11 +1673,11 @@ window.addEventListener('submit', async (e) => {
     if (e.target.id == 'newReport') {
         e.preventDefault();
 
-        const form = document.querySelector('form#newReport');
+        const form = $('form#newReport');
         let error = false,
             errorMsg = '';
 
-        document.querySelector('#nrerrors')?.remove();
+        $('#nrerrors')?.remove();
 
         // error checking
         if (form.querySelector('select[name=type]').options[form.querySelector('select[name=type]').selectedIndex].value == '- Choose -') {
@@ -1716,7 +1709,7 @@ window.addEventListener('submit', async (e) => {
 
                 let type, state;
 
-                document.querySelector('li#report').dataset.active = '0';
+                $('li#report').dataset.active = '0';
                 sub.disabled = true;
                 sub.value = 'Submitting...';
                 canc.style.display = 'none';
@@ -1737,7 +1730,7 @@ window.addEventListener('submit', async (e) => {
                     });
 
                     setTimeout(async () => {
-                        document.querySelector('#data-form').remove();
+                        $('#data-form').remove();
                         (await loadUtils()).notify('success', 'Your report was sent to us for review before it may be added to the map.');
                     }, 500);
                 } else {
@@ -1755,7 +1748,7 @@ window.addEventListener('submit', async (e) => {
 window.addEventListener('input', (e) => {
     // perimeter min size change text
     if (e.target.parentElement.id == 'perimeterSize' && e.target.classList.contains('slider')) {
-        document.querySelector('#pSize').innerHTML = `${e.target.value} acres`;
+        $('#pSize').innerHTML = `${e.target.value} acres`;
     }
 });
 

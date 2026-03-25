@@ -348,7 +348,7 @@ function createForecastTable(type, data, numDays = 5) {
             if (nextDayStr !== currentDay || i === times.length - 1) {
                 html += `<th colspan="${dayCount}">${currentDay}</th>`;
                 currentDay = nextDayStr;
-                firstBreak = dayCount - 2;
+                if (firstBreak == 0) firstBreak = dayCount - 1;
                 dayCount = 0;
             }
         });

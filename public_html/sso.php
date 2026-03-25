@@ -140,7 +140,7 @@ if (!$user) {
         'samesite' => 'None'
     ]);
 
-    if ($_COOKIE['guid'] !== $user['guid']) {
+    if (!isset($_COOKIE['guid']) || $_COOKIE['guid'] !== $user['guid']) {
         setcookie('guid', $user['guid'], [
             'expires' => time() + 31557600, // 60 * 60 * 24 * 365.25
             'path' => '/',
@@ -153,7 +153,7 @@ if (!$user) {
 
     $next = nextURL();
 
-    #echo $next;
+    //echo $next;
     header("Location: $next");
     exit();
 }

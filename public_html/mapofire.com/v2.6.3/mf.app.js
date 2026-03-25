@@ -2106,7 +2106,7 @@ document.onreadystatechange = async () => {
         }
 
         if (window.isAuthUser) {
-            const getAcct = await api(config.apiURL + 'user/get/mapofire', /*[['token', token[1]]]*/null, false, true);
+            const getAcct = await api(config.host + 'api/v1/user/get/mapofire', /*[['token', token[1]]]*/null, false, true);
 
             if (getAcct?.response) {
                 const loginURL = `${config.domain.replace('//', '//auth.')}login?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}`;

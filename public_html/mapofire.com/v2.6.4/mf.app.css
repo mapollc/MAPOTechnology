@@ -444,9 +444,10 @@ button.control:hover {
     max-width: 400px;
     overflow: hidden;
     color: rgb(0 0 0 / 75%);
+    text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-align: left;
+    user-select: none;
 }
 
 .maplibregl-ctrl-attrib.maplibregl-compact {

@@ -1,8 +1,8 @@
 <?
 $domain = str_replace('www.', '', $_SERVER['HTTP_HOST']);
 
-ini_set('display_errors', 0);
-error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 ini_set('session.cookie_domain', ".$domain");
 
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -80,9 +80,9 @@ if ($token) {
 
 $goto = '';
 $next = $_GET['next'] ?? '';
+$service = urlencode($_GET['service'] ?? '');
 
 if (isset($_GET['expired'], $_GET['method']) && $_GET['expired'] == 1 && $_GET['method'] == 'login') {
-    $service = urlencode($_GET['service'] ?? '');
     $next = urlencode($next);
     $goto = $secureURL . "fail=2" .
         (!empty($service) ? "&service=$service" : '') .
@@ -101,7 +101,13 @@ if (isset($_GET['expired'], $_GET['method']) && $_GET['expired'] == 1 && $_GET['
     }
 } else {
     if ($_GET['sso'] == 1) {
-        $goto = $next;
+        $redirect = match ($service) {
+            'mapofire' => 'mapofire.com',
+            'mapotrails' => 'mapotrails.com',
+            'apps' => 'apps.mapotechnology.com'
+        };
+
+        $goto = $next ?: ($service ? "//$redirect" : $secureURL) . '?loggedOut=1';
     } else {
         $goto = $secureURL . ($next ? 'next=' . urlencode(nextURL($next)) : $isLoggedOut);
     }

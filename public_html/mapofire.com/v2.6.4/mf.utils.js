@@ -955,12 +955,12 @@ export class Settings {
     }
 
     updateSpecial() {
-        const ot = document.querySelector('#otlkType'),
-            od = document.querySelector('#otlkDay'),
-            fm = document.querySelector('#forecastModel'),
-            ft = document.querySelector('#fcstTime'),
-            sf = document.querySelector('#sfpDateSelect'),
-            ec = document.querySelector('#erc_time');
+        const ot = $('#otlkType'),
+            od = $('#otlkDay'),
+            fm = $('#forecastModel'),
+            ft = $('#fcstTime'),
+            sf = $('#sfpDateSelect'),
+            ec = $('#erc_time');
 
         this.settings.special = {
             otlkType: ot.options[ot.selectedIndex].value,
@@ -980,32 +980,28 @@ export class Settings {
             if (id == 'perimColor') {
                 this.settings.perimeters.color = val;
 
-                let c = config.wildfire.perimeterColor(val),
-                    pcl = setInterval(() => {
-                        if (map.isStyleLoaded()) {
-                            clearInterval(pcl);
+                let c = config.wildfire.perimeterColor(val);
+                const pcl = setInterval(() => {
+                    if (map.isStyleLoaded()) {
+                        clearInterval(pcl);
 
-                            map.setPaintProperty('perimeters_outline', 'line-color', c)
-                                .setPaintProperty('perimeters_fill', 'fill-color', c)
-                                .setPaintProperty('ca_perimeters_outline', 'line-color', c)
-                                .setPaintProperty('ca_perimeters_fill', 'fill-color', c);
-                        }
-                    }, 500);
+                        map.setPaintProperty('perimeters_outline', 'line-color', c);
+                        map.setPaintProperty('perimeters_fill', 'fill-color', c);
+                        map.setPaintProperty('ca_perimeters_outline', 'line-color', c);
+                        map.setPaintProperty('ca_perimeters_fill', 'fill-color', c);
+                    }
+                }, 500);
             } else if (id == 'perimTtip') {
                 this.settings.perimeters.ttip = val;
             } else if (id == 'perimZoom') {
                 this.settings.perimeters.zoom = val;
             } else if (id == 'tempUnit') {
-                if (!this.settings.weather) {
-                    this.settings.weather = {};
-                }
+                if (!this.settings.weather) this.settings.weather = {};
 
                 this.settings.weather.temp = val;
                 new Weather().updateRAWSUnits();
             } else if (id == 'windSpeedUnit') {
-                if (!this.settings.weather) {
-                    this.settings.weather = {};
-                }
+                if (!this.settings.weather) this.settings.weather = {};
 
                 this.settings.weather.wind = val;
             } else if (id == 'acresUnit') {
@@ -1280,8 +1276,8 @@ export class Evacuations {
 
     filterListener() {
         let useThisState = '', useThisCounty = '';
-        const state = document.querySelector('#evac_states'),
-            county = document.querySelector('#evac_county'),
+        const state = $('#evac_states'),
+            county = $('#evac_county'),
             list = document.querySelectorAll('.evacs .evac');
 
         const filter = () => {
@@ -1305,7 +1301,7 @@ export class Evacuations {
     }
 
     evacHelper() {
-        const btn = document.querySelector('.control.evacBtn');
+        const btn = $('.control.evacBtn');
         if (!btn) return;
 
         btn.style.display = 'block';
@@ -1414,13 +1410,7 @@ export class Evacuations {
                 }
             });
 
-            map.on('mouseenter', 'evac', () => {
-                map.getCanvas().style.cursor = 'pointer';
-            });
-
-            map.on('mouseleave', 'evac', () => {
-                map.getCanvas().style.cursor = 'auto';
-            });
+            mapMouseOver('evac');
         }
 
         if (!map.getLayer('evac_outline')) {
@@ -1508,100 +1498,18 @@ export class Layers {
         inits.evacuations.get();
     }
 
-    contours(demSource) {
-        demSource.setupMaplibre(maplibregl);
-
-        if (!map.getSource('contours')) {
-            map.addSource('contours', {
-                type: 'vector',
-                tiles: [
-                    demSource.contourProtocolUrl({
-                        multiplier: 3.28084,
-                        thresholds: {
-                            11: [200, 1000],
-                            12: [100, 500],
-                            14: [50, 200],
-                            15: [20, 100]
-                        },
-                        contourLayer: 'contours',
-                        elevationKey: 'ele',
-                        levelKey: 'level',
-                        extent: 4096,
-                        buffer: 1
-                    })
-                ],
-                maxzoom: 15
-            });
-        }
-
-        if (!map.getLayer('contour-lines')) {
-            map.addLayer({
-                id: 'contour-lines',
-                type: 'line',
-                source: 'contours',
-                'source-layer': 'contours',
-                paint: {
-                    'line-color': '#626250',
-                    'line-opacity': 0.37,
-                    'line-width': ['match', ['get', 'level'], 1, 1, 0.5],
-                }
-            });
-        }
-
-        if (!map.getLayer('contour-labels')) {
-            map.addLayer({
-                id: 'contour-labels',
-                type: 'symbol',
-                source: 'contours',
-                'source-layer': 'contours',
-                filter: ['>', ['get', 'level'], 0],
-                layout: {
-                    'symbol-placement': 'line',
-                    'text-size': 10,
-                    'text-allow-overlap': true,
-                    'text-justify': 'center',
-                    'text-field': ['concat', ['number-format', ['get', 'ele'], {}], ' ft'],
-                    'text-font': config.fonts.source(),
-                },
-                paint: {
-                    'text-color': '#6b6638',
-                    'text-halo-color': '#ddddd5',
-                    'text-halo-width': 2,
-                    'text-halo-blur': 1
-                }
-            });
-        }
-    }
-
     addTerrain() {
         if (settings.hasPermissions(config.PERMISSION_LEVELS.PRO)) {
             const wait = setInterval(() => {
                 if (typeof mlcontour !== 'undefined') {
                     clearInterval(wait);
 
-                    const demSource = new mlcontour.DemSource({
-                        url: 'https://tiles.mapterhorn.com/{z}/{x}/{y}.webp',
-                        encoding: 'terrarium',
-                        maxzoom: 13,
-                        worker: true,
-                        cacheSize: 100,
-                        timeoutMs: 10_000
-                    });
-
                     if (!map.getSource('terrain')) {
                         map.addSource('terrain', {
                             type: 'raster-dem',
                             encoding: 'terrarium',
                             maxzoom: 13,
-                            url: 'https://tiles.mapterhorn.com/tilejson.json'
-                        });
-                    }
-
-                    if (!map.getSource('hillshading')) {
-                        map.addSource('hillshading', {
-                            type: 'raster-dem',
-                            encoding: 'terrarium',
-                            maxzoom: 13,
+                            tileSize: 512,
                             url: 'https://tiles.mapterhorn.com/tilejson.json'
                         });
                     }
@@ -1611,30 +1519,6 @@ export class Layers {
                         source: 'terrain',
                         exaggeration: 1.1
                     });
-
-                    if (settings.getBasemap() == 'outdoors') {
-                        map.addLayer({
-                            id: 'hillshading',
-                            type: 'hillshade',
-                            source: 'hillshading',
-                            layout: {},
-                            paint: {
-                                'hillshade-exaggeration': 0.1,
-                                'hillshade-shadow-color': 'rgba(50, 50, 50, 0.7)',
-                                'hillshade-accent-color': 'rgb(129, 128, 120)',
-                                'hillshade-highlight-color': 'rgba(250, 250, 250, 0.9)'
-                            }
-                        });
-                    } else if (map.getLayer('hillshading')) map.removeLayer('hillshading');
-
-                    if (settings.getBasemap() == 'outdoors') {
-                        this.contours(demSource);
-                    } else {
-                        ['contour-lines', 'contour-labels'].forEach(layer => {
-                            if (map.getLayer(layer)) map.removeLayer(layer);
-                        });
-                    }
-                    ////}
                 }
             }, 100);
         }
@@ -1645,7 +1529,6 @@ export class Layers {
             ['where', '1=1'],
             ['outFields', 'ObjectId,AQSID,SiteName,LocalTimeString,PM25_AQI,PM25'],
             ['returnGeometry', 'true'],
-            /*['geometry', getbbox()],*/
             ['geometryPrecision', '6'],
             ['returnExceededLimitFeatures', 'true'],
             ['f', 'geojson']
@@ -1696,13 +1579,7 @@ export class Layers {
                     }
                 });
 
-                map.on('mouseenter', 'airQuality', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'airQuality', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
+                mapMouseOver('airQuality');
             }
 
             if (!map.getLayer('airQuality_text')) {
@@ -1738,7 +1615,7 @@ export class Layers {
     }
 
     async lightning() {
-        const ltime = () => {
+        /*const ltime = () => {
             const now = new Date(),
                 mins = now.getUTCMinutes(),
                 roundedMins = mins < 30 ? 0 : 30;
@@ -1746,48 +1623,56 @@ export class Layers {
             now.setUTCMinutes(roundedMins, 0, 0);
 
             return now.toISOString();
-        };
+        };*/
 
-        /*map.addSource('lightning1', {
-            type: 'raster',
-            maxzoom: 15,
-            tiles: [
-                //ENV.host + 'api/v1/lightning?key=' + config.apiKey() + '&x={x}&y={y}&z={z}&t=5'
-                //'https://tiles.lightningmaps.org/?x={x}&y={y}&z={z}&s=256&t=5'
-                'https://www.firewxavy.org/apis/lightning/5/{z}/{x}/{y}'
-                //'https://nowcoast.noaa.gov/geoserver/observations/lightning_detection/ows?request=GetMap&service=WMS&layers=ldn_lightning_strike_density&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=256&height=256&time=' + ltime() + '&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
-            ],
-            tileSize: 256
-        });
-        
-        map.addLayer({
-            id: 'lightning1',
-            type: 'raster',
-            source: 'lightning1',
-            layout: {
-                visibility: settings.isEnabled('lightning1') || !settings.checkboxes() ? 'visible' : 'none'
-            }
-        });
-        
-        map.addSource('lightning24', {
-            type: 'raster',
-            maxzoom: 15,
-            tiles: [
-                //ENV.host + 'api/v1/lightning?key=' + config.apiKey() + '&x={x}&y={y}&z={z}&t=6'
-                //'https://tiles.lightningmaps.org/?x={x}&y={y}&z={z}&s=256&t=6'
-                'https://www.firewxavy.org/apis/lightning/6/{z}/{x}/{y}'
-            ],
-            tileSize: 256
-        });
-        
-        map.addLayer({
-            id: 'lightning24',
-            type: 'raster',
-            source: 'lightning24',
-            layout: {
-                visibility: settings.isEnabled('lightning24') || !settings.checkboxes() ? 'visible' : 'none'
-            }
-        });*/
+        if (!map.getSource('lightning1')) {
+            map.addSource('lightning1', {
+                type: 'raster',
+                maxzoom: 15,
+                tiles: [
+                    //ENV.host + 'api/v1/lightning?key=' + config.apiKey() + '&x={x}&y={y}&z={z}&t=5'
+                    //'https://tiles.lightningmaps.org/?x={x}&y={y}&z={z}&s=256&t=5'
+                    'https://www.firewxavy.org/apis/lightning/5/{z}/{x}/{y}'
+                    //'https://nowcoast.noaa.gov/geoserver/observations/lightning_detection/ows?request=GetMap&service=WMS&layers=ldn_lightning_strike_density&request=GetMap&styles=&format=image/png&transparent=true&version=1.3.0&width=256&height=256&time=' + ltime() + '&crs=EPSG%3A3857&bbox={bbox-epsg-3857}'
+                ],
+                tileSize: 256
+            });
+        }
+
+        if (!map.getSource('lightning24')) {
+            map.addSource('lightning24', {
+                type: 'raster',
+                maxzoom: 15,
+                tiles: [
+                    //ENV.host + 'api/v1/lightning?key=' + config.apiKey() + '&x={x}&y={y}&z={z}&t=6'
+                    //'https://tiles.lightningmaps.org/?x={x}&y={y}&z={z}&s=256&t=6'
+                    'https://www.firewxavy.org/apis/lightning/6/{z}/{x}/{y}'
+                ],
+                tileSize: 256
+            });
+        }
+
+        if (!map.getLayer('lightning1')) {
+            map.addLayer({
+                id: 'lightning1',
+                type: 'raster',
+                source: 'lightning1',
+                layout: {
+                    visibility: settings.isEnabled('lightning1') || !settings.checkboxes() ? 'visible' : 'none'
+                }
+            });
+        }
+
+        if (!map.getLayer('lightning24')) {
+            map.addLayer({
+                id: 'lightning24',
+                type: 'raster',
+                source: 'lightning24',
+                layout: {
+                    visibility: settings.isEnabled('lightning24') || !settings.checkboxes() ? 'visible' : 'none'
+                }
+            });
+        }
     }
 
     async radarInit() {
@@ -1803,7 +1688,7 @@ export class Layers {
         };
 
         // build radar control once
-        if (!document.querySelector('.radar')) {
+        if (!$('.radar')) {
             const len = radar.mapFrames.length,
                 mid = Math.floor(len / 2),
                 ticks = Array.from({ length: len }, (_, i) => {
@@ -1972,13 +1857,7 @@ export class Layers {
                         }
                     });
 
-                    map.on('mouseenter', modisID, () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', modisID, () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
+                    mapMouseOver(modisID);
                 }
             }
         } else {
@@ -2049,19 +1928,13 @@ export class Layers {
                     }
                 });
 
-                map.on('mouseenter', 'ev', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'ev', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
+                mapMouseOver('ev');
             }
         }
     }
 
     async erc(update = false, toggle = false) {
-        const sel = document.querySelector('#erc_time'),
+        const sel = $('#erc_time'),
             dy = sel ? sel.options[sel.selectedIndex].value : settings.special().erc(),
             obs = [
                 'case',
@@ -2235,7 +2108,7 @@ export class Layers {
     }*/
 
     sfp(update = false) {
-        const ss = document.querySelector('#sfpDateSelect'),
+        const ss = $('#sfpDateSelect'),
             bkTime = ss ? ss.options[ss.selectedIndex].value : sfpTimes()[0].key,
             time = settings.special().sfpDate() && new Date(settings.special().sfpDate()) >= new Date() ? settings.special().sfpDate() : bkTime,
             url = `https://fsapps.nwcg.gov/psp/arcgis/services/npsg/current_forecast/MapServer/WMSServer?service=WMS&request=GetMap&layers=0&styles=&format=image%2Fpng&transparent=true&version=1.1.1&Index=1&height=512&width=512&TIME=${time}&srs=EPSG%3A3857&bbox={bbox-epsg-3857}`;
@@ -2298,7 +2171,7 @@ export class Layers {
         };
 
         const doy = dayOfYear(dateObj),
-            control = document.querySelector('.spcTimeline');
+            control = $('.spcTimeline');
 
         if (!control) {
             const options = () => {
@@ -2324,7 +2197,7 @@ export class Layers {
                     <select id="spcDates" data-action="spcDates">${options()}</select>
                     <span id="tlf" data-action="spc-climo" data-dir="next" class="fas fa-forward-step tlcontrol"></span>
                 </div>`;
-            document.querySelector('.app-wrapper').appendChild(el);
+            $('.app-wrapper').appendChild(el);
         } else {
             const select = control.querySelector('#spcDates');
             select.selectedIndex = day;
@@ -2630,19 +2503,18 @@ export class Layers {
     }
 
     async drought() {
-        const ArcGISFeatureSource = window[""]["arcgis-featureserver"],
-            color = [
-                'case',
-                ['==', ['to-number', ['get', 'dm']], 0], '#ffff00',
-                ['==', ['to-number', ['get', 'dm']], 1], '#ffcc99',
-                ['==', ['to-number', ['get', 'dm']], 2], '#ff6600',
-                ['==', ['to-number', ['get', 'dm']], 3], '#ff0000',
-                ['==', ['to-number', ['get', 'dm']], 4], '#660000',
-                'rgba(255, 255, 255, 0)'
-            ];
+        const color = [
+            'case',
+            ['==', ['to-number', ['get', 'dm']], 0], '#ffff00',
+            ['==', ['to-number', ['get', 'dm']], 1], '#ffcc99',
+            ['==', ['to-number', ['get', 'dm']], 2], '#ff6600',
+            ['==', ['to-number', ['get', 'dm']], 3], '#ff0000',
+            ['==', ['to-number', ['get', 'dm']], 4], '#660000',
+            'rgba(255, 255, 255, 0)'
+        ];
 
         if (!map.getSource('drought')) {
-            new ArcGISFeatureSource('drought', map, {
+            new ArcGISFeature('drought', map, {
                 url: 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/US_Drought_Intensity_v1/FeatureServer/3',
                 precision: 6,
                 where: '1=1',
@@ -3347,13 +3219,7 @@ export class Layers {
                         }
                     });
 
-                    map.on('mouseenter', 'odfFDR', () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'odfFDR', () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
+                    mapMouseOver('odfFDR');
                 }
 
                 if (!map.getLayer('odfFDR_outline')) {
@@ -3673,13 +3539,7 @@ export class Layers {
                     }
                 });
 
-                map.on('mouseenter', 'firemed', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'firemed', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
+                mapMouseOver('firemed');
             }
         }
     }
@@ -3689,7 +3549,7 @@ export class Wildfires {
     constructor() {
         this.store = storage('mapofire.clicks');
         this.clicks = [];
-        this.ArcGISFeatureSource = window[""]["arcgis-featureserver"];
+        //this.ArcGISFeatureSource = window[""]["arcgis-featureserver"];
         this.agencies = {
             'US Forest Service': 'USFS',
             'Bureau of Land Management': 'BLM',
@@ -3978,7 +3838,7 @@ export class Wildfires {
 
     createChart(fireName, incID, hist) {
         if (hist.length <= 1) {
-            document.querySelector('#acres_history').parentElement.parentElement.remove();
+            $('#acres_history').parentElement.parentElement.remove();
         } else {
             let lastTs = null;
 
@@ -4029,7 +3889,7 @@ export class Wildfires {
                 },
                 /*events: {
                     render() {
-                        document.querySelector('#acres_history').style.backgroundColor = 'transparent';
+                        $('#acres_history').style.backgroundColor = 'transparent';
                     }
                 },*/
                 subtitle: {
@@ -4142,7 +4002,7 @@ export class Wildfires {
                 const p = document.createElement('p');
                 p.classList.add('fireStats');
                 p.innerHTML = `<i class="far fa-chart-line-up"></i><span>${fireStats}</span>`;
-                document.querySelector('#acres_history').parentElement.appendChild(p);
+                $('#acres_history').parentElement.appendChild(p);
             }
         }
 
@@ -4171,8 +4031,8 @@ export class Wildfires {
         inits.trackedDone = true;
 
         // if modal is already open with wildfire data, change the follow button now
-        if (document.querySelector('#modal').classList.contains('opened', 'fire')) {
-            const tf = document.querySelector('#trackFire');
+        if ($('#modal').classList.contains('opened', 'fire')) {
+            const tf = $('#trackFire');
 
             if (tf && dataView.trackedFires.includes(tf.dataset.id)) {
                 tf.dataset.following = '1';
@@ -4305,13 +4165,7 @@ export class Wildfires {
                         }
                     });
 
-                    map.on('mouseenter', 'ca_fires', () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'ca_fires', () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
+                    mapMouseOver('ca_fires');
                 }
 
                 if (!map.getLayer('ca_fire_title')) {
@@ -4386,13 +4240,7 @@ export class Wildfires {
                         }
                     });
 
-                    map.on('mouseenter', 'ca_fire_title', () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'ca_fire_title', () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
+                    mapMouseOver('ca_fire_title');
                 }
             }
         }, 500);
@@ -4437,7 +4285,7 @@ export class Wildfires {
 
     // get wildfires from API
     async getWildfires(update = false) {
-        const qInput = document.querySelector('#q');
+        const qInput = $('#q');
         const types = ['all', 'new', 'smk', 'rx'];
 
         if (settings.archive) {
@@ -4477,7 +4325,7 @@ export class Wildfires {
     }
 
     renderNewFiresUI(count) {
-        const nf = document.querySelector('nav #new_fires');
+        const nf = $('nav #new_fires');
 
         nf.dataset.action = 'new_fires';
         nf.title = 'New Fires';
@@ -4515,13 +4363,7 @@ export class Wildfires {
                     }
                 });
 
-                map.on('mouseenter', fireLayerName, () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', fireLayerName, () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
+                mapMouseOver(fireLayerName);
             }
 
             if (!map.getLayer(`${fireLayerName}_title`)) {
@@ -4573,13 +4415,7 @@ export class Wildfires {
                     }
                 });
 
-                map.on('mouseenter', `${fireLayerName}_fire`, () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', `${fireLayerName}_fire`, () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
+                mapMouseOver(`${fireLayerName}_fire`);
             }
         }
 
@@ -4714,12 +4550,12 @@ export class Wildfires {
             `See current information on the ${fname} near ${near.split(' of ')[1]}.`);
 
         if (fire.inciweb && fire.inciweb.photo) {
-            document.querySelector('meta[property="og:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
-            document.querySelector('meta[name="twitter:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
+            $('meta[property="og:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
+            $('meta[name="twitter:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
         }
 
         if (fire.inciweb && fire.inciweb.photo) {
-            document.querySelector('meta[property="og:image:alt"]').setAttribute('content', fire.inciweb.photo.caption);
+            $('meta[property="og:image:alt"]').setAttribute('content', fire.inciweb.photo.caption);
         }
 
         // send data to service worker
@@ -4772,7 +4608,7 @@ export class Wildfires {
                         </div>`;
                     });
 
-                    document.querySelector('.incident #incWX').insertAdjacentHTML('beforebegin', `<div class="evacs">${theEvacs}</div>`);
+                    $('.incident #incWX').insertAdjacentHTML('beforebegin', `<div class="evacs">${theEvacs}</div>`);
                 }
             }
 
@@ -4783,7 +4619,7 @@ export class Wildfires {
             if (!settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
                 acHis.style.height = 'unset';
                 acHis.innerHTML = '<a href="#" data-action="marketing-cta" data-utm="acres_history" class="btn btn-orange btn-lg" onclick="return false"><i class="fas fa-lock"></i>Upgrade to see growth history</a>';
-                /*document.querySelector('#acres_history').parentElement.parentElement.remove();*/
+                /*$('#acres_history').parentElement.parentElement.remove();*/
 
                 // blur coordinates
                 scrd.innerHTML = '0.0000 -0.0000';
@@ -4866,7 +4702,7 @@ export class Wildfires {
                 if (!intersects(viewBBox, this.REGION_BBOX[id])) return null;
 
                 if (!map.getSource(src)) {
-                    new this.ArcGISFeatureSource(src, map, {
+                    new ArcGISFeature(src, map, {
                         url: url,
                         precision: 6,
                         where: where,
@@ -4924,13 +4760,7 @@ export class Wildfires {
                         layout: { visibility: vis }
                     });
 
-                    map.on('mouseenter', fill, () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', fill, () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
+                    mapMouseOver(fill);
                 }
             };
 
@@ -4965,7 +4795,7 @@ export class Wildfires {
         if (!settings.archive) this.intlPerimeters(update);
 
         if (!map.getSource('perimeters')) {
-            new this.ArcGISFeatureSource('perimeters', map, {
+            new ArcGISFeature('perimeters', map, {
                 url: 'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0',
                 precision: 6,
                 where: w,
@@ -5035,13 +4865,7 @@ export class Wildfires {
                 }
             });
 
-            map.on('mouseenter', 'perimeters_fill', () => {
-                map.getCanvas().style.cursor = 'pointer';
-            });
-
-            map.on('mouseleave', 'perimeters_fill', () => {
-                map.getCanvas().style.cursor = 'auto';
-            });
+            mapMouseOver('perimeters_fill');
         }
 
         return this;
@@ -5100,13 +4924,7 @@ export class NWS {
                     }
                 });
 
-                map.on('mouseenter', 'wwas_fill', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'wwas_fill', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
+                mapMouseOver('wwas_fill');
             }
 
             if (!map.getLayer('wwas_title')) {
@@ -5165,8 +4983,8 @@ export class NWS {
 
     // get SPC convective and fire weather outlooks
     async spc(update = false) {
-        let od = document.querySelector('#otlkDay'),
-            ot = document.querySelector('#otlkType'),
+        let od = $('#otlkDay'),
+            ot = $('#otlkType'),
             dy,
             ty;
 
@@ -5209,13 +5027,7 @@ export class NWS {
                     }
                 });
 
-                map.on('mouseenter', 'outlook_fill', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-
-                map.on('mouseleave', 'outlook_fill', () => {
-                    map.getCanvas().style.cursor = 'auto';
-                });
+                mapMouseOver('outlook_fill');
             }
 
             if (!map.getLayer('outlook_outline')) {
@@ -5284,9 +5096,9 @@ export class NWS {
     }
 
     ndfd(update = false, tid) {
-        let ur, leg, legend = document.querySelector('.ndfdLegend');
-        const fcstMod = document.querySelector('#forecastModel'),
-            fcstTime = document.querySelector('#fcstTime');
+        let ur, leg, legend = $('.ndfdLegend');
+        const fcstMod = $('#forecastModel'),
+            fcstTime = $('#fcstTime');
 
         let ft = settings.special().fcstTime(),
             fm = settings.special().forecastModel();
@@ -5314,7 +5126,7 @@ export class NWS {
         }
 
         if (tid != 'fcstTime') {
-            document.querySelector('.ndfdLegend').innerHTML = `<img src="https://nowcoast.noaa.gov/geoserver/${leg}&service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=283&height=33" alt="Legend">`;
+            $('.ndfdLegend').innerHTML = `<img src="https://nowcoast.noaa.gov/geoserver/${leg}&service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=283&height=33" alt="Legend">`;
         }
 
         if (update) {
@@ -5487,7 +5299,7 @@ export class ClickListener {
 
     android() {
         sessionStorage.setItem('recommend_google_play', 1);
-        document.querySelector('.android-banner').remove();
+        $('.android-banner').remove();
     }
 
     tools() {
@@ -5508,11 +5320,11 @@ export class ClickListener {
     }
 
     closeDataForm() {
-        const r = document.querySelector('li#report'),
-            fw = document.querySelector('li#fwf');
+        const r = $('li#report'),
+            fw = $('li#fwf');
 
-        document.querySelector('#data-form')?.remove();
-        document.querySelector('.shadow')?.remove();
+        $('#data-form')?.remove();
+        $('.shadow')?.remove();
 
         if (r?.dataset.active === '1') r.removeAttribute('data-active');
         if (fw.dataset.active === '1') fw.removeAttribute('data-active');
@@ -5523,11 +5335,11 @@ export class ClickListener {
     }
 
     async clearSearch() {
-        const q = document.querySelector('#q');
+        const q = $('#q');
         if (!q) return;
 
         q.value = '';
-        document.querySelector('#clearSearch')?.style.setProperty('display', 'none');
+        $('#clearSearch')?.style.setProperty('display', 'none');
         new (await loadUtils()).Search('').do();
         q.focus();
     }
@@ -5701,7 +5513,7 @@ export class ClickListener {
             map.removeSource('stns');
         }
 
-        document.querySelector('.popup')?.remove();
+        $('.popup')?.remove();
 
         unsetHeaders();
 
@@ -5723,7 +5535,7 @@ export class ClickListener {
 
     closeNavbar() {
         if (!this.target) return;
-        const nav = document.querySelector('nav'),
+        const nav = $('nav'),
             isOpen = this.target.dataset.open === 'true',
             left = 'fa-chevron-left',
             right = 'fa-chevron-right';
@@ -6137,7 +5949,7 @@ export class ClickListener {
         };
 
         Object.entries(prefs).forEach(([id, val]) => {
-            const el = document.querySelector(`select#${id}`);
+            const el = $(`select#${id}`);
             if (el) el.value = val;
         });
 
@@ -6163,7 +5975,7 @@ export class ClickListener {
             </div>`;
         }
 
-        document.querySelector('#subs').innerHTML = ms;
+        $('#subs').innerHTML = ms;
     }
 
     radarStop() {
@@ -6178,7 +5990,7 @@ export class ClickListener {
     radarPlay() {
         radar.animationTimer = true;
         config.layersHandler.showRadarFrame(radar.animationPosition + 1);
-        const range = document.querySelector('.radar input[type=range]');
+        const range = $('.radar input[type=range]');
         range.value = radar.animationPosition;
 
         const percent = (range.value - range.min) / (range.max - range.min) * 100;
@@ -6186,7 +5998,7 @@ export class ClickListener {
     }
 
     radarPausePlay() {
-        const c = document.querySelector('.radarControl');
+        const c = $('.radarControl');
 
         c.classList.toggle('fa-play');
         c.classList.toggle('fa-pause');
@@ -6198,7 +6010,7 @@ export class ClickListener {
     spcClimo() {
         if (this.target.classList.contains('disabled')) return;
 
-        const select = document.querySelector('.spcTimeline #spcDates');
+        const select = $('.spcTimeline #spcDates');
         let newIndex = select.selectedIndex;
 
         if (this.target.dataset.dir === 'back') newIndex -= 1;
@@ -6217,7 +6029,7 @@ export class ClickListener {
 
         const name = fire.properties.name.replace(' Fire', '') + (fire.properties.type != 'Smoke Check' ? ' Fire' : '');
         const isRemove = this.target.dataset.mode == 'unfollow' && dataView.trackedFires.includes(id);
-        const tf = document.querySelector('#trackFire');
+        const tf = $('#trackFire');
 
         if (isRemove) {
             dataView.trackedFires.splice(dataView.trackedFires.indexOf(id), 1);
@@ -6226,8 +6038,6 @@ export class ClickListener {
         }
 
         if (tf) {
-            const m = isRemove ? 'remove' : 'add';
-
             tf.dataset.mode = isRemove ? 'follow' : 'unfollow';
             tf.title = isRemove ? 'Start following this incident' : 'You\'re following this incident';
             tf.classList.toggle('btn-black', !isRemove);
@@ -6248,7 +6058,7 @@ export class ClickListener {
     async unfollow(tar) {
         const id = Number(tar.dataset.wfid),
             name = tar.dataset.name,
-            myf = document.querySelector('ul.my-fires');
+            myf = $('ul.my-fires');
 
         tar.closest('li')?.remove();
 
@@ -6275,11 +6085,13 @@ export class ClickListener {
                 return `<option ${year === config.curTime.getFullYear() ? 'disabled ' : ''}value="${year}">${year}</option>`;
             }).join('');
 
-            new Popup('Historical Wildfires').create(`<p style="font-size:14px;line-height:1.2">See historical wildfires by selecting a year in our archive.</p>
+            new Popup('Historical Wildfires').create(
+                `<p style="font-size:14px;line-height:1.2">See historical wildfires by selecting a year in our archive.</p>
                 <select id="archive_years" data-action="archive_years" style="border:1px solid #cfcfcf;margin-top:1em"><option>- Choose a year -</option>${yrs}</select>
                 <div class="btn-group centered">
                     <input type="button" class="btn btn-sm btn-gray" value="Cancel" onclick="this.parentElement.parentElement.parentElement.remove()">
-                </div>`);
+                </div>`
+            );
         }
     }
 
@@ -6470,7 +6282,7 @@ export class ClickListener {
 
 export class Tooltips {
     constructor(options = {}) {
-        this.nav = document.querySelector('nav');
+        this.nav = $('nav');
         this.tooltipEl = document.createElement("div");
         this.tooltipEl.className = "tooltip";
         document.body.appendChild(this.tooltipEl);
@@ -6613,7 +6425,7 @@ export function notify(t, m, time = 0) {
         el = document.createElement('div'),
         icon = t == 'success' ? 'fa-check' : (t == 'info' ? 'fa-circle-info' : 'fa-circle-exclamation');
 
-    document.querySelector('div.alert')?.remove();
+    $('div.alert')?.remove();
 
     el.classList.add('alert', t);
 
@@ -6691,16 +6503,16 @@ export function marketing(override = false, utm = null) {
         document.body.appendChild(el);
 
         createDataForm(option.title, content);
-        document.querySelector('#data-form').classList.add('bg');
-        document.querySelector('#data-form h1').style.textAlign = 'center';
-        document.querySelector('#data-form h1').insertAdjacentHTML('beforebegin', '<i class="fad fa-user-unlock" style="display:block;text-align:center;font-size:50px;color:#ffcd82;margin-bottom:0.5em"></i>');
+        $('#data-form').classList.add('bg');
+        $('#data-form h1').style.textAlign = 'center';
+        $('#data-form h1').insertAdjacentHTML('beforebegin', '<i class="fad fa-user-unlock" style="display:block;text-align:center;font-size:50px;color:#ffcd82;margin-bottom:0.5em"></i>');
 
         // mark as shown
         sessionStorage.setItem('modal_shown_this_session', '1');
         storage('mapofire.marketing.last_shown', now.toString());
 
         // postive CTA
-        document.querySelector('#donate_cta').addEventListener('click', () => {
+        $('#donate_cta').addEventListener('click', () => {
             gtag('event', 'subscription_cta_click', {
                 'event_category': 'Subscription',
                 'event_label': `Variant_${pick}`,
@@ -6713,7 +6525,7 @@ export function marketing(override = false, utm = null) {
         });
 
         // dismiss CTA
-        document.querySelector('#donate_dismiss').addEventListener('click', () => {
+        $('#donate_dismiss').addEventListener('click', () => {
             dismissedCount++;
             storage('mapofire.marketing.dismiss_count', dismissedCount);
 
@@ -6760,26 +6572,25 @@ export function loadScript(src) {
 
 export function addTrending() {
     const fragment = document.createDocumentFragment();
+    const standby = searchResults.querySelector('li.standby');
     let count = 0;
 
     inits.trending = true;
 
     searchResults.style.display = 'flex';
-    searchResults.querySelector('li.standby').innerHTML = '<h6 style="color:var(--box-border);font-size:18px;cursor:auto;user-select:none">Trending incidents...</h6>';
+    standby.innerHTML = '<h6 style="color:var(--box-border);font-size:18px;cursor:auto;user-select:none">Trending incidents...</h6>';
 
-    if (searchResults.querySelector('li.standby').style.display == 'none') {
-        searchResults.querySelector('li.standby').style.display = 'inline-flex';
-    }
+    if (standby.style.display == 'none') standby.style.display = 'inline-flex';
 
     if (dataView.topFires?.length) {
-        for (let i = 0; i < dataView.topFires.length; i++) {
-            const p = dataView.topFires[i].data,
+        dataView.topFires.forEach(i => {
+            const p = i.data,
                 fire = config.wildfire.findFire(p.wfid);
 
             if (fire) {
                 const fireName = fire.properties.name,
                     acres = conversion.sizeFormat(fire.properties.acres),
-                    who = `${numberFormat(dataView.topFires[i].count, 0)} ${(dataView.topFires[i].count == 1 ? 'person is' : 'people are')} looking at the ${fireName}`,
+                    who = `${numberFormat(i.count, 0)} ${(i.count == 1 ? 'person is' : 'people are')} looking at the ${fireName}`,
                     li = document.createElement('li');
 
                 li.classList.add('trending');
@@ -6795,13 +6606,13 @@ export function addTrending() {
                         <span>${fire.properties.type} in ${stateLabels[fire.properties.state]?.name} &middot; <b>${acres}</b></span>
                     </h3>
                 </div>
-                ${(dataView.topFires[i].trending ? '<span class="trend fas fa-arrow-trend-up" style="color:var(--green)"></span>' : '')}`;
+                ${(i.trending ? '<span class="trend fas fa-arrow-trend-up" style="color:var(--green)"></span>' : '')}`;
 
                 fragment.appendChild(li);
 
                 count++;
             }
-        }
+        });
     }
 
     if (count === 0) {
@@ -6877,7 +6688,7 @@ export async function startReportProcess(e) {
 }
 
 export function contextMenu(e, isTouch = false) {
-    const menu = document.querySelector('.context-menu');
+    const menu = $('.context-menu');
 
     if (menu) menu.remove();
 
@@ -6995,7 +6806,7 @@ export const modalZoom = (coordsOrLng, lat) => {
 
 export const mapClick = async (e) => {
     // open new incident report form
-    if (document.querySelector('li#report').dataset.active == 1) {
+    if ($('li#report').dataset.active == 1) {
         config.disableClicks = true;
 
         map.getCanvas().style.cursor = 'auto';
@@ -7005,10 +6816,10 @@ export const mapClick = async (e) => {
     }
 
     // get fire weather forecast
-    if (document.querySelector('li#fwf')) {
-        if (document.querySelector('li#fwf').dataset.active == 1) {
+    if ($('li#fwf')) {
+        if ($('li#fwf').dataset.active == 1) {
             config.disableClicks = true;
-            document.querySelector('li#fwf').dataset.active = '0';
+            $('li#fwf').dataset.active = '0';
 
             map.getCanvas().style.cursor = 'auto';
 
@@ -7017,87 +6828,62 @@ export const mapClick = async (e) => {
     }
 
     // click listener for when the user isn't submitting a report or getting a fwf
-    if (!config.disableClicks) {
-        onMapClick(e);
-    }
+    if (!config.disableClicks) onMapClick(e);
 };
 
 export const moveEnd = debounce(() => {
     map.getCanvas().style.cursor = 'auto';
 
+    const simpleLayers = [
+        'erc',
+        'hms',
+        'smokeFcst',
+        'nri',
+        'power',
+        'dispatch',
+        'gaccBounds',
+        'calfireUnits',
+        'cdfFHSZ'
+    ],
+        zoomDependentLayers = [
+            { key: 'firemed', handler: () => config.layersHandler.firemed(true), minZoom: config.firemedZoomLevel },
+            { key: 'modis24', handler: () => config.layersHandler.modis(1, true), minZoom: config.modisZoomLevel },
+            { key: 'modis48', handler: () => config.layersHandler.modis(2, true), minZoom: config.modisZoomLevel },
+            { key: 'modis72', handler: () => config.layersHandler.modis(3, true), minZoom: config.modisZoomLevel }
+        ];
+
     //settings.logMovement();
 
-    if (!settings.user || !settings.checkboxes() || settings.isEnabled('perimeters')) {
-        //config.wildfire.perimeters(true);
-    }
+    /*if (!settings.user || !settings.checkboxes() || settings.isEnabled('perimeters')) {
+        config.wildfire.perimeters(true);
+    }*/
 
     if ((!settings.checkboxes() || settings.isEnabled('allFires')) && settings.archive != null) {
         config.wildfire.getWildfires(true);
     }
 
-    if (settings.isEnabled('firemed') && map.getZoom() >= config.firemedZoomLevel) {
-        config.layersHandler.firemed(true);
-    }
+    // control zoom dependent layers
+    zoomDependentLayers.forEach(layer => {
+        if (settings.isEnabled(layer.key) && map.getZoom() >= layer.minZoom) layer.handler();
+    });
 
-    if (settings.isEnabled('modis24') && map.getZoom() >= config.modisZoomLevel) {
-        config.layersHandler.modis(1, true);
-    }
+    // update simple layers
+    simpleLayers.forEach(key => {
+        if (settings.isEnabled(key)) config.layersHandler[key](true);
+    });
 
-    if (settings.isEnabled('modis48') && map.getZoom() >= config.modisZoomLevel) {
-        config.layersHandler.modis(2, true);
-    }
-
-    if (settings.isEnabled('modis72') && map.getZoom() >= config.modisZoomLevel) {
-        config.layersHandler.modis(3, true);
-    }
-
+    // get wwas
     if (settings.isEnabled('wwas')) {
         new NWS().get(true);
     }
 
     if (settings.isEnabled('stns')) {
-        const int = setInterval(() => {
-            if (Weather !== undefined) {
+        const intv = setInterval(() => {
+            if (typeof Weather !== 'undefined') {
                 new Weather().raws(true);
-                clearInterval(int);
+                clearInterval(intv);
             }
         }, 500);
-    }
-
-    if (settings.isEnabled('erc')) {
-        config.layersHandler.erc(true);
-    }
-
-    if (settings.isEnabled('hms')) {
-        config.layersHandler.hms(true);
-    }
-
-    if (settings.isEnabled('smokeFcst')) {
-        config.layersHandler.smokeFcst(true);
-    }
-
-    if (settings.isEnabled('nri')) {
-        config.layersHandler.nri(true);
-    }
-
-    if (settings.isEnabled('power')) {
-        config.layersHandler.power(true);
-    }
-
-    if (settings.isEnabled('dispatch')) {
-        config.layersHandler.dispatch(true);
-    }
-
-    if (settings.isEnabled('gaccBounds')) {
-        config.layersHandler.gaccBounds(true);
-    }
-
-    if (settings.isEnabled('calfireUnits')) {
-        config.layersHandler.calfireUnits(true);
-    }
-
-    if (settings.isEnabled('cdfFHSZ')) {
-        config.layersHandler.cdfFHSZ(true);
     }
 }, 500);
 
@@ -7149,7 +6935,7 @@ export class MFAttribControl extends maplibregl.AttributionControl {
 
     _updateAttributions() {
         ////super._updateAttributions();
-        this._innerContainer.innerHTML = `<a target="blank" href="https://maplibre.org/">MapLibre</a> | 
+        this._innerContainer.innerHTML = `<a target="blank" href="https://maplibre.org/">MapLibre</a>&nbsp;|&nbsp;
             © <a target="blank" href="https://www.esri.com">Esri</a>, 
             © <a target="blank" href="https://carto.com/about-carto/" rel="noopener">CARTO</a>, 
             © <a target="blank" href="http://www.openstreetmap.org/about/">OpenStreetMap</a> contributors`;

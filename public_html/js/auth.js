@@ -82,11 +82,18 @@ class SSO {
     async request(data, method = null) {
         data.append('key', apiKey);
 
-        return await fetch(apiURL + 'user' + (method ? '/' + method : ''), {
-            credentials: 'include',
-            method: 'POST',
-            body: data
-        });
+        try {
+            return await fetch(apiURL + 'user' + (method ? '/' + method : ''), {
+                credentials: 'include',
+                method: 'POST',
+                body: data
+            });
+        } catch (err) {
+            console.error(err);
+            createError('There was an error trying to log you in. Try again.');
+            submitBtn.disabled = false;
+            submitBtn.value = submitBtn.dataset.o;
+        }
     }
 
     /*uniqueDID(s) {
@@ -107,7 +114,7 @@ class SSO {
                 }
 
                 if (submitBtn) {
-                    submitBtn.value = submitBtn.getAttribute('data-o');
+                    submitBtn.value = submitBtn.dataset.o;
                     submitBtn.disabled = false;
                 }
                 createError(api.msg);
@@ -138,7 +145,7 @@ class SSO {
             }
         }
 
-        /*['service', 'next', 'subscribe', 'price_id'].forEach((n) => {
+        /*['service', 'next', 'subscribe', 'price_id'].forEach(n => {
             const el = document.querySelector(`input[name=${n}]`);
             if (el) fd.append(n, el.value);
         });*/
@@ -150,7 +157,7 @@ class SSO {
         removeErrors();
 
         const fd = new FormData();
-        document.querySelectorAll('#login input').forEach((e) => fd.append(e.getAttribute('name'), e.value));
+        document.querySelectorAll('#login input').forEach(e => fd.append(e.getAttribute('name'), e.value));
         this.doLogin(fd);
     }
 
@@ -164,7 +171,7 @@ class SSO {
             const api = await resp.json();
 
             if (api.response == 'error') {
-                submitBtn.value = submitBtn.getAttribute('data-o');
+                submitBtn.value = submitBtn.dataset.o;
                 submitBtn.disabled = false;
                 createError(api.msg);
                 return;
@@ -182,7 +189,7 @@ class SSO {
         removeErrors();
         const fd = new FormData();
 
-        ['verify', 'email', 'oauth_token', 'pass', 'confirm_pass'].forEach((n) => {
+        ['verify', 'email', 'oauth_token', 'pass', 'confirm_pass'].forEach(n => {
             const el = document.querySelector(`input[name=${n}]`);
             if (el) fd.append(n, el.value);
         });
@@ -191,7 +198,7 @@ class SSO {
             const api = await resp.json();
 
             if (api.response == 'error') {
-                submitBtn.value = submitBtn.getAttribute('data-o');
+                submitBtn.value = submitBtn.dataset.o;
                 submitBtn.disabled = false;
                 createError(api.msg);
                 return;
@@ -205,7 +212,7 @@ class SSO {
         const fd = new FormData();
 
         ['ip', 'invite_code', 'org_key', 'email', 'first_name', 'last_name', 'pass', 'confirm_pass']
-            .forEach((n) => {
+            .forEach(n => {
                 const el = document.querySelector(`input[name=${n}]`);
                 if (el) fd.append(n, el.value)
             });
@@ -214,7 +221,7 @@ class SSO {
             const api = await resp.json();
 
             if (api.response == 'error') {
-                submitBtn.value = submitBtn.getAttribute('data-o');
+                submitBtn.value = submitBtn.dataset.o;
                 submitBtn.disabled = false;
 
                 createError(api.msg);
@@ -227,7 +234,7 @@ class SSO {
         const fd = new FormData(),
             sub = document.querySelector('input[name=subscriber]');
 
-        ['ip', 'oauth_token', 'email'].forEach((n) => {
+        ['ip', 'oauth_token', 'email'].forEach(n => {
             const el = document.querySelector(`input[name=${n}]`);
             if (el) fd.append(n, el.value);
         });
@@ -238,7 +245,7 @@ class SSO {
             const api = await resp.json();
 
             if (api.response == 'error') {
-                submitBtn.value = submitBtn.getAttribute('data-o');
+                submitBtn.value = submitBtn.dataset.o;
 
                 if (api.code != 2) submitBtn.disabled = false;
                 createError(api.msg);
@@ -257,7 +264,7 @@ class SSO {
         const fd = new FormData();
 
         ['ip', 'location', 'first_name', 'last_name', 'email', 'phone', 'pass', 'confirm_pass']
-            .forEach((n) => {
+            .forEach(n => {
                 const el = document.querySelector(`input[name=${n}]`);
                 if (el) fd.append(n, el.value)
             });
@@ -265,7 +272,7 @@ class SSO {
         fd.append('tos', document.querySelector('input[name=tos]').checked ? 1 : 0);
 
         if (document.querySelector('input[name=subscribe]')) {
-            ['subscribe', 'price_id', 'product_key', 'trial'].forEach((n) => {
+            ['subscribe', 'price_id', 'product_key', 'trial'].forEach(n => {
                 const el = document.querySelector(`input[name=${n}]`);
                 if (el) fd.append(n, el.value);
             });
@@ -275,7 +282,7 @@ class SSO {
             const api = await resp.json();
 
             if (api.response == 'error') {
-                submitBtn.value = submitBtn.getAttribute('data-o');
+                submitBtn.value = submitBtn.dataset.o;
                 submitBtn.disabled = false;
                 createError(api.msg);
                 return;

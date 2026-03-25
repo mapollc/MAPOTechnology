@@ -10,7 +10,9 @@ const ENV = {
     PLATFORM_MAP: {
         'wlidfiremap.org': 'wildfiremap',
         'fireweatheravalanche.org': 'fireweatheravalanche'
-    }
+    }/*,
+    originalConsole: {},
+    consoleMsgs: []*/
 };
 
 const mfFonts = `${ENV.baseURL}data/maps/fonts/{fontstack}/{range}.pbf`,
@@ -20,6 +22,8 @@ const mfFonts = `${ENV.baseURL}data/maps/fonts/{fontstack}/{range}.pbf`,
         'wildfiremap': '85f58fa255efe0f779e0dfcd62d87e6d',
         'mapofire': '50e2c43f8f63ff0ed20127ee2487f15e'
     };
+
+const $ = (sel, scope = document) => scope.querySelector(sel);
 
 const getPlatform = () => {
     return ENV.PLATFORM_MAP[ENV.host] || 'mapofire';
@@ -52,7 +56,12 @@ const getFont = (type) => {
     return fontMap[type][mapType] || fontMap[type].default;
 };
 
+const loadArcgis = async () => {
+    await import(`${ENV.baseURL}${(debugMode ? `v${version}/arcgis.js` : `src/js/arcgis-${version}.js`)}`);
+};
+
 const loadUtils = async () => {
+    if (!window.ArcGISFeature) loadArcgis();
     if (utilsPromise) return utilsPromise;
 
     try {
@@ -221,9 +230,9 @@ const osm = {
     };
 
 const activeIncidents = new Map(),
-    modal = document.querySelector('#modal'),
-    impact = document.querySelector('#impact'),
-    searchResults = document.querySelector('#search-results'),
+    modal = $('#modal'),
+    impact = $('#impact'),
+    searchResults = $('#search-results'),
     disclaimer = 'This information is based on an automated collection of data from various state and federal interagency dispatch centers and other governmental sources. Always refer to your local sources for the latest updates on evacuations or other critical information.',
     impactHeader = `<header><h3 id="a" class="title"><div class="placeholder" style="width:225px;height:28px"></div></h3><div id="mclose" data-action="close-impact" title="Close window">
     <i class="far fa-xmark" data-action="close-impact"></i></div></header>`,
@@ -374,8 +383,8 @@ const layerActions = {
     'spc': {
         run: async (checked) => {
             if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
-                document.querySelector('#otlkType').disabled = !checked;
-                document.querySelector('#otlkDay').disabled = !checked;
+                $('#otlkType').disabled = !checked;
+                $('#otlkDay').disabled = !checked;
             }
 
             if (map.getSource('outlook')) {
@@ -390,7 +399,7 @@ const layerActions = {
             if (checked) {
                 config.layersHandler.radarInit();
             } else {
-                document.querySelector('.radar').remove();
+                $('.radar').remove();
 
                 for (let i = 0; i < radar.mapFrames.length; i++) {
                     if (map.getLayer(`radar-layer-${i}`)) map.removeLayer(`radar-layer-${i}`);
@@ -413,14 +422,14 @@ const layerActions = {
             const visibility = checked ? 'visible' : 'none';
 
             if (impact.style.display == 'flex') {
-                document.querySelector('#forecastModel').disabled = !checked;
-                document.querySelector('#fcstTime').disabled = !checked;
+                $('#forecastModel').disabled = !checked;
+                $('#fcstTime').disabled = !checked;
             }
 
             if (map.getSource('ndfd')) {
                 map.setLayoutProperty('ndfd', 'visibility', visibility);
 
-                if (!checked) document.querySelector('.ndfdLegend')?.remove();
+                if (!checked) $('.ndfdLegend')?.remove();
             } else if (checked) {
                 new (await loadUtils()).NWS().ndfd();
             }
@@ -428,7 +437,7 @@ const layerActions = {
     },
     'erc': {
         run: (checked) => {
-            if (impact.style.display == 'flex') document.querySelector('#erc_time').disabled = !checked;
+            if (impact.style.display == 'flex') $('#erc_time').disabled = !checked;
 
             if (map.getSource('erc')) {
                 ['erc_fill', 'erc_outline'].forEach(n => map.setLayoutProperty(n, 'visibility', checked ? 'visible' : 'none'));
@@ -447,7 +456,7 @@ const layerActions = {
             } else {
                 ['spc_climo_fill', 'spc_climo_outline', 'spc_climo_prob'].forEach(a => map.removeLayer(a));
                 map.removeSource('spc_climo');
-                document.querySelector('.spcTimeline').remove();
+                $('.spcTimeline').remove();
             }
         }
     },
@@ -461,7 +470,7 @@ const layerActions = {
     'fuels': { layers: ['fuels', 'fuelsAK'], exe: () => { config.layersHandler.fuels(); } },
     'sfp': {
         run: (checked) => {
-            if (impact.style.display == 'flex') document.querySelector('#sfpDateSelect').disabled = !checked;
+            if (impact.style.display == 'flex') $('#sfpDateSelect').disabled = !checked;
 
             if (map.getSource('sfp')) {
                 map.setLayoutProperty('sfp', 'visibility', checked ? 'visible' : 'none');
@@ -486,7 +495,7 @@ const layerActions = {
     'sfcSmoke': {
         run: async (checked) => {
             if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
-                document.querySelector('#sfc_smoke_time').disabled = !checked;
+                $('#sfc_smoke_time').disabled = !checked;
             }
 
             if (map.getSource('sfcSmoke')) {
@@ -499,7 +508,7 @@ const layerActions = {
     'viSmoke': {
         run: async (checked) => {
             if (impact.style.display == 'flex' && impact.dataset.display == 'layers') {
-                document.querySelector('#vi_smoke_time').disabled = !checked;
+                $('#vi_smoke_time').disabled = !checked;
             }
 
             if (map.getSource('viSmoke')) {
@@ -521,18 +530,18 @@ Object.freeze(layerActions);
 Object.freeze(config.PERMISSION_LEVELS);
 
 config.tiles = {
-    //outdoors: 'https://api.maptiler.com/maps/0198ce67-b3a9-7754-9811-60e2bf25e13a/style.json?key=ZeQEIVoqyieC6wk8qxJH',
-    outdoors: `${ENV.host}data/maps/terrain.json`,
+    outdoors: `${ENV.apiURL}maps/style/terrain?key=${config.apiKey()}`,
+    //outdoors: `${ENV.host}data/maps/terrain.json`,
     //outdoors: 'https://tiles.openfreemap.org/styles/liberty',
-    satellite: `${ENV.host}data/maps/satellite.json`,
+    satellite: `${ENV.apiURL}maps/style/satellite?key=${config.apiKey()}`,
     osm: osm,
     //fs16: fs16,
-    fs16: `${ENV.host}data/maps/usfs.json`,
+    fs16: `${ENV.apiURL}maps/style/usfs?key=${config.apiKey()}`,
     caltopo: caltopo,
     terrain: terrain,
     topofire: topofire,
-    voyager: `${ENV.host}data/maps/voyager.json`,
-    dark: `${ENV.host}data/maps/dark.json`
+    voyager: `${ENV.apiURL}maps/style/voyager?key=${config.apiKey()}`,
+    dark: `${ENV.apiURL}maps/style/dark?key=${config.apiKey()}`
     //dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
 };
 
@@ -636,19 +645,19 @@ function toggleLayer(e) {
         getLayer = config.listOfLayers.find(layer => layer.id === layerId),
         layerPerms = getLayer ? getLayer.perms : false;
 
-        const executeToggle = (sourceId, action, checked) => {
-            const visibility = checked ? 'visible' : 'none';
+    const executeToggle = (sourceId, action, checked) => {
+        const visibility = checked ? 'visible' : 'none';
 
-            if (sourceId == 'visSatellite') sourceId = 'satellite1';
-            else if (sourceId == 'irSatellite') sourceId = 'satellite2';
-            else if (sourceId == 'wvSatellite') sourceId = 'satellite3';
+        if (sourceId == 'visSatellite') sourceId = 'satellite1';
+        else if (sourceId == 'irSatellite') sourceId = 'satellite2';
+        else if (sourceId == 'wvSatellite') sourceId = 'satellite3';
 
-            if (map.getSource(sourceId)) {
-                action.layers.forEach(id => map.setLayoutProperty(id, 'visibility', visibility));
-            } else if (checked) {
-                action.exe();
-            }
-        };
+        if (map.getSource(sourceId)) {
+            action.layers.forEach(id => map.setLayoutProperty(id, 'visibility', visibility));
+        } else if (checked) {
+            action.exe();
+        }
+    };
 
     if (!action || !settings.hasPermissions(layerPerms)) return;
 
@@ -662,11 +671,10 @@ function toggleLayer(e) {
 }
 
 async function getCounties() {
-    const ArcGISFeatureSource = window[""]["arcgis-featureserver"];
-
     if (!map.getSource('us_counties')) {
-        new ArcGISFeatureSource('us_counties', map, {
-            url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_Counties_Generalized_Boundaries/FeatureServer/0',
+        new ArcGISFeature('us_counties', map, {
+            //url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_Counties_Generalized_Boundaries/FeatureServer/0',
+            url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_Census_Counties/FeatureServer/0',
             precision: 6,
             where: '1=1',
             outFields: 'NAME,STATE_ABBR AS STATE,FIPS,POPULATION,SQMI'
@@ -688,7 +696,7 @@ async function getCounties() {
         });
     }
 
-    if (!map.getLayer('county-boundaries')) {
+    /*if (!map.getLayer('county-boundaries')) {
         map.addLayer({
             id: 'county-boundaries',
             source: 'us_counties',
@@ -737,7 +745,7 @@ async function getCounties() {
                 ]
             }
         });
-    }
+    }*/
 
     /*map.addSource('property_lines', {
         type: 'raster',
@@ -758,7 +766,7 @@ async function getCounties() {
 
 function addDynamicControls() {
     const useBottom = window.innerWidth <= 500;
-    let evacBtn = document.querySelector('.evacBtn');
+    let evacBtn = $('.evacBtn');
 
     if (!evacBtn) {
         evacBtn = document.createElement('button');
@@ -778,7 +786,7 @@ function addDynamicControls() {
         t = ['Enter fullscreen', 'Zoom in', 'Zoom out', 'Reset bearing to north', 'Find my location'];
 
     for (let i = 0; i < c.length; i++) {
-        const it = document.querySelector(`.maplibregl-ctrl-${c[i]}`);
+        const it = $(`.maplibregl-ctrl-${c[i]}`);
         if (!it) continue;
 
         it.classList.add('ttip');
@@ -788,7 +796,7 @@ function addDynamicControls() {
     evacBtn.remove();
 
     if (useBottom) {
-        const parent = document.querySelector('.maplibregl-ctrl-bottom-right');
+        const parent = $('.maplibregl-ctrl-bottom-right');
         let container = parent.querySelector('.custom-ctrl');
 
         if (!container) {
@@ -799,7 +807,7 @@ function addDynamicControls() {
         container.prepend(evacBtn);
         parent.prepend(container);
     } else {
-        document.querySelector('.filter-controls').appendChild(evacBtn);
+        $('.filter-controls').appendChild(evacBtn);
     }
 
     if (inits.evacuations?.evacsLoaded) inits.evacuations?.evacHelper();
@@ -843,7 +851,7 @@ async function init() {
     // add map controls
     map.once('load', async () => {
         map.getCanvas().setAttribute('role', 'region');
-        map.getCanvas().ariaLabel = document.querySelector('meta[name=description]').content;
+        map.getCanvas().ariaLabel = $('meta[name=description]').content;
 
         mapControls.push(new maplibregl.FullscreenControl({
             container: document.body
@@ -885,7 +893,7 @@ async function init() {
     });
 
     map.once('styledata', () => {
-        const loading = document.querySelector('.loading');
+        const loading = $('.loading');
 
         // preload sample images of the basemaps
         tileConfig.forEach((item, index) => {
@@ -897,7 +905,7 @@ async function init() {
         // hide loading div once map is rendered
         if (loading) {
             loading.remove();
-            document.querySelector('.filter-controls .search').style.display = 'inline-flex';
+            $('.filter-controls .search').style.display = 'inline-flex';
         }
     });
 
@@ -1046,8 +1054,8 @@ async function init() {
             new (await loadUtils()).ClickListener().radarStop();
             radar.loadedPositions.forEach(pos => {
                 if (pos !== radar.animationPosition) {
-                    var layerId = 'radar-layer-' + pos;
-                    var sourceId = 'radar-' + pos;
+                    var layerId = `radar-layer-${pos}`;
+                    var sourceId = `radar-${pos}`;
 
                     if (map.getLayer(layerId)) map.removeLayer(layerId);
                     if (map.getSource(sourceId)) map.removeSource(sourceId);
@@ -1194,7 +1202,7 @@ document.onreadystatechange = async () => {
         }
 
         if (window.isAuthUser) {
-            const getAcct = await api(`${ENV.apiURL}user/get/mapofire`, null, false, true);
+            const getAcct = await api(`${ENV.host}api/v1/user/get/mapofire`, null, false, true);
 
             if (getAcct?.response) {
                 const loginURL = `${ENV.domain.replace('//', '//auth.')}login?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}`;
@@ -1204,16 +1212,16 @@ document.onreadystatechange = async () => {
             }
 
             // change menu button
-            if (usr) document.querySelector('#account span').textContent = 'Account';
+            if (usr) $('#account span').textContent = 'Account';
         } else {
-            document.querySelector('#save').remove();
+            $('#save').remove();
         }
 
         // show the nav menu
-        document.querySelector('nav ul').style.display = 'flex';
+        $('nav ul').style.display = 'flex';
 
         // show the "close navbar" menu when screen width > 600px
-        if (window.innerWidth > 600) document.querySelector('#close-navbar').classList.add('show');
+        if (window.innerWidth > 600) $('#close-navbar').classList.add('show');
 
         // create settings class based on user profile and settings
         settings = new (await loadUtils()).Settings(usr);
@@ -1231,7 +1239,7 @@ document.onreadystatechange = async () => {
         * * * */
 
         if (settings.getUser().role() !== config.PERMISSION_LEVELS.ADMIN) {
-            document.querySelector('.filter-controls').addEventListener('contextmenu', (e) => e.preventDefault());
+            $('.filter-controls').addEventListener('contextmenu', (e) => e.preventDefault());
         }
 
         // add fire weather and historical menu options (disabled them if user doesn't have correct perms)
@@ -1263,11 +1271,11 @@ document.onreadystatechange = async () => {
     };
 
     const complete = async () => {
-        const q = document.querySelector('#q');
+        const q = $('#q');
 
         // if the user is on an Android device, show the download app banner
         if (/android/.test(navigator.userAgent.toLowerCase()) && !sessionStorage.getItem('recommend_google_play')) {
-            document.querySelector('.android-banner').style.display = 'flex';
+            $('.android-banner').style.display = 'flex';
         }
 
         impact.addEventListener('scroll', () => {
@@ -1299,6 +1307,19 @@ document.onreadystatechange = async () => {
 };
 
 window.onload = async () => {
+    // keep a log of all console messages during the session
+    /*['log', 'info', 'warn', 'error', 'debug'].forEach(method => {
+        ENV.originalConsole[method] = console[method];
+        console[method] = function (...args) {
+            ENV.consoleMsgs.push({
+                type: method,
+                args,
+                timestamp: Date.now()
+            });
+            ENV.originalConsole[method].apply(console, args);
+        }
+    });*/
+
     // get top clicked fires
     const getTopFires = await api(`${ENV.apiURL}events?test=1`, [['limit', 6]]);
     if (top) dataView.topFires = getTopFires.top;
@@ -1329,17 +1350,10 @@ window.onload = async () => {
 
     // add service worker to handle additional js execution
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register(`${ENV.baseURL}${(debugMode ? `v${version}/service-worker.js` : `src/js/service-worker-${version}.js`)}`)
-            .then(registration => {
-                if (registration.active) {
-                    registration.active.postMessage({
-                        'version': version,
-                        'mbVersion': mbVersion,
-                        'host': ENV.baseURL
-                    });
-                }
-            })
-            .catch(error => console.error('Service worker registration failed:', error));
+        navigator.serviceWorker.register(
+            `${ENV.baseURL}${(debugMode ? `v${version}/service-worker.js` : `src/js/service-worker-${version}.js`)}`
+            + `?h=${encodeURIComponent(ENV.baseURL)}&v=${version}&m=${mbVersion}`
+        ).catch(err => console.error('Service worker registration failed:', err));
     }
 };
 
@@ -1347,7 +1361,7 @@ window.onload = async () => {
 window.addEventListener('click', async (e) => {
     const utils = await loadUtils(),
         target = e.target,
-        contextMenu = document.querySelector('.context-menu'),
+        contextMenu = $('.context-menu'),
         actionsThatOpenImpact = ['account', 'basemap', 'layers', 'legend', 'myfires', 'tools', 'back-my-content'],
         actionElement = target.closest('[data-action]'),
         action = actionElement ? actionElement.dataset.action : null,
@@ -1370,7 +1384,7 @@ window.addEventListener('click', async (e) => {
         'sr-onclick': () => clicks.searchResultClick(),
         'close-navbar': () => clicks.closeNavbar(),
         'clear-layer-search': () => clicks.clearLayerSearch(),
-        'dropdown-nav': () => document.querySelector('nav').classList.toggle('open'),
+        'dropdown-nav': () => $('nav').classList.toggle('open'),
         'new-fires': () => clicks.newFire(),
         'readSPC': async () => {
             const ds = target.dataset;
@@ -1402,7 +1416,7 @@ window.addEventListener('click', async (e) => {
         'changeSPCDate': () => clicks.changeSPCDate(),
         'fwf': async () => {
             if (canUse) {
-                document.querySelector('li#fwf').dataset.active = '1';
+                $('li#fwf').dataset.active = '1';
                 map.getCanvas().style.cursor = 'crosshair';
                 utils.notify('info', 'Click anywhere on get the fire weather forecast.');
             } else {
@@ -1416,7 +1430,7 @@ window.addEventListener('click', async (e) => {
             else utils.marketing(true, 'nav_archive');
         },
         'report': async () => {
-            document.querySelector('li#report').dataset.active = '1';
+            $('li#report').dataset.active = '1';
             map.getCanvas().style.cursor = 'crosshair';
             utils.notify('info', 'Click anywhere on the map to report a <b>NEW</b> fire incident.');
         },
@@ -1429,8 +1443,8 @@ window.addEventListener('click', async (e) => {
         actionHandlers[action]();
     }
 
-    if (document.querySelector('body nav .nav-wrapper ul').contains(target)) {
-        if (target.closest('li')) document.querySelector('nav').classList.toggle('open');
+    if ($('body nav .nav-wrapper ul').contains(target)) {
+        if (target.closest('li')) $('nav').classList.toggle('open');
     }
 
     if (contextMenu && !target.contains(contextMenu) && e.target !== contextMenu) {
@@ -1438,22 +1452,22 @@ window.addEventListener('click', async (e) => {
     }
 
     // hide search results if outside search result container
-    if (!target.contains(searchResults) && (target.parentElement && !target.parentElement.contains(searchResults)) && !target.contains(document.querySelector('#q'))) {
+    if (!target.contains(searchResults) && (target.parentElement && !target.parentElement.contains(searchResults)) && !target.contains($('#q'))) {
         searchResults.style.display = 'none';
-        document.querySelector('#q').value = '';
+        $('#q').value = '';
 
         searchResults.querySelectorAll('li:not(.standby)').forEach(li => li.remove());
     }
 
     // hide impact panel if outside of container
     if (impact != null && impact.style.display == 'flex' && !impact.contains(e.target) && e.target !== impact && impact.dataset.display !== 'my-content') {
-        if (!actionsThatOpenImpact.includes(action) && !document.querySelector('nav').contains(e.target)) clicks.closeImpact();
+        if (!actionsThatOpenImpact.includes(action) && !$('nav').contains(e.target)) clicks.closeImpact();
     }
 });
 
 window.addEventListener('resize', async () => {
-    const nav = document.querySelector('nav'),
-        nb = document.querySelector('#close-navbar');
+    const nav = $('nav'),
+        nb = $('#close-navbar');
 
     if (window.innerWidth < 600) {
         if (nav.classList.contains('hide')) {
@@ -1474,7 +1488,7 @@ window.addEventListener('keydown', (e) => {
         isSystemKey = e.altKey || e.key === 'Enter' || e.key === 'Shift' || e.key === 'Escape',
         isFindShortcut = (e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F'),
         isTypingKey = !e.ctrlKey && !e.metaKey && !e.altKey && !isSystemKey,
-        searchBox = document.querySelector('#q');
+        searchBox = $('#q');
 
     config.runSearch = false;
 
@@ -1484,7 +1498,7 @@ window.addEventListener('keydown', (e) => {
 
         if (isVisible('.popup')) {
             marker?.remove();
-            document.querySelector('.popup')?.remove();
+            $('.popup')?.remove();
         }
 
         // clear/close search features
@@ -1533,7 +1547,7 @@ window.addEventListener('keyup', debounce((e) => {
         if (/^(Arrow|Shift|Control|Alt|Tab|CapsLock|Escape)/.test(e.key)) return;
 
         if (e.target.id == 'q' && config.runSearch) {
-            document.querySelector('#clearSearch').style.display = e.target.value == '' ? 'none' : 'block';
+            $('#clearSearch').style.display = e.target.value == '' ? 'none' : 'block';
             new (await loadUtils()).Search(e.target.value).do();
 
             config.runSearch = false;

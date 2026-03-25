@@ -9,10 +9,10 @@
     "scope": "/",
     "icons": [
         {
-            "purpose": "any",
             "src": "//mapotechnology.com/assets/images/mf-favicon.png",
             "sizes": "any",
-            "type": "image/png"
+            "type": "image\/png",
+            "purpose": "any"
         }
     ],
     "theme_color": "#ffc65c",

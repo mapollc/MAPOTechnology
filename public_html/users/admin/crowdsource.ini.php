@@ -1,4 +1,6 @@
 <?
+require_once '/home/mapo/public_html/apis/functions.inc.php';
+
 function verify($v) {
     return [
         'text' => $v == 0 ? '<i class="fa-solid fa-square-question"></i> Unverified' : ($v == 1 ? '<i class="fas fa-badge-check"></i> Verified' : '<i class="fa-solid fa-shield-xmark"></i> Rejected'),
@@ -164,6 +166,10 @@ if (!$permission->view()->reports() && !$permission->manage()->reports()) {
                     <div class="row align-center">
                         <div class="col w17 label">State</div>
                         <div class="col w83"><?=convertState($row['state'])?></div>
+                    </div>
+                    <div class="row align-center">
+                        <div class="col w17 label">County</div>
+                        <div class="col w83"><?= getCounty($con, [$geo->lat, $geo->lon])['county'] ?? 'Unknown' ?> County</div>
                     </div>
                     <div class="row align-center">
                         <div class="col w17 label">Coordinates</div>

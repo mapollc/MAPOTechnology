@@ -7,6 +7,7 @@ $allowed_origins = [
     "https://mapotechnology.com",
     "https://www.mapotechnology.com"
 ];
+$mapboxToken = 'sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ';
 
 if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowed_origins)) {
     header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
@@ -31,52 +32,50 @@ function getUserID()
 
 function deleteMapboxFeature($id)
 {
+    global $mapboxToken;
     $ch = curl_init();
+    $url = "https://api.mapbox.com/datasets/v1/mapollc/clnnlg3w728a02nmv0ffz57jf/features/$id?access_token=$mapboxToken";
 
-    curl_setopt($ch, CURLOPT_URL, 'https://api.mapbox.com/datasets/v1/mapollc/clnnlg3w728a02nmv0ffz57jf/features/' . $id . '?access_token=sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ');
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => 1,
+        CURLOPT_CUSTOMREQUEST => 'DELETE'
+    ]);
 
     $result = curl_exec($ch);
-    if (curl_errno($ch)) {
-        echo 'Error:' . curl_error($ch);
-    }
-    curl_close($ch);
+    if (curl_errno($ch)) return 'Error:' . curl_error($ch);
+
+    return $result;
 }
 
 function guideUrl($s, $ty, $id)
 {
-    $words = array('and', 'at');
+    $words = ['and', 'at'];
     $s = str_replace(' ', '-', str_replace('  ', ' ', preg_replace('/([^A-Za-z0-9\s]+)/', '', strtolower($s))));
 
     foreach ($words as $r) {
-        $s = str_replace($r . '-', '', $s);
+        $s = str_replace("$r-", '', $s);
     }
 
-    return rtrim(rtrim('guide/' . $ty . '/' . $id . '/' . $s, '-'), ' ');
+    return rtrim(rtrim("guide/$ty/$id/$s", '-'), ' ');
 }
 
 function getMapbox($datasetID)
 {
-    $token = 'sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ';
+    global $mapboxToken;
     $ch = curl_init();
 
-    curl_setopt($ch, CURLOPT_URL, 'https://api.mapbox.com/datasets/v1/mapollc/' . $datasetID . '?access_token=' . $token);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-
-    $headers[] = 'Content-Type: application/json';
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt_array($ch, [
+        CURLOPT_URL => "https://api.mapbox.com/datasets/v1/mapollc/$datasetID?access_token=$mapboxToken",
+        CURLOPT_RETURNTRANSFER => 1,
+        CURLOPT_CUSTOMREQUEST => 'GET',
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json']
+    ]);
 
     $result = curl_exec($ch);
-    if (curl_errno($ch)) {
-        $output = curl_error($ch);
-    } else {
-        $output = $result;
-    }
-    curl_close($ch);
+    if (curl_errno($ch)) return curl_error($ch);
 
-    return json_decode($output);
+    return json_decode($result);
 }
 
 function defaultIncName($inc)
@@ -114,7 +113,7 @@ function incidentName($name, $inc, $type = null)
     }
 
     // --- Remove agency prefixes/suffixes ---
-    $things = ['Rn','Pr','Nw','Rs','Rv','Pv','Od','Ne','Cs','Fa','Cr','Cf','Gp','Sc'];
+    $things = ['Rn', 'Pr', 'Nw', 'Rs', 'Rv', 'Pv', 'Od', 'Ne', 'Cs', 'Fa', 'Cr', 'Cf', 'Gp', 'Sc'];
 
     foreach ($things as $t) {
         if (str_ends_with($name, " $t")) {
@@ -246,10 +245,10 @@ include_once '../../db.ini.php';
 $callback = $_REQUEST['callback'];
 $mode = $_REQUEST['mode'];
 
-if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['android'] != 1) {
+if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['android'] != 1) {
     $id = $_REQUEST['id'];
     $out = null;
-    $mapotrails = array('userUploads', 'waypoint', 'gpx', 'media', 'favtrails');
+    $mapotrails = ['userUploads', 'waypoint', 'gpx', 'media', 'favtrails'];
 
     if (in_array($callback, $mapotrails)) {
         $con2 = mysqli_connect('localhost', 'mapo_main', 'smQeP]-xjj+Uw$s_', 'mapo_trails');
@@ -257,9 +256,7 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
 
     //  START APIS  //
     if ($callback == 'mapotrails') {
-        if ($mode == 'meta') {
-            $out = getMapbox('clnnlg3w728a02nmv0ffz57jf');
-        }
+        if ($mode == 'meta') $out = getMapbox('clnnlg3w728a02nmv0ffz57jf');
     } else if ($callback == 'invoices') {
         $query = executeQuery('s', [$_SESSION['email']], "SELECT cid FROM billing WHERE email = ? ORDER BY status ASC, created DESC LIMIT 1");
 
@@ -327,12 +324,17 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
         if ($_REQUEST['method'] == 'remove') {
             mysqli_query($con2, "DELETE FROM track_trails WHERE tid = '$_REQUEST[tid]' AND uid = '$uid'");
 
-            $out = array('success' => 1);
+            $out = ['success' => 1];
         } else {
             $sql = mysqli_query($con2, "SELECT t.id, f.tid, t.type, title, stats FROM track_trails AS f LEFT JOIN trails AS t ON t.id = f.tid LEFT JOIN stats AS s ON s.trail_id = f.tid WHERE uid = $uid ORDER BY f.time DESC");
 
             while ($row = mysqli_fetch_assoc($sql)) {
-                $trails[] = array('id' => $row['id'], 'title' => $row['title'], 'url' => guideUrl($row['title'], $row['type'], $row['tid']), 'stats' => unserialize($row['stats']));
+                $trails[] = [
+                    'id' => $row['id'],
+                    'title' => $row['title'],
+                    'url' => guideUrl($row['title'], $row['type'], $row['tid']),
+                    'stats' => unserialize($row['stats'])
+                ];
             }
 
             $out = $trails;
@@ -351,16 +353,16 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
             $cpass = $_REQUEST['confirm'];
 
             if (!password_verify($old, $row['password'])) {
-                $out = array('error' => 1);
+                $out = ['error' => 1];
             } else {
                 if (!$new) {
-                    $out = array('error' => 2);
+                    $out = ['error' => 2];
                 } else if ($new && !$cpass) {
-                    $out = array('error' => 3);
+                    $out = ['error' => 3];
                 } else {
                     $pass = password_hash($new, PASSWORD_DEFAULT);
                     mysqli_query($con, "UPDATE users SET password = '$pass' WHERE uid = '$_REQUEST[uid]'");
-                    $out = array('success' => 1);
+                    $out = ['success' => 1];
                 }
             }
         } else {
@@ -413,7 +415,7 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
         }
 
         $rowsPerPage = 100;
-        $currentPage = isset($_REQUEST['results']) ? $_REQUEST['results'] : 1;
+        $currentPage = $_REQUEST['results'] ?? 1;
         $offset = ($currentPage - 1) * $rowsPerPage;
 
         if ($mode == 'duplicates') {
@@ -422,9 +424,7 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
             $query = "SELECT t1.* FROM wildfires t1 JOIN (SELECT state, name, MAX(date) as max_date FROM wildfires WHERE $when AND display = 1 GROUP BY state, name HAVING COUNT(*) > 1) t2 ON t1.state = t2.state AND t1.name = t2.name WHERE t1.year = $year AND t1.display = 1 $where ORDER BY t1.state ASC, t1.name ASC, t1.acres DESC";
         } else {
             $query = "SELECT wfid, agency, incidentID, type, state, name, year, date, acres, updated, display, owner FROM wildfires WHERE $when $where AND display IS NOT NULL ORDER BY " . (isset($_REQUEST['sort']) ? ($_REQUEST['sort'] == 'acres' ? 'CAST(acres AS float)' : $_REQUEST['sort']) . ' ' . $_REQUEST['order'] : (!isset($_REQUEST['q']) || (isset($_REQUEST['q']) && $_REQUEST['q'] == '') ? "date DESC" : "CAST(acres AS float) DESC"));
-
             $totalRows = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) AS totalRows FROM wildfires WHERE $when $where AND display IS NOT NULL"))['totalRows'];
-
             $query .= " LIMIT $offset, $rowsPerPage";
         }
 
@@ -459,7 +459,7 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
         }
 
         if (!$uid) {
-            $out = array('error' => 'No token was provided or your session ID doesn\'t exist');
+            $out = ['error' => 'No token was provided or your session ID doesn\'t exist'];
         } else {
             $account = executeQuery('i', [$uid], "SELECT uid, first_name, last_name, email, ip_address, last_active, created, role, phone, location, provider FROM users WHERE uid = ?");
             $mf = executeQuery('i', [$uid], "SELECT settings, method, CAST(time AS FLOAT) AS last_synced FROM settings WHERE uid = ?");
@@ -471,22 +471,12 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
             $fold = executeQuery('i', [$uid], "SELECT id AS object_id, fid AS folder_id, name, items, CAST(created AS float) AS created, cast(modified as float) AS modified FROM user_data_folders WHERE uid = ?", true);
             $mtUd = executeQuery('i', [$uid], "SELECT oid AS object_id, gis_id, type, name, color, notes, CAST(created AS float) AS created, CAST(modified AS float) AS modified FROM user_data WHERE uid = ?", true);
 
-            if ($mtUp && !isset($mtUp[0])) {
-                $mtUp = [$mtUp];
-            }
-
-            if ($mtUd && !isset($mtUd[0])) {
-                $mtUd = [$mtUd];
-            }
-
-            if ($fold && !isset($fold[0])) {
-                $fold = [$fold];
-            }
+            if ($mtUp && !isset($mtUp[0])) $mtUp = [$mtUp];
+            if ($mtUd && !isset($mtUd[0])) $mtUd = [$mtUd];
+            if ($fold && !isset($fold[0])) $fold = [$fold];
 
             for ($i = 0; $i < count($sess); $i++) {
-                if ($mtUd[$i]['stats']) {
-                    $mtUd[$i]['stats'] = json_decode($mtUd[$i]['stats']);
-                }
+                if ($mtUd[$i]['stats']) $mtUd[$i]['stats'] = json_decode($mtUd[$i]['stats']);
             }
 
             for ($i = 0; $i < count($sess); $i++) {
@@ -502,21 +492,10 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
             }
 
             foreach ($account as $k => $v) {
-                if ($k == 'last_active' || $k == 'created') {
-                    $v = floatval($v);
-                }
-
-                if ($k == 'provider') {
-                    $v = $v == 1 ? 'google' : 'mapo';
-                }
-
-                if ($k == 'location') {
-                    $v = unserialize($v);
-                }
-
-                if ($k == 'role') {
-                    $v = getUserRole($v);
-                }
+                if ($k == 'last_active' || $k == 'created') $v = floatval($v);
+                if ($k == 'provider') $v = $v == 1 ? 'google' : 'mapo';
+                if ($k == 'location') $v = unserialize($v);
+                if ($k == 'role') $v = getUserRole($v);
 
                 $account[$k] = $v;
             }
@@ -545,13 +524,11 @@ if (str_contains($_SERVER['HTTP_REFERER'], 'mapotechnology.com') || $_REQUEST['a
         }
     }
 } else {
-    $out = array('error' => 'You cannot access this from a browser');
+    $out = ['error' => 'You cannot access this from a browser'];
 }
 
 mysqli_close($con);
-if ($con2) {
-    mysqli_close($con2);
-}
+if ($con2) mysqli_close($con2);
 
-echo json_encode(array('response' => $out));
+echo json_encode(['response' => $out]);
 #echo json_encode(array('response' => $out), JSON_PRETTY_PRINT);

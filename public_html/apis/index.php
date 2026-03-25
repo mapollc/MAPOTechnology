@@ -9,6 +9,8 @@ if (!filter_var($host, FILTER_VALIDATE_IP) && $host !== 'localhost') {
 ini_set('display_errors', 0);
 error_reporting(E_ERROR | E_PARSE);
 
+/*ini_set('opcache.enable', 0);
+ini_set('opcache.enable_cli', 0);*/
 ini_set('log_errors', 1);
 ini_set('memory_limit', '1024M');
 ini_set("error_log", './error_log');
@@ -146,6 +148,7 @@ if ($_SERVER['REQUEST_URI'] == '/') {
                     'lightning' => 'lightning',
                     'logFire' => 'logFire',
                     'manageApp' => 'app',
+                    'maps' => 'maps',
                     'message' => 'message',
                     'nbm' => 'nbm',
                     'newReport' => 'newReport',
@@ -184,15 +187,12 @@ if ($_SERVER['REQUEST_URI'] == '/') {
 
                 $file = $apiMap[$api] ?? null;
                 $failed = 0;
+                $path = '/home/mapo/public_html' . ($mapotrails == 1 ? '/mapotrails.com' : ($mapofire == 1 ? '/mapofire.com' : '')) . '/apis/' . ($mapotrails != 1 && $mapofire != 1 ? 'v' . $_GET['version'] . '/' : '') . $file . '.ini.php';
 
-                if ($file != null) {
-                    $path = '/home/mapo/public_html' . ($mapotrails == 1 ? '/mapotrails.com' : ($mapofire == 1 ? '/mapofire.com' : '')) . '/apis/' . ($mapotrails != 1 && $mapofire != 1 ? 'v' . $_GET['version'] . '/' : '') . $file . '.ini.php';
-
-                    if (file_exists($path)) {
-                        include_once $path;
-                    } else {
-                        $returnJson = ['response' => 'error', 'code' => 404, 'msg' => 'The API resource you\'re looking for doesn\'t exist.'];
-                    }
+                if ($file == null || !file_exists($path)) {
+                    $returnJson = ['response' => 'error', 'code' => 404, 'msg' => 'The API resource you\'re looking for doesn\'t exist.'];
+                } else {
+                    include_once $path;
                 }
             }
         }

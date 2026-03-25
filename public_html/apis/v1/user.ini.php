@@ -1,5 +1,5 @@
 <?
-require '../vendor/autoload.php';
+require '/home/mapo/public_html/vendor/autoload.php';
 include_once '/home/mapo/public_html/subs.inc.php';
 
 use Firebase\JWT\JWT;

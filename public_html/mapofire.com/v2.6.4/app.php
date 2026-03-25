@@ -3,27 +3,27 @@ $fireType = $country == 'Austrailia' ? 'Bushfire' : ($country == 'Canada' ? 'For
 $parts = [];
 
 if (!empty($country)) $parts[] = $country;
-if (!empty($county)) $parts[] = $county . ' County,';
+if (!empty($county)) $parts[] = "$county County,";
 if (!empty($state)) $parts[] = $state;
 $titleParts = $parts;
 
 if (!empty($_GET['archive'])) $titleParts[] = $_GET['archive'] . ' Historical';
 
-$title = trim(implode(' ', $titleParts) . ' ' . $fireType . ' Map: Track Live Fires, Smoke, & Lightning | Map of Fire');
+$title = trim(implode(' ', $titleParts) . " $fireType Map: Track Live Fires, Smoke, & Lightning | Map of Fire");
 
 if (!empty($_GET['archive'])) {
     if (!empty($state)) {
-        $descLoc = (!empty($county) ? $county . ' County, ' : '') . $state;
+        $descLoc = (!empty($county) ? "$county County, " : '') . $state;
     } elseif (!empty($country)) {
         $descLoc = $country;
     } else {
         $descLoc = 'the US';
     }
 
-    $desc = 'Explore historical data on wildfires from ' . $_GET['archive'] . ' across ' . $descLoc . ' with Map of Fire. Discover past ' . strtolower($fireType) . ' occurrences, their locations, sizes, and impact.';
+    $desc = "Explore historical data on wildfires from $_GET[archive] across $descLoc with Map of Fire. Discover past " . strtolower($fireType) . " occurrences, their locations, sizes, and impact.";
 } else {
     if (!empty($state)) {
-        $descLoc = (!empty($county) ? $county . ' County, ' : '') . $state;
+        $descLoc = (!empty($county) ? "$county County, " : '') . $state;
 
         if (in_array(strtolower($state), $provinces)) $descLoc .= ', Canada';
     } elseif (!empty($country)) {
@@ -32,16 +32,8 @@ if (!empty($_GET['archive'])) {
         $descLoc = 'the US';
     }
 
-    $desc = 'Track ' . strtolower($fireType) . 's & smoke across ' . $descLoc . '. Monitor fire spread, intensity, and lightning strikes. Stay informed with real-time updates on Map of Fire.';
+    $desc = "Track " . strtolower($fireType) . "s & smoke across $descLoc. Monitor fire spread, intensity, and lightning strikes. Stay informed with real-time updates on Map of Fire.";
 }
-
-/*$title = ($country ? "$country " : '') . ($county ? "$county County, " : '') . ($state ? "$state " : '') . ($_GET['archive'] ? $_GET['archive'] . ' Historical ' : '') . $fireType . ' Map: Track Live Fires, Smoke, & Lightning | Map of Fire';
-
-if ($_GET['archive']) {
-    $desc = 'Explore historical data on wildfires from ' . $_GET['archive'] . ' across ' . ($state ? ($county ? $county . ' County, ' : '') . $state : ($country ? $country : 'the US')) . ' with Map of Fire. Discover past ' . strtolower($fireType) . ' occurrences, their locations, sizes, and impact.';
-} else {
-    $desc = 'Track ' . strtolower($fireType) . 's & smoke across ' . ($state ? ($county ? $county . ' County, ' : '') . $state . (in_array(strtolower($state), $provinces) ? ', Canada' : '') : ($country ? $country : 'the US')) . '. Monitor fire spread, intensity, and lightning strikes. Stay informed with real-time updates on Map of Fire.';
-}*/
 
 $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascript);
 ?>
@@ -182,13 +174,13 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
     <? } ?>
     <script><?= $javascript ?></script>
     <? if (isset($_GET['version'])) { ?>
-        <script src="<?= $baseURL . 'v' . $version ?>/mf.app.js"></script>
-        <script defer src="<?= $baseURL . 'v' . $version ?>/mf.supp.js"></script>
-        <script async defer src="<?= $baseURL . 'v' . $version ?>/arcgis.js"></script>
+        <script src="<?= "{$baseURL}v$version/mf.app.js" ?>"></script>
+        <script defer src="<?= "{$baseURL}v$version/mf.supp.js" ?>"></script>
+        <!--<script defer src="<?= "{$baseURL}v$version/arcgis.js" ?>"></script>-->
     <? } else { ?>
-        <script src="<?= $baseURL ?>src/js/mf.app-<?= $version ?>.js"></script>
-        <script defer src="<?= $baseURL ?>src/js/mf.supp-<?= $version ?>.js"></script>
-        <script async defer src="<?= $baseURL ?>src/js/arcgis-<?= $version ?>.js"></script>
+        <script src="<?= "{$baseURL}src/js/mf.app-$version.js" ?>"></script>
+        <script defer src="<?= "{$baseURL}src/js/mf.supp-$version.js" ?>"></script>
+        <script defer src="<?= "{$baseURL}src/js/arcgis-$version.js" ?>"></script>
     <? } ?>
 </body>
 
