@@ -16,7 +16,7 @@
  * @author     Robert Hafner <tedivm@tedivm.com>
  */
 
-// namespace JShrink;
+//namespace JShrink;
 
 /**
  * Minifier
@@ -693,6 +693,8 @@ class Minifier
         }
         return false;
     }
+
+
 
     /**
      * Replace patterns in the given string and store the replacement

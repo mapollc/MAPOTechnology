@@ -125,11 +125,11 @@ class NearbyEvacuations {
 
     get() {
         return new Promise((resolve, reject) => {
-            if (inits.evacuations.evacsLoaded) {
+            if (inits.evacuations?.evacsLoaded) {
                 resolve(this.process());
             } else {
                 const wait = setInterval(() => {
-                    if (inits.evacuations.evacsLoaded) {
+                    if (inits.evacuations?.evacsLoaded) {
                         clearInterval(wait);
                         resolve(this.process());
                     }
@@ -485,7 +485,7 @@ class Weather {
             domAvgW.innerHTML = formatWind(avgW);
             domMaxW.innerHTML = formatWind(maxW);
             u.innerHTML = `Latest data retrieved ${timeAgo(new Date(prop.updateTime).getTime())}`;
-            u.insertAdjacentHTML('afterend', `<div class="btn-group centered" style="margin:0">${btnHtml}</div>`);
+            u.insertAdjacentHTML('afterend', `<div class="btn-group centered">${btnHtml}</div>`);
         } catch (error) {
             showError(error);
         }

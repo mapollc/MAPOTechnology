@@ -287,7 +287,7 @@ class SSO
                         $code = 3;
                         $respMsg = 'This account has not been confirmed yet. Please check your email.';
                     } else {
-                        if (password_verify($pass, $row['password'])) {
+                        if (!empty($row['password']) && password_verify($pass, $row['password'])) {
                             unset($_SESSION['gtoken']);
 
                             $this->memcache->delete("login:email:" . strtolower($email));

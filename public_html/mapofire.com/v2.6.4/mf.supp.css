@@ -252,9 +252,16 @@ strong {
     transition: all .15s ease-in-out;
 }
 
+.evac .evacTitle {
+    display: inline-flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--half-spacing);
+}
+
 .evac h3 {
     font-size: 18px;
-    margin-bottom: 0.5em;
 }
 
 .evac summary {
@@ -1284,7 +1291,8 @@ ul#search-results li.standby i {
 }
 
 #modal .grid>div h3 {
-    margin-bottom: var(--half-spacing);
+    margin-bottom: var(--spacing);
+    font-size: 1.3rem;
     color: var(--box-header-color);
 }
 
@@ -1556,6 +1564,11 @@ ul#search-results li.standby i {
 .incident #curwx,
 .incident #fcstwx {
     justify-content: flex-start !important;
+}
+
+.incident #curwx .btn-group,
+.incident #fcstwx .btn-group {
+    margin: var(--spacing) 0 0 0;
 }
 
 .incident #curwx .table>div,
@@ -1984,7 +1997,7 @@ span.status.out {
 
 #data-form h1 {
     font-size: 2.2rem;
-    margin-bottom: 0.5em;
+    margin-bottom: 0.75em;
 }
 
 #data-form label {
@@ -2870,7 +2883,14 @@ span.status.out {
     }
 }
 
+@media (min-width: 400px) and (max-width: 550px) {
+        .incident .table {
+        gap: 1.5rem;
+    }
+}
+
 @media (max-width: 550px) {
+
     .grid.stats.cols-4 {
         grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
     }
@@ -2955,6 +2975,9 @@ span.status.out {
 }
 
 @media (max-width: 400px) {
+    #data-form h1 {
+        font-size: 1.5rem;
+    }
 
     .incident .table[data-cols="3"],
     .incident .table[data-cols="4"] {

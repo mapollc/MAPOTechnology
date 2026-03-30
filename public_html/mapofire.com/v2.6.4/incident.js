@@ -21,12 +21,7 @@ const numberFormat = (n, d = 2) => {
         </div>`;
     },
     disclaimer = () => {
-        return `<p class="disclaimer">
-            This information is collected from various state and federal interagency dispatch centers and other official
-            government sources. While we make every effort to provide accurate and up-to-date data, it may not reflect
-            the latest conditions. Always verify with your local authorities for current information on evacuations, fire
-            activity, or other critical safety alerts.
-        </p>`;
+        return `<p class="disclaimer">This information is collected from various state and federal interagency dispatch centers and other official government sources. While we make every effort to provide accurate and up-to-date data, it may not reflect the latest conditions. Always verify with your local authorities for current information on evacuations, fire activity, or other critical safety alerts.</p>`;
     },
     dispatchCtr = () => {
         if (center == null) return '';

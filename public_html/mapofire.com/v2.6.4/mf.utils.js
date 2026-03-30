@@ -1310,30 +1310,9 @@ export class Evacuations {
     }
 
     clickListener() {
-        let content = '';
-        const states = [];
-        const counties = [];
-
-        this.activeEvacuations
-            .sort((a, b) => a - b)
-            .forEach(e => {
-                const z = e.properties;
-                const nomen = z.level == 1 ? 'Be Ready' : (z.level == 2 ? 'Be Set' : 'Leave Immediately');
-
-                if (!z.county || !z.state) return;
-
-                if (!states.includes(z.state)) states.push(z.state);
-                if (!counties.includes(`${z.county}, ${z.state}`)) counties.push(`${z.county}, ${z.state}`);
-
-                content += `<div class="evac level${z.level}" data-action="goToEvacPoly" data-id="${z.id}" data-state="${z.state}" data-county="${z.county}">
-                    <h3><span class="evac-circ l${z.level}"></span>Level ${z.level}: ${nomen}</h3>
-                    <details>
-                        <summary style="font-weight:400">${stateLabels[z.state]?.name} &ndash; ${z.county} County</summary>
-                        <span style="font-size:15px">${z.notes}</span>
-                    </details>
-                    <p class="updated" style="text-align:left;color:#4a4a4a">Last updated ${timeAgo(z.updated)} by ${stateLabels[z.state]?.name} OEM</p>
-                </div>`;
-            });
+        const content = [],
+            states = [],
+            counties = [];
 
         const filters = () => {
             let a = '', b = '';
@@ -1348,7 +1327,32 @@ export class Evacuations {
                 <select id="evac_county"><option value="">- All Counties -</option>${b}</select></div>`;
         };
 
-        createDataForm('Active Evacuations', `${filters()}<div class="evacs" style="margin:0">${content}</div>`);
+
+        this.activeEvacuations
+            .sort((a, b) => Number(b.properties.updated) - Number(a.properties.updated))
+            .forEach(e => {
+                const z = e.properties;
+                const nomen = z.level == 1 ? 'Be Ready' : (z.level == 2 ? 'Be Set' : 'Leave Immediately');
+
+                if (!z.county || !z.state) return;
+
+                if (!states.includes(z.state)) states.push(z.state);
+                if (!counties.includes(`${z.county}, ${z.state}`)) counties.push(`${z.county}, ${z.state}`);
+
+                content.push(`<div class="evac level${z.level}" data-state="${z.state}" data-county="${z.county}">
+                    <div class="evacTitle">
+                        <h3><span class="evac-circ l${z.level}"></span>Level ${z.level}: ${nomen}</h3>
+                        <a href="#" class="btn btn-xs btn-black" style="margin:0" data-action="goToEvacPoly" data-id="${z.id}" onclick="return false">View on Map</a>
+                    </div>
+                    <details>
+                        <summary style="font-weight:400">${stateLabels[z.state]?.name} &ndash; ${z.county} County</summary>
+                        <span style="font-size:15px">${z.notes}</span>
+                    </details>
+                    <p class="updated" style="text-align:left;color:#4a4a4a">Last updated ${timeAgo(z.updated)} by ${stateLabels[z.state]?.name} OEM</p>
+                </div>`);
+            });
+
+        createDataForm('Active Evacuations', `${filters()}<div class="evacs" style="margin:0">${content.join('')}</div>`);
         this.filterListener();
     }
 
@@ -1361,7 +1365,7 @@ export class Evacuations {
             ['evac', 'evac_outline', 'evac_title'].forEach(n => map.setLayoutProperty(n, 'visibility', 'visible'));
         }
 
-        const feature = evacuations.activeEvacuations.find(i => i.id == id),
+        const feature = this.activeEvacuations.find(i => i.id == id),
             bounds = geojsonExtent(feature?.geometry);
 
         if (bounds) {
@@ -4550,8 +4554,8 @@ export class Wildfires {
             `See current information on the ${fname} near ${near.split(' of ')[1]}.`);
 
         if (fire.inciweb && fire.inciweb.photo) {
-            $('meta[property="og:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
-            $('meta[name="twitter:image"]').setAttribute('content', `https://www.mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
+            $('meta[property="og:image"]').setAttribute('content', `https://mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
+            $('meta[name="twitter:image"]').setAttribute('content', `https://mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
         }
 
         if (fire.inciweb && fire.inciweb.photo) {
@@ -4579,7 +4583,7 @@ export class Wildfires {
                     ago: timeAgo(fire.time.discovered),
                     useAgo: (Date.now() / 1000) - fire.time.discovered < 60 * 60 * 6
                 },
-                updated: config.curTime.getTime() - fire.time.updated * 1000 > TWO_MONTHS ? dateTime(fire.time.updated, true) : timeAgo(fire.time.updated)
+                updated: (config.curTime.getTime() / 1000) - fire.time.updated > TWO_MONTHS ? dateTime(fire.time.updated, true) : timeAgo(fire.time.updated)
             }
         });
 
@@ -6935,9 +6939,9 @@ export class MFAttribControl extends maplibregl.AttributionControl {
 
     _updateAttributions() {
         ////super._updateAttributions();
-        this._innerContainer.innerHTML = `<a target="blank" href="https://maplibre.org/">MapLibre</a>&nbsp;|&nbsp;
-            © <a target="blank" href="https://www.esri.com">Esri</a>, 
-            © <a target="blank" href="https://carto.com/about-carto/" rel="noopener">CARTO</a>, 
-            © <a target="blank" href="http://www.openstreetmap.org/about/">OpenStreetMap</a> contributors`;
+        this._innerContainer.innerHTML = `<a target="blank" href="https://maplibre.org/">MapLibre</a> | ` +
+            `© <a target="blank" href="https://www.esri.com">Esri</a>, ` +
+            `© <a target="blank" href="https://carto.com/about-carto/" rel="noopener">CARTO</a>, ` +
+            `© <a target="blank" href="http://www.openstreetmap.org/about/">OpenStreetMap</a> contributors`;
     }
 }

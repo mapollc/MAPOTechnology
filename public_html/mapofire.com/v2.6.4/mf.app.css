@@ -321,7 +321,7 @@ nav.hide .nav-wrapper .logo img {
 button.control {
     position: relative;
     flex-grow: 0;
-    min-width: var(--control-height);
+    min-width: var(--mb-button-width);
     height: var(--control-height);
     cursor: pointer;
     transition: var(--color-transition);
@@ -699,7 +699,7 @@ a.maplibregl-ctrl-logo {
 
     nav {
         transition: transform 0.3s ease;
-        max-width: 70vw;
+        max-width: 75vw;
         transform: translateX(-100%);
     }
 

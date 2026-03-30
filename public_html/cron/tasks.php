@@ -1,7 +1,7 @@
 <?
 date_default_timezone_set('America/Los_Angeles');
 ini_set('display_errors', 1);
-error_reporting(E_ALL);
+error_reporting(E_ERROR | E_PARSE);
 
 include_once '../db.ini.php';
 
@@ -85,9 +85,9 @@ while ($row = mysqli_fetch_assoc($result)) {
 }
 
 // remove user access to premium content if their subscription has expired
-$result = mysqli_query($con, "SELECT email FROM billing WHERE end < '$now' AND active != 0");
+$result = mysqli_query($con, "SELECT email FROM billing WHERE end < '$now' AND status != 'expired'");
 while ($row = mysqli_fetch_assoc($result)) {
-    $sqlQueries .= "UPDATE billing SET active = 0 WHERE email = '$row[email]';";
+    $sqlQueries .= "UPDATE billing SET status = 'expired' WHERE email = '$row[email]';";
 }
 
 // run ALL sql queries

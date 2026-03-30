@@ -40,12 +40,20 @@ function getChanges() {
     return $content;
 }
 
-/*$log[] = ['version' => '2.5', 'date' => '', 'changes' => [
+$log[] = ['version' => '2.6.4', 'date' => '3/27/2026', 'changes' => [
+'Numerous bug and styling fixes',
+'Numerous performance fixes',
+'Added hourly conditions to fire weather forecast in lieu of solely the 5-day fire weather forecast',
+'Increased user authentication security surrounding SSO & fixed a bug preventing users from logging in',
+'Rolled out an improved basemap for "MAPO Outdoors"',
+'Added high visibility evacuations button'
+]];
+$log[] = ['version' => '2.5', 'date' => '2/17/2026', 'changes' => [
 'Numerous changes to layout and style of the app',
 'Additional layers were added (primarily for premium and pro users)',
 'Numerous bug and performance fixes',
 'Updated Maplibre versions'
-]];*/
+]];
 $log[] = ['version' => '2.4', 'date' => '10/1/2025', 'changes' => [
 'Numerous bug and performance fixes',
 'Integrated subscriptions into the platform',
