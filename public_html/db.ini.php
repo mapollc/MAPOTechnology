@@ -230,35 +230,47 @@ function logEvent($action, $system = false, $uid = null)
 
 function sendEmail($to, $subject, $template, $fields, $customSignature = false)
 {
-    $headers = 'From: MAPO LLC <' . ($template == 'newfires' ? 'notifications' : 'no-reply') . '@mapotechnology.com>' . "\r\n" .
-        'Reply-To: ' . ($fields['contact'] == 1 ? $fields['{email}'] : 'info@mapotechnology.com') . "\r\n" .
-        'MIME-Version: 1.0' . "\r\n" .
-        'Content-type: text/html; charset=iso-8859-1' . "\r\n" .
-        'X-Mailer: PHP/' . phpversion();
+    $btnStyle = 'display:inline-block;color:#f9f9f9;text-align:center;font-weight:400;line-height:1.4;padding:12px 32px;text-decoration:none;outline:none;user-select:none;cursor:pointer';
+    $fromPrefix = $template === 'newfires' ? 'notifications' : 'no-reply';
+    $fromEmail = "$fromPrefix@mapotechnology.com";
+    $replyTo = ($fields['contact'] == 1 && isset($fields['{email}'])) ? $fields['{email}'] : 'info@mapotechnology.com';
+    $signature = $customSignature
+        ? 'Stay safe!<br><br>The Map of Fire Team<br><a href="mailto:payments@mapotechnology.com">payments@mapotechnology.com</a>'
+        : 'Sincerely,<br><br>MAPO LLC<br><a href="mailto:info@mapotechnology.com">info@mapotechnology.com</a>';
 
-    $file = file_get_contents('/home/mapo/public_html/config/mail/template.php');
-    $template = file_get_contents('/home/mapo/public_html/config/mail/' . $template . '.txt');
+    $headers = "From: MAPO LLC <$fromEmail>\r\n" .
+        "Reply-To: $replyTo\r\n" .
+        "MIME-Version: 1.0\r\n" .
+        "Content-type: text/html; charset=UTF-8\r\n" .
+        "X-Mailer: PHP/" . phpversion();
 
-    $msg = str_replace('{emailTitle}', $template, $file);
-    $msg = str_replace('{message}', $template, $file);
-    $msg = str_replace('{date}', date('F j, Y - g:i A'), $msg);
+    $baseTemplate = file_get_contents('/home/mapo/public_html/config/mail/template.php');
+    $templateBody = file_get_contents("/home/mapo/public_html/config/mail/$template.txt");
+
+    $msg = str_replace('{emailTitle}', $template, $baseTemplate);
+    $msg = str_replace('{message}', $templateBody, $msg);
     $msg = str_replace('{year}', date('Y'), $msg);
+    $msg = str_replace('{signature}', $signature, $msg);
 
-    if (!$customSignature) {
-        $msg = str_replace('{signature}', 'Sincerely,<br><br>MAPO LLC<br><a href="mailto:info@mapotechnology.com">info@mapotechnology.com</a>', $msg);
-    } else {
-        $msg = str_replace('{signature}', 'Stay safe!<br><br>The Map of Fire Team<br><a href="mailto:payments@mapotechnology.com">payments@mapotechnology.com</a>', $msg);
+    preg_match('/{button:(.*?)\|(.*?)}/', $templateBody, $matches);
+    if ($matches) {
+        $msg = preg_replace('/{button:(.*?)\|(.*?)}/', "<table cellpadding=\"0\" cellspacing=\"0\" style=\"display:inline-block\">
+        <tr><td bgcolor=\"#00395c\" style=\"border-radius:12px\"><a href=\"$1\" style=\"$btnStyle\">$2</a></td></tr></table>", $msg);
     }
-
-    foreach ($fields as $s => $r) {
-        if ($s == '{otp}') {
-            $r = '<h3>' . $r . '</h3>';
+    
+    foreach ($fields as $key => $value) {
+        if ($key === '{otp}') {
+            $value = "<h3>$value</h3>";
+        } else if ($key === '{header}') {
+            $value = "<h1>$value</h1>";
         }
-        $msg = str_replace($s, $r, $msg);
+
+        $msg = str_replace($key, $value, $msg);
     }
+    $msg = str_replace('{header}', '', $msg);
 
     #return $msg;
-    return mail($to, $subject, $msg, $headers) ? true : false;
+    return mail($to, $subject, $msg, $headers);
 }
 
 function returnURL($token, $vars)

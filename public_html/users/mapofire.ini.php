@@ -14,7 +14,7 @@ function convertToDMS($dec)
 {
     $vars = explode(".", $dec);
     $deg = $vars[0];
-    $tempma = "0." . $vars[1];
+    $tempma = "0.{$vars[1]}";
 
     $tempma = $tempma * 3600;
     $min = floor($tempma / 60);
@@ -23,7 +23,8 @@ function convertToDMS($dec)
     return [$deg, $min, rtrim(round($sec, 4), 0)];
 }
 
-function getSubscriptions($email){
+function getSubscriptions($email)
+{
     global $plan;
     $sub = executeQuery('s', [$email], "SELECT cid, subscription, trial, plan, created, start, end AS ends, status, cancel_end_period FROM billing WHERE email = ? AND status != 'expired' ORDER BY created DESC");
 
@@ -60,14 +61,47 @@ function getSubscriptions($email){
     }
 }
 
-$basemaps = ['outdoors' => 'MAPO Outdoors', 'satellite' => 'Satellite', 'fs16' => 'USFS 2016', 'dark' => 'Dark', 'osm' => 'Open Street Map', 'terrain' => 'Terrain'];
-$tilePerms = [
-    [],
-    [],
-    ['PRO'],
-    ['PREMIUM', 'PRO'],
-    [],
-    ['PREMIUM', 'PRO']
+$basemaps = [
+    [
+        "id" => "outdoors",
+        "name" => "MAPO Outdoors",
+        "permissions" => []
+    ],
+    [
+        "id" => "satellite",
+        "name" => "Satellite",
+        "permissions" => []
+    ],
+    [
+        "id" => "fs16",
+        "name" => "USFS 2016",
+        "permissions" => ["PRO"]
+    ],
+    [
+        "id" => "dark",
+        "name" => "Dark",
+        "permissions" => []
+    ],
+    [
+        "id" => "osm",
+        "name" => "OpenStreetMap",
+        "permissions" => []
+    ],
+    [
+        "id" => "topofire",
+        "name" => "Topofire",
+        "permissions" => ["PRO"]
+    ],
+    [
+        "id" => "terrain",
+        "name" => "Terrain",
+        "permissions" => ["PREMIUM", "PRO"]
+    ],
+    [
+        "id" => "voyager",
+        "name" => "Carto Voyager",
+        "permissions" => ["PREMIUM", "PRO"]
+    ]
 ];
 
 if (isset($_POST['action'])) {
@@ -83,28 +117,33 @@ if (isset($_POST['action'])) {
         $lon = $_POST['lon'];
     }
 
-    $settings = serialize(array(
-        'center' => array($lat, $lon),
-        'zoom' => $_POST['zoom'],
-        'tile' => $_POST['tile'],
-        'saveFreq' => $_POST['saveFreq'],
-        'locallySave' => $_POST['locallySave'],
+    $newSettings = [
+        'acres' => $_POST['acresUnit'],
+        'bearing' => intval($_POST['bearing'] ?? 0),
+        'center' => [floatval($lat), floatval($lon)],
         'checkboxes' => $cbs,
         'coordsDisplay' => $_POST['coordsDisplay'],
-        'perimeters' => array(
-            'minSize' => $_POST['minsize'],
-            'color' => $_POST['perimColor'],
-            'zoom' => $_POST['pzoom'],
-            'ttip' => $_POST['ttip']
-        ),
-        'weather' => array(
-            'temp' => $_POST['temp'],
-            'wind' => $_POST['wind']
-        ),
-        'acresUnit' => $_POST['acresUnit']
-    ));
+        'fireDisplay' => $_POST['fireDisplay'] ?? 'map',
+        'locallySave' => $_POST['locallySave'],
+        'perimeters' => [
+            'minSize' => $_POST['minsize'] ?? 500,
+            'color' => $_POST['perimColor'] ?? 'default',
+            'zoom' => intval($_POST['pzoom'] ?? 1),
+            'ttip' => intval($_POST['ttip'])
+        ],
+        'pitch' => intval($_POST['pitch'] ?? 0),
+        'saveFreq' => intval($_POST['saveFreq']),
+        'special' => json_decode($_POST['special'], true),
+        'tile' => $_POST['tile'],
+        'weather' => [
+            'temp' => $_POST['temp'] ?? 'f',
+            'wind' => $_POST['wind'] ?? 'mph'
+        ],
+        'zoom' => intval($_POST['zoom'])
+    ];
 
-    mysqli_query($con, "UPDATE settings SET settings = '$settings', method = '0', time = '$time' WHERE uid = $_SESSION[uid]");
+    $settings = json_encode($newSettings);
+    executeQuery('sii', [$settings, $time, $_SESSION['uid']], "UPDATE settings SET settings = ?, method = '0', time = ? WHERE uid = ?");
     echo message(true, 'Your map settings were successfully updated.');
 }
 
@@ -124,7 +163,7 @@ foreach ($subscribe as $sub) {
 
 $checkboxes = [];
 $row = mysqli_fetch_assoc(mysqli_query($con, "SELECT settings, method, time FROM settings WHERE uid = $_SESSION[uid]"));
-$settings = unserialize($row['settings']);
+$settings = json_decode($row['settings'], true);
 $checkboxes = $settings['checkboxes'];
 
 $hasPremium = false;
@@ -149,13 +188,12 @@ if (!empty($subs)) {
     }
 }
 
-if ($hasPro) {
-    $hasPremium = true;
-}
+if ($hasPro) $hasPremium = true;
 ?>
 <form action="" method="post" style="margin:0">
     <input type="hidden" name="lat" value="<?= $settings['center'][0] ?>">
     <input type="hidden" name="lon" value="<?= $settings['center'][1] ?>">
+    <input type="hidden" name="special" value='<?= json_encode($settings['special']) ?>'>
 
     <div class="rows">
         <div class="row">
@@ -172,10 +210,10 @@ if ($hasPro) {
         <div class="row">
             <div class="col w100">
                 <div class="card dark">
-                    <h2>Map</h2>
+                    <h2>Map Location</h2>
 
                     <div style="font-size:14px;padding-bottom:1em;color:<?= time() - $row['time'] > 3600 ? 'red' : 'green' ?>">
-                        <i class="fas fa-sync" style="padding-right:10px"></i> Your map settings were last synced <?= $row['method'] == 1 ? 'automatic' : 'manu' ?>ally <?= strtolower(ago($row['time'])) ?>
+                        <i class="fas fa-sync" style="padding-right:10px"></i> Your map settings were <?= $row['method'] == 1 ? 'automatic' : 'manu' ?>ally synced <?= strtolower(ago($row['time'])) ?>
                     </div>
 
                     <label>Map Center</label>
@@ -194,14 +232,16 @@ if ($hasPro) {
                             <label>Basemap</label>
                             <select name="tile" class="input">
                                 <? $i = 0;
-                                foreach ($basemaps as $k => $v) {
-                                    $disabled = false;
+                                foreach ($basemaps as $bm) {
+                                    $id = $bm['id'];
+                                    $name = $bm['name'];
+                                    $perms = $bm['permissions'];
+                                    $disabled = !($user['role'] == 'ADMIN' || empty($perms) ||
+                                        ($hasPremium && in_array('PREMIUM', $perms)) ||
+                                        ($hasPro && in_array('PRO', $perms))
+                                    );
 
-                                    if (empty($tilePerms[$i]) || (in_array('PREMIUM', $tilePerms[$i]) && $hasPremium) || (in_array('PRO', $tilePerms[$i]) && $hasPro)) {
-                                        $disabled = true;
-                                    }
-
-                                    echo '<option ' . (!$disabled ? 'disabled ' : '') . ($settings['tile'] == $k ? 'selected ' : '') . 'value="' . $k . '">' . $v . '</option>';
+                                    echo "<option " . ($disabled ? 'disabled ' : '') . ($settings['tile'] == $id ? 'selected ' : '') . "value=\"$id\">$name</option>";
                                     $i++;
                                 } ?>
                             </select>
@@ -240,16 +280,17 @@ if ($hasPro) {
                                 <option <?= $settings['coordsDisplay'] == 'dms' ? 'selected ' : '' ?>value="dms">Degs, Mins, Secs</option>
                                 <option <?= $settings['coordsDisplay'] == 'utm' ? 'selected ' : '' ?>value="utm">UTM</option>
                             </select>
+                            <span id="coordsHelp" class="help" style="color:#b34320"></span>
 
                             <label>Temperature Format</label>
                             <div class="radio"><input type="radio" name="temp" value="f" <?= !$settings['weather']['temp'] || $settings['weather']['temp'] == 'f' ? ' checked' : '' ?>><label>&deg;F</label></div>
                             <div class="radio"><input type="radio" name="temp" value="c" <?= $settings['weather']['temp'] == 'c' ? ' checked' : '' ?>><label>&deg;C</label></div>
 
                             <label>Wind Speed Format</label>
-                            <div class="radio"><input type="radio" id="wind1" name="wind" value="mph"<?= empty($settings['weather']) || $settings['weather']['wind'] == 'mph' ? 'checked ' : '' ?>><label for="wind1">mph</label></div>
-                            <div class="radio"><input type="radio" id="wind2" name="wind" value="m/s"<?= $settings['weather']['wind'] == 'm/s' ? 'checked ' : '' ?>><label for="wind2">m/s</label></div>
-                            <div class="radio"><input type="radio" id="wind3" name="wind" value="kts"<?= $settings['weather']['wind'] == 'kts' ? 'checked ' : '' ?>><label for="wind3">kts</label></div>
-                            <div class="radio"><input type="radio" id="wind4" name="wind" value="km/h"<?= $settings['weather']['wind'] == 'km/h' ? 'checked ' : '' ?>><label for="wind4">km/h</label></div>
+                            <div class="radio"><input type="radio" id="wind1" name="wind" value="mph" <?= empty($settings['weather']) || $settings['weather']['wind'] == 'mph' ? 'checked ' : '' ?>><label for="wind1">mph</label></div>
+                            <div class="radio"><input type="radio" id="wind2" name="wind" value="m/s" <?= $settings['weather']['wind'] == 'm/s' ? 'checked ' : '' ?>><label for="wind2">m/s</label></div>
+                            <div class="radio"><input type="radio" id="wind3" name="wind" value="kts" <?= $settings['weather']['wind'] == 'kts' ? 'checked ' : '' ?>><label for="wind3">kts</label></div>
+                            <div class="radio"><input type="radio" id="wind4" name="wind" value="km/h" <?= $settings['weather']['wind'] == 'km/h' ? 'checked ' : '' ?>><label for="wind4">km/h</label></div>
                         </div>
                         <div class="col w50">
                             <label>Acres Unit</label>
@@ -312,55 +353,53 @@ if ($hasPro) {
                                 echo '<h3 style="margin-bottom:0.5em">' . $layers['categories'][$n] . '</h3>';
 
                                 foreach ($a as $layer) {
-                                    $unlocked = false;
-
-                                    if (empty($layer['perms2']) || (in_array('PREMIUM', $layer['perms2']) && $hasPremium) || (in_array('PRO', $layer['perms2']) && $hasPro)) {
-                                        $unlocked = true;
-                                    }
-                                    
-                                    /*if ($layer['perms'] && $user['role'] != 'ADMIN' || ($layer['perms'] && !$activeSub && $user['role'] != 'ADMIN')) {
-                                        $unlocked = false;
-                                    }*/
+                                    if ($layer['testing']) continue;
+                                        
+                                    $unlocked = !(
+                                        $user['role'] == 'ADMIN' ||
+                                        empty($layer['perms2']) ||
+                                        ($hasPremium && in_array('PREMIUM', $layer['perms2'])) ||
+                                        ($hasPro && in_array('PRO', $layer['perms2']))
+                                    );
 
                                     echo '<div class="checkbox" style="display:block">';
 
-                                    if (!$unlocked) {
+                                    if ($unlocked) {
                                         echo '<i class="fad fa-lock" title="You don\'t have access to this premium layer"></i>';
                                     } else {
                                         echo '<input type="checkbox" id="' . $layer['id'] . '" name="checkboxes[' . $layer['id'] . ']" value="1"' . (($checkboxes != null && in_array($layer['id'], $checkboxes) || $checkboxes == null && $layer['default'] == 1) ? ' checked' : '') . '>';
                                     }
 
-                                    echo '<label for="' . $layer['id'] . '"' . (!$unlocked ? ' style="padding:0 0 0 1em' : '') . '">' . $layer['name'] . '</label>' .
+                                    echo '<label for="' . $layer['id'] . '"' . ($unlocked ? ' style="padding:0 0 0 1em' : '') . '">' . $layer['name'] . '</label>' .
                                         '<span class="help" style="margin-left:2.3em">' . $layer['desc'] . '</p></div>';
                                 }
                             } ?>
                         </div>
                         <div class="col w50">
                             <?
-                            foreach ($layers['layers'] as $n => $a) {
+                            foreach ($layers['layers'] as $n => $a) {                                    
                                 if ($n != 'fire' && $n != 'wx' && $n != 'evac') {
                                     echo '<h3 style="margin-bottom:0.5em">' . $layers['categories'][$n] . '</h3>';
 
                                     foreach ($a as $layer) {
-                                        $unlocked = false;
+                                        if ($layer['testing']) continue;
 
-                                        if (empty($layer['perms2']) || (in_array('PREMIUM', $layer['perms2']) && $hasPremium) || (in_array('PRO', $layer['perms2']) && $hasPro)) {
-                                            $unlocked = true;
-                                        }
-
-                                        /*if ($layer['perms'] && $user['role'] != 'ADMIN' || ($layer['perms'] && !$activeSub && $user['role'] != 'ADMIN')) {
-                                            $unlocked = false;
-                                        }*/
+                                        $unlocked = !(
+                                            $user['role'] == 'ADMIN' ||
+                                            empty($layer['perms2']) ||
+                                            ($hasPremium && in_array('PREMIUM', $layer['perms2'])) ||
+                                            ($hasPro && in_array('PRO', $layer['perms2']))
+                                        );
 
                                         echo '<div class="checkbox" style="display:block">';
 
-                                        if (!$unlocked) {
+                                        if ($unlocked) {
                                             echo '<i class="fad fa-lock" title="You don\'t have access to this premium layer"></i>';
                                         } else {
                                             echo '<input type="checkbox" id="' . $layer['id'] . '" name="checkboxes[' . $layer['id'] . ']" value="1"' . (($checkboxes != null && in_array($layer['id'], $checkboxes) || $checkboxes == null && $layer['default'] == 1) ? ' checked' : '') . '>';
                                         }
 
-                                        echo '<label for="' . $layer['id'] . '"' . (!$unlocked ? ' style="padding:0 0 0 1em' : '') . '">' . $layer['name'] . '</label>' .
+                                        echo '<label for="' . $layer['id'] . '"' . ($unlocked ? ' style="padding:0 0 0 1em' : '') . '">' . $layer['name'] . '</label>' .
                                             '<span class="help" style="margin-left:2.3em">' . $layer['desc'] . '</span></div>';
                                     }
                                 }

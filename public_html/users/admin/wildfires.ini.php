@@ -2,6 +2,7 @@
 include_once '../apis/functions.inc.php';
 include_once '/home/mapo/public_html/cron/dispatch.inc.php';
 $newDispatchCenters[] = 'MAPO';
+$year = date('Y');
 asort($newDispatchCenters);
 
 function size($a)
@@ -57,45 +58,83 @@ function is_duplicate_fire($current_fire, $last_fire, $acres_threshold = 10.0, $
 
 // create or modify a MAPO-entered incident
 if (isset($_POST['create']) && $_POST['create'] == 'Save Incident') {
-    $year = date('Y');
     $time = time();
     $date = strtotime($_POST['discovered']);
-    $id = $_POST['year'] . '-' . $_POST['juris'] . '-' . str_pad($_POST['num'], '6', '0', STR_PAD_LEFT);
+    $incNumOnly = str_pad($_POST['num'], '6', '0', STR_PAD_LEFT);
+    $id = $_POST['year'] . '-' . $_POST['juris'] . '-' . $incNumOnly;
     $name = mysqli_real_escape_string($con, str_replace(' Fire', '', $_POST['name']));
-    $near = mysqli_real_escape_string($con, $_POST['near']);
+    $near = json_decode($_POST['near'])->near;
+    $geo = mysqli_real_escape_string($con, $_POST['near']);
     $notes = mysqli_real_escape_string($con, $_POST['notes']);
-    $status = array();
+    $status = [];
     $agency = isset($_POST['agency']) && $_POST['agency'] != '' ? $_POST['agency'] : 'MAPO';
 
-    if ($_POST['control'] == 1) {
-        $status['Control'] = $time;
-    }
+    if ($_POST['control'] == 1) $status['Control'] = $time;
+    if ($_POST['contain'] == 1) $status['Contain'] = $time;
+    if ($_POST['out'] == 1) $status['Out'] = $time;
 
-    if ($_POST['contain'] == 1) {
-        $status['Contain'] = $time;
-    }
-
-    if ($_POST['out'] == 1) {
-        $status['Out'] = $time;
-    }
-
-    if (count($status) == 0) {
+    if ($status && count($status) == 0) {
         $status = '';
     } else {
         $status = serialize($status);
     }
 
     if ($_POST['modify'] == 1) {
-        $sql = "UPDATE wildfires SET incidentID = '$id', state = '$_POST[state]', agency = '$agency', unit = '$_POST[juris]', year = '$year', date = '$date', name = '$name', type = '$_POST[type]', lat = '$_POST[lat]',
-        lon = '$_POST[lon]', geo = '$near', acres = '$_POST[acres]', notes = '$notes', status = '$status', updated = '$time', timezone = '$_POST[tz]', display = '$_POST[display]' WHERE wfid = '$_POST[wfid]'";
+        $sql = "UPDATE wildfires SET 
+            incidentID = '$id',
+            incidentNumOnly = '$incNumOnly',
+            state = '$_POST[state]',
+            agency = '$agency',
+            unit = '$_POST[juris]',
+            year = '$year',
+            date = '$date',
+            name = '$name',
+            type = '$_POST[type]',
+            lat = '$_POST[lat]',
+            lon = '$_POST[lon]',
+            geo = '$near',
+            near = '$geo',
+            acres = '$_POST[acres]',
+            notes = '$notes',
+            status = '$status',
+            updated = '$time',
+            timezone = '$_POST[tz]',
+            display = '$_POST[display]'
+        WHERE wfid = '$_POST[wfid]'";
 
-        $msg = 'You have successfully updated Incident #' . $id . '.';
-        logEvent('Modified a ' . strtolower($_POST['type']) . ' incident (#' . $id . ')');
+        $msg = "You have successfully updated Incident #$id.";
+        logEvent("Modified a " . strtolower($_POST['type']) . " incident (#$id)");
     } else {
-        $sql = "INSERT INTO wildfires (incidentID,state,agency,unit,year,date,name,type,lat,lon,geo,acres,status,notes,resources,fuels,captured,updated,timezone,display,owner)
-        VALUES('$id','$_POST[state]','$agency','$_POST[juris]','$year','$date','$name','$_POST[type]','$_POST[lat]','$_POST[lon]','$near','$_POST[acres]','$status','$notes','','','$time','$time','$_POST[tz]','$_POST[display]','mapo')";
+        $sql = "INSERT INTO wildfires
+            (incidentID,incidentNumOnly,state,agency,unit,year,date,name,type,lat,lon,
+            geo,near,acres,status,notes,resources,fuels,captured,updated,timezone,display,owner)
+        VALUES (
+            '$id',
+            '$incNumOnly',
+            '$_POST[state]',
+            '$agency',
+            '$_POST[juris]',
+            '$year',
+            '$date',
+            '$name',
+            '$_POST[type]',
+            '$_POST[lat]',
+            '$_POST[lon]',
+            '$near',
+            '$geo',
+            '$_POST[acres]',
+            '$status',
+            '$notes',
+            '',
+            '',
+            '$time',
+            '$time',
+            '$_POST[tz]','
+            $_POST[display]',
+            'mapo'
+        )";
 
-        $msg = 'Incident ' . $id . ' was successfully created. You can modify it <a href="modify?wfid={{wfid}}">here</a>.';
+        $msg = "Incident $id was successfully created. You can modify it <a href=\"modify?wfid={{wfid}}\">here</a>.";
     }
 
     #echo $sql;

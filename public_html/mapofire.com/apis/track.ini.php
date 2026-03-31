@@ -7,9 +7,9 @@ $token = $_COOKIE['token'] ?? $_REQUEST['token'];
 if ($token) {
     $row = executeQuery('si', [$token, $time], "SELECT uid FROM sessions WHERE token = ? AND expires > ?");
     $uid = $row['uid'] ?? null;
-} else if (isset($_SESSION['uid'])) {
+}/* else if (isset($_SESSION['uid'])) {
     $uid = $_SESSION['uid'] ?? null;
-}
+}*/
 
 if ($uid == null) {
     $returnJson = ['response' => 'error', 'code' => 1, 'msg' => 'User authentication failed'];

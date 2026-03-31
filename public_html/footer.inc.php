@@ -13,6 +13,7 @@
                     <li><a href="<?=$domain?>purchase/mapofire?utm_campaign=mapofire&utm_medium=link&utm_source=footer">Pricing</a></li>
                     <li><a href="<?=$domain?>about/legal/terms">Terms</a></li>
                     <li><a href="<?=$domain?>about/legal/privacy">Privacy</a></li>
+                    <li><a target="_blank" href="<?=str_replace('//', '//status.', $domain)?>">Status</a></li>
                 </ul>
             </div>
         </div>

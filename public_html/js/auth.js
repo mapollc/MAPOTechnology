@@ -1,11 +1,11 @@
 const apiURL = 'https://api.mapotechnology.com/v1/',
-    apiKey = '57a83db35f6d91d1ee2bd83a2d305857'
-//apiKey = 'c196d0958608ad2b7d4af2be078ecc54',
-submitBtn = document.querySelector('input[type=submit]'),
+    apiKey = '57a83db35f6d91d1ee2bd83a2d305857',
+    submitBtn = document.querySelector('input[type=submit]'),
     city = document.querySelector('#city'),
     userLocation = document.querySelector('input[name=location]'),
-    cityResults = document.querySelector('#cityResults'),
-    stateLabels = {
+    cityResults = document.querySelector('#cityResults');
+
+const stateLabels = {
         'AL': 'Alabama',
         'AK': 'Alaska',
         'AZ': 'Arizona',

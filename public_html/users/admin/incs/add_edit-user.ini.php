@@ -15,26 +15,6 @@ $perms = unserialize($row['permissions']);
 
 $customerID = mysqli_fetch_assoc(mysqli_query($con, "SELECT cid FROM billing WHERE email = '$row[email]' ORDER BY status ASC, created DESC LIMIT 1"))['cid'];
 
-/*$sql2 = mysqli_query($con, "SELECT cid FROM billing WHERE email = '$row[email]' ORDER BY status ASC");
-while ($billing = mysqli_fetch_assoc($sql2)) {
-    if ($customerID == null) {
-        $customerID = $billing['cid'];
-    }
-}*/
-#$sql = mysqli_query($con, "SELECT sid, token, ip, host, source, location, created, expires FROM sessions WHERE uid = '$_GET[uid]' AND expires > $time ORDER BY created DESC");
-
-/*$subs = [];
-$sql9 = mysqli_query($con, "SELECT cid, subscription, plan, b.created, start, end, active FROM billing AS b LEFT JOIN users AS u ON u.email = b.email WHERE u.uid = $_GET[uid] ORDER BY b.created DESC, active DESC");
-
-while ($data = mysqli_fetch_assoc($sql9)) {
-    if ($data) {
-        $sub = $data;
-        $sub['details'] = getSub($data['plan']);
-
-        $subs[] = $sub;
-    }
-}*/
-
 if ($function == 'edit' && !$row) {
     echo errorCode('User account not found', 'The user account you\'re looking for does not exist.');
 } else {
@@ -45,12 +25,6 @@ if ($function == 'edit' && !$row) {
             '<input type="checkbox" id="p' . $i . '" name="perms[' . $userPermissions[$i]['category'] . '][' . $userPermissions[$i]['perm'] . ']' . $ex . '" value="1"' .
             ($thePerm == 1 ? ' checked' : '') . '>' .
             '<label for="p' . $i . '">' . $userPermissions[$i]['name'] . '</label></div>';
-
-        /*if ($i % 2 == 0) {
-            $col1 .= $permCols;
-        } else {
-            $col2 .= $permCols;
-        }*/
     }
 ?>
     <h1><?= $function == 'create' ? 'Create New ' : 'Edit' ?> User Account<?= $function == 'edit' ? ': ' . $row['first_name'] . ' ' . $row['last_name'] : '' ?></h1>
@@ -135,7 +109,7 @@ if ($function == 'edit' && !$row) {
         <div class="btn-group">
             <input type="submit" name="action" class="btn btn-green" value="<?= $function == 'add' ? 'Add User' : 'Save Changes' ?>">
             <input type="button" class="btn" onclick="window.location.href='../people'" value="Go Back">
-            <input type="button" class="btn btn-red" onclick="window.location.href='../people/remove?uid=<?=$_GET['uid']?>'" value="Delete User Account">
+            <input type="button" class="btn btn-red" onclick="window.location.href='../people/remove?uid=<?=$_GET['uid']?>'" value="Delete Account">
         </div>
     </form>
 

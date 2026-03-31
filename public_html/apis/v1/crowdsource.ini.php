@@ -3,7 +3,11 @@ function verify($v) {
     return $v == 0 ? 'unverified' : ($v == 1 ? 'verified' : 'rejected');
 }
 
-$where = "verified != 2";
+if (isset($_GET['verified'])) {
+    $where = "verified = $_GET[verified]";
+} else {
+    $where = "verified != 2";
+}
 
 if ($method == 'active' && !isset($_REQUEST['start']) && !isset($_REQUEST['end'])) {
     $time = strtotime('-6 hours');
@@ -41,7 +45,7 @@ while ($row = mysqli_fetch_assoc($result)) {
             'state' => $row['state'],
             'type' => $row['type'],
             'near' => $geo->near,
-            'acres' => floatval(number_format($row['acres'])),
+            'acres' => $row['acres'] ? floatval(number_format($row['acres'])) : null,
             'details' => $row['details'],
             'reported' => intval($row['time']),
             'verified' => $row['verified'] == 1 ? true : false,

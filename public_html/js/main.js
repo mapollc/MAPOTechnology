@@ -1,10 +1,85 @@
-var host = 'https://www.mapotechnology.com/',
+const host = 'https://www.mapotechnology.com/',
     apiUrl = 'https://api.mapotechnology.com/v1/',
     key = 'c196d0958608ad2b7d4af2be078ecc54',
-    pn = window.location.pathname,
-    headerChange = (pn == '/' ? 100 : 50);
+    pageName = window.location.pathname,
+    headerChange = (pageName == '/' ? 100 : 50);
 
-async function sendMessage(form) {
+function sendMessage(e) {
+    e.preventDefault();
+    const form = this;
+    const submit = document.querySelector('form#contact input[type=submit]');
+
+    let errors = false,
+        errorMsg = '';
+
+    document.querySelector('#senderror')?.remove();
+    submit.disabled = true;
+    submit.value = 'Sending...';
+
+    if (document.querySelector('input[name=fname]').value == '') {
+        errors = true;
+        errorMsg += 'Please provide your first name.<br>';
+    }
+
+    if (document.querySelector('input[name=lname]').value == '') {
+        errors = true;
+        errorMsg += 'Please provide your last name.<br>';
+    }
+
+    if (document.querySelector('input[name=email]').value == '') {
+        errors = true;
+        errorMsg += 'Please provide your email address.<br>';
+    }
+
+    if (document.querySelector('select[name=subject]').value == '-- Reason for message --') {
+        errors = true;
+        errorMsg += 'Please select a reason for contacting us.<br>';
+    }
+
+    if (document.querySelector('textarea[name=msg]').value == '') {
+        errors = true;
+        errorMsg += 'Your must enter some kind of message to send.';
+    }
+
+    if (errors) {
+        form.insertAdjacentHTML('beforebegin', '<div class="message error" id="senderror">' + errorMsg + '</div>');
+        submit.disabled = false;
+        submit.value = 'Send Message';
+    } else {
+        grecaptcha.ready(function () {
+            grecaptcha.execute('6Ld5X1AkAAAAAF7AVZbd60fGTNqx-bYJ6s9wnlrC', {
+                action: 'submit'
+            }).then(async function (token) {
+                var fd = new FormData();
+                fd.append('token', token);
+                fd.append('ip', document.querySelector('input[name=ip]').value);
+
+                const validate = await fetch(apiUrl + 'recaptcha?key=' + key, {
+                    method: 'POST',
+                    body: fd
+                });
+
+                if (validate.ok) {
+                    const resp = await validate.json();
+
+                    if (resp.success) {
+                        messageSubmit(form);
+                    } else {
+                        form.insertAdjacentHTML('beforebegin', '<div class="message error" id="senderror">You have failed automatic reCAPTCHA verification.</div>');
+
+                        document.querySelectorAll('form input, form select, form textarea').forEach(n => {
+                            n.disabled = true;
+                        });
+                    }
+                }
+            });
+        });
+    }
+}
+
+async function messageSubmit(form) {
+    const submit = document.querySelector('input[type=submit]');
+
     const send = await fetch(apiUrl + 'message?key=' + key, {
         method: 'POST',
         body: new FormData(document.querySelector('form'))
@@ -21,45 +96,38 @@ async function sendMessage(form) {
             });
 
             document.querySelector('select[name=subject]').selectedIndex = 0;
-            document.querySelector('input[type=submit]').disabled = false;
-            document.querySelector('input[type=submit]').value = 'Send Message';
+            submit.disabled = false;
+            submit.value = 'Send Message';
         } else {
-            if (resp.error == 1) {
-                var m = 'Your message was unable to be sent. Try emailing us directly.';
-            } else if (resp.error == 2) {
-                var m = 'You didn\'t complete all the required fields. Try again.';
-            }
+            const msg = resp.error == 1 ? 'Your message was unable to be sent. Try emailing us directly.' : 'You didn\'t complete all the required fields. Try again.';
 
-            form.insertAdjacentHTML('beforebegin', '<div class="message error">' + m + '</div>');
+            form.insertAdjacentHTML('beforebegin', `<div class="message error">${msg}</div>`);
         }
     }
 }
 
-document.querySelector('.menu_icon').addEventListener('click', function () {
-    if (this.getAttribute('data-open') == '0') {
-        this.setAttribute('data-open', '1');
-        document.querySelector('.menu_icon i').classList.add('fa-times');
-        document.querySelector('.menu_icon i').classList.remove('fa-bars');
-        document.querySelector('ul.navbar_menu').style.display = 'flex';
-    } else {
-        this.setAttribute('data-open', '0');
-        document.querySelector('.menu_icon i').classList.remove('fa-times');
-        document.querySelector('.menu_icon i').classList.add('fa-bars');
-        document.querySelector('ul.navbar_menu').style.display = 'none';
-    }
-});
-
 window.onresize = function () {
+    const nav = document.querySelector('ul.navbar_menu'),
+        mi = document.querySelector('.menu_icon i');
+
     if (window.outerWidth >= 768) {
-        document.querySelector('ul.navbar_menu').style.display = '';
-        document.querySelector('.menu_icon').setAttribute('data-open', '0');
-        document.querySelector('.menu_icon i').classList.remove('fa-times');
-        document.querySelector('.menu_icon i').classList.add('fa-bars');
+        nav.style.display = '';
+        mi.parentElement.setAttribute('data-open', '0');
+        mi.classList.remove('fa-times');
+        mi.classList.add('fa-bars');
     }
+
+    document.querySelectorAll('.promo .btn').forEach(b => {
+        if (window.outerWidth > 495) {
+            b.classList.add('btn-xl')
+        } else {
+            b.classList.remove('btn-xl')
+        }
+    });
 };
 
 window.onscroll = function () {
-    if (pn == '/') {
+    if (pageName == '/') {
         var t = document.querySelector('section.stats').offsetTop,
             b = t + window.outerHeight,
             h = window.scrollTop,
@@ -80,12 +148,8 @@ window.onscroll = function () {
     if (document.querySelector('header').getAttribute('data-mt') != 1) {
         if (window.scrollY > headerChange) {
             document.querySelector('header').classList.add('dark');
-            /*document.querySelector('.logo').style.display = 'none';
-            document.querySelector('.logo2').style.display = 'block';*/
         } else {
             document.querySelector('header').classList.remove('dark');
-            /*document.querySelector('.logo').style.display = 'block';
-            document.querySelector('.logo2').style.display = 'none';*/
         }
     }
 };
@@ -94,20 +158,12 @@ window.onload = function () {
     if (document.querySelector('header').getAttribute('data-mt') != 1) {
         if (window.scrollY > headerChange) {
             document.querySelector('header').classList.add('dark');
-            /*document.querySelector('.logo').style.display = 'none';
-            document.querySelector('.logo2').style.display = 'block';*/
         } else {
             document.querySelector('header').classList.remove('dark');
-            /*if (document.querySelector('logo')) {
-                document.querySelector('logo').style.display = 'block';
-            }
-            if (document.querySelector('logo2')) {
-                document.querySelector('logo2').style.display = 'none';
-            }*/
         }
     }
 
-    if (pn == '/donate/success') {
+    if (pageName == '/donate/success') {
         gtag("event", "purchase", {
             transaction_id: pid,
             value: pamt,
@@ -119,96 +175,49 @@ window.onload = function () {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.querySelector('#wwd')) {
-        document.querySelector('#wwd').addEventListener('click', function (e) {
-            e.preventDefault();
+    const wwd = document.querySelector('#wwd');
 
-            document.querySelector('#abt').scrollIntoView();
-            /*document.querySelector('html, body').animate({
-                scrollTop: (document.querySelector('abt').offsetTop / 2) - 50
-            }, 1000);*/
+    document.querySelector('.menu_icon')?.addEventListener('click', (e) => {
+        const nav = document.querySelector('ul.navbar_menu'),
+            mi = e.target.querySelector('i');
 
-            return false;
+        if (this.dataset.open == '0') {
+            this.setAttribute('data-open', '1');
+            mi.classList.add('fa-times');
+            mi.classList.remove('fa-bars');
+            nav.style.display = 'flex';
+        } else {
+            this.setAttribute('data-open', '0');
+            mi.classList.remove('fa-times');
+            mi.classList.add('fa-bars');
+            nav.style.display = 'none';
+        }
+    });
+
+    wwd?.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        document.querySelector('#abt').scrollIntoView();
+        return false;
+    });
+
+    if (pageName == '/') {
+        document.querySelectorAll('.promo .btn').forEach(b => {
+            if (window.outerWidth > 495) {
+                b.classList.add('btn-xl')
+            } else {
+                b.classList.remove('btn-xl')
+            }
         });
     }
 
-    if (pn == '/about/contact' || pn == '/contact') {
+    if (pageName == '/about/contact' || pageName == '/contact') {
         const rc = document.createElement('script');
         rc.src = 'https://www.google.com/recaptcha/api.js?render=6Ld5X1AkAAAAAF7AVZbd60fGTNqx-bYJ6s9wnlrC';
         document.body.appendChild(rc);
 
-        document.querySelector('form#contact').addEventListener('submit', function (e) {
-            e.preventDefault();
-            var form = this;
-
-            var errors = false,
-                errorMsg = '';
-
-            if (document.querySelector('#senderror')) {
-                document.querySelector('#senderror').remove();
-            }
-            document.querySelector('input[type=submit]').disabled = true;
-            document.querySelector('input[type=submit]').val = 'Sending...';
-
-            if (document.querySelector('input[name=fname]').value == '') {
-                errors = true;
-                errorMsg += 'Please provide your first name.<br>';
-            }
-
-            if (document.querySelector('input[name=lname]').value == '') {
-                errors = true;
-                errorMsg += 'Please provide your last name.<br>';
-            }
-
-            if (document.querySelector('input[name=email]').value == '') {
-                errors = true;
-                errorMsg += 'Please provide your email address.<br>';
-            }
-
-            if (document.querySelector('select[name=subject]').options[document.querySelector('select[name=subject]').selectedIndex].value == '-- Reason for message --') {
-                errors = true;
-                errorMsg += 'Please select a reason for contacting us.<br>';
-            }
-
-            if (document.querySelector('textarea[name=msg]').value == '') {
-                errors = true;
-                errorMsg += 'Your must enter some kind of message to send.';
-            }
-
-            if (errors) {
-                form.insertAdjacentHTML('beforebegin', '<div class="message error" id="senderror">' + errorMsg + '</div>');
-                document.querySelector('form#contact input[type=submit]').disabled = false;
-                document.querySelector('form#contact input[type=submit]').value = 'Send Message';
-            } else {
-                grecaptcha.ready(function () {
-                    grecaptcha.execute('6Ld5X1AkAAAAAF7AVZbd60fGTNqx-bYJ6s9wnlrC', {
-                        action: 'submit'
-                    }).then(async function (token) {
-                        var fd = new FormData();
-                        fd.append('token', token);
-                        fd.append('ip', document.querySelector('input[name=ip]').value);
-
-                        const validate = await fetch(apiUrl + 'recaptcha?key=' + key, {
-                            method: 'POST',
-                            body: fd
-                        });
-
-                        if (validate.ok) {
-                            const resp = await validate.json();
-                            
-                            if (resp.success) {
-                                sendMessage(form);
-                            } else {
-                                form.insertAdjacentHTML('beforebegin', '<div class="message error" id="senderror">You have failed automatic reCAPTCHA verification.</div>');
-
-                                document.querySelectorAll('form input, form select, form textarea').forEach(function (n) {
-                                    n.disabled = true;
-                                });
-                            }
-                        }
-                    });
-                });
-            }
+        document.querySelector('form#contact').addEventListener('submit', (e) => {
+            sendMessage(e);
         });
     }
 });

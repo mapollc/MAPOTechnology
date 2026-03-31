@@ -84,8 +84,7 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PREMIUM'],
             'default' => false,
-            'app' => true,
-            'testing' => false
+            'app' => true
         ]
     ],
     'wx' => [
@@ -209,8 +208,7 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PREMIUM', 'PRO'],
             'default' => false,
-            'app' => true,
-            'testing' => false
+            'app' => true
         ],
         [
             'id' => 'nri',
@@ -250,8 +248,7 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PRO'],
             'default' => false,
-            'app' => true,
-            'testing' => false
+            'app' => true
         ],
         [
             'id' => 'drought',
@@ -267,8 +264,7 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PRO'],
             'default' => false,
-            'app' => true,
-            'testing' => false
+            'app' => true
         ],
         [
             'id' => 'fuels',

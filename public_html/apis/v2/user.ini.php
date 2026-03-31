@@ -768,7 +768,7 @@ class SSO
 
                     logEvent('Request sent to reset password', false, $row['uid']);
 
-                    sendEmail($row['email'], 'Your account password was reset', 'reset', ['{fname}' => $row['first_name'], '{token}' => $token, '{email}' => $row['email']]);
+                    sendEmail($row['email'], 'Your account password was reset', 'reset', ['{header}' => 'Reset your password', '{fname}' => $row['first_name'], '{token}' => $token, '{email}' => $row['email']]);
 
                     return ['response' => 'success'];
                 }

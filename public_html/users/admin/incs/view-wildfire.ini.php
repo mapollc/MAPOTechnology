@@ -4,7 +4,9 @@ if (isset($_GET['unit']) && $_GET['unit'] != '') {
     $unit = $juris['unit'] . ': ' . $juris['agency'] . ($juris['area'] ? ' / ' . $juris['area'] : '');
 }
 
-$addtl = ($_GET['q'] != '' ? 'q=' . $_GET['q'] . '&' : '') . ($_GET['unit'] != '' ? 'unit=' . $_GET['unit'] . '&' : '') . ($_GET['state'] != '' ? 'state=' . $_GET['state'] . '&' : '');
+$addtl = ($_GET['q'] != '' ? 'q=' . $_GET['q'] . '&' : '') .
+    ($_GET['unit'] != '' ? 'unit=' . $_GET['unit'] . '&' : '') .
+    ($_GET['state'] != '' ? 'state=' . $_GET['state'] . '&' : '');
 ?>
 <h1>Wildfire Management<?= $function == 'duplicates' ? ': Duplicates' : '' ?></h1>
 
@@ -22,8 +24,8 @@ $addtl = ($_GET['q'] != '' ? 'q=' . $_GET['q'] . '&' : '') . ($_GET['unit'] != '
         <? if ($function != 'duplicates') { ?>
             <div>
                 <label>Start Date</label>
-                <input type="date" style="max-width:130px" class="input" name="start" min="2010-01-01" 
-                    value="<?= $_GET['start'] ?? date('Y').'-01-01' ?>" max="<?= date('Y-m-d') ?>">
+                <input type="date" style="max-width:130px" class="input" name="start" min="2010-01-01"
+                    value="<?= $_GET['start'] ?? date('Y') . '-01-01' ?>" max="<?= date('Y-m-d') ?>">
             </div>
 
             <div>
@@ -43,7 +45,7 @@ $addtl = ($_GET['q'] != '' ? 'q=' . $_GET['q'] . '&' : '') . ($_GET['unit'] != '
         </select>
 
         <select name="state[]" class="input" multiple size="3" style="max-width:190px">
-            <option <?=!isset($_GET['state']) ? 'selected ' : ''?>value="">All States</option>
+            <option <?= !isset($_GET['state']) ? 'selected ' : '' ?>value="">All States</option>
             <? foreach ($statesArray as $k => $v) {
                 echo '<option ' . (isset($_GET['state']) && in_array($k, $_GET['state']) ? 'selected ' : '') . 'value="' . $k . '">' . ucwords(strtolower($v)) . '</option>';
             } ?>
@@ -101,4 +103,6 @@ $addtl = ($_GET['q'] != '' ? 'q=' . $_GET['q'] . '&' : '') . ($_GET['unit'] != '
     </table>
 </div>
 
-<div class="pagination"><div></div></div>
+<div class="pagination">
+    <div></div>
+</div>

@@ -1,6 +1,6 @@
 <?
 ////ini_set('display_errors', 1);
-////error_reporting(E_ALL);
+////error_reporting(E_ERROR | E_PARSE);
 ini_set('session.cookie_domain', '.mapotechnology.com');
 
 $allowed_origins = [
@@ -21,13 +21,12 @@ use UAParser\Parser;
 
 function getUserID()
 {
-    global $con;
     global $_REQUEST;
 
-    if ($_REQUEST['token'] == 'null') return '';
+    $token = $_COOKIE['token'] ?? $_REQUEST['token'] ?? null;
 
-    $user = mysqli_fetch_assoc(mysqli_query($con, "SELECT uid FROM sessions WHERE token = '$_REQUEST[token]' LIMIT 1"));
-    return $user['uid'];
+    $user = executeQuery('s', [$token], "SELECT uid FROM sessions WHERE token = ? LIMIT 1");
+    return $user['uid'] ?? null;
 }
 
 function deleteMapboxFeature($id)
@@ -245,7 +244,7 @@ include_once '../../db.ini.php';
 $callback = $_REQUEST['callback'];
 $mode = $_REQUEST['mode'];
 
-if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['android'] != 1) {
+if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['android'] != 1 && isset($_REQUEST['key'])) {
     $id = $_REQUEST['id'];
     $out = null;
     $mapotrails = ['userUploads', 'waypoint', 'gpx', 'media', 'favtrails'];

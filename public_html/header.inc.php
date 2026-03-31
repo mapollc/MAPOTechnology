@@ -30,9 +30,8 @@ if ($host == 'mapotrails.com' || $host == 'lagranderide.com') {
     $logoB = 'mapo_logo_transparent_small.png';
 }
 
-$websiteTitle = ($bktitle ? $bktitle : ($title ? $title : '')) . ($site == 'mapo' && $frontPage ? 'Innovative Mapping Technology for Wildfire & Recreation' : '') . ' | ' . $siteProduct;
-
-$metaDesc = $metaDesc ? $metaDesc : 'Track wildfires with Map of Fire. Explore trails with Map of Trails. Expert mapping solutions for outdoor safety & recreation by MAPO LLC.';
+$websiteTitle = ($bktitle ?: $title ?: '') . ($site == 'mapo' && $frontPage ? 'Innovative Mapping Technology for Wildfire & Recreation' : '') . ' | ' . $siteProduct;
+$metaDesc = $metaDesc ?: 'Track wildfires with Map of Fire. Explore trails with Map of Trails. Expert mapping solutions for outdoor safety & recreation by MAPO LLC.';
 ?>
 <!DOCTYPE html>
 
@@ -41,7 +40,8 @@ $metaDesc = $metaDesc ? $metaDesc : 'Track wildfires with Map of Fire. Explore t
 <head>
     <title><?= $websiteTitle ?></title>
     <meta charset="utf-8">
-    <link rel="preconnect" href="//fonts.gstatic.com/">
+    <link rel="preconnect" href="//fonts.googleapis.com">
+    <link rel="preconnect" href="//fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="//cdn.jsdelivr.net">
     <link rel="preconnect" href="//fontawesome.com">
     <link rel="preconnect" href="//ka-p.fontawesome.com">
@@ -58,13 +58,13 @@ $metaDesc = $metaDesc ? $metaDesc : 'Track wildfires with Map of Fire. Explore t
     <? } ?>
     <meta property="og:site_name" content="<?= $site == 'mapotrails' ? 'Map of Trails' : ($site == 'mapofire' ? 'Map of Fire' : 'MAPO LLC') ?>">
     <meta property="og:url" content="https://<?= $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] ?>">
-    <meta property="og:image" content="<?= $metaphoto ? $metaphoto : '//mapotechnology.com/assets/images/mapo_logo_square.png' ?>">
-    <meta property="og:image:alt" content="<?= $metaphoto ? $metacaption : 'MAPO LLC' ?>">
+    <meta property="og:image" content="<?= $metaphoto ?: '//mapotechnology.com/assets/images/mapo_logo_square.png' ?>">
+    <meta property="og:image:alt" content="<?= $metaphoto ?: 'MAPO LLC' ?>">
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://<?= $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] ?>">
     <meta property="twitter:title" content="<?= $websiteTitle ?>">
     <meta property="twitter:description" content="<?= $metaDesc ?>">
-    <meta property="twitter:image" content="<?= $metaphoto ? $metaphoto : '//mapotechnology.com/assets/images/mapo_logo_square.png' ?>">
+    <meta property="twitter:image" content="<?= $metaphoto ?: '//mapotechnology.com/assets/images/mapo_logo_square.png' ?>">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#ffc65c">
     <meta name="robots" content="index,follow">
@@ -76,14 +76,13 @@ $metaDesc = $metaDesc ? $metaDesc : 'Track wildfires with Map of Fire. Explore t
     } ?>
     <link rel="stylesheet" href="<?= $domain ?>src/css/global.css">
     <link rel="stylesheet" href="<?= $domain ?>src/css/main.css">
-    <link rel="preload" href="//fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&family=Dosis:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="//fonts.googleapis.com/css2?family=Roboto:wght@300..600&family=Dosis:wght@400..600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript>
-        <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto@300;400;500;600&family=Dosis:wght@400;500;600&display=swap">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300..600&family=Dosis:wght@400..600&display=swap">
     </noscript>
     <? if ($css) {
         foreach ($css as $c) {
-            echo '<link rel="stylesheet" href="' . $c . '"></script>
-';
+            echo "<link rel=\"stylesheet\" href=\"$c\">";
         }
     } ?>
     <script async src="//kit.fontawesome.com/a107124392.js" crossorigin="anonymous"></script>
@@ -109,11 +108,11 @@ $metaDesc = $metaDesc ? $metaDesc : 'Track wildfires with Map of Fire. Explore t
                 <div class="col text-right">
                     <nav class="navbar">
                         <ul class="navbar_menu">
-                            <li><a href="//mapofire.com/?utm_campaign=mapofire&utm_source=mapotechnology.com&utm_medium=header">wildfires</a></li>
-                            <li><a href="//mapotrails.com/?utm_campaign=mapotrails&utm_source=mapotechnology.com&utm_medium=header">trails</a></li>
-                            <li><a href="<?= $domain ?>about">about</a></li>
-                            <li><a href="<?= $domain ?>contact">contact</a></li>
-                            <li><a href="<?= ($_SESSION['uid'] ? '//mapotechnology.com/account/home' : '//auth.mapotechnology.com/login?ref=header') ?>"><?= $_SESSION['uid'] ? 'Account' : 'Login' ?></a></li>
+                            <li><a href="//mapofire.com/?utm_campaign=mapofire&utm_source=mapotechnology.com&utm_medium=header">Wildfires</a></li>
+                            <li><a href="//mapotrails.com/?utm_campaign=mapotrails&utm_source=mapotechnology.com&utm_medium=header">Trails</a></li>
+                            <li><a href="<?= $domain ?>about">About</a></li>
+                            <li><a href="<?= $domain ?>contact">Contact</a></li>
+                            <li><a href="<?= $_SESSION['uid'] ? '//mapotechnology.com/account/home' : '//auth.mapotechnology.com/login?ref=header' ?>"><?= $_SESSION['uid'] ? 'My Account' : 'Log In' ?></a></li>
                         </ul>
                         <div class="menu_icon" data-open="0">
                             <i class="fat fa-bars" aria-hidden="true"></i>

@@ -27,7 +27,7 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
             executeQuery('ii', [$uid, $time], "INSERT INTO oreroads_settings (uid,settings,app_token,time) VALUES(?,'','',?)");
 
             logEvent('Created a new user account (<a href="https://www.mapotechnology.com/account/admin/people/edit?uid=' . $uid . '">#' . $uid . '</a>)');
-            header('Location: edit?created=1&uid=' . $uid);
+            header("Location: edit?created=1&uid=$uid");
         }
     }
 
@@ -80,11 +80,11 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
         <?
         // remove a user
         if ($function == 'remove') {
-            include_once $documentRoot . 'admin/incs/remove-user.ini.php';
+            include_once "{$documentRoot}admin/incs/remove-user.ini.php";
 
             // add or edit a user
         } else if ($function == 'create' || $function == 'edit') {
-            include_once $documentRoot . 'admin/incs/add_edit-user.ini.php';
+            include_once "{$documentRoot}admin/incs/add_edit-user.ini.php";
 
             // table view of all users
         } else {
@@ -102,7 +102,7 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
             $totalRows = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) AS totalRows FROM users AS u LEFT JOIN billing AS b ON b.email = u.email $where"))['totalRows'];
             $totalPages = ceil($totalRows / $rowsPerPage);
 
-            $currentPage = isset($_GET['results']) ? $_GET['results'] : 1;
+            $currentPage = $_GET['results'] ?? 1;
             $offset = ($currentPage - 1) * $rowsPerPage;
             $pagination = new Pagination($currentPage, $totalPages, 50);
 
@@ -147,7 +147,7 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
                             <tr>
                                 <td><?= $row['first_name'] ?></td>
                                 <td><?= $row['last_name'] ?></td>
-                                <td><?= $row['email'] ?></td>
+                                <td><a href="mailto:<?= $row['email'] ?>"><?= $row['email'] ?></a></td>
                                 <td><?= $row['cid'] != null ? "<a target=\"blank\" href=\"https://dashboard.stripe.com/customers/$row[cid]\">$row[cid]</a>" : 'No' ?></td>
                                 <td><?= $row['role'] == 1 ? '<i class="fa-solid fa-user" title="General User"></i>' : '' ?>
                                     <?= $row['role'] == 2 ? '<i class="fa-solid fa-badge-check" title="Premium Access"></i>' : '' ?>
@@ -155,8 +155,8 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
                                     <?= $row['role'] == 3 ? '<i class="fa-solid fa-lock" title="Administrative User"></i>' : '' ?></td>
                                 <td><?= $row['last_active'] ? ago($row['last_active']) : '--' ?></td>
                                 <td><?= ago($row['created']) ?></td>
-                                <td><? if ($permission->user()->edit()) { ?><a href="people/edit?uid=<?= $row['uid'] ?>">edit</a><? } ?>
-                                    <? if ($permission->user()->delete()) { ?> | <a href="people/remove?uid=<?= $row['uid'] ?>">remove</a><? } ?></td>
+                                <td><? if ($permission->user()->edit()) { ?><a title="Edit User" href="people/edit?uid=<?= $row['uid'] ?>"><i class="fas fa-pen"></i></a><? } ?>
+                                    <? if ($permission->user()->delete()) { ?><a title="Remove user" href="people/remove?uid=<?= $row['uid'] ?>" style="margin-left:1em"><i class="fas fa-trash-xmark"></i></a><? } ?></td>
                             </tr>
                         <? } ?>
                     </tbody>

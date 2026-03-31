@@ -3,7 +3,7 @@ ini_set('session.cookie_domain', '.mapotechnology.com');
 session_start();
 
 $method = $_GET['method'];
-$allowedMethods = ['confirmation', 'invitation', 'login', 'forgot', 'register'];
+$allowedMethods = ['confirmation', 'invitation', 'login', 'forgot', 'reset', 'register'];
 $gtoken = $_GET['gtoken'] ?? null;
 $google_client_id = '27619385576-o8elfb66trj3e5v2acahnjm0jiqacg5n.apps.googleusercontent.com';
 

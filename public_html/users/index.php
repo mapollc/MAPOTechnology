@@ -20,8 +20,8 @@ $queryParams = $queryParams == '&' ? '' : $queryParams;
 $queryParams = ltrim($queryParams, '&');
 
 $page = $_GET['page'];
-$pageFile = $_GET['page'] . '.ini.php';
-$versions = ['leaflet' => '1.9.4', 'jquery' => '3.6.4'];
+$pageFile = "$page.ini.php";
+$versions = ['leaflet' => '1.9.4', 'jquery' => '3.6.4', 'maplibre' => '5.17.0'];
 $method = $_GET['method'] ?: false;
 $function = $_GET['function'] ?: false;
 $path = $page . ($method ? "/$method" : '');
@@ -114,8 +114,11 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
     <link rel="stylesheet" href="//mapotechnology.com/src/css/global.css">
     <link rel="stylesheet" href="<?= $baseURL ?>src/css/account.css">
     <script async src="https://kit.fontawesome.com/a107124392.js" crossorigin="anonymous"></script>
-    <? if (in_array($pageFile, $leafletPages) || $method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
-        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet.min.css">
+    <? if ($method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet.min.css">
+    <? }
+    if ($page == 'mapofire') {?>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@<?= $versions['maplibre'] ?>/dist/maplibre-gl.min.css">
     <? } ?>
     <link rel="shortcut icon" href="//mapotechnology.com/images/favicon.ico" type="image/x-icon" />
     <link rel="canonical" href="<?= substr($baseURL, 0, -1) . $_SERVER['REQUEST_URI'] ?>" />
@@ -179,7 +182,7 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
     <section>
         <div class="container">
             <?
-            if (!in_array($_GET['page'], $securePages) || in_array($_GET['page'], $securePages) && $isAdmin) {
+            if (!in_array($page, $securePages) || in_array($page, $securePages) && $isAdmin) {
                 if (file_exists($pageFile)) {
                     include_once './' . $pageFile;
                 } else {
@@ -216,12 +219,12 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
 
     <div id="shadow"></div>
 
-    <script>
-        const uid = <?= $_SESSION['uid'] ?>;
-        let userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;
-    </script>
-    <? if (in_array($pageFile, $leafletPages) || $method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
+    <script>const uid = <?= $_SESSION['uid'] ?>;let userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;</script>
+    <? if ($method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
         <script src="https://cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet-src.min.js"></script>
+    <? } 
+    if ($page == 'mapofire') { ?>
+        <script src="//cdn.jsdelivr.net/npm/maplibre-gl@<?= $versions['maplibre'] ?>/dist/maplibre-gl.min.js"></script>
     <? } ?>
     <script src="<?= $baseURL ?>src/js/account.js"></script>
 

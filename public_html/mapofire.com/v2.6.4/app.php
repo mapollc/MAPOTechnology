@@ -44,6 +44,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
     <link rel="preconnect" href="//cdn.jsdelivr.net">
     <link rel="preconnect" href="//services3.arcgis.com">
     <link rel="preconnect" href="//ka-p.fontawesome.com">
+    <link rel="preconnect" href="//fonts.googleapis.com">
     <link rel="preconnect" href="//fonts.gstatic.com" crossorigin>
     <title><?= $title ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
@@ -76,10 +77,10 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
         <link rel="preload" href="<?= $baseURL ?>src/css/mf.supp-<?= $version ?>.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <? } ?>
     <link rel="preload" href="//mapotechnology.com/src/css/global.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="//fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="//fonts.googleapis.com/css2?family=Roboto:wght@300..700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript>
         <link rel="stylesheet" href="//mapotechnology.com/src/css/global.css">
-        <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap">
+        <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@300..700&display=swap">
         <? if (isset($_GET['version'])) { ?>
             <link rel="stylesheet" href="<?= $baseURL ?>v<?= $version ?>/mf.supp.css" media="print" onload="this.media='all'">
         <? } else { ?>

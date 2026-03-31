@@ -12,7 +12,7 @@ function getDispatch($lat, $lon) {
     $json = json_decode(file_get_contents('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/DMP_National_Dispatch_Boundaries_Public/FeatureServer/0/query?where=1%3D1&geometry='.$lon.','.$lat.'&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&outFields=DispUnitID%2CDispName&returnGeometry=false&returnCentroid=false&returnEnvelope=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&outSR=4326&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&returnZ=false&returnM=false&returnTrueCurves=false&returnExceededLimitFeatures=true&f=json'));
     $id = str_replace('US', '', $json->features[0]->attributes->DispUnitID);
 
-    return '<a href="../dispatch/edit?agency='.$id.'">'.$id.'</a> / '.$json->features[0]->attributes->DispName;
+    return ['id' => $id, 'name' => $json->features[0]->attributes->DispName];
 }
 
 if (!$permission->view()->reports() && !$permission->manage()->reports()) {
@@ -36,7 +36,8 @@ if (!$permission->view()->reports() && !$permission->manage()->reports()) {
         $ver = verify($row['verified']);
         $verify = $ver['text'];
         $verifyColor = $ver['color'];
-        $dispatch = getDispatch($geo->lat, $geo->lon);
+        $getDispatch = getDispatch($geo->lat, $geo->lon);
+        $dispatch = "<a href=\"../dispatch/edit?agency={$getDispatch['id']}\">{$getDispatch['id']}</a> / {$getDispatch['name']}";
 
         if ($row['verified'] != 0) {
             $verify .= ' &mdash; by '.$ex->userName.' on '.date('D, n/j/Y \a\t g:i A', $ex->time);
@@ -219,6 +220,7 @@ if (!$permission->view()->reports() && !$permission->manage()->reports()) {
                         <div class="btn-group">
                             <input type="submit" name="verify" class="btn btn-green" value="Verify"<?=$row['verified'] == 1 ? ' disabled' : ''?>>
                             <input type="submit" name="reject" class="btn btn-red" value="Reject"<?=$row['verified'] == 2 ? ' disabled' : ''?>>
+                            <input type="button" class="btn btn-blue" value="Convert to incident" onclick="window.location.href='../wildfires/create?crowdsource=1&cid=<?= $row['id'] ?>&dispatch=<?= $getDispatch['id'] ?>'">
                             <input type="button" class="btn btn-gray" value="Go back" onclick="window.location.href='../crowdsource'">
                         </div>
                     </form>

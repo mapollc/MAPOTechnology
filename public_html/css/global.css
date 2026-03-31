@@ -3,7 +3,7 @@
     --blue-gray-rgb: 143 146 159;
     --red-rgb: 237 37 78;
     --green-rgb: 76 175 80;
-    --light-blue-rgb: 0 166 237;
+    --light-blue-rgb: 24 158 215;
     --yellow-rgb: 255 186 8;
     --black-rgb: 40 40 41;
     --gray-rgb: 119 119 119;
@@ -137,7 +137,8 @@ input[type=button] {
     font-family: roboto;
     font-weight: 400;
     font-size: 14px;
-    letter-spacing: 0.3px;
+    line-height: 1;
+    letter-spacing: 0.1px;
     color: #444!important;
     background-color: #ddd;
     border: 0px solid transparent;

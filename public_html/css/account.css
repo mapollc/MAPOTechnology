@@ -166,12 +166,14 @@ section {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1em;
+    margin-bottom: 1em;
 }
 
 .grid-container .grid-item {
     display: flex;
     flex-direction: column;
     gap: 1em;
+    min-width: 0;
 }
 
 .rows {
@@ -439,6 +441,10 @@ ul.inline-menu li:last-child:after {
     background-color: #f5f5f5;
 }
 
+.card.admin h2 {
+    color: #f94d3d;
+}
+
 #account-settings {
     input {
         max-width: unset;
@@ -578,6 +584,7 @@ span.data {
 }
 
 .popup .options .btn {
+    line-height: 1;
     margin: 0;
 }
 
@@ -806,13 +813,24 @@ label {
 .search-results .result {
     display: inline-flex;
     width: 100%;
-    padding: .6em;
-    cursor: pointer;
+    padding: .75em;
     user-select: none;
+    cursor: pointer;
+    transition: all .15s ease-in-out;
 }
 
 .search-results .result:hover {
-    background-color: #e5e5e5;
+    background-color: #ededed;
+}
+
+.coordinates {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.coordinates input {
+    margin-top: 0;
 }
 
 .radio-group,
@@ -1037,12 +1055,8 @@ form label+.input {
     vertical-align: middle;
     font-weight: 400;
     font-size: 14px;
-    color: #6b7280
-        /*#fff*/
-    ;
-    background-color: #f9fafb
-        /*var(--blue-gray)*/
-    ;
+    color: #6b7280;
+    background-color: #f9fafb;
     border: 1px solid #ededed;
     border-left: 0;
     border-right: 0;
@@ -1091,6 +1105,11 @@ form label+.input {
 .table.small tbody td {
     padding: 0.5em;
 }*/
+
+.table thead th.ctrl, .table tbody td.ctrl {
+    min-width: 0;
+    width: 21px;
+}
 
 .table tbody td {
     text-align: left;
@@ -1438,6 +1457,18 @@ form label+.input {
     color: var(--red);
 }
 
+.maplibregl-ctrl button.maplibregl-ctrl-geolocate .maplibregl-ctrl-icon {
+    background-size: 90%;
+}
+
+.maplibregl-ctrl button.maplibregl-ctrl-compass {
+    cursor: pointer;
+
+    .maplibregl-ctrl-icon {
+        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIGZpbGw9JyNlZDI1NGUnIHdpZHRoPSczMDAnIGhlaWdodD0nMzAwJyB2aWV3Qm94PScwIDAgMjkgMjknPjxwYXRoIGQ9J00xMC41IDE0bDQtOCA0IDhoLTh6Jy8+PHBhdGggZD0nTTEwLjUgMTZsNCA4IDQtOGgtOHonIGZpbGw9JyNkZGQnLz48L3N2Zz4=") !important;
+        background-size: 90%;
+    }
+}
 /*.sub {
     width: 100%;
     border: 1px solid #e9e9e9;

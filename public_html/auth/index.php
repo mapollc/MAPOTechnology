@@ -12,7 +12,7 @@ if (isset($_SESSION['uid'])) {
         $goto = '//mapotechnology.com/logout?expired=1' . ($_SERVER['QUERY_STRING'] ? '&' . preg_replace('/(%26|%3F)loggedOut%3D1/m', '', $_SERVER['QUERY_STRING']) : '');
     } else {
         if ($service) {
-            $goto = $sourceURL . '/authenticate?' . ($service ? 'service=' . $service . '&' : '') . 'token=' . $_SESSION['token'] . ($nextURL ? '&next=' . urlencode($nextURL) : '');
+            $goto = "$sourceURL/authenticate?" . ($service ? "service=$service&" : '') . "token=$_SESSION[token]" . ($nextURL ? '&next=' . urlencode($nextURL) : '');
         } else {
             $goto = $nextURL ?: '//mapotechnology.com/account/home?existing=1';
         }
@@ -38,7 +38,8 @@ $msg = $_GET['fail'] ?? 0 ? $failMessages[$_GET['fail']] : '';
 
 $pageTitles = [
     'login' => 'Account Login',
-    'forgot' => ($_GET['verify'] ?? 0) == 1 ? 'Reset your Password' : 'Forgot Password',
+    'reset' => 'Reset your Password',
+    'forgot' => 'Forgot Password',
     'confirmation' => 'Confirm Your Account',
     'invitation' => 'Accept Invitation',
     'register' => 'Create an Account'

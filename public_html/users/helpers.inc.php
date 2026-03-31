@@ -10,7 +10,7 @@ use UAParser\Parser;
 $user_agent = Parser::create();
 
 // include leaflet on these pages only
-$leafletPages = ['mapofire.ini.php'];
+$maplibrePages = ['mapofire.ini.php'];
 
 // IF THE USER MUST BE A SUPER USER
 $isAdmin = $user['role'] == 'ADMIN';
