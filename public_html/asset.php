@@ -1,24 +1,37 @@
 <?
-if ($_GET['folder']) {
-    $root = '/home/mapo/public_html/'.$_GET['folder'].'/'.$_GET['file'];
-} else {
-    $root = '/home/mapo/public_html/'.$_GET['type'].'/'.$_GET['file'];
-}
-$filemod = filemtime($root);
-
 function rep($t) {
     return str_replace(['.js', '.css'], ['', ''], $t);
 }
 
-////ini_set('display_errors', 1);
-////error_reporting(E_ALL);
+function ctype() {
+    global $_GET;
 
-header('Cache-Control: must-revalidate, public, max-age=604800');
-header('Expires: '.gmdate('D, d M Y H:i:s \G\M\T', time() + 604800));
+    switch ($_GET['type']) {
+        case 'geojson':
+            return 'application/geo+json';
+        case 'js':
+            return 'text/javascript';
+        case 'css':
+            return 'text/css';
+    }
+}
+
+$contentType = ctype();
+$expiry = 604800;
+$version = $_GET['version'] ?? '';
+$type = $_GET['type'] ?? '';
+$file = $_GET['file'] ?? '';
+$folder = $_GET['folder'] ?? '';
+
+$root = "/home/mapo/public_html/" . ($folder ? "$folder/$file" : "$type/$file");
+$filemod = filemtime($root);
+
+header("Content-type: $contentType");
+header("Cache-Control: must-revalidate, public, max-age=$expiry");
+header('Expires: '.gmdate('D, d M Y H:i:s \G\M\T', time() + $expiry));
 header('Pragma: cache');
-header('Etag: "'.$filemod.'.'.filemtime('./asset.php').'"');
+header("Etag: \"$filemod." . filemtime('./asset.php')."\"");
 header('Last-Modified: '.gmdate('D, d M Y H:i:s \G\M\T', $filemod));
-header('Content-type: '.($_GET['type'] == 'geojson' ? 'application/geo+json' : 'text/'.($_GET['type'] == 'js' ? 'javascript' : 'css')));
 
 $minify = true;
-require_once './config/minifier.ini.php';
+require_once './config/minifier.inc.php';

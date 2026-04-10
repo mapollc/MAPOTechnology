@@ -1,4 +1,12 @@
 <?
+function resetAuth($url) {
+    setcookie('token', $_COOKIE['token'], time() - 60 * 60 * 24 * 7, '/', '.mapotechnology.com');
+    $_SESSION = [];
+    session_regenerate_id();
+
+    header("Location: $url");
+}
+
 session_start();
 
 /*function decodeToken($token) {
@@ -15,42 +23,34 @@ $token = $_COOKIE['token'];
 if (!isset($_SESSION['uid']) || !$token) {
     $redirect = true;
     $error = 1;
-    // the session has expired
-} else if ($_SESSION['expires'] < $time || !$_COOKIE['token']) {
+} // the session has expired
+else if ($_SESSION['expires'] < $time || !$_COOKIE['token']) {
     $redirect = true;
     $error = 2;
-    // the logged in IP doesn't match the current IP
-} /*else if ($token->ip != $_SERVER['REMOTE_ADDR']) {
-    $redirect = true;
-    $error = 3; echo 'yes';
-}*/
+}
 
 // If security measures fail, take them to re-login
 if ($redirect === true) {
-    setcookie('token', $_COOKIE['token'], $time - 60 * 60 * 24 * 7, '/', '.mapotechnology.com');
-    $_SESSION = array();
-    session_regenerate_id();
-
-    header('Location: ' . $baseURL . 'secure/login?fail=' . $error . '&next=' . urlencode(str_replace('?existing=1', '', $_SERVER['REQUEST_URI'])));
+    resetAuth("{$baseURL}secure/login?fail=$error&next=" . urlencode(str_replace('?existing=1', '', $_SERVER['REQUEST_URI'])));
 } else {
     $u = executeQuery('is', [$_SESSION['uid'], $_COOKIE['token']], "SELECT u.location, method, s.time, se.expires, email, permissions, u.role FROM users AS u LEFT JOIN permissions AS p ON p.uid = u.uid LEFT JOIN settings AS s ON s.uid = u.uid LEFT JOIN sessions AS se ON se.uid = u.uid WHERE u.uid = ? AND se.token = ?");
 
     if (!isset($u['error'])) {
         if (time() > $u['expires']) {
-            setcookie('token', $_COOKIE['token'], $time - (60 * 60 * 24 * 7), '/', '.mapotechnology.com', true);
-            $_SESSION = array();
-            session_regenerate_id();
-
-            header('Location: ' . $baseURL . 'secure/login?fail=2&next=' . urlencode(str_replace('?existing=1', '', $_SERVER['REQUEST_URI'])));
+            resetAuth("{$baseURL}secure/login?fail=2&next=" . urlencode(str_replace('?existing=1', '', $_SERVER['REQUEST_URI'])));
         } else {
             $subs = executeQuery('s', [$u['email']], "SELECT * FROM billing WHERE email = ? AND status = 'active'");
 
+            // check if user is a licensed org admin
             if (!isset($_SESSION['org_admin'])) {
                 $orgs = executeQuery('s', [$u['email']], "SELECT org_key FROM groups WHERE admin_email = ?");
+                if ($orgs) $_SESSION['org_admin'] = true;
+            }
 
-                if ($orgs) {
-                    $_SESSION['org_admin'] = true;
-                }
+            // check if user is apart of a group
+            if (!isset($_SESSION['groups'])) {
+                $g = executeQuery('s', [$u['email']], "SELECT g.group_id, org_key, name AS org_name FROM group_users AS gu INNER JOIN groups AS g ON g.group_id = gu.group_id WHERE gu.email = ? LIMIT 1");
+                if (!empty($g)) $_SESSION['groups'] = $g;
             }
 
             if (isset($subs['cid'])) {
@@ -60,7 +60,7 @@ if ($redirect === true) {
             }
 
             // Set global user variables
-            $user = array(
+            $user = [
                 'uid' => $_SESSION['uid'],
                 'fullName' => $_SESSION['name'],
                 'firstInitial' => substr($_SESSION['first_name'], 0, 1),
@@ -73,12 +73,13 @@ if ($redirect === true) {
                 'permissions' => ($u['permissions'] ? unserialize($u['permissions']) : []),
                 'sync' => array('m' => $u['method'], 't' => $u['time']),
                 'location' => json_decode($u['location'])
-            );
+            ];
 
             // use the script to update user's last active time
             if (isset($_SESSION['visited']) && time() - $_SESSION['visited'] > 600) {
                 executeQuery('ii', [time(), $_SESSION['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
             }
+
             $_SESSION['visited'] = time();
         }
     }

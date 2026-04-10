@@ -125,11 +125,11 @@ class NearbyEvacuations {
 
     get() {
         return new Promise((resolve, reject) => {
-            if (evacsLoaded) {
+            if (inits.evacuations?.evacsLoaded) {
                 resolve(this.process());
             } else {
                 const wait = setInterval(() => {
-                    if (evacsLoaded) {
+                    if (inits.evacuations?.evacsLoaded) {
                         clearInterval(wait);
                         resolve(this.process());
                     }
@@ -142,7 +142,7 @@ class NearbyEvacuations {
         let active = null,
             grouped = {};
 
-        activeEvacuations.forEach(feature => {
+        inits.evacuations.activeEvacuations.forEach(feature => {
             const geom = feature.geometry;
             let fnotes = '',
                 polygons = geom.type === 'Polygon' ? [geom.coordinates[0]] : geom.coordinates.flat();
@@ -181,7 +181,7 @@ class Popup {
         this.tall = tall;
         this.dialog = null;
 
-        if (isVisible('#modal')) new ClickListener().closeModal();
+        if (isVisible('#modal')) inits.clickListener.closeModal();
     }
 
     create(content) {
@@ -213,7 +213,7 @@ class Popup {
     }
 
     close() {
-        if (document.querySelector('.popup') != null) document.querySelector('.popup').remove();
+        if ($('.popup') != null) $('.popup').remove();
     }
 }
 
@@ -308,7 +308,7 @@ class Weather {
             tunit = 'F',
             wunit = 'mph';
 
-        /* format temperature */
+        // format temperature
         if (settings.weather()?.temp() == 'c' && t != null) {
             tunit = 'C';
             t = conversion.FtoC(t);
@@ -318,7 +318,7 @@ class Weather {
             t = Math.round(t);
         }
 
-        /* format wind speed */
+        // format wind speed
         if (settings.weather()?.wind() != 'mph' && ws != null) {
             ws = ws != null ? conversion.speed(ws, settings.weather().wind()) : null;
             wunit = settings.weather().wind();
@@ -336,19 +336,13 @@ class Weather {
         popup.update(stnData, 'Current Conditions');
     }
 
-    /*windIndicator(d) {
-        return '<svg xmlns="http://www.w3.org/2000/svg" style="transform:rotate(' + d + 'deg)" width="24" height="24" viewBox="0 0 24 24"><path fill="var(--orange)" d="M12,2L4.5,20.29l0.71,0.71L12,18l6.79,3 0.71,-0.71z"></path></svg>';
-    }*/
-
     fireWxFcst() {
-        new ClickListener().openModal('wwa');
+        inits.clickListener.openModal('wwa firewx');
 
         setHeaders(`Daily Fire Weather Forecast for ${this.lat}, ${this.lon}`, `weather/forecast/${this.lat},${this.lon}`,
             `Daily fire weather forecast from the National Weather Service for ${this.lat}, ${this.lon}.`);
 
-        if (config.workers.fwf == null) {
-            config.workers.fwf = new Worker(`${config.specificURL}${(debugMode ? `v${version}/fwf.js` : `src/js/fwf-${version}.js`)}`);
-        }
+        getWorker('fwf');
 
         config.workers.fwf.postMessage({
             lat: this.lat,
@@ -368,7 +362,7 @@ class Weather {
     }
 
     async incidentWX() {
-        const holder = document.querySelector('#curwx');
+        const holder = $('#curwx');
         if (!holder) return;
 
         const onError = (/*error*/) => {
@@ -377,7 +371,7 @@ class Weather {
         };
 
         try {
-            const wx = await api(config.apiURL + 'weather/nearby', [['radius', `${this.lat},${this.lon},30`], ['latest', 1]]);
+            const wx = await api(`${ENV.apiURL}weather/nearby`, [['radius', `${this.lat},${this.lon},30`], ['latest', 1]]);
 
             if (!wx?.weather?.obs) return showError();
 
@@ -424,7 +418,7 @@ class Weather {
     }
 
     async incidentForecast() {
-        const holder = document.querySelector('#fcstwx');
+        const holder = $('#fcstwx');
         if (!holder) return;
 
         const onError = (error) => {
@@ -481,9 +475,9 @@ class Weather {
                 u = holder.querySelector('.updated');
 
             if (isPremium) {
-                btnHtml = `<a href="#" class="btn btn-orange btn-sm" style="margin:0" data-lat="${this.lat}" data-lon="${this.lon}" data-action="incident_wx-fwf" onclick="return false">View the full fire forecast</a>`
+                btnHtml = `<a href="#" class="btn btn-orange btn-sm" style="margin:1em 0 0" data-lat="${this.lat}" data-lon="${this.lon}" data-action="incident_wx-fwf" onclick="return false">View the full fire forecast</a>`
             } else {
-                btnHtml = `<a href="#" class="btn btn-sm btn-orange" style="margin:0" data-action="marketing-cta" data-utm="acres_history" onclick="return false"><i class="fas fa-lock"></i> Upgrade to view forecast</a>`;
+                btnHtml = `<a href="#" class="btn btn-sm btn-orange" style="margin:1em 0 0" data-action="marketing-cta" data-utm="acres_history" onclick="return false"><i class="fas fa-lock"></i> Upgrade to view forecast</a>`;
             };
 
             domTemp.innerHTML = displayT;
@@ -491,7 +485,7 @@ class Weather {
             domAvgW.innerHTML = formatWind(avgW);
             domMaxW.innerHTML = formatWind(maxW);
             u.innerHTML = `Latest data retrieved ${timeAgo(new Date(prop.updateTime).getTime())}`;
-            u.insertAdjacentHTML('afterend', `<div class="btn-group centered" style="margin:0">${btnHtml}</div>`);
+            u.insertAdjacentHTML('afterend', `<div class="btn-group centered">${btnHtml}</div>`);
         } catch (error) {
             showError(error);
         }
@@ -595,13 +589,7 @@ class Weather {
                         }
                     });
 
-                    map.on('mouseenter', 'stns', () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'stns', () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
+                    mapMouseOver('stns');
                 }
 
                 if (!map.getLayer('stns_text')) {
@@ -628,13 +616,7 @@ class Weather {
                         }
                     });
 
-                    map.on('mouseenter', 'stns_text', () => {
-                        map.getCanvas().style.cursor = 'pointer';
-                    });
-
-                    map.on('mouseleave', 'stns_text', () => {
-                        map.getCanvas().style.cursor = 'auto';
-                    });
+                    mapMouseOver('stns_text');
                 }
             }
         }
@@ -677,30 +659,23 @@ class Weather {
             this.lon = c.lng;
         }
 
-        return new Promise(resolve => {
-            const check = setInterval(() => {
-                if (airQualityStns.features) {
-                    clearInterval(check);
+        if (!dataView.airQualityStns.features) return;
 
-                    const distances = [],
-                        stns = [];
+        const distances = [], stns = [];
 
-                    airQualityStns.features.forEach(f => {
-                        const dist = conversion.distance(this.lat, this.lon, f.geometry.coordinates[1], f.geometry.coordinates[0]);
-                        distances.push(dist);
-                        stns.push(f.properties);
-                    });
-
-                    const stn = stns[distances.indexOf(Math.min(...distances))];
-
-                    resolve({
-                        ...stn,
-                        color: this.airQColor(stn.PM25_AQI),
-                        details: this.airQDesc(stn.PM25_AQI)
-                    });
-                }
-            }, 200);
+        dataView.airQualityStns.features.forEach(f => {
+            const dist = conversion.distance(this.lat, this.lon, f.geometry.coordinates[1], f.geometry.coordinates[0]);
+            distances.push(dist);
+            stns.push(f.properties);
         });
+
+        const stn = stns[distances.indexOf(Math.min(...distances))];
+
+        return {
+            ...stn,
+            color: this.airQColor(stn.PM25_AQI),
+            details: this.airQDesc(stn.PM25_AQI)
+        };
     }
 }
 
@@ -734,7 +709,7 @@ class ChangeListener {
         const v = this.target.value;
 
         settings.updatePSize(v);
-        document.querySelector('#pSize').innerHTML = v + ' acres';
+        $('#pSize').innerHTML = `${v} acres`;
 
         ['perimeters_outline', 'perimeters_fill', 'perimeters_title'].forEach(lay => map.removeLayer(lay));
         map.removeSource('perimeters');
@@ -763,11 +738,11 @@ class ChangeListener {
     }
 
     async spc() {
-        const type = document.querySelector('#otlkType'),
-            days = document.querySelector('#otlkDay'),
+        const type = $('#otlkType'),
+            days = $('#otlkDay'),
             day3 = days.querySelector('option[value="3"]');
 
-        /* add or remove day 3 depending on if the user is looking at severe or fire wx outlooks */
+        // add or remove day 3 depending on if the user is looking at severe or fire wx outlooks
         if (type.value == 'severe') {
             if (!day3) {
                 const opt = document.createElement('option');
@@ -784,7 +759,7 @@ class ChangeListener {
     }
 
     personalize() {
-        if (document.querySelector('#impact #settings') != null) {
+        if ($('#impact #settings') != null) {
             document.querySelectorAll('#impact #settings select').forEach(s => settings.updatePersonal(s));
 
             saveSession(true);
@@ -792,11 +767,11 @@ class ChangeListener {
     }
 
     archive() {
-        const ay = document.querySelector('#archive_years'),
+        const ay = $('#archive_years'),
             s = ay.options[ay.selectedIndex].value,
             win = window.location;
 
-        if (s != '- Choose a year -') win.href = `${config.host}archive/${s}${(win.search ? win.search : '')}${(win.hash ? win.hash : '')}`;
+        if (s != '- Choose a year -') win.href = `${ENV.host}archive/${s}${(win.search ? win.search : '')}${(win.hash ? win.hash : '')}`;
     }
 
     spcClimo() {
@@ -805,8 +780,13 @@ class ChangeListener {
     }
 }
 
+function mapMouseOver(layer) {
+    map.on('mouseenter', layer, () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseleave', layer, () => map.getCanvas().style.cursor = 'auto');
+}
+
 function isVisible(div) {
-    const element = document.querySelector(div);
+    const element = $(div);
 
     if (element != null) {
         const rect = element.getBoundingClientRect(),
@@ -848,7 +828,7 @@ function timeAgo(t, w, c) {
 
     if (w === 1) val = val.split(',')[0];
 
-    return val + ' ago';
+    return `${val} ago`;
 }
 
 function ucfirst(s) {
@@ -880,7 +860,7 @@ function dateTime(it, time = false, timezone = false, longMonth = false) {
     return `${month} ${t.getDate()}, ${t.getFullYear()}${(time ? `&nbsp;at ${a}` : '')}${(timezone ? ` ${tz}` : '')}`;
 }
 
-/* social media shares */
+// social media shares
 function socialShare(se) {
     const p = window.location.pathname,
         s = p.split('/'),
@@ -889,7 +869,7 @@ function socialShare(se) {
     if (se == 'tt') {
         window.open(`https://tiktok.com/search?q=${s[4].replaceAll('-', '%20').toLowerCase()}`);
     } else {
-        const ref = config.host.substring(0, config.host.length - 1).replace('www.', '') + p;
+        const ref = ENV.host.substring(0, ENV.host.length - 1).replace('www.', '') + p;
 
         if (se == 'fb') {
             url = `https://www.facebook.com/sharer/sharer.php?u=${ref}&src=sdkpreparse`;
@@ -956,7 +936,7 @@ function initNDFDTimes() {
 }
 
 function setHeaders(title, urlPath, description) {
-    const fullUrl = `${config.specificURL}${urlPath.replace(/incident\/|wildfire\//g, 'fires/')}${window.location.search}${window.location.hash}`,
+    const fullUrl = `${ENV.baseURL}${urlPath.replace(/incident\/|wildfire\//g, 'fires/')}${window.location.search}${window.location.hash}`,
         pageTitle = `${title} | ${config.productName}`;
 
     // Use a single line to decide which history method to use
@@ -980,8 +960,8 @@ function setHeaders(title, urlPath, description) {
     ];
 
     metaTags.forEach(tag => {
-        if (tag.property) document.querySelector(`meta[property="${tag.property}"]`).setAttribute('content', tag.content);
-        if (tag.name) document.querySelector(`meta[name="${tag.name}"]`).setAttribute('content', tag.content);
+        if (tag.property) $(`meta[property="${tag.property}"]`).setAttribute('content', tag.content);
+        if (tag.name) $(`meta[name="${tag.name}"]`).setAttribute('content', tag.content);
     });
 }
 
@@ -994,18 +974,18 @@ function unsetHeaders() {
         }, '', h.replace(window.location.pathname, (settings.archive == null ? '' : `/archive/${settings.archive}`)));
 
         document.title = defaultTitle;
-        document.querySelector('meta[property="og:title"]').setAttribute('content', defaultTitle);
-        document.querySelector('meta[name="twitter:title"]').setAttribute('content', defaultTitle);
-        document.querySelector('meta[name="description"]').setAttribute('content', defaultDesc);
-        document.querySelector('meta[property="og:description"]').setAttribute('content', defaultDesc);
-        document.querySelector('meta[name="twitter:description"]').setAttribute('content', defaultDesc);
+
+        ['meta[property="og:title"]', 'meta[name="twitter:title"]']
+            .forEach(n => $(n).setAttribute('content', defaultTitle));
+        ['meta[name="description"]', 'meta[property="og:description"]', 'meta[name="twitter:description"]']
+            .forEach(n => $(n).setAttribute('content', defaultDesc));
     }
 }
 
 async function saveSession(method = true) {
     if (!navigator.onLine) return (await loadUtils()).notify('error', 'Unable to sync due to no internet.');
 
-    const sy = document.querySelector('li#save span'),
+    const sy = $('li#save span'),
         syncStatus = impact.querySelector('#sync span'),
         set = {
             ...settings.settings,
@@ -1020,10 +1000,7 @@ async function saveSession(method = true) {
     if (sy) sy.innerHTML = 'Syncing...';
     if (syncStatus) syncStatus.innerHTML = 'Syncing...';
 
-    /*const send = [['method', method], ['settings', JSON.stringify(set)]];
-    if (settings.user) send.push(['token', settings.getUser().token()]);*/
-
-    const data = await api(config.host + 'api/v1/session', [['method', method], ['settings', JSON.stringify(set)]], false, true);
+    const data = await api(`${ENV.host}api/v1/session`, [['method', method], ['settings', JSON.stringify(set)]], false, true);
 
     if (data?.success === 1) {
         if (settings.user) settings.user.settings.synced = Date.now();
@@ -1042,16 +1019,16 @@ function newFiresReport() {
     let content = document.createElement('ul');
     content.classList.add('new_fires');
 
-    newFires.forEach(fire => {
+    dataView.newFires.forEach(fire => {
         const li = document.createElement('li'),
             name = fire.properties.name.replace(' Fire', '') + (fire.properties.type == 'Wildfire' ? ' Fire' : ''),
             near = fire.properties.near,
             acres = fire.properties.acres,
             size = conversion.sizeFormat(acres);
 
-        li.setAttribute('data-action', 'new-fires');
-        li.setAttribute('data-lat', fire.geometry.coordinates[1]);
-        li.setAttribute('data-lon', fire.geometry.coordinates[0]);
+        li.dataset.action = 'new-fires';
+        li.dataset.lat = fire.geometry.coordinates[1];
+        li.dataset.lon = fire.geometry.coordinates[0];
         li.innerHTML = `<div class="pert"><h3>${name}</h3><span class="near">${near}</div></div><span class="disc">${size}</span>`;
         content.appendChild(li);
     });
@@ -1060,7 +1037,7 @@ function newFiresReport() {
 }
 
 function createDataForm(title, content, center = false) {
-    const df = document.querySelector('#data-form');
+    const df = $('#data-form');
 
     df?.classList.remove('bg');
     df?.remove();
@@ -1074,9 +1051,9 @@ function createDataForm(title, content, center = false) {
     document.body.append(el);
 }
 
-/* allow user to submit report to MAPO of a new wildfire incident */
+// allow user to submit report to MAPO of a new wildfire incident
 async function createCSReport(data, lat, lon) {
-    const form = document.querySelector('#newReport'),
+    const form = $('#newReport'),
         theState = (await loadUtils()).stateLabels[data.geocode.state];
 
     if (settings.user != null) {
@@ -1164,7 +1141,7 @@ async function onRasterLayerClick(e) {
         const popup = new Popup(title, true).create('<div id="spinner" class="sm" style="display:block;margin:0 auto"></div>');
 
         const [respRes, pcRes] = await Promise.allSettled([
-            api(`${config.apiURL}risk`, [['lat', coords.lat], ['lon', coords.lng]]),
+            api(`${ENV.apiURL}risk`, [['lat', coords.lat], ['lon', coords.lng]]),
             new Convert().getRasterColor(e.lngLat, id)
         ]);
 
@@ -1178,7 +1155,7 @@ async function onRasterLayerClick(e) {
             // Short function to generate the comparison text
             const getComp = (val, region) => {
                 const pct = Math.round(val * 100);
-                return `On average, ${data.name} has a ${pct < 5 ? 'lower' : 'greater'} risk than ${pct < 5 ? 'nearly all' : pct + '% of'} other counties in ${region}`;
+                return `On average, ${data.name} has a ${pct < 5 ? 'lower' : 'greater'} risk than ${pct < 5 ? 'nearly all' : `${pct}% of`} other counties in ${region}`;
             };
 
             const content = `<div class="item"><div class="t">Location</div><div class="v">${data.name}, ${data.state}</div></div>
@@ -1235,11 +1212,9 @@ async function onMapClick(e) {
             sources = [],
             fire_layers = ['all_fires', 'new_fires', 'smk_fires', 'rx_fires'];
 
-        features.forEach((feature) => {
-            sources.push(feature.source);
-        });
+        features.forEach(feature => sources.push(feature.source));
 
-        /* highlight specific features on the map when clicked on */
+        // highlight specific features on the map when clicked on
         Object.entries({
             ca_perimeters: 'caperim',
             aus_perimeters: 'ausperim',
@@ -1257,7 +1232,7 @@ async function onMapClick(e) {
             }
         });
 
-        /* loop through all features to see if county data is available */
+        // loop through all features to see if county data is available
         for (let i = 0; i < features.length; i++) {
             if (features[i].layer.id == 'us_counties') {
                 clickedCounty = features[i].properties.NAME;
@@ -1265,11 +1240,11 @@ async function onMapClick(e) {
             }
         }
 
-        /* loop through all features */
+        // loop through all features
         for (let i = 0; i < features.length; i++) {
             const feature = features[i];
 
-            /* display wildfire incident */
+            // display wildfire incident
             if (fire_layers.includes(feature.source)) {
                 if (feature.properties.cluster) {
                     map.zoomIn();
@@ -1330,7 +1305,7 @@ async function onMapClick(e) {
                 );
             }
 
-            /* on canada perimeter click */
+            // on canada perimeter click
             if (feature.source == 'ca_perimeters') {
                 selected.caperim = feature.id;
 
@@ -1350,7 +1325,7 @@ async function onMapClick(e) {
                 break;
             }
 
-            /* on austrailia perimeter click */
+            // on austrailia perimeter click
             if (feature.source == 'aus_perimeters') {
                 const p = feature.properties,
                     name = p.fire_name,
@@ -1385,7 +1360,7 @@ async function onMapClick(e) {
             }
 
             if (feature.source == 'perimeters') {
-                const name = ucwords(feature.properties.attr_IncidentName.replace(' Fire', '').toLowerCase()) + ' Fire',
+                const name = `${ucwords(feature.properties.attr_IncidentName.replace(' Fire', '').toLowerCase())} Fire`,
                     ago = timeAgo(feature.properties.poly_DateCurrent),
                     acres = feature.properties.poly_Acres_AutoCalc > feature.properties.poly_GISAcres ? feature.properties.poly_Acres_AutoCalc : feature.properties.poly_GISAcres,
                     size = conversion.sizeFormat(acres);
@@ -1431,7 +1406,7 @@ async function onMapClick(e) {
                 break;
             }
 
-            /* on air quality click */
+            // on air quality click
             if (feature.source == 'airq') {
                 const w = new Weather(),
                     aqi = feature.properties.PM25_AQI,
@@ -1448,13 +1423,13 @@ async function onMapClick(e) {
                 break;
             }
 
-            /* on wwas click */
+            // on wwas click
             if (feature.source == 'wwas') {
                 new (await loadUtils()).NWS().find(e.lngLat.lat, e.lngLat.lng);
                 break;
             }
 
-            /* on SPC outlook click */
+            // on SPC outlook click
             if (feature.source == 'outlook') {
                 const color = (feature.properties.fill == '#66A366' || feature.properties.fill == '#ff3333' ? '#fff' : '#242424'),
                     content = `<div class="item">
@@ -1472,7 +1447,7 @@ async function onMapClick(e) {
                 break;
             }
 
-            /* modis heat spot click */
+            // modis heat spot click
             /*if (modis_layers.includes(feature.source)) {
                 const p = feature.properties,
                     when = timeAgo(p.acq_time),
@@ -1488,7 +1463,7 @@ async function onMapClick(e) {
                 break;
             }*/
 
-            /* ERC PSA click */
+            // ERC PSA click
             if (feature.source == 'erc') {
                 let p = feature.properties,
                     psa = p.PSANAME,
@@ -1537,7 +1512,7 @@ async function onMapClick(e) {
                 break;
             }
 
-            /* PNW EVACUATION VULNERABILITY */
+            // PNW EVACUATION VULNERABILITY
             if (feature.source == 'ev') {
                 const p = feature.properties,
                     rank = (v) => {
@@ -1554,7 +1529,7 @@ async function onMapClick(e) {
                 new Popup('Evacuation Vulnerability').create(content);
             }
 
-            /* FEMA NRI click */
+            // FEMA NRI click
             if (feature.source == 'nri') {
                 const p = feature.properties,
                     name = `${p.COUNTY} County, ${p.STATEABBRV}`,
@@ -1589,7 +1564,7 @@ async function onMapClick(e) {
                 break;
             }
 
-            /* on ODF fire danger areas click */
+            // on ODF fire danger areas click
             if (feature.source == 'odfFDR') {
                 let danger = '',
                     ifpl = feature.properties.ifplrestrictionlevel ? feature.properties.ifplrestrictionlevel : 'N/A';
@@ -1612,7 +1587,7 @@ async function onMapClick(e) {
                 break;
             }
 
-            /* on CAL FIRE FHSZ click */
+            // on CAL FIRE FHSZ click
             if (feature.source == 'cdfFHSZ') {
                 const level = feature.properties.FHSZ,
                     desc = level == 1 ? 'Moderate' : (level == 2 ? 'High' : 'Very High');
@@ -1625,7 +1600,7 @@ async function onMapClick(e) {
                 break;
             }
 
-            /* on drought click */
+            // on drought click
             if (feature.source == 'drought') {
                 let level;
                 switch (feature.properties.dm) {
@@ -1652,13 +1627,13 @@ async function onMapClick(e) {
                 `);
             }
 
-            /* on weather stations click */
+            // on weather stations click
             if (feature.source == 'stns') {
                 new Weather().currentConds(feature.properties);
                 break;
             }
 
-            /* on oregon evacuations click */
+            // on oregon evacuations click
             if (feature.source == 'evac') {
                 map.fitBounds(geojsonExtent(feature.geometry), {
                     padding: 60
@@ -1694,17 +1669,17 @@ async function onMapClick(e) {
 }
 
 window.addEventListener('submit', async (e) => {
-    /* submit user NEW INCIDENT form */
+    // submit user NEW INCIDENT form
     if (e.target.id == 'newReport') {
         e.preventDefault();
 
-        const form = document.querySelector('form#newReport');
+        const form = $('form#newReport');
         let error = false,
             errorMsg = '';
 
-        document.querySelector('#nrerrors')?.remove();
+        $('#nrerrors')?.remove();
 
-        /* error checking */
+        // error checking
         if (form.querySelector('select[name=type]').options[form.querySelector('select[name=type]').selectedIndex].value == '- Choose -') {
             error = true;
             errorMsg += '<li>Please choose an incident type</li>';
@@ -1734,7 +1709,7 @@ window.addEventListener('submit', async (e) => {
 
                 let type, state;
 
-                document.querySelector('li#report').setAttribute('data-active', '0');
+                $('li#report').dataset.active = '0';
                 sub.disabled = true;
                 sub.value = 'Submitting...';
                 canc.style.display = 'none';
@@ -1745,7 +1720,7 @@ window.addEventListener('submit', async (e) => {
                     if (key == 'state') state = value;
                 }
 
-                const send = await api(config.apiURL + 'newReport', fd);
+                const send = await api(`${ENV.apiURL}newReport`, fd);
 
                 if (send.success == 1) {
                     gtag('event', 'submit_report', {
@@ -1755,7 +1730,7 @@ window.addEventListener('submit', async (e) => {
                     });
 
                     setTimeout(async () => {
-                        document.querySelector('#data-form').remove();
+                        $('#data-form').remove();
                         (await loadUtils()).notify('success', 'Your report was sent to us for review before it may be added to the map.');
                     }, 500);
                 } else {
@@ -1773,7 +1748,7 @@ window.addEventListener('submit', async (e) => {
 window.addEventListener('input', (e) => {
     // perimeter min size change text
     if (e.target.parentElement.id == 'perimeterSize' && e.target.classList.contains('slider')) {
-        document.querySelector('#pSize').innerHTML = e.target.value + ' acres';
+        $('#pSize').innerHTML = `${e.target.value} acres`;
     }
 });
 

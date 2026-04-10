@@ -69,12 +69,12 @@ const stateLabels = {
 let calc,
     map,
     kw,
-    token = '',
+    //token = '',
     wildfires = [],
     keywordResults,
     centerMarker;
 
-async function api(uri, fields = null, v2 = false, forAuth = false, signal = null) {
+async function api(uri, fields = null, v2 = false, forAuth = false) {
     if (!navigator.onLine) {
         console.error('You are not connected to the internet');
         return null;
@@ -632,28 +632,30 @@ function downloadFile(name, url) {
 }
 
 async function getFavoriteFires() {
-    return await api(`${mapofireAPI}trackFires/list`, [['meta', 1]], false, true);
+    return await api(host + usersAPI + 'favFires', null, false, true);
 }
 
 function displayFavFires(resp) {
     const ff = document.querySelector('#favfires');
-    const validFires = resp.fires.filter(f => findFire(f.wfid) != null);
 
-    if (validFires.length) {
-        const rows = validFires.map(f => {
-            const name = f.name,
-                type = f.type,
-                geo = f.geo,
-                url = f.url;
+    if (resp.response.fires) {
+        const validFires = resp.response.fires.filter(f => findFire(f.wfid) != null);
 
-            return `<tr>
+        if (validFires.length) {
+            const rows = validFires.map(f => {
+                const name = f.name,
+                    type = f.type,
+                    geo = f.geo,
+                    url = f.url;
+
+                return `<tr>
                 <td><a target="blank" href="https://mapofire.com/${url}">${name}${(type != 'Smoke Check' ? ' Fire' : '')}</a></td>
                 <td>${geo}</td>
                 <td class="ctrl"><div id="unfollow" data-wfid="${f.wfid}" title="Unfollow this incident" class="far fa-ellipsis-vertical control unfollow"></div></td>
             </tr>`;
-        });
+            });
 
-        const content = `<div class="table-responsive">
+            const content = `<div class="table-responsive">
             <table class="table small">
                 <thead>
                     <tr><th>Name</th><th>Location</th><th class="ctrl"></th></tr>
@@ -664,7 +666,10 @@ function displayFavFires(resp) {
             </table>
         </div>`;
 
-        ff.innerHTML = content;
+            ff.innerHTML = content;
+        } else {
+            ff.innerHTML = '<div class="message info">You are not currently following any active wildfires.</div>';
+        }
     } else {
         ff.innerHTML = '<div class="message info">You are not currently following any active wildfires.</div>';
     }
@@ -674,7 +679,7 @@ async function getFavoriteTrails() {
     let content = [];
     const resp = await api(host + usersAPI + 'favtrails', null, false, true);
 
-    if (resp.response.length) {
+    if (resp.response != null && resp.response.length) {
         resp.response.forEach((f) => {
             const id = f.id,
                 title = f.title,
@@ -700,7 +705,7 @@ async function getUploads() {
     let content = [];
     const resp = await api(`${host}${usersAPI}userUploads`, null, false, true);
 
-    if (resp.response.length) {
+    if (resp.response != null && resp.response.length) {
         content.push('<div class="table-responsive"><table class="table small"><thead><tr><th>Name</th><th>Type</th><th>Size</th><th>Created</th></tr></thead><tbody>');
 
         resp.response.forEach(f => {
@@ -1080,33 +1085,36 @@ function billing() {
 }
 
 async function getInvoices() {
-    const invoiceDiv = document.querySelector('#invoices'),
-        inv = await api(`${host}${usersAPI}invoices`);
+    const invoiceDiv = document.querySelector('#invoices');
 
-    if (inv.response == null || inv.response.data.length == 0) {
-        invoiceDiv.innerHTML = '<p>There are no invoices or receipts for your account.</p>';
-    } else {
-        let table = [`<div class="table-responsive">
+    if (invoiceDiv) {
+        const inv = await api(`${host}${usersAPI}invoices`);
+
+        if (inv.response == null || inv.response.data.length == 0) {
+            invoiceDiv.innerHTML = '<p>There are no invoices or receipts for your account.</p>';
+        } else {
+            let table = [`<div class="table-responsive">
             <table class="table small"><thead><tr><th>Invoice #</th><th>Date</th><th>Amount</th><th>Status</th><th>Receipt</th></tr></thead><tbody>`];
 
-        inv.response.data.forEach((invoice) => {
-            let amt = invoice.amount_remaining,
-                links = [];
+            inv.response.data.forEach((invoice) => {
+                let amt = invoice.amount_remaining,
+                    links = [];
 
-            if (invoice.status == 'paid') amt = invoice.amount_paid;
-            if (invoice.hosted_invoice_url) links.push(`<a target="blank" href="${invoice.hosted_invoice_url}">View</a>`);
-            if (invoice.invoice_pdf) links.push(` &nbsp;&middot;&nbsp; <a href="${invoice.invoice_pdf}">Download</a>`);
+                if (invoice.status == 'paid') amt = invoice.amount_paid;
+                if (invoice.hosted_invoice_url) links.push(`<a target="blank" href="${invoice.hosted_invoice_url}">View</a>`);
+                if (invoice.invoice_pdf) links.push(` &nbsp;&middot;&nbsp; <a href="${invoice.invoice_pdf}">Download</a>`);
 
-            table.push(`<tr>
+                table.push(`<tr>
                 <td>${invoice.number ? invoice.number : (invoice.status == 'Draft' ? invoice.status : 'N/A')}</td>
                 <td>${new Date(invoice.created * 1000).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
                 <td>$${(amt / 100).toFixed(2)}</td>
                 <td><span class="inv-paid${invoice.status != 'paid' ? ' no' : ''}">${invoice.status}</span></td>
                 <td>${links.join('')}</td>
             </tr>`);
-        });
+            });
 
-        invoiceDiv.innerHTML = `${table.join('')}</tbody></table></div>`;
+            invoiceDiv.innerHTML = `${table.join('')}</tbody></table></div>`;
+        }
     }
 }
 
@@ -1117,14 +1125,16 @@ async function doSearch(q) {
     if (q.length > 0) {
         const resp = await api(`${apiURL}search`, [['citiesonly', 1], ['q', q]], true);
 
-        resp.results.forEach(s => {
-            const data = s.data,
-                name = `${data.city}, ${data.state} ${data.zip}`;
+        if (resp.results != null) {
+            resp.results.forEach(s => {
+                const data = s.data,
+                    name = `${data.city}, ${data.state} ${data.zip}`;
 
-            results.push(`<div class="result" data-name="${name}" data-lat="${s.lat}" data-lon="${s.lon}">${name}</div>`);
-        });
+                results.push(`<div class="result" data-name="${name}" data-lat="${s.lat}" data-lon="${s.lon}">${name}</div>`);
+            });
 
-        if (results.length) sr.innerHTML = results.join('');
+            if (results.length) sr.innerHTML = results.join('');
+        }
     }
 }
 
@@ -1624,7 +1634,7 @@ document.querySelector('#waypoints').appendChild(markerDataContainer);
 document.onreadystatechange = async () => {
     if (document.readyState != 'complete') {
         calc = new Calculate();
-        token = getUserToken();
+        //token = getUserToken();
     } else {
         complete();
     }

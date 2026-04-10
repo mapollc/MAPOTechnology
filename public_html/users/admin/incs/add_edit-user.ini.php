@@ -9,11 +9,12 @@ $stripe = new \Stripe\StripeClient($stripeSecretKey);
 // get users details
 $row = executeQuery('i', [$_GET['uid']], "SELECT u.uid AS userID, first_name, last_name, u.email, phone, location, u.created, last_active, ip_address, role, permissions FROM users AS u LEFT JOIN permissions AS p ON p.uid = u.uid WHERE u.uid = ? LIMIT 1");
 $conf = mysqli_fetch_assoc(mysqli_query($con, "SELECT confirmed FROM confirmation WHERE email = '$row[email]' ORDER BY cid DESC LIMIT 1"));
+$customerID = mysqli_fetch_assoc(mysqli_query($con, "SELECT cid FROM billing WHERE email = '$row[email]' ORDER BY status ASC, created DESC LIMIT 1"))['cid'];
+$group = mysqli_fetch_assoc(mysqli_query($con, "SELECT g.group_id, name AS org_name FROM group_users AS gu INNER JOIN groups AS g ON g.group_id = gu.group_id WHERE email = '$row[email]' LIMIT 1"));
+
 $location = json_decode($row['location']);
 $loc = $location ? "$location->city, " . convertState($location->state, 2) . " $location->zip" : '';
 $perms = unserialize($row['permissions']);
-
-$customerID = mysqli_fetch_assoc(mysqli_query($con, "SELECT cid FROM billing WHERE email = '$row[email]' ORDER BY status ASC, created DESC LIMIT 1"))['cid'];
 
 if ($function == 'edit' && !$row) {
     echo errorCode('User account not found', 'The user account you\'re looking for does not exist.');
@@ -84,6 +85,7 @@ if ($function == 'edit' && !$row) {
                     <option <?= $row['role'] == 1 ? 'selected ' : '' ?>value="1">Guest</option>
                     <option <?= $row['role'] == 2 ? 'selected ' : '' ?>value="2">Premium</option>
                     <option <?= $row['role'] == 4 ? 'selected ' : '' ?>value="4">Trail Moderator</option>
+                    <option <?= $row['role'] == 5 ? 'selected ' : '' ?>value="5">Licensee</option>
                     <option <?= $row['role'] == 3 ? 'selected ' : '' ?>value="3">Admin</option>
                 </select>
 
@@ -115,6 +117,11 @@ if ($function == 'edit' && !$row) {
 
     <?
     if ($function != 'create') {
+        if (!empty($group)) {
+            echo '<h2 class="underline" style="margin-top:1em">Organizations</h2>';
+            echo "<p>User belongs to an organization: <a href=\"../organizations/edit?group_id=$group[group_id]\"><b>$group[org_name]</b></a></p>";
+        }
+
         echo '<h2 class="underline" style="margin-top:1em">Subscriptions</h2>';
 
         if ($customerID) {

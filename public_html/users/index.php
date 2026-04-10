@@ -1,5 +1,5 @@
 <?
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
 error_reporting(E_ERROR | E_PARSE);
 
 ini_set('session.cookie_domain', '.mapotechnology.com');
@@ -40,8 +40,8 @@ switch ($path) {
     case 'admin/dispatch':
         $pageTitle = 'Manage Dispatch Centers';
         break;
-    case 'myorg':
-    case 'myorg/invite':
+    case 'my-organization':
+    case 'my-organization/invite':
         $pageTitle = 'My Organization';
         break;
     case 'admin/log':
@@ -149,7 +149,7 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
                 <li><a href="<?= $linkURL ?>home"><span>Home</span></a></li>
                 <li><a href="<?= $linkURL ?>settings"><span>Account</span></a></li>
                 <? if ($_SESSION['org_admin']) { ?>
-                    <li><a href="myorg">My Organization</a></li>
+                    <li><a href="my-organization">My Organization</a></li>
                 <? } ?>
                 <li><a href="<?= $linkURL ?>billing"><span>Billing</span></a></li>
                 <? if ($permission->user()->add() || $permission->user()->edit()) { ?>
@@ -219,7 +219,7 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
 
     <div id="shadow"></div>
 
-    <script>const uid = <?= $_SESSION['uid'] ?>;let userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;</script>
+    <script>const uid = <?= $_SESSION['uid'] ?>, token = '<?= $_COOKIE['token'] ?>';let userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;</script>
     <? if ($method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
         <script src="https://cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet-src.min.js"></script>
     <? } 

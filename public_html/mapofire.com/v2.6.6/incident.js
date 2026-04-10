@@ -21,12 +21,7 @@ const numberFormat = (n, d = 2) => {
         </div>`;
     },
     disclaimer = () => {
-        return `<p class="disclaimer">
-            This information is collected from various state and federal interagency dispatch centers and other official
-            government sources. While we make every effort to provide accurate and up-to-date data, it may not reflect
-            the latest conditions. Always verify with your local authorities for current information on evacuations, fire
-            activity, or other critical safety alerts.
-        </p>`;
+        return `<p class="disclaimer">This information is collected from various state and federal interagency dispatch centers and other official government sources. While we make every effort to provide accurate and up-to-date data, it may not reflect the latest conditions. Always verify with your local authorities for current information on evacuations, fire activity, or other critical safety alerts.</p>`;
     },
     dispatchCtr = () => {
         if (center == null) return '';
@@ -262,7 +257,7 @@ self.onmessage = (e) => {
                     <dd>${cause == null ? 'Unknown' : cause}</dd>
                 </div>
                 ${fr.image != null && !inciweb ? `<div class="card">
-                    <a target="_blank" href="../../../src/images/incident?mapo=1&path=${fr.image}">
+                    <a class="figure" target="_blank" href="../../../src/images/incident?mapo=1&path=${fr.image}">
                         <img loading="lazy" class="mapoIncPhoto" src="../../../src/images/incident?mapo=1&path=${fr.image}&small=1">
                     </a>
                 </div>` : ''}

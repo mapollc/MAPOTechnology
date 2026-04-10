@@ -237,23 +237,6 @@ function pageNotFound()
     return errorCode('Page Not Found', 'The link your clicked or URL you entered was not found. Try a different page.');
 }
 
-function message($type, $m, $info = false, $center = false)
-{
-    return '<div style="margin-bottom:1em" class="message ' . ($info ? 'info' : ($type ? 'success' : 'error')) . ($center ? ' center' : '') . '">' . $m . '</div>';
-}
-
-function validSubscription($user, $planID = null) {
-    if ($planID != null && $user['subscriptions'] != null) {
-        for ($i = 0; $i < count($user['subscriptions']); $i++) {
-            if ($user['subscriptions'][$i]['plan'] == $planID && $user['subscriptions'][$i]['active'] == 1 && $user['subscriptions'][$i]['ends'] > time()) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
 function hasPermissions($planID = null) {
     global $user;
 

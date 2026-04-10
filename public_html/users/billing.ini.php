@@ -74,6 +74,11 @@ if (isset($_GET['checkout_id'])) {
 <div class="row">
     <div class="col w100">
         <div class="card">
+            <? if (isset($_SESSION['groups'])) {
+                $orgName = $_SESSION['groups']['org_name'];
+                echo message(null, "Your account is part of an commerical group account with <b>$orgName</b>.", true, true);
+            } ?>
+
             <h1 style="text-align:center">Subscriptions & Billing</h1>
 
             <?

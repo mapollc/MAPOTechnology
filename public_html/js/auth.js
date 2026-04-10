@@ -6,58 +6,58 @@ const apiURL = 'https://api.mapotechnology.com/v1/',
     cityResults = document.querySelector('#cityResults');
 
 const stateLabels = {
-        'AL': 'Alabama',
-        'AK': 'Alaska',
-        'AZ': 'Arizona',
-        'AR': 'Arkansas',
-        'CA': 'California',
-        'CO': 'Colorado',
-        'CT': 'Connecticut',
-        'DE': 'Delaware',
-        'DC': 'District of Columbia',
-        'FL': 'Florida',
-        'GA': 'Georgia',
-        'HI': 'Hawaii',
-        'ID': 'Idaho',
-        'IL': 'Illinois',
-        'IN': 'Indiana',
-        'IA': 'Iowa',
-        'KS': 'Kansas',
-        'KY': 'Kentucky',
-        'LA': 'Louisiana',
-        'ME': 'Maine',
-        'MD': 'Maryland',
-        'MA': 'Massachusetts',
-        'MI': 'Michigan',
-        'MN': 'Minnesota',
-        'MS': 'Mississippi',
-        'MO': 'Missouri',
-        'MT': 'Montana',
-        'NE': 'Nebraska',
-        'NV': 'Nevada',
-        'NH': 'New Hampshire',
-        'NJ': 'New Jersey',
-        'NM': 'New Mexico',
-        'NY': 'New York',
-        'NC': 'North Carolina',
-        'ND': 'North Dakota',
-        'OH': 'Ohio',
-        'OK': 'Oklahoma',
-        'OR': 'Oregon',
-        'PA': 'Pennsylvania',
-        'RI': 'Rhode Island',
-        'SC': 'South Carolina',
-        'SD': 'South Dakota',
-        'TN': 'Tennessee',
-        'TX': 'Texas',
-        'UT': 'Utah',
-        'VT': 'Vermont',
-        'VA': 'Virginia',
-        'WA': 'Washington',
-        'WV': 'West Virginia',
-        'WI': 'Wisconsin',
-        'WY': 'Wyoming'
-    },
+    'AL': 'Alabama',
+    'AK': 'Alaska',
+    'AZ': 'Arizona',
+    'AR': 'Arkansas',
+    'CA': 'California',
+    'CO': 'Colorado',
+    'CT': 'Connecticut',
+    'DE': 'Delaware',
+    'DC': 'District of Columbia',
+    'FL': 'Florida',
+    'GA': 'Georgia',
+    'HI': 'Hawaii',
+    'ID': 'Idaho',
+    'IL': 'Illinois',
+    'IN': 'Indiana',
+    'IA': 'Iowa',
+    'KS': 'Kansas',
+    'KY': 'Kentucky',
+    'LA': 'Louisiana',
+    'ME': 'Maine',
+    'MD': 'Maryland',
+    'MA': 'Massachusetts',
+    'MI': 'Michigan',
+    'MN': 'Minnesota',
+    'MS': 'Mississippi',
+    'MO': 'Missouri',
+    'MT': 'Montana',
+    'NE': 'Nebraska',
+    'NV': 'Nevada',
+    'NH': 'New Hampshire',
+    'NJ': 'New Jersey',
+    'NM': 'New Mexico',
+    'NY': 'New York',
+    'NC': 'North Carolina',
+    'ND': 'North Dakota',
+    'OH': 'Ohio',
+    'OK': 'Oklahoma',
+    'OR': 'Oregon',
+    'PA': 'Pennsylvania',
+    'RI': 'Rhode Island',
+    'SC': 'South Carolina',
+    'SD': 'South Dakota',
+    'TN': 'Tennessee',
+    'TX': 'Texas',
+    'UT': 'Utah',
+    'VT': 'Vermont',
+    'VA': 'Virginia',
+    'WA': 'Washington',
+    'WV': 'West Virginia',
+    'WI': 'Wisconsin',
+    'WY': 'Wyoming'
+},
     ucwords = (s) => {
         const smallWords = new Set(['a', 'an', 'the', 'is', 'of', 'and', 'or', 'for', 'to', 'in', 'on', 'at', 'by', 'with']);
         return s.split(' ').map((word, i) => i === 0 || !smallWords.has(word.toLowerCase()) ? word.charAt(0).toUpperCase() + word.slice(1) : word.toLowerCase()).join(' ');
@@ -79,11 +79,14 @@ const stateLabels = {
     };
 
 class SSO {
-    async request(data, method = null) {
+    async request(data, method = null, v2 = false) {
         data.append('key', apiKey);
 
         try {
-            return await fetch(apiURL + 'user' + (method ? '/' + method : ''), {
+            let url = apiURL;
+            if (v2) url = url.replace('/v1', '/v2');
+
+            return await fetch(url + 'user' + (method ? '/' + method : ''), {
                 credentials: 'include',
                 method: 'POST',
                 body: data
@@ -121,7 +124,7 @@ class SSO {
                 return;
             }
 
-            if (api.auth) window.location.href = api.next;
+            if (api.auth) window.location.href = `${api.service == 'mapotechnology' ? 'https://mapotechnology.com' : ''}${api.next}`;
         });
     }
 
@@ -211,7 +214,7 @@ class SSO {
     invitation() {
         const fd = new FormData();
 
-        ['ip', 'invite_code', 'org_key', 'email', 'first_name', 'last_name', 'pass', 'confirm_pass']
+        ['ip', 'invite_code', 'org_key', 'uid', 'email', 'first_name', 'last_name', 'pass', 'confirm_pass']
             .forEach(n => {
                 const el = document.querySelector(`input[name=${n}]`);
                 if (el) fd.append(n, el.value)
@@ -226,6 +229,10 @@ class SSO {
 
                 createError(api.msg);
                 return;
+            }
+
+            if (api.response == 'success') {
+                window.location.href = `./login?group_account=1&email=${api.email}${api.existingUser ? '&existingUser=1' : ''}`;
             }
         });
     }
@@ -431,8 +438,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const showPWD = document.querySelector('#showpwd'),
-        pass = document.querySelector('input[name=pass]');
+    const showPWD = document.querySelector('#showpwd');
+    const pass = document.querySelector('input[name=pass]');
 
     if (showPWD) {
         showPWD.addEventListener('click', (e) => {
@@ -446,31 +453,39 @@ document.addEventListener('DOMContentLoaded', () => {
     if (register || invitation || (forgot && document.querySelector('input[name=verify]'))) {
         const confirmPass = document.querySelector('input[name=confirm_pass]');
 
-        pass.addEventListener('focus', () => document.querySelector('.req').style.display = 'block');
-        pass.addEventListener('blur', () => document.querySelector('.req').style.display = 'none');
-        pass.addEventListener('keyup', (e) => {
-            const pa = e.target.value,
-                conds = [
-                    ['#p1', pa.length >= 8],
-                    ['#p4', /[A-Z]/.test(pa)],
-                    ['#p3', /[a-z]/.test(pa)],
-                    ['#p2', /\d/.test(pa)],
-                    ['#p5', /[#$%^&@&*()+=\-\[\]\';,.\/{}|":<>?~\\]/.test(pa)]
-                ];
+        if (pass) {
+            const req = document.querySelector('.req');
 
-            conds.forEach(([id, met]) => {
-                const el = document.querySelector(id);
-                if (el) el.classList.toggle('met', met);
+            pass.addEventListener('focus', () => req.style.display = 'block');
+            pass.addEventListener('blur', () => req.style.display = 'none');
+            pass.addEventListener('keyup', (e) => {
+                const pa = e.target.value,
+                    conds = [
+                        ['#p1', pa.length >= 8],
+                        ['#p4', /[A-Z]/.test(pa)],
+                        ['#p3', /[a-z]/.test(pa)],
+                        ['#p2', /\d/.test(pa)],
+                        ['#p5', /[#$%^&@&*()+=\-\[\]\';,.\/{}|":<>?~\\]/.test(pa)]
+                    ];
+
+                conds.forEach(([id, met]) => {
+                    const el = document.querySelector(id);
+                    if (el) el.classList.toggle('met', met);
+                });
             });
-        });
+        }
 
-        confirmPass.addEventListener('focus', () => document.querySelector('#meets').style.dislay = 'block');
-        confirmPass.addEventListener('blur', () => document.querySelector('#meets').style.display = 'none');
-        confirmPass.addEventListener('keyup', (e) => {
-            const match = e.target.value === pass.value;
-            meets.style.color = match ? 'var(--green)' : 'var(--red)';
-            meets.innerHTML = match ? 'Your passwords match' : 'Your passwords don\'t match';
-        });
+        if (confirmPass) {
+            const meets = document.querySelector('#meets');
+
+            confirmPass.addEventListener('focus', () => meets.style.display = 'block');
+            confirmPass.addEventListener('blur', () => meets.style.display = 'none');
+            confirmPass.addEventListener('keyup', (e) => {
+                const match = e.target.value === pass.value;
+                meets.style.color = match ? 'var(--green)' : 'var(--red)';
+                meets.innerHTML = match ? 'Your passwords match' : 'Your passwords don\'t match';
+            });
+        }
     }
 });
 

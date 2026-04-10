@@ -1,6 +1,6 @@
 <?
-////ini_set('display_errors', 1);
-////error_reporting(E_ERROR | E_PARSE);
+////ini_set('display_errors', 0);
+////error_reporting(E_ALL);
 ini_set('session.cookie_domain', '.mapotechnology.com');
 
 $allowed_origins = [
@@ -47,18 +47,6 @@ function deleteMapboxFeature($id)
     return $result;
 }
 
-function guideUrl($s, $ty, $id)
-{
-    $words = ['and', 'at'];
-    $s = str_replace(' ', '-', str_replace('  ', ' ', preg_replace('/([^A-Za-z0-9\s]+)/', '', strtolower($s))));
-
-    foreach ($words as $r) {
-        $s = str_replace("$r-", '', $s);
-    }
-
-    return rtrim(rtrim("guide/$ty/$id/$s", '-'), ' ');
-}
-
 function getMapbox($datasetID)
 {
     global $mapboxToken;
@@ -77,169 +65,8 @@ function getMapbox($datasetID)
     return json_decode($result);
 }
 
-function defaultIncName($inc)
-{
-    preg_match('/-([0-9]+)/', $inc, $last);
-    return 'Incident ' . ltrim($last[1] ?? '0', '0'); // added: safety check
-}
-
-function incidentName($name, $inc, $type = null)
-{
-    // --- Smoke Check special case ---
-    if ($type === 'Smoke Check') {
-        $ps = explode('-', $inc);
-        return "Smoke Check #$ps[1]-" . ltrim($ps[2], '0');
-    }
-
-    $a = explode('-', $inc);
-
-    // --- Normalize base name ---
-    $name = trim($name);
-
-    // removed redundant substr strlen usage
-    if (str_starts_with($name, 'Loc-')) {
-        $name = substr($name, 4);
-    }
-
-    $name = str_replace(['/ ', '  ', ' Fire'], ['/', ' ', ''], ucwords(strtolower($name)));
-    $name = ltrim($name, '.');
-    $name = preg_replace('/^([\/])*/', '', $name);
-    $name = preg_replace('/#[0-9+]/', ' $0', $name);
-
-    // normalize "Inc"
-    if (str_starts_with($name, 'Inc ') || str_starts_with($name, 'INC ')) {
-        $name = preg_replace('/^Inc /i', 'Incident ', $name);
-    }
-
-    // --- Remove agency prefixes/suffixes ---
-    $things = ['Rn', 'Pr', 'Nw', 'Rs', 'Rv', 'Pv', 'Od', 'Ne', 'Cs', 'Fa', 'Cr', 'Cf', 'Gp', 'Sc'];
-
-    foreach ($things as $t) {
-        if (str_ends_with($name, " $t")) {
-            $name = substr($name, 0, -3);
-        }
-        if (str_starts_with($name, "$t - ")) {
-            $name = substr($name, 5);
-        } elseif (str_starts_with($name, "$t ")) {
-            $name = substr($name, 3);
-        }
-    }
-
-    // --- Fallback cases ---
-    if (str_contains($name, 'Outside Investigation')) {
-        $name = defaultIncName($inc);
-    }
-
-    if (substr($name, 0, 3) === substr($inc, -3)) {
-        $name = preg_replace("/[0-9]{3}\s/", "", $name); // simplified regex
-    }
-
-    if (str_starts_with(strtolower($name), 'nfca') || $name === '') {
-        $name = defaultIncName($inc);
-    }
-
-    if (str_starts_with($name, 'Fa/')) {
-        $name = substr($name, 3);
-    }
-
-    // --- RX normalization ---
-    if (str_ends_with($name, ' Rx')) {
-        $name = substr($name, 0, -3) . ' RX';
-    } else {
-        $name = str_replace(' Rx ', ' RX ', $name);
-    }
-
-    // --- Mc / Mac fixes ---
-    if (str_starts_with($name, 'Mc')) {
-        $name = 'Mc' . ucfirst(substr($name, 2));
-    } elseif (str_starts_with($name, 'Mac')) {
-        $name = 'Mac' . ucfirst(substr($name, 3));
-    }
-
-    if (str_starts_with($name, 'Loc ')) {
-        $name = substr($name, 4);
-    }
-
-    // --- Remove trailing incident numbers ---
-    if (isset($a[1]) && (str_ends_with($name, ' ' . $a[1]) || str_ends_with($name, ' 0' . $a[1]))) {
-        $name = substr($name, 0, -5);
-    }
-
-    // --- Invalid names fallback ---
-    if (
-        (is_numeric($name) && isset($a[1]) && $name == $a[1]) ||
-        $name === 'Incident' ||
-        $name === '*******'
-    ) {
-        $name = "Incident $a[1]-" . ltrim($a[2], '0');
-    }
-
-    // --- Slash handling ---
-    if (str_contains($name, '/')) {
-        $name = str_replace(['//', '/ ', ' /', '  /'], ' / ', $name);
-        $parts = explode('/', $name);
-        if (isset($parts[1])) {
-            $name = $parts[0] . '/' . ucfirst($parts[1]);
-        }
-    }
-
-    // --- Too many dashes ---
-    if (substr_count($name, '-') > 1) {
-        $name = str_replace('-', ' ', $name);
-    }
-
-    // --- Trim trailing period ---
-    $name = rtrim($name, '.');
-
-    // --- Apostrophe / dash capitalization ---
-    if (str_contains($name, '\'') || str_contains($name, '-')) {
-        $a = explode('\'', $name);
-        if (isset($a[1])) {
-            $name = "$a[0]'" . ucfirst($a[1]);
-        }
-
-        $b = explode('-', $name);
-        if (isset($b[1])) {
-            $name = "$b[0]-" . ucfirst($b[1]);
-        }
-    }
-
-    // --- Remove duplicate numbers ---
-    if (preg_match('/(.*)\s([0-9]+)/', $name, $output1)) {
-        if (isset($output1[2]) && str_contains($inc, $output1[2])) {
-            $name = str_replace($output1[2], '', $name);
-        }
-    }
-
-    // --- Weird numeric edge case ---
-    if (preg_match('/([A-Z][a-z])([0-9]+)/', $name, $output)) {
-        if (preg_match('/([0]{2,})([0-9]+)/', $output[2], $match)) {
-            $name = "Incident $match[2]";
-        }
-    }
-
-    if ($name === 'Utl') $name = 'UTL';
-
-    // --- Final cleanup ---
-    $name = preg_replace('/Lac-(.*)/', 'LAC-$1', $name);
-    $name = str_replace('\'S ', '\'s ', rtrim($name, '-'));
-
-    $name = preg_replace('/Mm([0-9]+)/', 'MM$1', $name);
-    $name = str_replace(['  ', '&amp;', 'Utl-'], [' ', '&', ''], $name);
-    $name = preg_replace('/\s?\'$/', '', $name);
-
-    $name = ucwords($name);
-    $name = rtrim($name);
-
-    if (in_array($name, ['Incident', 'Inc.', 'Inc'])) $name = defaultIncName($inc);
-
-    //$name = preg_replace('/^\d+\s+(?=[A-Za-z])/', '', str_replace('\'S', '\'s', $name));
-    $name = preg_replace('/^0+\d*\s+/', '', str_replace('\'S', '\'s', $name));
-
-    return $name;
-}
-
 include_once '../../db.ini.php';
+include_once '/home/mapo/public_html/apis/functions.inc.php';
 
 $callback = $_REQUEST['callback'];
 $mode = $_REQUEST['mode'];
@@ -317,6 +144,27 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
             unlink('/home/mapo/public_html/mapotrails.com/data/photos/thumbnail/' . $_REQUEST['filename']);
             $out = 'success';
         }
+    } else if ($callback == 'favFires') {
+        $uid = getUserID();
+        $sql = "SELECT incidentId, state, name, date, geo, type, acres, t.wfid, time, status FROM track_fires AS t LEFT JOIN wildfires AS w ON w.wfid = t.wfid WHERE uid = $uid";
+
+        $result = mysqli_query($con, $sql);
+        while ($row = mysqli_fetch_assoc($result)) {
+            $f[] = [
+                'wfid' => intval($row['wfid']),
+                'incidentId' => $row['incidentId'],
+                'state' => $row['state'],
+                'date' => $row['date'],
+                'name' => $row['name'],
+                'type' => $row['type'],
+                'acres' => /*$uid == 1 ? $row['acres'] - 1000 : */ $row['acres'],
+                'geo' => $row['geo'],
+                'status' => unserialize($row['status']),
+                'url' => wildfireURL($row['wfid'], $row['name'], $row['state'])
+            ];
+        }
+
+        $out = ['fires' => $f];
     } else if ($callback == 'favtrails') {
         $uid = getUserID();
 

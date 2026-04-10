@@ -3,7 +3,7 @@ include_once '../db.ini.php';
 require_once './secure.inc.php';
 include_once '/home/mapo/public_html/subs.inc.php';
 require_once 'permissions.inc.php';
-require_once $baseRoot . '/vendor/autoload.php';
+require_once "$baseRoot/vendor/autoload.php";
 
 use UAParser\Parser;
 
@@ -19,6 +19,54 @@ $superAdmin = in_array($_SESSION['uid'], $doNotEdit) ? true : false;
 $securePages = array('wildfires', /*'billing',*/ 'admin');
 $lock = '<i class="far fa-lock"></i>';
 
+function inviteUser($org_key, $gid, $orgName, $email)
+{
+    $expires = time() + 3600 * 24;
+    $token = createToken(['org_key' => $org_key, 'group_id' => $gid], $expires);
+
+    try {
+        $existingUser = executeQuery('s', [$email], "SELECT uid FROM users WHERE email = ? LIMIT 1");
+        $uid = $existingUser['uid'] ?? NULL;
+
+        $query = executeQuery(
+            'isssi',
+            [$gid, $uid, $email, $token, $expires],
+            "INSERT INTO group_users (group_id, uid, email, invite_code, expires, status) VALUES(?, ?, ?, ?, ?, 0)"
+        );
+
+        if ($query['success']) {
+            $fields = ['{company}' => $orgName, '{org_key}' => $_POST['org_key'], '{email}' => $email, '{token}' => $token];
+            sendEmail($email, "You've been invited to $orgName's MAPO account", 'inviteuser', $fields);
+
+            echo message(true, 'An invitation to <b>' . htmlspecialchars($email) . '</b> was successfully sent.');
+        }
+    } catch (mysqli_sql_exception $e) {
+        $repopulate = true;
+        if ($e->getCode() === 1062) {
+            echo message(false, 'The email <b>' . htmlspecialchars($email) . '</b> has already been invited or is a current member.');
+        } else {
+            echo message(false, 'Error: ' . $e->getMessage());
+        }
+    }
+}
+
+function message($type, $m, $info = false, $center = false)
+{
+    return '<div style="margin-bottom:1em" class="message ' . ($info ? 'info' : ($type ? 'success' : 'error')) . ($center ? ' center' : '') . '">' . $m . '</div>';
+}
+
+function validSubscription($user, $planID = null) {
+    if ($planID != null && $user['subscriptions'] != null) {
+        for ($i = 0; $i < count($user['subscriptions']); $i++) {
+            if ($user['subscriptions'][$i]['plan'] == $planID && $user['subscriptions'][$i]['active'] == 1 && $user['subscriptions'][$i]['ends'] > time()) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 // run any sql queries
 if ($path == 'home' && $isAdmin) {
     $memcache = new Memcached();
@@ -28,8 +76,8 @@ if ($path == 'home' && $isAdmin) {
 
     function kpiCompare($variable, $period, $reverse = false)
     {
-        $up = '<i class="fas fa-caret-up" style="margin-left:5px;color:var(--green)"></i>';
-        $down = '<i class="fas fa-caret-down" style="margin-left:5px;color:var(--red)"></i>';
+        $up = '<i class="fas fa-caret-up" style="margin:0 10px 0 5px;color:var(--green)"></i>';
+        $down = '<i class="fas fa-caret-down" style="margin:0 10px 0 5px;color:var(--red)"></i>';
         if ($reverse) {
             $up = str_replace('up', 'down', str_replace('red', 'green', $up));
             $down = str_replace('down', 'up', str_replace('green', 'red', $up));
@@ -40,18 +88,18 @@ if ($path == 'home' && $isAdmin) {
 
         if ($prev === 0) {
             if ($last > 0) {
-                return '100%' . $up;
+                return "$up <small>(100%)</small>";
             } else {
-                return '0%';
+                return ' <small>(0%)</small>';
             }
         }
 
         $change = round(($reverse ? (($prev - $last) / $last) : (($last - $prev) / $prev)) * 100, 0);
 
         if ($change > 0) {
-            return "$change%$up";
+            return "$up <small>($change%)</small>";
         } elseif ($change < 0) {
-            return "$change%$down";
+            return "$down <small>($change%)</small>";
         } else {
             return '0%';
         }
@@ -93,7 +141,7 @@ if ($path == 'home' && $isAdmin) {
             SUM(date >= UNIX_TIMESTAMP() - 2592000) AS last_month,
             SUM(date BETWEEN UNIX_TIMESTAMP() - 5184000 AND UNIX_TIMESTAMP() - 2592000) AS prev_month
         FROM wildfires"));
-        
+
         $memcache->set('newFiresKPI', json_encode($newFiresSQL), 3600);
     }
 }

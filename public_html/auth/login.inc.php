@@ -18,7 +18,7 @@ echo $hidden;
 <p style="margin-bottom:30px;text-align:center">Need an account? <a class="fl" href="register<?= isset($_GET['price_id']) ? '?service=' . $service . '&next=' . $nextURL . '&price_id=' . $_GET['price_id'] : ($service ? '?service=' . $service . ($prod ? '&prod=' . $prod : '') : '') ?>">Sign Up</a></p>
 
 <div class="field"><label>Email</label>
-    <input type="email" autocomplete="email" required name="email" value="" placeholder="Email Address">
+    <input type="email" autocomplete="email" required name="email" value="<?= isset($_GET['email']) ? $_GET['email'] : '' ?>" placeholder="Email Address">
 </div>
 
 <div class="password field"><label>Password</label>

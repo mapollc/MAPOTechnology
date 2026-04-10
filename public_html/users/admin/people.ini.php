@@ -69,8 +69,8 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
                 executeQuery('isis', [$_POST['uid'], $perms, $time, $perms], "INSERT INTO permissions (uid,permissions,time) VALUES(?,?,?) ON DUPLICATE KEY UPDATE permissions = ?");
             }
 
-            logEvent('Modified a user account (<a href="https://www.mapotechnology.com/account/admin/people/edit?uid=' . $_POST['uid'] . '">#' . $_POST['uid'] . '</a>)');
-            echo message(true, '<b>' . $fname . ' ' . $lname . '</b>\'s account was successfully updated.');
+            logEvent("Modified a user account (<a href=\"https://www.mapotechnology.com/account/admin/people/edit?uid=$_POST[uid]]\">#$_POST[uid]</a>)");
+            echo message(true, "<b>$fname $lname</b>'s account was successfully updated.");
         }
     }
 ?>
@@ -93,8 +93,9 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
             if (isset($_GET['q'])) {
                 $where = "WHERE (first_name LIKE '%" . $_GET['q'] . "%' OR last_name LIKE '%" . $_GET['q'] . "%' OR u.email LIKE '%" . $_GET['q'] . "%' OR phone LIKE '%" . $_GET['q'] . "%')";
             }
-            if (isset($_GET['userType']) && $_GET['userType'] == '1') {
-                $where .= " AND cid IS NOT NULL";
+            if (isset($_GET['userType'])) {
+                if ($_GET['userType'] == '1') $where .= " AND cid IS NOT NULL";
+                if ($_GET['userType'] == '2') $where .= " AND role = 5";
             }
             $order = ($_GET['sort'] != '' ? $_GET['sort'] : 'uid') . ' ' . ($_GET['order'] != '' ? $_GET['order'] : 'DESC');
 
@@ -116,6 +117,7 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
                     <input type="text" class="input" style="max-width:300px" name="q" placeholder="Search users..." value="<?= $_GET['q'] ? $_GET['q'] : '' ?>">
                     <select name="userType" class="input" style="max-width:150px">
                         <option <?= !isset($_GET['userType']) || $_GET['userType'] == '0' ? 'selected ' : '' ?>value="0">All Users</option>
+                        <option <?= $_GET['userType'] == '2' ? 'selected ' : '' ?>value="2">Licensees ONLY</option>
                         <option <?= $_GET['userType'] == '1' ? 'selected ' : '' ?>value="1">Subscribers ONLY</option>
                     </select>
                     <div class="btn-group">
@@ -149,10 +151,11 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
                                 <td><?= $row['last_name'] ?></td>
                                 <td><a href="mailto:<?= $row['email'] ?>"><?= $row['email'] ?></a></td>
                                 <td><?= $row['cid'] != null ? "<a target=\"blank\" href=\"https://dashboard.stripe.com/customers/$row[cid]\">$row[cid]</a>" : 'No' ?></td>
-                                <td><?= $row['role'] == 1 ? '<i class="fa-solid fa-user" title="General User"></i>' : '' ?>
-                                    <?= $row['role'] == 2 ? '<i class="fa-solid fa-badge-check" title="Premium Access"></i>' : '' ?>
-                                    <?= $row['role'] == 4 ? '<i class="fa-solid fa-person-hiking" title="Trail Moderator"></i>' : '' ?>
-                                    <?= $row['role'] == 3 ? '<i class="fa-solid fa-lock" title="Administrative User"></i>' : '' ?></td>
+                                <td><?= $row['role'] == 1 ? '<i class="fas fa-user" title="General User"></i>' : '' ?>
+                                    <?= $row['role'] == 2 ? '<i class="fas fa-badge-check" title="Premium Access"></i>' : '' ?>
+                                    <?= $row['role'] == 4 ? '<i class="fas fa-person-hiking" title="Trail Moderator"></i>' : '' ?>
+                                    <?= $row['role'] == 5 ? '<i class="far fa-id-card" title="Licensee"></i>' : '' ?>
+                                    <?= $row['role'] == 3 ? '<i class="fas fa-lock" title="Administrative User"></i>' : '' ?></td>
                                 <td><?= $row['last_active'] ? ago($row['last_active']) : '--' ?></td>
                                 <td><?= ago($row['created']) ?></td>
                                 <td><? if ($permission->user()->edit()) { ?><a title="Edit User" href="people/edit?uid=<?= $row['uid'] ?>"><i class="fas fa-pen"></i></a><? } ?>

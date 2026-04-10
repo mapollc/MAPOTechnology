@@ -1,8 +1,9 @@
 <div class="row">
     <div class="col w100">
         <div class="card">
-            <? if ($_SESSION['org_admin']) {
-                echo message(null, 'Your account is part of an commerical group account.', true);
+            <? if (isset($_SESSION['groups'])) {
+                $orgName = $_SESSION['groups']['org_name'];
+                echo message(null, "Your account is part of an commerical group account with <b>$orgName</b>.", true);
             } ?>
 
             <h1>Hello, <?= $_SESSION['first_name'] ?>!</h1>
@@ -27,7 +28,6 @@
                                 <th>Period</th>
                                 <th>Last</th>
                                 <th>Previous</th>
-                                <th>Comparison</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -35,8 +35,7 @@
                                 <tr>
                                     <td><?= $period == 'month' ? '30 days' : ucfirst($period) ?></td>
                                     <td><?= number_format($newUsersSQL["last_$period"]) ?></td>
-                                    <td><?= number_format($newUsersSQL["prev_$period"]) ?></td>
-                                    <td><?= kpiCompare($newUsersSQL, $period) ?></td>
+                                    <td><?= number_format($newUsersSQL["prev_$period"]) . kpiCompare($newUsersSQL, $period) ?></td>
                                 </tr>
                             <? } ?>
                         </tbody>
@@ -64,7 +63,6 @@
                                 <th>Period</th>
                                 <th>Last</th>
                                 <th>Previous</th>
-                                <th>Comparison</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -72,8 +70,7 @@
                                 <tr>
                                     <td><?= $period == 'month' ? '30 days' : ($period == '6' || $period == '12' ? "$period hours" : ucfirst($period)) ?></td>
                                     <td><?= number_format($newFiresSQL["last_$period"]) ?></td>
-                                    <td><?= number_format($newFiresSQL["prev_$period"]) ?></td>
-                                    <td><?= kpiCompare($newFiresSQL, $period, true) ?></td>
+                                    <td><?= number_format($newFiresSQL["prev_$period"]) . kpiCompare($newFiresSQL, $period, true) ?></td>
                                 </tr>
                             <? } ?>
                         </tbody>
@@ -95,18 +92,20 @@
                     <div class="spinner"></div>
                 </div>
             <? } else {
-                echo '<div class="message error">Your location settings are not set. Would you like to <a href="settings#location">change them</a>?</div>';
+                echo '<div class="message error">Your home location has not been set. Would you like to <a href="settings#location">set it</a>?</div>';
             } ?>
         </div>
 
-        <div class="card dark">
-            <h2>Map of Trails Uploads</h2>
-            <p class="help">Any GPX, KML, or GeoJSON files you've upload to Map of Trails.</p>
+        <? if ($isAdmin) { ?>
+            <div class="card dark">
+                <h2>Map of Trails Uploads</h2>
+                <p class="help">Any GPX, KML, or GeoJSON files you've upload to Map of Trails.</p>
 
-            <div id="uploads">
-                <div class="spinner"></div>
+                <div id="uploads">
+                    <div class="spinner"></div>
+                </div>
             </div>
-        </div>
+        <? } ?>
     </div>
 
     <div class="grid-item">
@@ -119,13 +118,15 @@
             </div>
         </div>
 
-        <div class="card dark">
-            <h2>Your Favorite Trails</h2>
-            <p class="help">All recreation trails you are following on Map of Trails.</p>
+        <? if ($isAdmin) { ?>
+            <div class="card dark">
+                <h2>Your Favorite Trails</h2>
+                <p class="help">All recreation trails you are following on Map of Trails.</p>
 
-            <div id="favtrails">
-                <div class="spinner"></div>
+                <div id="favtrails">
+                    <div class="spinner"></div>
+                </div>
             </div>
-        </div>
+        <? } ?>
     </div>
 </div>

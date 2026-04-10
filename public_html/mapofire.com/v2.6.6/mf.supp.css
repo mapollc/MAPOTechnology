@@ -237,6 +237,75 @@ strong {
     color: var(--box-orange-hover);
 }
 
+.evacs {
+    margin: 0 0 2em 0;
+}
+
+.evac {
+    display: block;
+    width: 100%;
+    padding: 1em;
+    margin: 0.5em 0;
+    border-radius: 8px;
+    color: #333;
+    background-color: rgb(2 130 58 / 20%);
+    transition: all .15s ease-in-out;
+}
+
+.evac .evacTitle {
+    display: inline-flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--half-spacing);
+}
+
+.evac h3 {
+    font-size: 18px;
+}
+
+.evac summary {
+    position: relative;
+    list-style: none;
+    padding-left: 1.5em;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.evac details[open]>summary {
+    margin-bottom: 0.5em;
+}
+
+.evac summary::-webkit-details-marker {
+    display: none;
+}
+
+.evac summary::before {
+    content: '▶';
+    position: absolute;
+    top: 1px;
+    left: 0;
+    font-size: 13px;
+    color: #262626;
+    cursor: pointer;
+    transform: rotate(0deg);
+    transition: transform 0.2s ease-in-out;
+}
+
+.evac details[open] summary::before {
+    content: '▶';
+    transform: rotate(90deg);
+}
+
+.evac.level2 {
+    background-color: rgb(237 214 1 / 25%);
+}
+
+.evac.level3 {
+    background-color: rgb(230 0 0 / 25%);
+}
+
 span.evac-circ {
     display: inline-block;
     width: 15px;
@@ -642,7 +711,7 @@ select {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    gap: calc(var(--spacing) * 2);
+    gap: var(--double-spacing);
     border-top: 1px solid var(--box-border);
     padding-top: var(--spacing);
 }
@@ -728,7 +797,7 @@ select {
 .layers-list.bm li .desc {
     flex-direction: row;
     align-items: center;
-    gap: calc(var(--spacing) * 2);
+    gap: var(--double-spacing);
 }
 
 .layers-list.bm li .desc label {
@@ -971,47 +1040,6 @@ select {
     padding: 4px 6px 3px 6px;
 }
 
-.filter-controls .search {
-    display: none;
-    width: var(--search-results-width);
-    align-items: center;
-    font-size: 18px;
-}
-
-.filter-controls .search>span {
-    padding: 0 calc(var(--spacing) * .75);
-    color: var(--box-text-color);
-    font-size: 17px;
-    user-select: none;
-}
-
-.filter-controls .search #clearSearch {
-    display: none;
-    padding: 0 calc(var(--spacing) * .75);
-    cursor: pointer;
-}
-
-.filter-controls .search input {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    outline: none;
-    background: transparent;
-    font-family: var(--roboto);
-    font-size: 16px;
-}
-
-.filter-controls .search input::placeholder {
-    font-weight: 300;
-    color: #6f777e;
-}
-
-.filter-controls .search input:disabled {
-    cursor: not-allowed;
-    background-color: transparent;
-}
-
 ul#search-results {
     position: absolute;
     top: calc(40px + .5em);
@@ -1173,7 +1201,7 @@ ul#search-results li.standby i {
 
 #modal .message,
 #impact .message {
-    color: #fff !important;
+    color: #ededed !important;
 }
 
 #modal p,
@@ -1263,7 +1291,8 @@ ul#search-results li.standby i {
 }
 
 #modal .grid>div h3 {
-    margin-bottom: var(--half-spacing);
+    margin-bottom: var(--spacing);
+    font-size: 1.3rem;
     color: var(--box-header-color);
 }
 
@@ -1293,13 +1322,29 @@ ul#search-results li.standby i {
     margin-left: calc(18px + 0.75em);
 }
 
-.incident header,
-.wwa header {
+#modal .incident header,
+#modal .wwa header {
     display: flex;
     justify-content: space-between;
     gap: var(--spacing);
     width: 100%;
-    /*margin-bottom: calc(var(--spacing) * 2);*/
+    /*margin-bottom: var(--double-spacing);*/
+}
+
+#modal.firewx header {
+    margin-bottom: var(--spacing);
+}
+
+#modal.firewx h2 {
+    display: inline-block;
+    margin: var(--spacing) 0;
+    padding-bottom: 5px;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--box-header-color);
+    border-bottom: 1px solid rgb(237 77 0 / 45%);
+    text-transform: uppercase;
 }
 
 #modal .content header .title {
@@ -1314,7 +1359,7 @@ ul#search-results li.standby i {
     width: 100%;
     flex-wrap: wrap;
     column-gap: 6px;
-    margin: calc(var(--spacing) * 2) 0;
+    margin: var(--double-spacing) 0;
     color: #cbd5e1;
     font-size: 15px;
     font-weight: 300;
@@ -1521,6 +1566,11 @@ ul#search-results li.standby i {
     justify-content: flex-start !important;
 }
 
+.incident #curwx .btn-group,
+.incident #fcstwx .btn-group {
+    margin: var(--spacing) 0 0 0;
+}
+
 .incident #curwx .table>div,
 .incident #fcstwx .table>div {
     align-items: center;
@@ -1546,6 +1596,8 @@ ul#search-results li.standby i {
 .incident #fcstwx #c i,
 .incident #fcstwx #d i {
     font-size: 18px;
+    width: auto;
+    max-height: 16px;
 }
 
 .incident #curwx #a i,
@@ -1567,7 +1619,7 @@ ul#search-results li.standby i {
 .incident .acres_history {
     font-size: 15px;
     color: var(--box-text-color);
-    margin: 0 0 calc(var(--spacing) * 2) 0;
+    margin: 0 0 var(--double-spacing) 0;
 }
 
 .incident .disclaimer {
@@ -1585,11 +1637,13 @@ ul#search-results li.standby i {
     font-weight: 400;
 }
 
-.incident .inciweb figure a {
+.incident .inciweb figure a,
+a.figure {
     position: relative;
 }
 
-.incident .inciweb figure a:before {
+.incident .inciweb figure a:before,
+a.figure:before {
     content: "";
     position: absolute;
     top: 0;
@@ -1600,11 +1654,13 @@ ul#search-results li.standby i {
     transition: background-color 180ms ease;
 }
 
-.incident .inciweb figure a:hover::before {
+.incident .inciweb figure a:hover::before,
+a.figure:hover::before {
     background-color: rgb(0 0 0 / 60%);
 }
 
-.incident .inciweb figure a:hover::after {
+.incident .inciweb figure a:hover::after,
+a.figure:hover::after {
     content: "\f065";
     position: absolute;
     top: 50%;
@@ -1624,7 +1680,7 @@ ul#search-results li.standby i {
 }
 
 .incident .block .row {
-    margin-bottom: calc(var(--spacing) * 2);
+    margin-bottom: var(--double-spacing);
 }
 
 .incident .block .row {
@@ -1668,6 +1724,7 @@ ul#search-results li.standby i {
     margin: var(--half-spacing) 11px 0 11px;
     gap: 1em;
     align-items: center;
+    color: #ffecc1;
     font-size: 14px;
 }
 
@@ -1676,7 +1733,7 @@ ul#search-results li.standby i {
 }
 
 p.updated {
-    margin-top: var(--spacing);
+    margin-top: var(--double-spacing);
     text-align: center;
     font-size: 12px;
 }
@@ -1765,9 +1822,8 @@ span.status.out {
 .radar,
 .spcTimeline {
     position: absolute;
-    left: 50%;
-    bottom: var(--spacing);
-    transform: translateX(-50%);
+    right: var(--container-space);
+    bottom: calc(24px + calc(var(--container-space) * 2));
     width: 100%;
     max-width: 300px;
     padding: .5em var(--spacing);
@@ -1813,31 +1869,41 @@ span.status.out {
     display: flex;
     flex-direction: column;
     width: 100%;
-    gap: .45em;
+    gap: 4px;
 }
 
 .radar>div .time .tr {
+    position: relative;
     display: inline-flex;
     width: 100%;
     justify-content: space-between;
     font-size: 12px;
 }
 
-.radar input[type=range] {
-    width: 100%;
-    height: 12px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: #d5d5d5;
-    border: 0;
-    border-radius: 4px;
-    cursor: pointer;
+.radar>div .time .tr .tick {
+    position: absolute;
+    border-left: 1px solid #444;
+    width: 1px;
+    height: 100%;
+    margin-left: 8px;
 }
 
-.radar input[type=range]::-webkit-slider-runnable-track,
-.radar input[type=range]::-moz-range-track {
-    background: #d5d5d5;
-    height: 14px;
+.radar>div .time .tr .tick.short {
+    height: 60%;
+    border-color: #919191;
+}
+
+.radar input[type=range] {
+    --val: 100%;
+    width: 100%;
+    height: 13px;
+    margin-bottom: 1px;
+    background: linear-gradient(to right, #777 0%, #777 var(--val, 0%), #d5d5d5 var(--val, 0%), #d5d5d5 100%);
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 .radar input[type=range]::-webkit-slider-thumb {
@@ -1845,8 +1911,8 @@ span.status.out {
     appearance: none;
     margin-top: 0;
     background-color: var(--orange);
-    height: 18px;
-    width: 18px;
+    height: 20px;
+    width: 20px;
     border-radius: 50%;
 }
 
@@ -1934,7 +2000,7 @@ span.status.out {
 
 #data-form h1 {
     font-size: 2.2rem;
-    margin-bottom: 0.5em;
+    margin-bottom: 0.75em;
 }
 
 #data-form label {
@@ -1956,6 +2022,16 @@ span.status.out {
     border: 1px solid var(--light-gray);
     border-radius: 4px;
     outline: none;
+}
+
+#data-form .filterEvacs {
+    display: flex;
+    gap: 0.5em;
+    margin-bottom: var(--spacing);
+}
+
+#data-form .filterEvacs select {
+    margin: 0;
 }
 
 .my-subs {
@@ -1994,15 +2070,15 @@ span.status.out {
 }
 
 .legend .viirs.t24 {
-    background-image: url(//mapotechnology.com/assets/images/icons/fire/modis1.png);
+    background-image: url("//mapotechnology.com/assets/images/icons/fire/modis1.png");
 }
 
 .legend .viirs.t48 {
-    background-image: url(//mapotechnology.com/assets/images/icons/fire/modis2.png);
+    background-image: url("//mapotechnology.com/assets/images/icons/fire/modis2.png");
 }
 
 .legend .viirs.t72 {
-    background-image: url(//mapotechnology.com/assets/images/icons/fire/modis3.png);
+    background-image: url("//mapotechnology.com/assets/images/icons/fire/modis3.png");
 }
 
 .legend .fire-icon {
@@ -2256,15 +2332,29 @@ span.status.out {
 
 .forecast-table-wrapper {
     width: 100%;
-    padding-bottom: 1px;
+    padding-bottom: 3px;
+    overflow-x: auto;
 }
 
 .forecast-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 3px;
-    margin-top: 20px;
+    border-collapse: collapse;
+    /*border-collapse: separate;
+    border-spacing: 2px;
+    margin-top: 20px;*/
     color: #333;
+}
+
+.forecast-table .wind-dir {
+    display: block;
+    width: 20px;
+    height: 20px;
+    margin: 0 auto;
+    background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIzMCIgdmlld0JveD0iMCAwIDY0MCA2NDAiPjxwYXRoIGZpbGw9IiNlZDRkMDAiIGQ9Ik01NDEuOSAxMzkuNWM0LjUtMTEuOCAxLjctMjUuMi03LjItMzQuMXMtMjIuMy0xMS44LTM0LjEtNy4ybC00MTYgMTYwQTMxLjggMzEuOCAwIDAgMCA2NCAyODguN2MuMyAxMy41IDkuMSAyNS40IDIxLjkgMjkuNmwxNzYuOCA1OC45TDMyMS42IDU1NGM0LjMgMTIuOCAxNi4xIDIxLjYgMjkuNiAyMS45czI1LjctNy45IDMwLjYtMjAuNWwxNjAtNDE2eiIvPjwvc3ZnPg==") no-repeat center / cover;
+}
+
+.forecast-table-wrapper.hourly .forecast-table thead tr.date-group th:nth-child(2) {
+    border-right: 3px solid #ff8cb5;
 }
 
 .forecast-table th {
@@ -2277,14 +2367,31 @@ span.status.out {
     padding: 10px 15px;
     text-align: center;
     color: #fff;
+    border-right: 3px solid var(--data-color);
 }
 
-.forecast-table tr:first-child td:last-child,
+.forecast-table tbody tr {
+    border-bottom: 3px solid var(--data-color);
+}
+
+.forecast-table tbody tr td:last-child {
+    border-right: 0;
+}
+
+.forecast-table tbody tr:last-child {
+    border-bottom: 0;
+}
+
+.forecast-table-wrapper.hourly table.forecast-table td:not(.row-label) {
+    min-width: 90px;
+}
+
+/*.forecast-table tr:first-child td:last-child,
 .forecast-table tr:nth-child(2) td:last-child,
 .forecast-table tr:nth-child(3) td:last-child,
 .forecast-table tr:nth-child(4) td:last-child {
     border-right: none;
-}
+}*/
 
 .forecast-table thead th {
     width: calc(100% / 6);
@@ -2308,7 +2415,7 @@ span.status.out {
 }
 
 .forecast-table tbody tr:nth-child(even) {
-    background-color: #222c3c;
+    background-color: var(--box-compliment);
 }
 
 .tools.control .tool:first-child {
@@ -2604,6 +2711,13 @@ span.status.out {
     #modal .grid.cols-3>.card:nth-child(3) {
         grid-column: 1 / -1;
     }
+
+    .radar,
+    .spcTimeline {
+        left: calc(var(--nav-width) + 50%);
+        transform: translateX(-50%);
+        bottom: var(--container-space);
+    }
 }
 
 @media (max-width: 850px) {
@@ -2749,7 +2863,7 @@ span.status.out {
 
 @media (max-width: 600px) {
     .forecast-table-wrapper {
-        overflow-x: scroll;
+        /*overflow-x: scroll;*/
         -webkit-overflow-scrolling: touch;
     }
 
@@ -2759,6 +2873,7 @@ span.status.out {
 
     .forecast-table thead th {
         font-size: 14px;
+        min-width: 120px;
     }
 
     .forecast-table .row-label {
@@ -2771,7 +2886,14 @@ span.status.out {
     }
 }
 
+@media (min-width: 400px) and (max-width: 550px) {
+        .incident .table {
+        gap: 1.5rem;
+    }
+}
+
 @media (max-width: 550px) {
+
     .grid.stats.cols-4 {
         grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
     }
@@ -2804,6 +2926,7 @@ span.status.out {
 
     #modal :not(.block)>.grid>div dd,
     .inciweb .block .card dd {
+        margin-left: 0;
         text-align: center;
     }
 
@@ -2813,7 +2936,6 @@ span.status.out {
 }
 
 @media (max-width: 500px) {
-
     .banner {
         left: var(--spacing);
         bottom: calc(var(--spacing) + 10px);
@@ -2829,6 +2951,10 @@ span.status.out {
     #modal .content .desc span {
         font-size: 16px;
     }
+
+    #data-form h1 {
+        font-size: 1.75rem;
+    }
 }
 
 @media (max-width: 479px) {
@@ -2837,9 +2963,25 @@ span.status.out {
         justify-content: unset;
         gap: 0.5em;
     }
+
+    #data-form .filterEvacs {
+        flex-wrap: wrap;
+    }
+
+    .radar,
+    .spcTimeline {
+        width: calc(100% - var(--double-spacing) - var(--mb-button-width));
+        left: var(--container-space);
+        bottom: calc(calc(var(--container-space) * 2) + 13px);
+        transform: unset;
+    }
+
 }
 
 @media (max-width: 400px) {
+    #data-form h1 {
+        font-size: 1.5rem;
+    }
 
     .incident .table[data-cols="3"],
     .incident .table[data-cols="4"] {

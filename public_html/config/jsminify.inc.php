@@ -122,6 +122,8 @@ class Minifier
      */
     protected $locks = [];
 
+    private $templates = [];
+
     /**
      * Takes a string containing javascript and removes unneeded characters in
      * order to shrink the code without altering it's functionality.
@@ -135,9 +137,11 @@ class Minifier
     {
         try {
             $jshrink = new Minifier();
+            $js = $jshrink->extractTemplates($js);
             $js = $jshrink->lock($js);
             $js = ltrim($jshrink->minifyToString($js, $options));
             $js = $jshrink->unlock($js);
+            $js = $jshrink->restoreTemplates($js);
             unset($jshrink);
             return $js;
         } catch (\Exception $e) {
@@ -164,6 +168,97 @@ class Minifier
         $this->loop();
         $this->clean();
         return $this->output;
+    }
+
+    protected function restoreTemplates($js)
+    {
+        // CHANGE: reverse sort prevents accidental partial token collisions
+        uksort($this->templates, function ($a, $b) {
+            return strlen($b) <=> strlen($a);
+        });
+
+        $out = str_replace(
+            array_keys($this->templates),
+            array_values($this->templates),
+            $js
+        );
+        $out = preg_replace('/\s(\?|:)\s/', '$1', $out);
+
+        return $out;
+    }
+
+    protected function extractTemplates($js)
+    {
+        $out = '';
+        $len = strlen($js);
+
+        $buffer = '';
+        $index = 0;
+
+        $inTpl = false;
+        $inExpr = false;
+        $braceDepth = 0;
+
+        for ($i = 0; $i < $len; $i++) {
+            $c = $js[$i];
+
+            // START TEMPLATE
+            if (!$inTpl && $c === '`') {
+                $inTpl = true;
+                $buffer = '`';
+                continue;
+            }
+
+            if ($inTpl) {
+                $buffer .= $c;
+
+                // handle escape sequences
+                if ($c === '\\') {
+                    $buffer .= $js[++$i] ?? '';
+                    continue;
+                }
+
+                // ENTER interpolation
+                if (!$inExpr && $c === '$' && ($js[$i + 1] ?? '') === '{') {
+                    $inExpr = true;
+                    $braceDepth = 0;
+                    $buffer .= '{';
+                    $i++;
+                    continue;
+                }
+
+                // track braces inside ${ ... }
+                if ($inExpr) {
+                    if ($c === '{') {
+                        $braceDepth++;
+                    } elseif ($c === '}') {
+                        if ($braceDepth === 0) {
+                            $inExpr = false;
+                        } else {
+                            $braceDepth--;
+                        }
+                    }
+                    continue;
+                }
+
+                // END TEMPLATE (only if not in expression)
+                if ($c === '`' && !$inExpr) {
+                    $token = "__TPL_{$index}__";
+                    $this->templates[$token] = $buffer;
+                    $out .= $token;
+                    $index++;
+                    $inTpl = false;
+                    $buffer = '';
+                    continue;
+                }
+
+                continue;
+            }
+
+            $out .= $c;
+        }
+
+        return $out;
     }
 
     /**

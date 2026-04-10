@@ -127,20 +127,16 @@ function getUserRole($r)
 {
     switch ($r) {
         case 1:
-            $p = 'GUEST';
-            break;
+            return 'GUEST';
         case 2:
-            $p = 'PREMIUM';
-            break;
+            return 'PREMIUM';
         case 3:
-            $p = 'ADMIN';
-            break;
+            return 'ADMIN';
         case 4:
-            $p = 'TRAIL MODERATOR';
-            break;
+            return 'TRAIL MODERATOR';
+        case 5:
+            return 'LICENSEE';
     }
-
-    return $p;
 }
 
 function agent($ua)

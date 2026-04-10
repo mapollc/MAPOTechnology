@@ -1,23 +1,22 @@
 <?
-if ($function == 'create' || $function == 'edit') {
-    include_once $documentRoot . 'admin/incs/add_edit-org.ini.php';
-} else if ($function == 'people') {
-    include_once $documentRoot . 'admin/incs/modify_org-users.ini.php';
+if (!$permission->manage()->org()) {
+    echo invalidPermissions();
 } else {
-    if (!$permission->manage()->org()) {
-        echo invalidPermissions();
+    if ($function == 'create' || $function == 'edit') {
+        include_once "{$documentRoot}admin/incs/add_edit-org.ini.php";
+    } else if ($function == 'suspend' || $function == 'unsuspend') {
+        include_once "{$documentRoot}admin/incs/suspend-org.ini.php";
     } else {
         $result = mysqli_query($con, "SELECT * FROM groups ORDER BY start_period DESC");
+        $num = mysqli_num_rows($result);
 ?>
         <div class="row">
             <div class="col w100">
                 <div class="card">
                     <h1 class="category">Manage Licensed Organizations</h1>
 
-                    <div class="controls">
-                        <div class="btn-group">
-                            <input type="button" class="btn btn-green" onclick="window.location.href='./organizations/create'" value="Create Licensee">
-                        </div>
+                    <div class="btn-group" style="margin:0">
+                        <input type="button" class="btn btn-green" onclick="window.location.href='./organizations/create'" value="Create Licensee">
                     </div>
 
                     <div class="table-responsive">
@@ -34,21 +33,27 @@ if ($function == 'create' || $function == 'edit') {
                                 <th></th>
                             </thead>
                             <tbody>
-                                <? while ($row = mysqli_fetch_assoc($result)) {
-                                    $cur = mysqli_num_rows(mysqli_query($con, "SELECT guid FROM group_users WHERE group_id = '$row[group_id]'"));
-                                    ?>
-                                    <tr>
-                                        <td><?= $row['org_key'] ?></td>
-                                        <td><?= $row['name'] ?></td>
-                                        <td><?= $cur .'/'. $row['max_users'] ?></td>
-                                        <td><?= date('n/j/Y', $row['created']) ?></td>
-                                        <td><?= date('n/j/Y H:i', $row['start_period']) ?></td>
-                                        <td><?= round(($row['end_period'] - time()) / 86400, 1) ?></td>
-                                        <td><?= $row['active'] == 1 ? 'Yes' : 'No' ?></td>
-                                        <td><?= $row['suspended'] == 1 ? 'Yes' : 'No' ?></td>
-                                        <td><a href="organizations/edit?group_id=<?= $row['group_id'] ?>">edit</a> | <a href="organizations/suspend?group_id=<?= $row['group_id'] ?>">suspend</a></td>
-                                    </tr>
-                                <? } ?>
+                                <?
+                                if ($num == 0) {
+                                    echo '<tr><td colspan="9" style="text-align:center">There are currently no licensed organizations.</td></tr>';
+                                } else {
+                                    while ($row = mysqli_fetch_assoc($result)) {
+                                        $cur = mysqli_num_rows(mysqli_query($con, "SELECT guid FROM group_users WHERE group_id = '$row[group_id]'"));
+                                ?>
+                                        <tr>
+                                            <td><?= $row['org_key'] ?></td>
+                                            <td><?= $row['name'] ?></td>
+                                            <td><?= $cur . '/' . $row['max_users'] ?></td>
+                                            <td><?= date('n/j/Y', $row['created']) ?></td>
+                                            <td><?= date('n/j/Y H:i', $row['start_period']) ?></td>
+                                            <td><?= round(($row['end_period'] - time()) / 86400, 1) ?></td>
+                                            <td><?= $row['active'] == 1 ? 'Yes' : 'No' ?></td>
+                                            <td><?= $row['suspended'] == 1 ? 'Yes' : 'No' ?></td>
+                                            <td><a href="organizations/edit?group_id=<?= $row['group_id'] ?>">edit</a> |
+                                            <a href="organizations/<?= $row['suspended'] == 1 ? 'un' : '' ?>suspend?group_id=<?= $row['group_id'] ?>"><?= $row['suspended'] == 1 ? 'un' : '' ?>suspend</a></td>
+                                        </tr>
+                                <? }
+                                } ?>
                             </tbody>
                         </table>
                     </div>
@@ -56,5 +61,5 @@ if ($function == 'create' || $function == 'edit') {
                 </div>
             </div>
         </div>
-    <? }
+<? }
 } ?>

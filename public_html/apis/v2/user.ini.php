@@ -844,72 +844,76 @@ class SSO
         }
     }
 
-    /*function invitation()
+    function invitation()
     {
         $error = false;
+        $code = 0;
+        $msg = '';
+
+        $orgKey = $this->fields['org_key'];
         $invite_code = $this->fields['invite_code'];
         $email = $this->fields['email'];
+        $existingUser = $this->fields['uid'] ? true : false;
 
-        $match = executeQuery('ss', [$email, $invite_code], "SELECT * FROM group_users WHERE email = ? AND invite_code = ?");
+        $org = executeQuery('s', [$orgKey], "SELECT group_id FROM groups WHERE org_key = ?");
 
-        if (!$match) {
+        if (!$org) {
             $error = true;
             $code = 1;
-            $msg = 'The email address and invite code provided do not match.';
+            $msg = 'The organization specified is invalid.';
         } else {
-            $perror = false;
-            $pass = $this->fields['pass'];
-            $cpass = $this->fields['confirm_pass'];
-            $passVal = $this->validatePassword($pass);
-            $validToken = $this->tokenStatus($invite_code);
-
-            if ($validToken) {
-                if (!$pass) {
-                    $perror = true;
-                    $msgs[] = 'You must enter a password.';
-                } else {
-                    if ($passVal[0]) {
-                        $perror = true;
-                        foreach ($passVal[1] as $p) {
-                            $msgs[] = $p;
-                        }
-                    }
-
-                    if (!$cpass) {
-                        $perror = true;
-                        $msgs[] = 'You must confirm your password.';
-                    } else if ($pass != $cpass) {
-                        $perror = true;
-                        $msgs[] = 'Your passwords don\'t match.';
-                    }
-                }
-
-                if (!$perror) {
-                    $password = password_hash($this->fields['pass'], PASSWORD_DEFAULT);
-
-                    $create = $this->createAccount($this->fields['first_name'], $this->fields['last_name'], $email, $password, $_SERVER['REMOTE_ADDR'], '1', '', '', 0, false);
-
-                    if ($create && $create['response'] == 'error') {
-                        return $create;
-                    } else {
-                        $newUID = mysqli_insert_id($this->con);
-                        //mysqli_query($this->con, "UPDATE group_users SET status = 1, uid = $newUID WHERE email = '$email'");
-                        executeQuery('is', [$newUID, $email], "UPDATE group_users SET status = 1, uid = ? WHERE email = ?");
-                    }
-                } else {
-                    return ['response' => 'error', 'code' => 3, 'msg' => implode('<br>', $msgs)];
-                }
-            } else {
+            if (!$invite_code) {
                 $error = true;
                 $code = 2;
-                $msg = 'The invite code provided is invalid.';
+                $msg = 'No invitation code was provided.';
+            } else {
+                $match = executeQuery('iiss', [time(), $org['group_id'], $invite_code, $email], "SELECT guid FROM group_users WHERE expires > ? AND group_id = ? AND invite_code = ? AND email = ? LIMIT 1");
+
+                if (!$match) {
+                    $error = true;
+                    $code = 3;
+                    $msg = 'We are unable to process your invitation.';
+                }
+
+                if (!validToken($invite_code)) {
+                    $error = true;
+                    $code = 4;
+                    $msg = 'Your invitation code is either invalid or expired.';
+                }
             }
         }
 
+        // return output to class
         if ($error) {
             return ['response' => 'error', 'code' => $code, 'msg' => $msg];
+        } else {
+            if (!$existingUser) {
+                $amsg = [];
+                $passVal = $this->validatePassword($this->fields['pass']);
+
+                if (empty($this->fields['first_name'])) $amsg[] = 'You must provide your first name.';
+                if (empty($this->fields['last_name'])) $amsg[] = 'You must provide your last name.';
+                if (empty($this->fields['pass'])) $amsg[] = 'Please enter a password.';
+                if ($this->fields['pass'] != $this->fields['confirm_pass']) $amsg[] = 'Your passwords do not match.';
+                if ($passVal[0] == 1) $amsg = array_merge($amsg, $passVal[1]);
+
+                if ($amsg && count($amsg) > 0) {
+                    return ['response' => 'error', 'code' => 5, 'msg' => implode('<br>', $amsg)];
+                } else {
+                    $create = $this->createAccount($this->fields['first_name'], $this->fields['last_name'], $email, $this->fields['pass'], 1, '', '', 0, false);
+
+                    if ($create['response'] == 'error') {
+                        return $create;
+                    } else {
+                        mysqli_query($this->con, "UPDATE group_users SET uid = $create[uid] WHERE guid = $match[guid]");
+                    }
+                }
+            }
+
+            mysqli_query($this->con, "UPDATE group_users SET expires = 0, status = 1 WHERE guid = $match[guid]");
+            return ['response' => 'success', 'existingUser' => $existingUser];
         }
-    }*/
+    }
 
     function confirmation()
     {
@@ -1051,7 +1055,7 @@ class SSO
                 if (isset($ins1['error']) || isset($ins2['error']) || isset($ins3['error'])) {
                     $out = ['response' => 'error', 'code' => 3, 'msg' => 'There was an error creating your account'];
                 } else {
-                    $out = ['response' => 'success', 'subscribe' => isset($this->fields['price_id']) ? true : false];
+                    $out = ['response' => 'success', 'uid' => $uid, 'subscribe' => isset($this->fields['price_id']) ? true : false];
 
                     // if user is starting a subscription
                     if (isset($this->fields['price_id'])) {
@@ -1269,7 +1273,7 @@ if (empty($method)) {
             $returnJson = $sso->confirmation();
         } # confirm email address for a user that was invited as a part of an organization
         else if ($method == 'invitation') {
-            ////$returnJson = $sso->invitation();
+            $returnJson = $sso->invitation();
         } # logout the user
         else if ($method == 'logout') {
             $returnJson = $sso->logout();

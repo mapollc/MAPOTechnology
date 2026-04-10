@@ -5,7 +5,7 @@ error_reporting(E_PARSE | E_ERROR);
 require_once 'config.inc.php';
 
 // verify if the user is already logged in and then redirect them
-if (isset($_SESSION['uid'])) {
+if (isset($_SESSION['uid']) && $method != 'invitation') {
     $exp = executeQuery('s', [$_SESSION['token']], "SELECT expires FROM sessions WHERE token = ?")['expires'];
 
     if ($_SESSION['expires'] < time() || $exp <= time()) {
@@ -25,7 +25,10 @@ if (isset($_SESSION['uid'])) {
 
 if ($method == 'invitation') {
     $org = executeQuery('s', [$_GET['org_key']], "SELECT name AS orgName FROM groups WHERE org_key = ?");
+    $orgUser = executeQuery('s', [$_GET['invite_code']], "SELECT uid, email FROM group_users WHERE invite_code = ?");
     $orgName = $org['orgName'] ?? '';
+    $existingUser = !empty($orgUser['uid']);
+    $validInviteCode = validToken($_GET['invite_code']) == 1 ? true : false;
 }
 
 $failMessages = [
@@ -81,6 +84,12 @@ $desc = "Access your " . ($serviceName ?: "MAPO LLC") . " account. Sign in or cr
             <h1><?= $title ?></h1>
 
             <?
+            if ($method == 'invitation' && !$validInviteCode) {
+                echo '<div class="message error">The invitation code is invalid or expired.</div>';
+            }
+            if (isset($_GET['group_account'])) {
+                echo '<div class="message subscribe">Thanks for accepting the invitation. You can now login.</div>';
+            }
             if (isset($_GET['price_id'])) {
                 $plan->setPlan(null, $_GET['price_id']);
                 echo '<div class="message subscribe">Start your <b>' . $plan->getName() . '</b> subscription by creating a new account, or logging into your existing account.</div>';
