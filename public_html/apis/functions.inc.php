@@ -185,57 +185,12 @@ function getBearing($lat1, $lon1, $lat2, $lon2)
 
 function getCompassDirection($bearing)
 {
-    $tmp = round($bearing / 22.5);
-    switch ($tmp) {
-        case 1:
-            $direction = "NNE";
-            break;
-        case 2:
-            $direction = "NE";
-            break;
-        case 3:
-            $direction = "ENE";
-            break;
-        case 4:
-            $direction = "East";
-            break;
-        case 5:
-            $direction = "ESE";
-            break;
-        case 6:
-            $direction = "SE";
-            break;
-        case 7:
-            $direction = "SSE";
-            break;
-        case 8:
-            $direction = "South";
-            break;
-        case 9:
-            $direction = "SSW";
-            break;
-        case 10:
-            $direction = "SW";
-            break;
-        case 11:
-            $direction = "WSW";
-            break;
-        case 12:
-            $direction = "West";
-            break;
-        case 13:
-            $direction = "WNW";
-            break;
-        case 14:
-            $direction = "NW";
-            break;
-        case 15:
-            $direction = "NNW";
-            break;
-        default:
-            $direction = "North";
-    }
-    return $direction;
+    $bearing = $bearing % 360;
+    if ($bearing < 0) $bearing += 360;
+    
+    $directions = ["North", "NNE", "NE", "ENE", "East", "ESE", "SE", "SSE", "South", "SSW", "SW", "WSW", "West", "WNW", "NW", "NNW"];
+
+    return $directions[round($bearing / 22.5) % 16];
 }
 
 function convertCoords($lon3857, $lat3857)

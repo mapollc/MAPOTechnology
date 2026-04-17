@@ -1092,11 +1092,11 @@ async function onRasterLayerClick(e) {
 
     if (fuels && fuels.layout.visibility.toString() == 'visible') {
         const popup = new Popup('', true).create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>'),
-            year = 25,
+            year = 2024,
             getFuelType = async (year, where) => {
-                const url = `https://lfps.usgs.gov/arcgis/rest/services/Landfire_LF${year}0/${where}_${year}0EVT/ImageServer/identify?geometry=${encodeURIComponent(`{"spatialReference":{"latestWkid":4326,"wkid":102100},"x":${coords.lng},"y":${coords.lat}}`)}
+                const url = `https://lfps.usgs.gov/arcgis/rest/services/Landfire_LF${year}/LF${year}_EVT_${where}/ImageServer/identify?geometry=${encodeURIComponent(`{"spatialReference":{"latestWkid":4326,"wkid":102100},"x":${coords.lng},"y":${coords.lat}}`)}
                 &geometryType=esriGeometryPoint&mosaicRule=${encodeURIComponent('{"ascending":true,"mosaicMethod":"esriMosaicNorthwest","mosaicOperation":"MT_FIRST"}')}
-                &renderingRule=&renderingRules=${encodeURIComponent(`[{"rasterFunction":"${where}_${year}0EVT"}]`)}
+                &renderingRule=&renderingRules=${encodeURIComponent(`[{"rasterFunction":"LF${year}_EVT_${where}"}]`)}
                 &pixelSize=${encodeURIComponent('{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":152.87405657041106,"y":152.87405657041106}')}
                 &sliceId=&time=&returnGeometry=false&returnCatalogItems=false&returnPixelValues=true&processAsMultidimensional=false&maxItemCount=1&f=json`;
 
@@ -1113,7 +1113,7 @@ async function onRasterLayerClick(e) {
                 }
             };
 
-        let where = "US",
+        let where = "CONUS",
             fuelType = 'Unknown',
             fuels = await getFuelType(year, where);
 

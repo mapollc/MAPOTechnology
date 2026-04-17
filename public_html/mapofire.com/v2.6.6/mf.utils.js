@@ -2620,7 +2620,7 @@ export class Layers {
 
     async fuels() {
         if (config.fuelsData == null) {
-            const data = await api('https://lfps.usgs.gov/arcgis/rest/services/Landfire_LF250/US_250EVT/ImageServer/rasterAttributeTable', [['f', 'json'], ['renderingRule', '{"rasterFunction":"US_250EVT"}']]);
+            const data = await api('https://lfps.usgs.gov/arcgis/rest/services/Landfire_LF2024/LF2024_EVT_CONUS/ImageServer/rasterAttributeTable', [['f', 'json'], ['renderingRule', '{"rasterFunction":"LF2024_EVT_CONUS"}']]);
 
             config.fuelsData = data.features;
         }
@@ -2629,7 +2629,7 @@ export class Layers {
             map.addSource('fuels', {
                 type: 'raster',
                 tiles: [
-                    'https://dmsdata.cr.usgs.gov/geoserver/gwc/service/wms?REQUEST=GetMap&SERVICE=WMS&VERSION=1.3.0&FORMAT=image%2Fpng&STYLES=&TRANSPARENT=true&LAYERS=landfire%3ALC24_EVT_250&TILED=true&SRS=EPSG%3A3857&jsonLayerId=us_240%20Fuel%20Vegetation%20Type&WIDTH=256&HEIGHT=256&CRS=EPSG%3A3857&BBOX={bbox-epsg-3857}'
+                    'https://dmsdata.cr.usgs.gov/geoserver/gwc/service/wms?REQUEST=GetMap&SERVICE=WMS&VERSION=1.3.0&FORMAT=image%2Fpng&STYLES=&TRANSPARENT=true&LAYERS=landfire%3ALF2024_EVT_CONUS&TILED=true&SRS=EPSG%3A3857&jsonLayerId=us_250%20Existing%20Vegetation%20Type&WIDTH=256&HEIGHT=256&CRS=EPSG%3A3857&BBOX={bbox-epsg-3857}'
                 ],
                 tileSize: 256
             });
@@ -2639,7 +2639,7 @@ export class Layers {
             map.addSource('fuelsAK', {
                 type: 'raster',
                 tiles: [
-                    'https://dmsdata.cr.usgs.gov/geoserver/gwc/service/wms?REQUEST=GetMap&SERVICE=WMS&VERSION=1.3.0&FORMAT=image%2Fpng&STYLES=&TRANSPARENT=true&LAYERS=landfire%3ALA24_EVT_250&TILED=true&SRS=EPSG%3A3857&jsonLayerId=ak_240%20Existing%20Vegetation%20Type&WIDTH=256&HEIGHT=256&CRS=EPSG%3A3857&BBOX={bbox-epsg-3857}'
+                    'https://dmsdata.cr.usgs.gov/geoserver/gwc/service/wms?REQUEST=GetMap&SERVICE=WMS&VERSION=1.3.0&FORMAT=image%2Fpng&STYLES=&TRANSPARENT=true&LAYERS=landfire%3ALF2024_EVT_AK&TILED=true&SRS=EPSG%3A3857&jsonLayerId=ak_250%20Existing%20Vegetation%20Type&WIDTH=256&HEIGHT=256&CRS=EPSG%3A3857&BBOX={bbox-epsg-3857}'
                 ],
                 tileSize: 256
             });

@@ -328,7 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
         invitation = document.querySelector('#invitation'),
         login = document.querySelector('#login'),
         register = document.querySelector('#register'),
-        forgot = document.querySelector('#forgot');
+        forgot = document.querySelector('#forgot'),
+        reset = document.querySelector('#reset');
 
     const addSubmitListener = (form, fn, submitText = 'Loading...') => {
         form.addEventListener('submit', (e) => {
@@ -342,7 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirmation) addSubmitListener(confirmation, () => sso.confirmation(), 'Verifying...');
     if (invitation) addSubmitListener(invitation, () => sso.invitation());
     if (login) addSubmitListener(login, () => sso.login());
-    if (forgot) addSubmitListener(forgot, () => qs('input[name=verify]') ? sso.reset() : sso.forgot());
+    if (forgot) addSubmitListener(forgot, () => sso.forgot());
+    if (reset) addSubmitListener(reset, () => sso.reset());
     if (register) addSubmitListener(register, () => sso.register());
 
     /*const unique = {
@@ -450,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (register || invitation || (forgot && document.querySelector('input[name=verify]'))) {
+    if (register || invitation || (reset && document.querySelector('input[name=verify]'))) {
         const confirmPass = document.querySelector('input[name=confirm_pass]');
 
         if (pass) {

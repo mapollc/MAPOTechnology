@@ -150,6 +150,7 @@ if ($_SERVER['REQUEST_URI'] == '/') {
                     'manageApp' => 'app',
                     'maps' => 'maps',
                     'message' => 'message',
+                    'model' => 'model',
                     'nbm' => 'nbm',
                     'newReport' => 'newReport',
                     'nws' => 'nws',

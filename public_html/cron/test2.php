@@ -1,8 +1,8 @@
 <?
-/*ini_set('display_errors',1);
-error_reporting(E_ALL);*/
-include_once '../db.ini.php';
-include_once '../apis/functions.inc.php';
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+/*include_once '../db.ini.php';
+include_once '../apis/functions.inc.php';*/
 
 /*$names = [];
 $result = mysqli_query($con, "SELECT city, lat, lon FROM cities WHERE state_prefix = 'OR' ORDER BY city ASC");
