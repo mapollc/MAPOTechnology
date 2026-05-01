@@ -1128,8 +1128,8 @@ async function onRasterLayerClick(e) {
             if (found) fuelType = found.attributes.EVT_NAME;
 
             popup.update(`<div class="item"><div class="t">Existing Vegetation Type</div><div class="v">${fuelType}</div></div>
-                <div class="item"><div class="t">Model</div><div class="v">${where == 'US' ? 'United States' : 'Alaska'}</div></div>
-                <div class="item"><div class="t">Data Year</div><div class="v">20${year}</div></div>`, 'Fuels Type');
+                <div class="item"><div class="t">Model</div><div class="v">${where == 'CONUS' ? 'United States' : 'Alaska'}</div></div>
+                <div class="item"><div class="t">Data Year</div><div class="v">${year}</div></div>`, 'Fuels Type');
         } else {
             popup.close();
             (await loadUtils()).notify('error', 'Unable to get fuels information. Try again.');

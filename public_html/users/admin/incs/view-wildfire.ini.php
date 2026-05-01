@@ -89,9 +89,9 @@ $addtl = ($_GET['q'] != '' ? 'q=' . $_GET['q'] . '&' : '') .
             <tr>
                 <th class="sortTable" data-url="sort=incidentID&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Incident #</th>
                 <th class="sortTable" data-url="sort=state&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">State</th>
+                <th class="sortTable" data-url="sort=type&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Type</th>
                 <th class="sortTable" data-url="sort=name&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Incident Name</th>
                 <th class="sortTable" data-url="sort=date&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'DESC' ? 'DESC' : 'ASC') . ($queryParams ? "&$queryParams" : '') ?>">Discovery Date</th>
-                <th class="sortTable" data-url="sort=type&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Type</th>
                 <th class="sortTable" data-url="sort=acres&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'DESC' ? 'DESC' : 'ASC') . ($queryParams ? "&$queryParams" : '') ?>">Acres</th>
                 <th class="sortTable" data-url="sort=updated&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'DESC' ? 'DESC' : 'ASC') . ($queryParams ? "&$queryParams" : '') ?>">Last Update</th>
                 <th>Displayed</th>

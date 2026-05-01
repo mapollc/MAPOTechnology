@@ -67,14 +67,15 @@ $sql = str_replace(' AND  AND ', ' AND ', $sql);
 
 /*if ($category == 'test') {
     $sql = "SELECT * FROM wildfires WHERE geo LIKE '%la grande%' AND year = 2024 AND display = 1 ORDER BY date DESC LIMIT 5";
-}*/
+} */
 
 ////echo $sql;exit();
 $result = mysqli_query($con, $sql);
 $total = 0;
 
 while ($row = mysqli_fetch_assoc($result)) {
-    $status = unserialize($row['status']);
+    $status = !empty($row['status']) ? json_decode($row['status']) : [];
+
     if ($category == 'test') {
         $show_fire = true;
     } else {
@@ -97,7 +98,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 
             $zone = dispatchZones($row['incidentID']);
             $fire = [
-                'wfid' => $row['wfid'],
+                'wfid' => (int)$row['wfid'],
                 'incidentId' => $row['incidentID'],
                 'county' => json_decode($row['near'])->county,
                 'state' => $row['state'],
@@ -105,7 +106,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 'name' => $name,
                 'type' => $row['type'],
                 'acres' => floatval($row['acres']),
-                'status' => ($status ? $status : ''),
+                'status' => empty($status) ? '' : $status,
                 'notes' => $row['notes'],
                 'resources' => $row['resources'],
                 'fuels' => $row['fuels'],

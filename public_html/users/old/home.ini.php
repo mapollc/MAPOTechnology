@@ -146,7 +146,7 @@ $count = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) AS c FROM wildfi
         <div class="card">
             <h1 class="category">Your Favorite Trails</h1>
 
-            <span class="help">These are your favorite trails on Map-o-Trails.</span>
+            <span class="help">These are your favorite trails on Map of Trails.</span>
 
             <div class="table-responsive" style="margin-top:0">
                 <table class="table" id="favTrails">

@@ -1,18 +1,13 @@
 <?
-$file = json_decode(file_get_contents('./cache/tfrs.json'), true);
+$cachefile = '/home/mapo/public_html/cron/cache/tfrs.json';
+$file = json_decode(file_get_contents($cachefile));
 
-if (isset($method)) {
-    foreach ($file['features'] as $f) {
-        if ($f['properties']['id'] == str_replace('-', '/', $method)) {
-            $f['properties']['geo'] = $f['geometry'];
-            $out = array('tfr' => $f['properties']);
-        }
+if (isset($_REQUEST['id'])) {
+    foreach ($file as $ea) {
+        if ($ea->properties->id == $_REQUEST['id']) $features[] = $ea;
     }
 } else {
-    $out = $file;
+    $features = $file;
 }
 
-$out['updated'] = filemtime('./cache/tfrs.json');
-
-$returnJson = $out;
-?>
+$returnJson = ['type' => 'FeatureCollection', 'updated' => filemtime($cachefile), 'features' => $features];

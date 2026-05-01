@@ -144,6 +144,15 @@ function loadScript(src) {
     });
 }
 
+function goBack(url) {
+    if (history.length > 1) {
+        history.go(-1);
+    } else {
+        window.location.href = url;
+    }
+    return false;
+}
+
 function ucfirst(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -240,7 +249,7 @@ class QueryWildfires {
         document.querySelector('#resultsNum').innerHTML = '';
         this.listOfFires.querySelector('tbody').innerHTML = '<tr><td colspan="10" style="text-align:center"><div class="spinner"></div></td></tr>';
 
-        const resp = await api(host + usersAPI + 'getFires' + (pageName.search('duplicates') >= 0 ? '/duplicates' : ''), body);
+        const resp = await api(apiURL + 'account/getFires' + (pageName.search('duplicates') >= 0 ? '/duplicates' : ''), body, true);
         this.success(resp);
     }
 
@@ -254,6 +263,8 @@ class QueryWildfires {
             for (let i = 0; i < this.wildfires.length; i++) {
                 this.createRow(this.wildfires[i], (i > 0 ? this.wildfires[i - 1] : null));
             }
+        } else {
+            this.listOfFires.querySelector('tbody').innerHTML = '<tr><td colspan="9" style="text-align:center">No wildfires were found for that search criteria</td></tr>';
         }
     }
 
@@ -364,18 +375,18 @@ class QueryWildfires {
         };
         const date = this.now - fire.date > 86400 ? new Intl.DateTimeFormat('en-US', options).format(fire.date * 1000).replace(',', '') : timeAgo(fire.date),
             url = `../admin/wildfires/${fire.owner == 'mapo' ? 'modify' : 'edit'}?wfid=${fire.wfid}`,
-            dupURL = pageName == 'admin/wildfires/duplicates' ? ` | <a href="#" class="hidefrommap" data-wfid="${fire.wfid}" onclick="return false">hide</a>` : '';
+            dupURL = pageName == 'admin/wildfires/duplicates' ? `&nbsp;|&nbsp;<a href="#" class="hidefrommap" data-wfid="${fire.wfid}" onclick="return false">hide</a>` : '';
 
         return `<td>${fire.incidentID}</td>
             <td>${fire.state}</td>
+            <td>${fire.type}</td>
             <td>${fire.name}</td>
             <td>${date}</td>
-            <td>${fire.type}</td>
             <td>${this.size(fire.acres)}</td>
             <td>${timeAgo(fire.updated)}</td>
             <td>${fire.display == '1' ? 'Yes' : 'No'}</td>
             <td>${fire.owner}</td>
-            <td>${this.listOfFires.dataset.edit == '1' ? `<a style="font-weight:400!important" href="${url}">edit</a>${dupURL}` : ''}</td>`;
+            <td>${this.listOfFires.dataset.edit == '1' ? `<a style="font-weight:400!important" href="${url}">edit</a>&nbsp;|&nbsp;<a style="font-weight:400!important" target="blank" href="//mapofire.com/${fire.url}">view</a>${dupURL}` : ''}</td>`;
     }
 
     isDuplicateFire(currentFire, lastFire, acresThreshold = 10.0, idLastDigits = 3) {
@@ -1358,6 +1369,12 @@ async function complete() {
             }
 
             const queryString = params.toString();
+            const updatedQueryParams = queryString.replace(/(sort|order)=[A-Za-z]+&?/g, '');
+
+            document.querySelectorAll('.sortTable').forEach(th => {
+                let url = th.dataset.url;
+                th.dataset.url = `${url.match(/sort=[A-Za-z]+&order=[A-Za-z]+/)}&${updatedQueryParams}`;
+            });
 
             query.search(queryString);
         });

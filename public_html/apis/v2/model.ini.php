@@ -360,7 +360,7 @@ class FireSpreadModel
 
         // Anderson (1983) L/W ratio based on wind speed (mph)
         // Formula: L/W = 1 + 0.25 * (WindSpeed^0.8)
-        $lw = 1 + (0.25 * pow($this->windSpd, 0.8));
+        $lw = 1 + (0.25 * pow($useGusts ? $this->windGust : $this->windSpd, 0.8));
         $headDist = $ros;
 
         // Usually very slow, roughly 5-10% of head fire in moderate winds
@@ -431,9 +431,9 @@ class FireSpreadModel
         return round($miles, 2) . " miles";
     }
 
-    private function statement($analysis, $acres)
+    private function statement($analysis, $acres, $isGust)
     {
-        return "This fire has a {$analysis['spread_class']} spread potential. " .
+        return "Based on current " . ($isGust ? 'wind gusts' : 'sustained wind speeds') . ", this fire has a {$analysis['spread_class']} spread potential. " .
             "In the next hour, the risk zone extends approximately {$this->formatDistance($analysis['ros'])}" .
             " {$analysis['spread_direction']['long']}, impacting an estimated {$acres}.";
     }
@@ -449,13 +449,14 @@ class FireSpreadModel
             $area = $cone['meta']['area'];
             $acres = "$area acre". ($area != 1 ? 's' : '');
 
-            $analysis['statement'] = $this->statement($analysis, $acres);
+            $analysis['statement'] = $this->statement($analysis, $acres, $isGust);
             $analysis['spread_direction'] = $analysis['spread_direction']['short'];
 
             return [
                 'type' => 'Feature',
                 'properties' => [
                     'id' => $isGust ? 'gusts' : 'sustained',
+                    'wfid' => (int)$_REQUEST['wfid'],
                     'updated' => $this->updated,
                     'valid' => $this->updated + 3600,
                     'weather' => [
@@ -487,14 +488,14 @@ class FireSpreadModel
             ];
         }, [false, true]);
 
-        $features[] = [
+        /*$features[] = [
             'type' => 'Feature',
             'geometry' => [
                 'type' => 'Point',
                 'coordinates' => [$this->lng, $this->lat]
             ],
             'properties' => ['type' => 'origin']
-        ];
+        ];*/
 
         return $features;
     }

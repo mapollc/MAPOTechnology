@@ -3578,9 +3578,9 @@ export class Wildfires {
         const isBig = [
             'all',
             ['>=', ['to-number', ['coalesce', ['get', 'acres'], 0]], thresh],
-            ['!', ['has', 'Out']],
-            ['!', ['has', 'Control']],
-            ['!', ['has', 'Contain']]
+            ['!=', ['get', 'Out'], true],
+            ['!=', ['get', 'Control'], true],
+            ['!=', ['get', 'Contain'], true]
         ];
 
         const config = {
@@ -3615,9 +3615,9 @@ export class Wildfires {
             discovered = ['to-number', ['coalesce', ['get', 'discovered', ['get', 'time']], now]],
             baseCase = ['==', ['get', 'type'], 'Complex'],
             statusChecks = [
-                ['has', 'Out'], 'fire-icon-out',
-                ['has', 'Contain'], 'fire-icon-contained',
-                ['has', 'Control'], 'fire-icon-controlled'
+                ['==', ['get', 'Out'], true], 'fire-icon-out',
+                ['==', ['get', 'Contain'], true], 'fire-icon-contained',
+                ['==', ['get', 'Control'], true], 'fire-icon-controlled'
             ],
             complexIcon = 'fire-icon-complex';
 
@@ -3638,7 +3638,7 @@ export class Wildfires {
             ];
         }
 
-        return [
+        const exp = [
             'case',
             baseCase, complexIcon,
             [
@@ -3648,10 +3648,14 @@ export class Wildfires {
             ],
             'fire-icon-out',
             ...statusChecks,
-            ['>=', acres, 1000], 'fire-icon-large',
+            ['>=', acres, 1000],
+            'fire-icon-large',
             ['>=', acres, 100], 'fire-icon-big',
             'fire-icon'
         ];
+
+        //console.log(exp);
+        return exp;
     }
 
     async commitLog() {
@@ -4260,11 +4264,12 @@ export class Wildfires {
         const sourceId = `${type}_fires`;
         const source = map.getSource(sourceId);
 
+        // add or get properties from json return
         fires.features.forEach(f => {
             const p = f.properties;
 
             ['Out', 'Contain', 'Control'].forEach(status => {
-                if (p.status[status]) p[status] = true;
+                p[status] = p.status[status] ? true : false;
             });
 
             p.name = config.wildfire.fireName(p.name, p.type, p.incidentId);
@@ -4360,7 +4365,7 @@ export class Wildfires {
                         'icon-image': this.fireIcon(type),
                         'icon-size': [
                             'case',
-                            ['has', 'Out'],
+                            ['==', ['get', 'Out'], true],
                             0.3,
                             0.4
                         ],

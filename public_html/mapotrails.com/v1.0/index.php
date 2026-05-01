@@ -94,7 +94,7 @@ if ($_GET['tid']) {
     $settings['category'] = $json->guide->metadata->type;
 } else {
     $title = 'Interactive ' . ($_GET['activity'] ? ucwords(str_replace('-', ' ', $_GET['activity'])) . ' ' : ($category ? ucwords($category) . ' ' : '')) . 'Maps '.($_GET['area'] ? 'near '.ucwords(str_replace('-', ' ', $_GET['area'])).' ' : '').'- Online Recreation Mapping';
-    $desc = 'Find trails to hike, mountain bike, ski, and snowmoboile in Oregon using Map-o-Trails, a recreation mapping app.';
+    $desc = 'Find trails to hike, mountain bike, ski, and snowmoboile in Oregon using Map of Trails, a recreation mapping app.';
 }
 
 $settings['android'] = ($android == 1 ? 1 : 0);
@@ -103,7 +103,7 @@ $settings['android'] = ($android == 1 ? 1 : 0);
 
 <html lang="en-US" xmlns:og="http://ogp.me/ns#">
 <head>
-    <title><?=$title?> - Map-o-Trails</title>
+    <title><?=$title?> - Map of Trails</title>
     <meta charset="utf-8">
     <link rel="preconnect" href="//fonts.gstatic.com/">
     <link rel="preconnect" href="//cdn.jsdelivr.net">
@@ -112,15 +112,15 @@ $settings['android'] = ($android == 1 ? 1 : 0);
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
     <meta name="description" content="<?=$desc?>">
-    <meta property="og:title" content="<?=$title?> - Map-o-Trails">
+    <meta property="og:title" content="<?=$title?> - Map of Trails">
     <meta property="og:description" content="<?=$desc?>">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Map-o-Trails">
+    <meta property="og:site_name" content="Map of Trails">
     <meta property="og:url" content="<?=$domain.substr($_SERVER['REQUEST_URI'], 1)?>">
     <meta property="og:image" content="<?=($metaimg ? $metaimg : 'https://www.mapotechnology.com/assets/images/mapotrails_logo.png')?>">
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="<?=$domain.substr($_SERVER['REQUEST_URI'], 1)?>">
-    <meta property="twitter:title" content="<?=$title?> - Map-o-Trails">
+    <meta property="twitter:title" content="<?=$title?> - Map of Trails">
     <meta property="twitter:description" content="<?=$desc?>">
     <meta property="twitter:image" content="<?=($metaimg ? $metaimg : 'https://www.mapotechnology.com/assets/images/mapotrails_logo.png')?>">
     <meta name="mobile-web-app-capable" content="yes">
@@ -157,7 +157,7 @@ $settings['android'] = ($android == 1 ? 1 : 0);
             <?}?>
             <li id="save" class="ttip" data-tooltip='{"text":"Sync map settings","dir":"left"}'><i class="fas fa-cloud-arrow-up"></i><span>Sync</span></li>
             <li id="mylocation" class="ttip" data-tooltip='{"text":"Find my location","dir":"left"}'><i class="fas fa-location-arrow"></i><span>Location</span></li>
-            <li class="ttip" data-tooltip='{"text":"About Map-o-Trails","dir":"left"}' onclick="window.location.href='https://www.mapotrails.com/about'"><i class="fas fa-circle-info"></i><span>About</span></li>
+            <li class="ttip" data-tooltip='{"text":"About Map of Trails","dir":"left"}' onclick="window.location.href='https://www.mapotrails.com/about'"><i class="fas fa-circle-info"></i><span>About</span></li>
         </ul>
     </nav>
     <?if($android != 1){?><div class="logo"><a href="https://www.mapofire.com"><img src="https://www.mapotechnology.com/assets/images/mapo_logo_square_transparent.png" style="width:65px;height:65px" title="MAPO LLC" alt="MAPO LLC logo"></a></div><?}?>

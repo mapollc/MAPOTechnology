@@ -217,6 +217,10 @@ if ($method == 'delete') {
                         <h2>Your Home Location</h2>
                         <p class="help">Setting your home location helps us provide information specific to your area.</p>
                     </li>
+                    <li onclick="window.location.href='../account/settings/devices'">
+                        <h2>Your Devices</h2>
+                        <p class="help">View a list of devices you have logged into your account with.</p>
+                    </li>
                     <li onclick="downloadUserData()">
                         <h2>Download Data</h2>
                         <p class="help">Download all your MAPO user data in a JSON file.</p>

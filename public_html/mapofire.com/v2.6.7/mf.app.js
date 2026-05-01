@@ -232,6 +232,7 @@ const osm = {
     };
 
 const activeIncidents = new Map(),
+    loadingImages = new Set(),
     modal = $('#modal'),
     impact = $('#impact'),
     searchResults = $('#search-results'),
@@ -291,7 +292,7 @@ const activeIncidents = new Map(),
             permissions: ['PREMIUM', 'PRO']
         }
     ],
-    fireIcons = ['', 'out', 'big', 'controlled', 'contained', 'large', 'complex', 'new', 'new-big', 'rx', 'smoke'],
+    fireIcons = ['', 'out', 'big', 'controlled', 'contained', 'large', 'large-inactive', 'complex', 'new', 'new-big', 'rx', 'smoke'],
     risk = {
         'whp': [
             ['N/A', '#fff'],
@@ -815,19 +816,27 @@ function addDynamicControls() {
     if (inits.evacuations?.evacsLoaded) inits.evacuations?.evacHelper();
 }
 
-function loadMapIcons() {
+async function loadMapIcons() {
     const queue = [
         ...fireIcons.map(i => ({ id: `fire-icon${i ? `-${i}` : ''}`, path: `fire/fire-icon${i ? `-${i}` : ''}.png` })),
         ...['helicopter', 'plane_tactical', 'plane_large', 'plane_small'].map(i => ({ id: i, path: `fire/${i}.png` })),
         ...[1, 2, 3].map(i => ({ id: `modis${i}`, path: `fire/modis${i}.png` }))
     ];
 
-    queue.forEach(async ({ id, path }) => {
-        if (!map.hasImage(id)) {
+    await Promise.all(queue.map(async ({ id, path }) => { // changed: use Promise.all instead of forEach
+        if (map.hasImage(id) || loadingImages.has(id)) return; // added: prevent duplicate loads
+
+        loadingImages.add(id); // added
+
+        try {
             const img = await map.loadImage(`${ENV.domain}assets/images/icons/${path}`);
-            map.addImage(id, img.data);
+            if (!map.hasImage(id)) map.addImage(id, img.data);
+        } catch (e) {
+            console.error(`Failed to load image: ${id}`, e); // added
+        } finally {
+            loadingImages.delete(id); // added
         }
-    });
+    }));
 }
 
 async function init() {
@@ -1366,7 +1375,7 @@ window.addEventListener('click', async (e) => {
         actionElement = target.closest('[data-action]'),
         action = actionElement ? actionElement.dataset.action : null,
         canUse = settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM);
-        //canUse = settings.subscriptions().valid() || settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN;
+    //canUse = settings.subscriptions().valid() || settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN;
 
     const clicks = new (await loadUtils()).ClickListener(target, searchResults);
 

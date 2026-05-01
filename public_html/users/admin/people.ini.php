@@ -107,7 +107,7 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
             $offset = ($currentPage - 1) * $rowsPerPage;
             $pagination = new Pagination($currentPage, $totalPages, 50);
 
-            $sql = mysqli_query($con, "SELECT uid, first_name, last_name, u.email, role, u.created, last_active, cid FROM users AS u LEFT JOIN billing AS b ON b.email = u.email $where ORDER BY $order, b.start DESC LIMIT $offset, $rowsPerPage");
+            $sql = mysqli_query($con, "SELECT uid, first_name, last_name, u.email, role, u.created, last_active, cid FROM users AS u LEFT JOIN billing AS b ON b.email = u.email $where GROUP BY u.uid ORDER BY $order, b.start DESC LIMIT $offset, $rowsPerPage");
             $totalUsers = mysqli_num_rows(mysqli_query($con, "SELECT uid FROM users")) - 2;
         ?>
             <h1>Manage Users</h1>
@@ -150,7 +150,7 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
                                 <td><?= $row['first_name'] ?></td>
                                 <td><?= $row['last_name'] ?></td>
                                 <td><a href="mailto:<?= $row['email'] ?>"><?= $row['email'] ?></a></td>
-                                <td><?= $row['cid'] != null ? "<a target=\"blank\" href=\"https://dashboard.stripe.com/customers/$row[cid]\">$row[cid]</a>" : 'No' ?></td>
+                                <td><?= $row['cid'] != null ? "<a target=\"blank\" href=\"https://dashboard.stripe.com/acct_1MTX5vIpCdpJm6cT/customers/$row[cid]\">$row[cid]</a>" : 'No' ?></td>
                                 <td><?= $row['role'] == 1 ? '<i class="fas fa-user" title="General User"></i>' : '' ?>
                                     <?= $row['role'] == 2 ? '<i class="fas fa-badge-check" title="Premium Access"></i>' : '' ?>
                                     <?= $row['role'] == 4 ? '<i class="fas fa-person-hiking" title="Trail Moderator"></i>' : '' ?>

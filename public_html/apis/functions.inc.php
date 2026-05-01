@@ -129,7 +129,8 @@ function polygon($points_polygon, $vertices_x, $vertices_y, $longitude_x, $latit
     return $c;
 }
 
-function pointInPolygon($lat, $lon, $geo) {
+function pointInPolygon($lat, $lon, $geo)
+{
     $geometry = json_decode(gzuncompress($geo));
     $coords = $geometry->coordinates;
 
@@ -143,19 +144,22 @@ function pointInPolygon($lat, $lon, $geo) {
     return false;
 }
 
-function pointInRings($x, $y, $rings) {
+function pointInRings($x, $y, $rings)
+{
     foreach ($rings as $ring) {
         if (pointInSingleRing($x, $y, $ring)) return true;
     }
     return false;
 }
 
-function pointInSingleRing($x, $y, $ring) {
+function pointInSingleRing($x, $y, $ring)
+{
     $inside = false;
     $n = count($ring);
-    for ($i = 0, $j = $n-1; $i < $n; $j = $i++) {
+    for ($i = 0, $j = $n - 1; $i < $n; $j = $i++) {
         if ((($ring[$i][1] > $y) != ($ring[$j][1] > $y)) &&
-            ($x < ($ring[$j][0]-$ring[$i][0]) * ($y-$ring[$i][1])/($ring[$j][1]-$ring[$i][1]) + $ring[$i][0])) {
+            ($x < ($ring[$j][0] - $ring[$i][0]) * ($y - $ring[$i][1]) / ($ring[$j][1] - $ring[$i][1]) + $ring[$i][0])
+        ) {
             $inside = !$inside;
         }
     }
@@ -187,7 +191,7 @@ function getCompassDirection($bearing)
 {
     $bearing = $bearing % 360;
     if ($bearing < 0) $bearing += 360;
-    
+
     $directions = ["North", "NNE", "NE", "ENE", "East", "ESE", "SE", "SSE", "South", "SSW", "SW", "WSW", "West", "WNW", "NW", "NNW"];
 
     return $directions[round($bearing / 22.5) % 16];
@@ -454,7 +458,7 @@ function incidentName($name, $inc, $type = null)
     }
 
     // --- Remove agency prefixes/suffixes ---
-    $things = ['Rn','Pr','Nw','Rs','Rv','Pv','Od','Ne','Cs','Fa','Cr','Cf','Gp','Sc'];
+    $things = ['Rn', 'Pr', 'Nw', 'Rs', 'Rv', 'Pv', 'Od', 'Ne', 'Cs', 'Fa', 'Cr', 'Cf', 'Gp', 'Sc'];
 
     foreach ($things as $t) {
         if (str_ends_with($name, " $t")) {
@@ -740,7 +744,8 @@ function calculateMedian(array $numbers)
     return ($count % 2 === 1) ? $numbers[$middleIndex] : ($numbers[$middleIndex - 1] + $numbers[$middleIndex]) / 2;
 }
 
-function getCounty($con, $coords, $oregon = false) {
+function getCounty($con, $coords, $oregon = false)
+{
     $lat = $coords[0];
     $lon = $coords[1];
     $isOregon = $oregon ? " state = 'OR' AND" : "";
@@ -911,9 +916,7 @@ function utlPresent($row)
 
     # loop through keywords that indicate the incident is utl etc
     foreach ($words as $w) {
-        if (strpos($name, $w) !== false || strpos($notes, $w) !== false) {
-            return true;
-        }
+        if (str_contains($name, $w) || str_contains($notes, $w)) return true;
     }
 
     return false;
@@ -934,7 +937,8 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
     $onemonth = (60 * 60 * 24 * (365.25 / 12));
     $acres = floatval(str_replace(',', '', $row['acres']));
     $noAcres = $acres == '' || $acres == 'Unknown' || $acres == 0 ? true : false;
-    $status = $status != false && !empty($status) && $status != '' ? (is_array($status) ? $status : unserialize($status)) : [];
+    //$status = $status != false && !empty($status) && $status != '' ? (is_array($status) ? $status : unserialize($status)) : [];
+    $status = empty($status) || !is_array($status) ? [] : $status;
     $isUTL = utlPresent($row);
 
     if ($row['updated'] > $day5 && !$isUTL) {
@@ -991,7 +995,7 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
     return $p ? $parts : $show_fire;
 }
 
-function wildfireAlgorithm2($request, $inc_type, $status, $row, $archive, $p = false/*, $week2, $weekold*/)
+/*function wildfireAlgorithm2($request, $inc_type, $status, $row, $archive, $p = false/*, $week2, $weekold*//*)
 {
     $parts = [];
     $show_fire = false;
@@ -1065,7 +1069,7 @@ function wildfireAlgorithm2($request, $inc_type, $status, $row, $archive, $p = f
     }
 
     return $p ? $parts : $show_fire;
-}
+}*/
 
 function wildfireURL($wfid, $name, $state)
 {

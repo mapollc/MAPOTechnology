@@ -178,7 +178,7 @@ if (!$permission->fire()->edit()) {
 
                 <div class="btn-group">
                     <input type="submit" class="btn btn-green" name="action" value="Save Changes">
-                    <input type="button" class="btn" value="Go Back" onclick="window.location.href='../wildfires'">
+                    <input type="button" class="btn" value="Go Back" onclick="goBack('../wildfires')">
                 </div>
             </div>
 

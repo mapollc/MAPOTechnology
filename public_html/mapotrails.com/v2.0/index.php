@@ -78,7 +78,7 @@ if ($_GET['tid']) {
                 <?}?>
                 <li id="save" class="ttip" data-tooltip='{"text":"Sync map settings","dir":"left"}'><i class="fas fa-cloud-arrow-up"></i><span>Sync</span></li>
                 <!--<li id="mylocation" class="ttip" data-tooltip='{"text":"Find my location","dir":"left"}'><i class="fas fa-location-arrow"></i><span>Location</span></li>-->
-                <li class="ttip" data-tooltip='{"text":"About Map-o-Trails","dir":"left"}' onclick="window.location.href='https://www.mapotrails.com/about'"><i class="fas fa-circle-info"></i><span>About</span></li>
+                <li class="ttip" data-tooltip='{"text":"About Map of Trails","dir":"left"}' onclick="window.location.href='https://www.mapotrails.com/about'"><i class="fas fa-circle-info"></i><span>About</span></li>
                 <li class="ttip" data-tooltip='{"text":"Donate","dir":"left"}' onclick="window.location.href='https://buy.stripe.com/6oEdTx7PFdAJ8YU3cc'"><i class="fas fa-circle-dollar-to-slot"></i><span>Donate</span></li>
                 <?if ($_SESSION['uid']) {?>
                     <li class="ttip" data-tooltip='{"text":"Logout","dir":"left"}' onclick="window.location.href='https://www.mapotrails.com/logout?service=mapotrails&next=<?= urlencode('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']) ?>'"><i class="far fa-right-from-bracket"></i><span>Logout</span></li>

@@ -49,7 +49,7 @@ for ($i = 0; $i < count($json->features); $i++) {
             $status['Out'] = round($prop->FireOutDateTime / 1000);
         }
 
-        $status = count($status) == 0 ? '' : serialize($status);
+        $status = count($status) > 0 ? json_encode($status) : '';
 
         $sqlQueries .= "INSERT INTO wildfires (incidentID,incidentNumOnly,state,agency,year,date,name,type,lat,lon,geo,acres,status,notes,resources,fuels,captured,updated,timezone,display)
         VALUES('$incidentNum','$incNumOnly','$state','AICC','$year','$date','$name','$incidentType','$lat','$lon','$geo','$acres','$status','','','$fuels','$time','$updated','America/Juneau','1')

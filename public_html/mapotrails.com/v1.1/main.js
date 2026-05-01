@@ -1320,7 +1320,7 @@ async function init() {
                     var c = l[i].getLatLng();
 
                     map.setView([c.lat, c.lng], 12);
-                    document.title = l[i].options.title + ' - Online Recreation Mapping - Map-o-Trails';
+                    document.title = l[i].options.title + ' - Online Recreation Mapping - Map of Trails';
                 }
             }
         } else {

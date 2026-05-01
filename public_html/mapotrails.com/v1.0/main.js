@@ -1223,7 +1223,7 @@ async function init() {
                     var c = l[i].getLatLng();
 
                     map.setView([c.lat, c.lng], 12);
-                    document.title = l[i].options.title + ' - Interactive Maps on Map-o-Trails | MAPO LLC';
+                    document.title = l[i].options.title + ' - Interactive Maps on Map of Trails | MAPO LLC';
                 }
             }
         } else {

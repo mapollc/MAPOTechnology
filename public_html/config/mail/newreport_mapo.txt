@@ -1,4 +1,4 @@
-A website user at Map-o-Fire sent a new wildland fire incident report to MAPO:<br>
+A Map of Fire website or app user sent a new wildland fire incident report to MAPO:<br>
 
 ------------------------------------------------------<br>
 {report}

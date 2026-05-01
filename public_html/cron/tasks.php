@@ -6,6 +6,7 @@ error_reporting(E_ERROR | E_PARSE);
 include_once '../db.ini.php';
 
 $now = time();
+$year = date('Y', $now);
 $sqlQueries = '';
 
 /*function dualDomains()
@@ -78,17 +79,40 @@ function syncFireFiles() {
 ";
 }
 
+// if an inciweb fire says a fire is 100% contained, update the wildfires database with that info
+$iw = mysqli_query($con, "SELECT state, year, name, data FROM `inciweb` WHERE year = $year");
+while ($row = mysqli_fetch_assoc($iw)) {
+    $arr = unserialize($row['data'])['data'];
+
+    if ($arr['Current Situation']) {
+        foreach ($arr['Current Situation'] as $item) {
+            if (isset($item['desc']) && strtolower($item['desc']) === 'containment' && $item['info'] === '100%') {
+                $stat = json_encode(['Contain' => -1]);
+                $sqlQueries .= "UPDATE wildfires SET status = '$stat' WHERE year = $row[year] AND state = '$row[state]' AND name LIKE '%$row[name]%' AND (status IS NULL OR status = '' OR status != '$stat');";
+            }
+        }
+    }
+}
+echo 'Wildfires DB updated with contained status from Inciweb...
+';
+
 // expire any sessions that show as active, but have expired according to current time
 $result = mysqli_query($con, "SELECT sid FROM sessions WHERE expires != 0 AND expires < '$now' AND source NOT LIKE 'com.mapollc%'");
 while ($row = mysqli_fetch_assoc($result)) {
     $sqlQueries .= "UPDATE sessions SET expires = 0 WHERE sid = '$row[sid]';";
 }
+echo 'Inactive user sessions set to expired...
+';
 
 // remove user access to premium content if their subscription has expired
 $result = mysqli_query($con, "SELECT email FROM billing WHERE end < '$now' AND status != 'expired'");
 while ($row = mysqli_fetch_assoc($result)) {
     $sqlQueries .= "UPDATE billing SET status = 'expired' WHERE email = '$row[email]';";
 }
+echo 'Inactive subscriptions set to expired and permissions removed...
+
+====== Executing MySQL queries ======
+';
 
 // run ALL sql queries
 if ($sqlQueries) {
@@ -106,6 +130,9 @@ if ($sqlQueries) {
 }
 
 mysqli_close($con);
+echo '
+====== Starting file maintenance tasks ======
+';
 
 // delete old, cached API files older than 5 days
 $dir = '/home/mapo/public_html/apis/cache/';
@@ -116,6 +143,8 @@ foreach ($cached as $file) {
         unlink($dir . $file);
     }
 }
+echo 'Old API cache files deleted....
+';
 
 // delete old cron emails
 $dir2 = '/home/mapo/mail/cur/';
@@ -129,6 +158,8 @@ foreach ($cached as $file) {
         }
     }
 }
+echo 'Old system emails deleted....
+';
 
 // delete old log files every 12 hours
 $dir3 = '/home/mapo/logs/';
@@ -143,6 +174,8 @@ foreach ($logs as $file) {
         }
     }
 }
+echo 'Old log files deleted...
+';
 
 // delete trash items every 3 days
 $dir5 = '/home/mapo/.trash/';
@@ -157,6 +190,8 @@ foreach ($trash as $file) {
         }
     }
 }
+echo 'Files in trash deleted...
+';
 
 // delete old cache files on mapofire every 3 days
 $dir4 = '/home/mapo/public_html/mapofire.com/apis/cache/';
@@ -170,9 +205,12 @@ foreach ($cached2 as $file) {
         }
     }
 }
+echo 'Old Map of Fire API cache files deleted....
+';
 
 echo syncFireFiles();
 ////echo sendReminderEmails();
 
 echo '-------------------------------------------------------
-Completed all maintenance tasks...';
+Completed all maintenance tasks...
+';

@@ -145,7 +145,7 @@ if ($_GET['tid']) {
     $settings['category'] = $json->guide->metadata->type;
 } else {
     $title = 'Interactive ' . ($_GET['activity'] ? ucwords(str_replace('-', ' ', $_GET['activity'])) . ' ' : ($category ? ucwords($category) . ' ' : '')) . 'Maps '.($_GET['area'] ? 'near '.ucwords(str_replace('-', ' ', $_GET['area'])).' ' : '').'- Online Recreation Mapping';
-    $desc = 'Find trails to hike, mountain bike, ski, and snowmoboile in Oregon using Map-o-Trails, a recreation mapping app.';
+    $desc = 'Find trails to hike, mountain bike, ski, and snowmoboile in Oregon using Map of Trails, a recreation mapping app.';
 }
 
 $settings['android'] = ($android == 1 ? 1 : 0);
@@ -154,7 +154,7 @@ $settings['android'] = ($android == 1 ? 1 : 0);
 
 <html lang="en-US" xmlns:og="http://ogp.me/ns#">
 <head>
-    <title><?=$title?> - Map-o-Trails</title>
+    <title><?=$title?> - Map of Trails</title>
     <meta charset="utf-8">
     <link rel="preconnect" href="//fonts.gstatic.com/">
     <link rel="preconnect" href="//unpkg.com">
@@ -164,15 +164,15 @@ $settings['android'] = ($android == 1 ? 1 : 0);
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
     <meta name="description" content="<?=$desc?>">
-    <meta property="og:title" content="<?=$title?> - Map-o-Trails">
+    <meta property="og:title" content="<?=$title?> - Map of Trails">
     <meta property="og:description" content="<?=$desc?>">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Map-o-Trails">
+    <meta property="og:site_name" content="Map of Trails">
     <meta property="og:url" content="<?=$domain.substr($_SERVER['REQUEST_URI'], 1)?>">
     <meta property="og:image" content="<?=($metaimg ? $metaimg : 'https://www.mapotechnology.com/assets/images/mapotrails_logo.png')?>">
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="<?=$domain.substr($_SERVER['REQUEST_URI'], 1)?>">
-    <meta property="twitter:title" content="<?=$title?> - Map-o-Trails">
+    <meta property="twitter:title" content="<?=$title?> - Map of Trails">
     <meta property="twitter:description" content="<?=$desc?>">
     <meta property="twitter:image" content="<?=($metaimg ? $metaimg : 'https://www.mapotechnology.com/assets/images/mapotrails_logo.png')?>">
     <meta name="mobile-web-app-capable" content="yes">
@@ -210,7 +210,7 @@ $settings['android'] = ($android == 1 ? 1 : 0);
                 <?}?>
                 <li id="save" class="ttip" data-tooltip='{"text":"Sync map settings","dir":"left"}'><i class="fas fa-cloud-arrow-up"></i><span>Sync</span></li>
                 <li id="mylocation" class="ttip" data-tooltip='{"text":"Find my location","dir":"left"}'><i class="fas fa-location-arrow"></i><span>Location</span></li>
-                <li class="ttip" data-tooltip='{"text":"About Map-o-Trails","dir":"left"}' onclick="window.location.href='https://www.mapotrails.com/about'"><i class="fas fa-circle-info"></i><span>About</span></li>
+                <li class="ttip" data-tooltip='{"text":"About Map of Trails","dir":"left"}' onclick="window.location.href='https://www.mapotrails.com/about'"><i class="fas fa-circle-info"></i><span>About</span></li>
                 <?if ($_SESSION['uid']){?>
                 <li class="ttip" data-tooltip='{"text":"Logout","dir":"left"}' onclick="window.location.href='https://www.mapotrails.com/logout?service=mapotrails&next=<?=urlencode('https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'])?>'"><i class="far fa-right-from-bracket"></i><span>Logout</span></li>
                 <?}?>
@@ -221,7 +221,7 @@ $settings['android'] = ($android == 1 ? 1 : 0);
 
     <?/*<div class="marketing" style="padding-left:calc(.75em + var(--nav-width))">
         <div>
-            <span>Upgrade to Map-o-Trails Premium to access additional features.</span>
+            <span>Upgrade to Map of Trails Premium to access additional features.</span>
             <a class="btn btn-xs btn-light-blue" style="font-size:15px;margin:0" href="https://www.mapotechnology.com/checkout?price_id=<?=$mapoSubscriptions['mapotrails'][($stripeLive ? 'live' : 'test')]?>&host=mapotrails.com&return=<?=urlencode($_SERVER['REQUEST_URI'])?>">Upgrade</a>
         </div>
         <i class="far fa-xmark" onclick="this.parentElement.remove()"></i>

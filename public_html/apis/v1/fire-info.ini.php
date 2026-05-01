@@ -43,7 +43,7 @@ if (!$cache || filemtime(root() . 'fire-info.ini.php') > $memcache->get($cachefi
         $contain = time() - $row['date'] < 86400 ? '0%' : 'N/A';
         $name = incidentName($row['name'], $row['incidentID'], $row['type']);
         $notes = rtrim($row['notes']);
-        $status = $row['status'] != '' ? unserialize($row['status']) : false;
+        $status = empty($row['status']) ? false : json_decode($row['status'], true);
         $state = convertState(explode(', ', $row['geo'])[1], 1);
         $fuelGroups = json_decode($row['fuelGroups']);
         $causes = json_decode($row['causes']);
@@ -121,6 +121,20 @@ if (!$cache || filemtime(root() . 'fire-info.ini.php') > $memcache->get($cachefi
 
             $fire['inciweb'] = $inciweb;
 
+            $aa = unserialize($row['data']);
+            foreach ($aa['data']['Current Situation'] as $k) {
+                if ($k['desc'] == 'Size') {
+                    $bkacres = str_replace([' Acres', ','], ['', ''], $k['info']);
+                }
+
+                if ($k['desc'] == 'Containment') {
+                    $contain = $k['info'];
+                }
+            }
+
+            // if acreage reported by inciweb is greater than acres reported by dispatch, use inciweb
+            if ($bkacres > $row['acres']) $fire['properties']['acres'] = $bkacres;
+
             // remove coordinates from inciweb data
             for ($i = 0; $i < count($fire['inciweb']['current']['data']['Basic Information']); $i++) {
                 if ($fire['inciweb']['current']['data']['Basic Information'][$i]['desc'] == 'Coordinates') {
@@ -128,23 +142,9 @@ if (!$cache || filemtime(root() . 'fire-info.ini.php') > $memcache->get($cachefi
                 }
             }
 
-            $aa = unserialize($row['data']);
-            foreach ($aa['data']['Current Situation'] as $o) {
-                if ($o['desc'] == 'Size') {
-                    $bkacres = str_replace([' Acres', ','], ['', ''], $o['info']);
-                    break;
-                }
-            }
-
-            // if acreage reported by inciweb is greater than acres reported by dispatch, use inciweb
-            if ($bkacres > $row['acres']) $fire['properties']['acres'] = $bkacres;
-
-            foreach ($aa['data']['Current Situation'] as $k) {
-                if ($k['desc'] == 'Containment') {
-                    $contain = $k['info'];
-                    break;
-                }
-            }
+            // remove size (acres) from inciweb data
+            $situation = array_values(array_filter($fire['inciweb']['current']['data']['Current Situation'], fn($item) => $item['desc'] !== 'Size'));
+            $fire['inciweb']['current']['data']['Current Situation'] = $situation;
         }
 
         if ($contain == '100%' && !is_array($status)) $fire['properties']['status'] = ['Contain' => -1];

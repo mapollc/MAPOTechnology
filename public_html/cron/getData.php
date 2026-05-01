@@ -184,7 +184,7 @@ foreach($newDispatchCenters as $center) {
                                     $fireStatus['Out'] = strtotime($fs->out);
                                 }
 
-                                $status = count($fireStatus) > 0 ? serialize($fireStatus) : '';
+                                $status = count($fireStatus) > 0 ? json_encode($fireStatus) : '';
                             
                                 // prepare mysql statements
                                 $sqlQueries .= "INSERT INTO wildfires (

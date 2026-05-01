@@ -341,7 +341,7 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
             foreach ($account as $k => $v) {
                 if ($k == 'last_active' || $k == 'created') $v = floatval($v);
                 if ($k == 'provider') $v = $v == 1 ? 'google' : 'mapo';
-                if ($k == 'location') $v = unserialize($v);
+                if ($k == 'location') $v = json_decode($v);
                 if ($k == 'role') $v = getUserRole($v);
 
                 $account[$k] = $v;

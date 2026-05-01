@@ -104,6 +104,7 @@ if ($category == 'stats') {
         // otherwise we need to query the database for fresh data
         if ($cacheResult && $cacheResult['expires'] > time() && !$apiUpdated && !$apiUpdated2) {
             $isCached = true;
+            $isCachedType = 'mariadb';
             $returnJson = json_decode($cacheResult['cache_data']);
 
             $memcache->set($cachefilename, json_encode($returnJson), $cacheExpires);
@@ -119,6 +120,7 @@ if ($category == 'stats') {
         }
     } else {
         $isCached = true;
+        $isCachedType = 'memcache';
         $updateForCacheTime = $memcache->get("$cachefilename-time");
         $cache = json_decode($cache);
         ////$cache->cached = true;

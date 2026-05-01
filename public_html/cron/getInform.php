@@ -28,7 +28,7 @@ for ($i = 0; $i < count($json->features); $i++) {
     $cost = $fire->EstimatedCostToDate !== NULL ? $fire->EstimatedCostToDate : 'NULL';
 
     // Detect undetermined-only causes
-    $isUndeterminedOnly = (count($c) === 1 && strcasecmp(reset($c), 'Undetermined') === 0);
+    $isUndeterminedOnly = count($c) === 1 && strcasecmp(reset($c), 'Undetermined') === 0;
 
     // Skip insert if everything is empty / null / undetermined
     if (

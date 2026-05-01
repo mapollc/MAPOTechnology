@@ -54,6 +54,7 @@ RewriteRule ^secure/([^/]+)$ https://auth.mapotechnology.com/$1 [R=301,L,QSA,Uns
 RewriteRule ^authenticate/([^/]*)$ /do.php?method=$1 [L,QSA]
 RewriteRule ^account/secure/apis/([^/]*)$ /users/admin/api.php?callback=$1 [L,QSA]
 RewriteRule ^account/secure/apis/([^/]*)/([^/]*)$ /users/admin/api.php?callback=$1&mode=$2 [L,QSA]
+RewriteRule ^account/?$ /account/home [R=302,L]
 RewriteRule ^account/([^/]*)$ /users/index.php?page=$1 [L,QSA]
 RewriteRule ^account/([^/]*)/([^/]*)$ /users/index.php?page=$1&method=$2 [L,QSA]
 RewriteRule ^account/([^/]*)/([^/]*)/([^/]*)$ /users/index.php?page=$1&method=$2&function=$3 [L,QSA]

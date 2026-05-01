@@ -103,6 +103,7 @@ $allowBrowser = true;
 $needSess = array('logFire', 'session', 'favorite', 'profile', 'trackFires', 'user', 'upload');
 $needCon2 = array('favorite', 'trails', 'upload');
 $isCached = false;
+$isCachedType = null;
 
 if ($_SERVER['REQUEST_URI'] == '/') {
     echo '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:150%;font-family:sans-serif;text-align:center"><h1>MAPO LLC</h1>' .
@@ -128,6 +129,7 @@ if ($_SERVER['REQUEST_URI'] == '/') {
                 }
 
                 $apiMap = [
+                    'account' => 'account',
                     'avalanche' => 'avalanche',
                     'billing' => 'billing',
                     'createChart' => 'chart',
@@ -215,9 +217,7 @@ if ($_SERVER['REQUEST_URI'] == '/') {
 
     // close all mysql connections
     mysqli_close($con);
-    if ($con2) {
-        mysqli_close($con2);
-    }
+    if ($con2) mysqli_close($con2);
 
     // close memcache connection at the end, if started in the first place
     if ($memcache) {
@@ -231,11 +231,14 @@ if ($_SERVER['REQUEST_URI'] == '/') {
             if ($isCached) {
                 $tmp = [];
                 $tmp = $returnJson->metadata;
-                $returnJson->metadata = array_merge(['cache' => true], $tmp);
+                $arr = ['cache' => true];
+                if ($isCachedType != null) $arr['cacheType'] = $isCachedType;
+                $returnJson->metadata = array_merge($arr, $tmp);
             }
         } else {
             $returnJson['metadata'] = $arr;
             if ($isCached) $returnJson['metadata']['cache'] = true;
+            if ($isCachedType != null) $returnJson['metadata']['cacheType'] = $isCachedType;
         }
     }
 

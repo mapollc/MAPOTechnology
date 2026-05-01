@@ -3713,7 +3713,7 @@ class CustomControls {
                         coordinates: f.coords
                     },
                     properties: {
-                        attribution: 'Created using Map-o-Trails (mapotrails.com)',
+                        attribution: 'Created using Map of Trails (mapotrails.com)',
                         created: prettyDT(f.created, false, true),
                         id: f.id,
                         modified: prettyDT(f.modified, false, true),

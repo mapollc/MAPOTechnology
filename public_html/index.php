@@ -165,7 +165,7 @@ include_once 'header.inc.php';
                         <div class="image-modal" style="background-image:url(assets/images/mapotwy.png)">
                             <div class="overlay">    
                                 <h6>Waypoints</h6>
-                                <p>Bridges, common avalanche paths, parking, and more&mdash;simply called waypoints on Map-o-Trails. These waypoints mark a abundance of spots along our mapped trails.</p>
+                                <p>Bridges, common avalanche paths, parking, and more&mdash;simply called waypoints on Map of Trails. These waypoints mark a abundance of spots along our mapped trails.</p>
                             </div>
                         </div>
                     </div>

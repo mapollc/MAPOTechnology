@@ -17,7 +17,7 @@ $productName = 'Map of Fire';
 $companyName = 'MAPO LLC';
 $queryParams = preg_replace('/(?:sort=[^&]*|order=[^&]*)(&?)/i', '$1', explode('?', $_SERVER['REQUEST_URI'])[1]);
 $queryParams = $queryParams == '&' ? '' : $queryParams;
-$queryParams = ltrim($queryParams, '&');
+$queryParams = ltrim(rtrim($queryParams, '&'), '&');
 
 $page = $_GET['page'];
 $pageFile = "$page.ini.php";

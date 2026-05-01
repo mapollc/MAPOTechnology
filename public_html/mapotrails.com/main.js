@@ -233,7 +233,7 @@ document.getElementById('category').onchange = function() {
 
     window.location.href = url;
     /*history.pushState('', title, url);
-    document.title = title + ' - Map-o-Trails';
+    document.title = title + ' - Map of Trails';
     getTrails((s == 'all-activities' ? '' : type), act, a);*/
 };
 
@@ -247,7 +247,7 @@ document.getElementById('areas').onchange = function() {
 
     window.location.href = url;
     /*history.pushState('', title, url);
-    document.title = title + ' - Map-o-Trails';
+    document.title = title + ' - Map of Trails';
     getTrails((t == 'all-activities' ? '' : type), t, a);*/
 };
 
