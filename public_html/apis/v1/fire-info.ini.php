@@ -26,7 +26,8 @@ if (!$cache || filemtime(root() . 'fire-info.ini.php') > $memcache->get($cachefi
         ////$getCmplxSQL = mysqli_query($con, "SELECT child_fire AS incidentID, child_name AS childName FROM complexes WHERE child_fire = '$row[incidentID]'");
 
         // check if there is any inciweb data for this fire
-        $getInciweb = mysqli_fetch_assoc(mysqli_query($con, "SELECT incident_info, data, contact, photo, updated AS inciweb_updated, captured AS inciweb_captured FROM inciweb WHERE year = $row[year] AND name LIKE '%$row[name]%' AND state = '$row[state]' LIMIT 1"));
+        $cleanName = mysqli_real_escape_string($con, $row['name']);
+        $getInciweb = mysqli_fetch_assoc(mysqli_query($con, "SELECT incident_info, data, contact, photo, updated AS inciweb_updated, captured AS inciweb_captured FROM inciweb WHERE year = $row[year] AND name LIKE '%$cleanName%' AND state = '$row[state]' LIMIT 1"));
 
         if ($getInciweb) $row = array_merge($row, $getInciweb);
 

@@ -9,8 +9,8 @@ if (!filter_var($host, FILTER_VALIDATE_IP) && $host !== 'localhost') {
 ini_set('display_errors', 0);
 error_reporting(E_ERROR | E_PARSE);
 
-/*ini_set('opcache.enable', 0);
-ini_set('opcache.enable_cli', 0);*/
+ini_set('opcache.enable', 0);
+ini_set('opcache.enable_cli', 0);
 ini_set('log_errors', 1);
 ini_set('memory_limit', '1024M');
 ini_set("error_log", './error_log');

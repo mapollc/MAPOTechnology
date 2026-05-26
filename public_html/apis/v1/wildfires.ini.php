@@ -61,7 +61,7 @@ if ($category == 'stats') {
                 'type' => 'Wildfire',
                 'acres' => floatval($row['acres']),
                 'status' => ($row['status'] ? $row['status'] : null),
-                'near' => $row['geo'] ? $row['geo'] : null,
+                'near' => null,
                 'url' => $url,
                 'time' => [
                     'year' => intval($row['year']),
@@ -76,7 +76,7 @@ if ($category == 'stats') {
         $total++;
     }
 
-    $returnJson = array('type' => 'FeatureCollection', 'features' => $features, 'totalFires' => $total);
+    $returnJson = ['type' => 'FeatureCollection', 'features' => $features, 'totalFires' => $total];
 } else {
     if (isset($_REQUEST['bbox'])) {
         $js = json_decode(urldecode($_REQUEST['bbox']));

@@ -24,7 +24,7 @@ if ($method == 'style') {
         $returnJson = $json;
     }
 } else if ($method == 'sprites') {
-    $path = "/home/mapo/public_html/mapofire.com/data/maps/sprites/$style";
+    $path = "/home/mapo/public_html/mapofire.com/data/maps/sprites/$style.json";
 
     if (!file_exists($path)) {
         $returnJson = ['response' => 'error', 'code' => 404, 'msg' => 'The tilejson style does not exist or cannot be found'];

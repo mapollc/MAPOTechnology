@@ -293,44 +293,75 @@ class Weather {
 
     currentConds(p) {
         if (!p) return;
-        setHeaders(`Current Weather Conditions at ${p.NAME}`, `weather/current/${p.STID}`, `See current fire weather conditions at ${p.NAME}.`);
 
-        const hasPermissions = settings.hasPermissions('PRO'),
-            popup = new Popup('').create('<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>');
+        const weatherSettings = settings.weather(),
+            tempPref = weatherSettings?.temp(),
+            windPref = weatherSettings?.wind(),
+            hasPermissions = settings.hasPermissions('PRO');
 
-        let obs = typeof p.OBSERVATIONS === 'string' ? JSON.parse(p.OBSERVATIONS) : p.OBSERVATIONS,
-            t = obs.air_temp_value_1.value,
-            rh = obs.relative_humidity_value_1.value,
-            wetBulb = conversion.wetBulb(t, rh),
-            wd = obs.wind_direction_value_1.value ? conversion.getCompassDirection(obs.wind_direction_value_1.value) : 'Variable',
-            ws = obs.wind_speed_value_1.value,
-            feelsLike = t < 50 && ws ? conversion.windChill(t, ws) : (t && rh ? conversion.heatIndex(t, rh) : null),
-            tunit = 'F',
+        setHeaders(
+            `Current Weather at ${p.NAME}`,
+            `weather/current/${p.STID}`,
+            `Live weather observations at ${p.NAME} (${p.STID}).`
+        );
+
+        const popup = new Popup('').create(
+            '<div id="spinner" class="sm" style="display:block;text-align:center;margin:0 auto"></div>'
+        );
+
+        const obs = typeof p.OBSERVATIONS === 'string' ? JSON.parse(p.OBSERVATIONS) : p.OBSERVATIONS;
+
+        let t = obs.air_temp_value_1?.value ?? null,
+            rh = obs.relative_humidity_value_1?.value ?? null,
+            ws = obs.wind_speed_value_1?.value ?? null;
+
+        let wd = obs.wind_direction_value_1?.value ? conversion.getCompassDirection(obs.wind_direction_value_1?.value) : 'Variable';
+
+        let tunit = 'F',
             wunit = 'mph';
 
-        // format temperature
-        if (settings.weather()?.temp() == 'c' && t != null) {
-            tunit = 'C';
-            t = conversion.FtoC(t);
-            feelsLike = feelsLike != null ? conversion.FtoC(feelsLike).toFixed(1) : null;
-        } else {
-            feelsLike = feelsLike != null ? Math.round(conversion.FtoC(feelsLike)) : null;
-            t = Math.round(t);
+        let wetBulb = (t != null && rh != null) ? conversion.wetBulb(t, rh) : null;
+
+        // calculate heat index or wind chill
+        let feelsLike = t;
+
+        if (t != null) {
+            if (ws != null && t <= 50 && ws >= 3) {
+                feelsLike = conversion.windChill(t, ws);
+            } else if (rh != null && t >= 80/* && rh >= 40*/) {
+                feelsLike = conversion.heatIndex(t, rh);
+            }
         }
 
-        // format wind speed
-        if (settings.weather()?.wind() != 'mph' && ws != null) {
-            ws = ws != null ? conversion.speed(ws, settings.weather().wind()) : null;
-            wunit = settings.weather().wind();
+        // format temperature
+        if (tempPref == 'c') {
+            tunit = 'C';
+
+            if (t != null) t = conversion.FtoC(t);
+            if (feelsLike != null) feelsLike = conversion.FtoC(feelsLike);
+            if (wetBulb != null) wetBulb = conversion.FtoC(wetBulb);
         }
+
+        if (rh != null) rh = Math.round(rh);
+        if (t != null) t = Math.round(t);
+        if (feelsLike != null) wetBulb = Math.round(feelsLike);
+
+        // format wind speed
+        if (windPref != 'mph' && ws != null) {
+            ws = conversion.speed(ws, windPref);
+            wunit = windPref;
+        }
+
+        const updated = timeAgo(new Date(obs.air_temp_value_1.date_time).getTime()),
+            wind = (ws != null ? (ws == 0 ? 'Calm' : `${wd} at ${Math.round(ws)} ${wunit}`) : 'N/A');
 
         const stnData = `<div class="item"><div class="t">Station Name</div><div class="v">${p.NAME}</div></div>
             <div class="item"><div class="t">Temperature</div><div class="v">${Math.round(t)}&deg;${tunit}</div></div>
-            <div class="item"><div class="t">Feels Like</div><div class="v">${feelsLike != null ? `${feelsLike}&deg;${tunit}` : 'N/A'}</div></div>
-            <div class="item"><div class="t">Wet-Bulb Temp.</div><div class="v">${wetBulb != null ? `${wetBulb.toFixed(1)}&deg;${tunit}` : 'N/A'}</div></div>
-            <div class="item"><div class="t">Humidity</div><div class="v">${Math.round(rh)}%</div></div>
-            <div class="item"><div class="t">Wind</div><div class="v">${(ws != null ? (ws == 0 ? 'Calm' : `${wd} at ${Math.round(ws)} ${wunit}`) : 'N/A')}</div></div>
-            <div class="item"><div class="t">Last report</div><div class="v">${timeAgo(new Date(obs.air_temp_value_1.date_time).getTime())}</div></div>
+            <div class="item"><div class="t">Feels Like</div><div class="v">${feelsLike}&deg;${tunit}</div></div>
+            <div class="item"><div class="t">Wet-Bulb Temp.</div><div class="v">${wetBulb != null ? `${wetBulb}&deg;${tunit}` : 'N/A'}</div></div>
+            <div class="item"><div class="t">Humidity</div><div class="v">${rh}%</div></div>
+            <div class="item"><div class="t">Wind</div><div class="v">${wind}</div></div>
+            <div class="item"><div class="t">Last report</div><div class="v">${updated}</div></div>
             ${(!hasPermissions ? `<a href="#" data-action="marketing-cta" data-utm="wx_stn" onclick="return false" class="btn btn-sm btn-yellow" style="display:block;margin:0 auto">Upgrade to see more data</a>` : '')}`;
 
         popup.update(stnData, 'Current Conditions');
@@ -404,8 +435,9 @@ class Weather {
             domRH.innerHTML = o.rh ? `${Math.round(o.rh)}%` : '--';
 
             if (o.raw_wind_dir != null) {
+                const arrDir = (Number(o.raw_wind_dir - 45) + 180) % 360;
                 domWD.innerHTML = o.wind_dir || '--';
-                if (icon) icon.style.transform = `rotate(${Number(o.raw_wind_dir - 45)}deg)`;
+                if (icon) icon.style.transform = `rotate(${arrDir}deg)`;
             } else {
                 domWD.innerHTML = '--';
             }
@@ -512,40 +544,37 @@ class Weather {
 
     async raws(update = false) {
         const feat = [];
-            const b = JSON.parse(getbbox()),
+        const b = JSON.parse(getbbox()),
             bx = `${b.xmin},${b.ymin},${b.xmax},${b.ymax}`,
-            vars = `token=350409c14c544ec9957effb1c15bcb99
-                &bbox=${bx}
-                &vars=air_temp,relative_humidity,wind_speed,wind_direction
-                &units=temp|f,speed|mph
-                &obtimezone=local
-                &status=active
-                &network=2,1
-                &networkimportance=2,1`;
+            vars = `token=350409c14c544ec9957effb1c15bcb99&bbox=${bx}&vars=air_temp,relative_humidity,wind_speed,wind_direction&units=temp|f,speed|mph&obtimezone=local&network=2,1,25,65&status=active&networkimportance=2,1`;
 
         const data = await api(`https://api.synopticlabs.org/v2/stations/latest?${vars}`);
 
         if (data.STATION) {
-            data.STATION.forEach(s => {
-                const ob = s.OBSERVATIONS;
+            data.STATION
+                .filter(s => s.OBSERVATIONS.air_temp_value_1)
+                .forEach(s => {
+                    const ob = s.OBSERVATIONS;
 
-                if (ob.air_temp_value_1) {
+                    //if (ob.air_temp_value_1) {
                     let t = ob.air_temp_value_1.value;
 
                     if (settings.weather()?.temp() == 'c' && t != '--') t = conversion.FtoC(ob.air_temp_value_1.value);
 
                     s.temp = Math.round(t);
-                }
+                    //}
 
-                feat.push({
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Point',
-                        coordinates: [parseFloat(s.LONGITUDE), parseFloat(s.LATITUDE)]
-                    },
-                    properties: s
+                    //if (ob.air_temp_value_1 && ob.relative_humidity_value_1 && ob.wind_speed_value_1) {
+                    feat.push({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [parseFloat(s.LONGITUDE), parseFloat(s.LATITUDE)]
+                        },
+                        properties: s
+                    });
+                    //}
                 });
-            });
 
             if (update) {
                 map.getSource('stns').setData({
@@ -561,8 +590,8 @@ class Weather {
                             features: feat
                         },
                         cluster: true,
-                        clusterMaxZoom: 7,
-                        clusterMinPoints: 5,
+                        clusterMaxZoom: 9,
+                        clusterMinPoints: 4,
                         clusterRadius: 100
                     });
                 }
