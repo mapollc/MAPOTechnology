@@ -7,7 +7,7 @@ include_once '../db.ini.php';
 
 $now = time();
 $year = date('Y', $now);
-$sqlQueries = '';
+$sqlQueries = [];
 
 /*function dualDomains()
 {
@@ -37,7 +37,8 @@ $sqlQueries = '';
     return $msg;
 }*/
 
-function sendReminderEmails() {
+function sendReminderEmails()
+{
     global $now;
     global $con;
 
@@ -53,7 +54,7 @@ function sendReminderEmails() {
             $email = $row['email'];
             $created = date('l, F j, Y \a\t g:i A', $row['created']);
             $never = $row['active'] == 0 ? true : false;
-            $last = $never ? 'have never logged into any MAPO services' : 'haven\'t logged into any MAPO services since '.date('F j, Y', $row['active']);
+            $last = $never ? 'have never logged into any MAPO services' : 'haven\'t logged into any MAPO services since ' . date('F j, Y', $row['active']);
             $msg = "We noticed that you $last.";
 
             if (sendEmail($email, "$name, we've missed you!", 'notactive', ['{name}' => $name, '{msg}' => $msg, '{created}' => $created])) {
@@ -67,7 +68,8 @@ function sendReminderEmails() {
 ";
 }
 
-function syncFireFiles() {
+function syncFireFiles()
+{
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, 'https://data.mapotechnology.com/generate-js.php');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -79,44 +81,186 @@ function syncFireFiles() {
 ";
 }
 
-// if an inciweb fire says a fire is 100% contained, update the wildfires database with that info
-$iw = mysqli_query($con, "SELECT state, year, name, data FROM `inciweb` WHERE year = $year");
-while ($row = mysqli_fetch_assoc($iw)) {
-    $arr = unserialize($row['data'])['data'];
+function deleteOldAPIFiles()
+{
+    $dir = '/home/mapo/public_html/apis/cache/';
+    foreach (scandir($dir) as $f) {
+        if (str_starts_with($f, 'api') && (($GLOBALS['now'] - filemtime("$dir$f")) > 432000 || !filesize("$dir$f"))) {
+            @unlink("$dir$f");
+        }
+    }
+    return "Old API cache files deleted...
+";
+}
 
-    if ($arr['Current Situation']) {
-        foreach ($arr['Current Situation'] as $item) {
-            if (isset($item['desc']) && strtolower($item['desc']) === 'containment' && $item['info'] === '100%') {
-                $stat = json_encode(['Contain' => -1]);
-                $sqlQueries .= "UPDATE wildfires SET status = '$stat' WHERE year = $row[year] AND state = '$row[state]' AND name LIKE '%$row[name]%' AND (status IS NULL OR status = '' OR status != '$stat');";
+function deleteCronEmails()
+{
+    $dir = '/home/mapo/mail/cur/';
+    foreach (array_diff(scandir($dir), ['.', '..']) as $f) {
+        if (($GLOBALS['now'] - filemtime($dir . explode('.', $f)[0])) > 259200) {
+            @unlink("$dir$f");
+        }
+    }
+    return "Old system emails deleted...
+";
+}
+
+function deleteOldLogFiles()
+{
+    $dir = '/home/mapo/logs/';
+    foreach (array_diff(scandir($dir), ['.', '..']) as $f) {
+        if (!is_dir("$dir$f") && (time() - filectime("$dir$f")) > 43200) {
+            @unlink("$dir$f");
+        }
+    }
+    return "Old log files deleted...
+";
+}
+
+function deleteMFCache()
+{
+    $dir = '/home/mapo/public_html/mapofire.com/apis/cache/';
+    foreach (array_diff(scandir($dir), ['.', '..']) as $f) {
+        if (($GLOBALS['now'] - filemtime($dir . explode('.', $f)[0])) > 259200) {
+            @unlink("$dir$f");
+        }
+    }
+    return "Old Map of Fire API cache files deleted...
+";
+}
+
+function deleteTrash()
+{
+    $dir = '/home/mapo/.trash/';
+    foreach (array_diff(scandir($dir), ['.', '..']) as $f) {
+        if (!is_dir("$dir$f") && (time() - filectime("$dir$f")) > 259200) {
+            @unlink("$dir$f");
+        }
+    }
+    return "Files in trash deleted...
+";
+}
+
+function inciwebContainment()
+{
+    global $con;
+    global $year;
+
+    $q = [];
+    $iw = mysqli_query($con, "SELECT state, year, name, data FROM `inciweb` WHERE year = $year");
+    while ($row = mysqli_fetch_assoc($iw)) {
+        $arr = unserialize($row['data'])['data'];
+
+        if ($arr['Current Situation']) {
+            foreach ($arr['Current Situation'] as $item) {
+                if (isset($item['desc']) && strtolower($item['desc']) === 'containment' && $item['info'] === '100%') {
+                    $stat = json_encode(['Contain' => -1]);
+                    $q[] = "UPDATE wildfires SET status = '$stat' WHERE year = $row[year] AND state = '$row[state]' AND name LIKE '%$row[name]%' AND (status IS NULL OR status = '' OR status != '$stat')";
+                }
             }
         }
     }
+
+    return $q;
 }
+function expireSessions()
+{
+    global $con;
+    global $now;
+
+    $q = [];
+    $result = mysqli_query($con, "SELECT sid FROM sessions WHERE expires != 0 AND expires < '$now' AND source NOT LIKE 'com.mapollc%'");
+    while ($row = mysqli_fetch_assoc($result)) {
+        $q[] = "UPDATE sessions SET expires = 0 WHERE sid = '$row[sid]'";
+    }
+    return $q;
+}
+
+function inactiveSubs()
+{
+    global $con;
+    global $now;
+    $q = [];
+
+    $result = mysqli_query($con, "SELECT email FROM billing WHERE end < $now AND status != 'expired'");
+    while ($row = mysqli_fetch_assoc($result)) {
+        $q[] = "UPDATE billing SET status = 'expired' WHERE email = '$row[email]'";
+    }
+
+    return $q;
+}
+
+function freshenTopFires()
+{
+    $memcache = new Memcached();
+    if (!count($memcache->getServerList())) $memcache->addServer('127.0.0.1', 11211);
+
+    if ($memcache->get('trendingFires_v1')) $memcache->delete('trendingFires_v1');
+    if ($memcache->get('trendingFires_v2')) $memcache->delete('trendingFires_v2');
+
+    $ago = strtotime('-15 minutes');
+    return ["DELETE FROM topFires WHERE time < $ago"];
+}
+
+function updateLocations()
+{
+    global $con;
+    $time = strtotime('-1 day');
+    $queries = [];
+
+    $result = mysqli_query($con, "SELECT wfid, state, lat, lon FROM `wildfires` WHERE date >= $time AND near LIKE '%\"near\":\"\"%'");
+    while ($row = mysqli_fetch_assoc($result)) {
+        $coords = [$row['lat'], $row['lon']];
+        $state = $row['state'];
+        $getLocation = getLocation($con, $coords, false, $state);
+        $getCounty = getCounty($con, $coords);
+        $geo = mysqli_real_escape_string($con, $getLocation);
+        $near = $getCounty ?: [
+            'county' => null,
+            'fips' => null
+        ];
+
+        $near['near'] = $getLocation ?: null;
+        $near = mysqli_real_escape_string($con, json_encode($near));
+
+        $queries[] = "UPDATE wildfires SET near = '$near', geo = '$geo' WHERE wfid = $row[wfid]";
+    }
+
+    return $queries;
+}
+
+// if an inciweb fire says a fire is 100% contained, update the wildfires database with that info
+$sqlQueries = [...$sqlQueries, ...inciwebContainment()];
 echo 'Wildfires DB updated with contained status from Inciweb...
 ';
 
 // expire any sessions that show as active, but have expired according to current time
-$result = mysqli_query($con, "SELECT sid FROM sessions WHERE expires != 0 AND expires < '$now' AND source NOT LIKE 'com.mapollc%'");
-while ($row = mysqli_fetch_assoc($result)) {
-    $sqlQueries .= "UPDATE sessions SET expires = 0 WHERE sid = '$row[sid]';";
-}
+$sqlQueries = [...$sqlQueries, ...expireSessions()];
 echo 'Inactive user sessions set to expired...
 ';
 
+// remove top fires to keep top fires' algorithm fresh
+$sqlQueries = [...$sqlQueries, ...freshenTopFires()];
+echo 'Top fires algorithm refreshed...
+';
+
+// update locations of any fires that are lacking a location
+$sqlQueries = [...$sqlQueries, updateLocations()];
+echo 'Updated locations of location-less wildfires...
+';
+
 // remove user access to premium content if their subscription has expired
-$result = mysqli_query($con, "SELECT email FROM billing WHERE end < '$now' AND status != 'expired'");
-while ($row = mysqli_fetch_assoc($result)) {
-    $sqlQueries .= "UPDATE billing SET status = 'expired' WHERE email = '$row[email]';";
-}
+$sqlQueries = [...$sqlQueries, ...inactiveSubs()];
 echo 'Inactive subscriptions set to expired and permissions removed...
 
 ====== Executing MySQL queries ======
 ';
 
 // run ALL sql queries
-if ($sqlQueries) {
-    if (mysqli_multi_query($con, $sqlQueries) or die(mysqli_error($con))) {
+if (!empty($sqlQueries)) {
+    $sql = implode(';', $sqlQueries);
+
+    if (mysqli_multi_query($con, $sql) or die(mysqli_error($con))) {
         do {
             if ($result = mysqli_store_result($con)) {
                 while ($row = mysqli_fetch_row($result)) {
@@ -135,82 +279,25 @@ echo '
 ';
 
 // delete old, cached API files older than 5 days
-$dir = '/home/mapo/public_html/apis/cache/';
-$cached = scandir($dir);
-
-foreach ($cached as $file) {
-    if (substr($file, 0, 3) == 'api' && (($now - filemtime($dir . $file)) > (60 * 60 * 24 * 5) || filesize($dir . $file) == 0)) {
-        unlink($dir . $file);
-    }
-}
-echo 'Old API cache files deleted....
-';
+echo deleteOldAPIFiles();
 
 // delete old cron emails
-$dir2 = '/home/mapo/mail/cur/';
-$cached = scandir($dir2);
-
-foreach ($cached as $file) {
-    if ($file != '.' && $file != '..') {
-        $e = explode('.', $file);
-        if ($now - filemtime($dir2 . $e[0]) > (60 * 60 * 24 * 3) && $file) {
-            unlink($dir2 . $file);
-        }
-    }
-}
-echo 'Old system emails deleted....
-';
+echo deleteCronEmails();
 
 // delete old log files every 12 hours
-$dir3 = '/home/mapo/logs/';
-$logs = scandir($dir3);
-
-foreach ($logs as $file) {
-    if ($file != '.' && $file != '..') {
-        if (time() - filectime($dir3 . $file) > 60 * 60 * 12) {
-            if (!is_dir($dir3 . $file)) {
-                unlink($dir3 . $file);
-            }
-        }
-    }
-}
-echo 'Old log files deleted...
-';
+echo deleteOldLogFiles();
 
 // delete trash items every 3 days
-$dir5 = '/home/mapo/.trash/';
-$trash = scandir($dir5);
-
-foreach ($trash as $file) {
-    if ($file != '.' && $file != '..') {
-        if (time() - filectime($dir5 . $file) > 60 * 60 * 24 * 3) {
-            if (!is_dir($dir5 . $file)) {
-                unlink($dir5 . $file);
-            }
-        }
-    }
-}
-echo 'Files in trash deleted...
-';
+echo deleteTrash();
 
 // delete old cache files on mapofire every 3 days
-$dir4 = '/home/mapo/public_html/mapofire.com/apis/cache/';
-$cached2 = scandir($dir4);
+echo deleteMFCache();
 
-foreach ($cached2 as $file) {
-    if ($file != '.' && $file != '..') {
-        $e = explode('.', $file);
-        if ($now - filemtime($dir4 . $e[0]) > (60 * 60 * 24 * 3) && $file) {
-            unlink($dir4 . $file);
-        }
-    }
-}
-echo 'Old Map of Fire API cache files deleted....
-';
-
+// generate wildfire API for faster loads
 echo syncFireFiles();
+
+// send emails to users who haven't been active in awhile
 ////echo sendReminderEmails();
 
-echo '-------------------------------------------------------
-Completed all maintenance tasks...
+echo '====== Completed all maintenance tasks ======
 ';

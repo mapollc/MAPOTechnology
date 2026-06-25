@@ -57,7 +57,7 @@ function ago($timestamp)
             $value = floor($diff / $seconds);
             $remainder = $diff % $seconds;
 
-            $result = $value . ' ' . $unit . plural($value);
+            $result = "$value $unit" . plural($value);
 
             if ($remainder > 0) {
                 $foundNext = false;
@@ -75,7 +75,7 @@ function ago($timestamp)
                 }
             }
 
-            return $result . ' ago';
+            return "$result ago";
         }
     }
 

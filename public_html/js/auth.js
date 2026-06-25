@@ -78,6 +78,14 @@ const stateLabels = {
         });
     };
 
+function debounce(fn, wait) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(this, args), wait);
+    };
+}
+
 class SSO {
     async request(data, method = null, v2 = false) {
         data.append('key', apiKey);
@@ -124,7 +132,10 @@ class SSO {
                 return;
             }
 
-            if (api.auth) window.location.href = `${api.service == 'mapotechnology' ? 'https://mapotechnology.com' : ''}${api.next}`;
+            if (api.auth) {
+                const nextURL = `${api.service == 'mapotechnology' ? 'https://mapotechnology.com' : ''}${api.next}`;
+                window.location.href = nextURL.replaceAll('../', '/');
+            }
         });
     }
 
@@ -406,33 +417,38 @@ document.addEventListener('DOMContentLoaded', () => {
             cityResults.style.display = 'block';
         });
 
-        city.addEventListener('keyup', async (e) => {
-            const v = e.target.value;
+        city.addEventListener('keyup', debounce((e) => {
+            (async () => {
+                const v = e.target.value;
 
-            if (!v) {
-                cityResults.innerHTML = '<p style="padding:10px">Searching...</p>';
-                cityResults.style.display = 'block';
-                return;
-            }
-
-            try {
-                const fd = new FormData();
-                fd.append('key', apiKey);
-                fd.append('citiesonly', 1);
-                fd.append('q', v);
-
-                const resp = await fetch(apiURL + 'search', { method: 'POST', body: fd }),
-                    r = await resp.json();
-
-                if (r.rs) {
-                    results.innerHTML = r.rs.map(r => `<div class="result" data-lat="${r.lat}" data-lon="${r.lon}" data-name="${r.name}">${r.name}</div>`).join('');
-                } else {
-                    cityResults.innerHTML = '<p style="padding:10px">No results found...</p>';
+                if (!v) {
+                    cityResults.innerHTML = '<p style="padding:10px">Searching...</p>';
+                    cityResults.style.display = 'block';
+                    return;
                 }
-            } catch (error) {
-                console.error(error);
-            }
-        });
+
+                try {
+                    const fd = new FormData();
+                    fd.append('key', apiKey);
+                    fd.append('citiesonly', 1);
+                    fd.append('q', v);
+
+                    const resp = await fetch(apiURL.replace('v1', 'v2') + 'search', { method: 'POST', body: fd }),
+                        r = await resp.json();
+
+                    if (r.results) {
+                        cityResults.innerHTML = r.results.map(r => {
+                            const name = `${r.data.city}, ${r.data.state} ${r.data.zip}`;
+                            return `<div class="result" data-lat="${r.lat}" data-lon="${r.lon}" data-name="${name}">${name}</div>`
+                        }).join('');
+                    } else {
+                        cityResults.innerHTML = '<p style="padding:10px">No results found...</p>';
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            })();
+        }, 500));
 
         document.querySelector('input[name=tos]').addEventListener('click', (e) => {
             submitBtn.classList.toggle('dis');
@@ -495,7 +511,7 @@ document.addEventListener('click', (e) => {
     if (!e.target.classList.contains('result')) return;
 
     let n = e.target.dataset.name,
-        c = n.match(/(.*?),/gm),
+        c = n.match(/(.*?),/m),
         s = n.match(/[A-Z]{2}/gm),
         z = n.match(/\d+/gm);
 
@@ -505,7 +521,7 @@ document.addEventListener('click', (e) => {
     cityResults.innerHTML = '';
 
     userLocation.value = JSON.stringify({
-        "city": c?.[0],
+        "city": c?.[1],
         "state": stateLabels[s?.[0]],
         "zip": z?.[0],
         "lat": e.target.dataset.lat,

@@ -1,28 +1,43 @@
 <?
-function versionDate($matches) {
-    $version = $matches[1];
-    $date = date('F j, Y', strtotime($matches[2].' 00:00:00 '.date('T')));
+function daysAgo($timestamp)
+{
+    $diff = (new DateTime())->diff((new DateTime())->setTimestamp($timestamp));
 
-    return "<p style=\"font-weight:400\"><b style=\"font-weight:500\">" . strtolower($version) . "</b> &mdash; Released $date</p>";
+    if ($diff->y > 0) return $diff->y . ($diff->y === 1 ? " year ago" : " years ago");
+    if ($diff->m > 0) return $diff->m . ($diff->m === 1 ? " month ago" : " months ago");
+    if ($diff->d > 0) return $diff->d . ($diff->d === 1 ? " day ago" : " days ago");
+    return "today";
 }
 
-function android() {
+function versionDate($matches)
+{
+    $version = $matches[1];
+    $ts = strtotime("$matches[3] 00:00:00" . date('T'));
+    $date = date('F j, Y', $ts);
+    $ago = daysAgo($ts);
+
+    return "<p style=\"font-weight:400\"><b style=\"font-weight:500\">" . strtolower($version) . "</b> &mdash; Released $date ($ago)</p>";
+}
+
+function android()
+{
     $file = file_get_contents('https://docs.google.com/document/d/e/2PACX-1vTg47sHjMbOHAOJRNoY2v71qhawpk0hFQBh8W5RdW5_7b2NDGyYK7mUQx9Udy4piOZxXR6uxXpVmc1F/pub');
 
     preg_match('/Map of Fire: Android Change Log<\/span><\/p>(.*)<\/div>/', $file, $a);
     $b = preg_replace('/<span class="[a-z0-9\s]+"><a class="[a-z0-9\s]+" href="(.*?)">(.*?)<\/a><\/span>/', '', $a[1]);
     $c = str_replace('</div>', '', preg_replace('/<p class="[a-z0-9\s]+">(<span class="[a-z0-9\s]+"><\/span>)?<\/p>/', '', $b));
-    
+
     return preg_replace_callback('/<p class="[a-z0-9\s]+"><span class="[a-zA-z0-9\s]+">((v|V)[\.0-9]+)\s-\s([\d\/]+)<\/span><\/p>/', 'versionDate', $c);
 }
 
-function getChanges() {
+function getChanges()
+{
     global $log;
     $content = '';
 
     usort($log, function ($a, $b) {
-        $date1 = strtotime($a['date'].' 00:00:00 PDT');
-        $date2 = strtotime($b['date'].' 00:00:00 PDT');
+        $date1 = strtotime($a['date'] . ' 00:00:00 PDT');
+        $date2 = strtotime($b['date'] . ' 00:00:00 PDT');
 
         return $date2 <=> $date1;
     });
@@ -33,7 +48,7 @@ function getChanges() {
             $lis .= '<li>' . $li . '</li>';
         }
 
-        $content .= '<p style="font-weight:400"><b style="font-weight:500">v' . $change['version'] . '</b> &mdash; Released ' . date('F j, Y', strtotime($change['date'].' 00:00:00 PDT')) . '</p>';
+        $content .= '<p style="font-weight:400"><b style="font-weight:500">v' . $change['version'] . '</b> &mdash; Released ' . date('F j, Y', strtotime($change['date'] . ' 00:00:00 PDT')) . '</p>';
         $content .= '<ul>' . $lis . '</ul>';
     }
 
@@ -41,43 +56,43 @@ function getChanges() {
 }
 
 $log[] = ['version' => '2.6.4', 'date' => '3/27/2026', 'changes' => [
-'Numerous bug and styling fixes',
-'Numerous performance fixes',
-'Added hourly conditions to fire weather forecast in lieu of solely the 5-day fire weather forecast',
-'Increased user authentication security surrounding SSO & fixed a bug preventing users from logging in',
-'Rolled out an improved basemap for "MAPO Outdoors"',
-'Added high visibility evacuations button'
+    'Numerous bug and styling fixes',
+    'Numerous performance fixes',
+    'Added hourly conditions to fire weather forecast in lieu of solely the 5-day fire weather forecast',
+    'Increased user authentication security surrounding SSO & fixed a bug preventing users from logging in',
+    'Rolled out an improved basemap for "MAPO Outdoors"',
+    'Added high visibility evacuations button'
 ]];
 $log[] = ['version' => '2.5', 'date' => '2/17/2026', 'changes' => [
-'Numerous changes to layout and style of the app',
-'Additional layers were added (primarily for premium and pro users)',
-'Numerous bug and performance fixes',
-'Updated Maplibre versions'
+    'Numerous changes to layout and style of the app',
+    'Additional layers were added (primarily for premium and pro users)',
+    'Numerous bug and performance fixes',
+    'Updated Maplibre versions'
 ]];
 $log[] = ['version' => '2.4', 'date' => '10/1/2025', 'changes' => [
-'Numerous bug and performance fixes',
-'Integrated subscriptions into the platform',
-'Migrated from Mapbox to Maplibre',
-'Fixed issues with dark mode compatability'
+    'Numerous bug and performance fixes',
+    'Integrated subscriptions into the platform',
+    'Migrated from Mapbox to Maplibre',
+    'Fixed issues with dark mode compatability'
 ]];
 $log[] = ['version' => '2.3', 'date' => '6/15/2025', 'changes' => [
-'Numerous bug fixes',
-'Added clustering to MODIS hotspots for better map visibility',
-'Incorporated Canadian wildfires and wildfire perimeters',
-'Numerous code improvements and rewrites for speed and efficiency',
-'Updates to GIS database',
-'Moved "dark mode" setting to user account (only available for users that have accounts)',
-'Bug fixes when in dark mode',
-'Added a new layer called "PNW Evacuation Vulnerability"',
-'Made minor UI changes to evacuation polygons',
-'UI changes to map settings menu',
-'Added detailed RAWS fire weather information to weather stations',
-'Improvements made to incident weather concerns',
-'Added a new fire weather forecast feature to see fire weather at a clicked location',
-'Smoke forecasts can now be viewed up to 13 hours for the current time instead of just the next hour\'s forecast',
-'Fixed issues with navigation menu when screen size changes',
-'Fixed issue with determining icons caused by failed expressions within Mapbox',
-'Updated Mapbox SDK to v3.12.0'
+    'Numerous bug fixes',
+    'Added clustering to MODIS hotspots for better map visibility',
+    'Incorporated Canadian wildfires and wildfire perimeters',
+    'Numerous code improvements and rewrites for speed and efficiency',
+    'Updates to GIS database',
+    'Moved "dark mode" setting to user account (only available for users that have accounts)',
+    'Bug fixes when in dark mode',
+    'Added a new layer called "PNW Evacuation Vulnerability"',
+    'Made minor UI changes to evacuation polygons',
+    'UI changes to map settings menu',
+    'Added detailed RAWS fire weather information to weather stations',
+    'Improvements made to incident weather concerns',
+    'Added a new fire weather forecast feature to see fire weather at a clicked location',
+    'Smoke forecasts can now be viewed up to 13 hours for the current time instead of just the next hour\'s forecast',
+    'Fixed issues with navigation menu when screen size changes',
+    'Fixed issue with determining icons caused by failed expressions within Mapbox',
+    'Updated Mapbox SDK to v3.12.0'
 ]];
 $log[] = ['version' => '2.2.250523', 'date' => '5/23/2025', 'changes' => ['Fixed issues with map search when searching for GIS (eg: lakes, peaks, etc)']];
 $log[] = ['version' => '2.2.250509', 'date' => '5/9/2025', 'changes' => ['Several bug & performance fixes', 'Minor UI changes']];
@@ -91,13 +106,13 @@ include_once '../header.inc.php';
     <div class="container">
         <h2>Android App</h2>
 
-        <?echo android()?>
+        <? echo android() ?>
 
         <h2>Web/Browser</h2>
 
-        <?echo getChanges()?>
+        <? echo getChanges() ?>
 
     </div>
 </section>
 
-<?include_once '../footer.inc.php'?>
+<? include_once '../footer.inc.php' ?>

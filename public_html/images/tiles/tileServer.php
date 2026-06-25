@@ -1,6 +1,6 @@
 <?
-#ini_set('display_errors', 1);
-#error_reporting(E_ALL);
+////ini_set('display_errors', 1);
+////error_reporting(E_ALL);
 #header('Access-Control-Allow-Origin: *');
 header('Content-type: image/png');
 header('Cache-Control: must-revalidate, public, max-age=604800');

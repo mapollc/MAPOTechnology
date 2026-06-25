@@ -1,85 +1,92 @@
 <?
-$dzones = json_decode(file_get_contents('../cron/dispatch_zones.json'));
-////$sql = "SELECT w.*, i.data FROM wildfires AS w LEFT JOIN inciweb AS i ON i.state = w.state AND i.name = w.name AND i.year = w.year WHERE w.agency ".($category == 'canada' ? "= 'CIFFC'" : "!= 'CIFFC'")." AND ";
-$sql = "SELECT w.*, dc.gacc FROM wildfires AS w LEFT JOIN dispatch_centers AS dc ON dc.agency = w.agency WHERE w.agency != 'CIFFC' AND ";
+$moreThanJustAll = ['smk', 'rx', 'all,new', 'all,new,smk', 'all,new,rx', 'all,new,smk,rx', 'smk,rx', 'canada'];
+
+$wheres = [];
+$sql = "SELECT w.wfid, w.incidentID, w.name, w.state, w.agency, w.type, w.acres, w.status, 
+    w.notes, w.resources, w.fuels, w.geo, w.near, w.lat, w.lon, w.year, w.date, 
+    w.captured, w.updated, w.timezone, dc.gacc FROM wildfires w FORCE INDEX (idx_filter) LEFT JOIN dispatch_centers dc ON dc.agency = w.agency WHERE display = 1 AND ";
 
 // if retrieving archived fires
 if ($_REQUEST['archive']) {
-    $sql .= "date >= ".strtotime('1/1/'.$_REQUEST['archive'].' 00:00:00')." AND date <= ".strtotime('12/31/'.$_REQUEST['archive'].' 23:59:59');
+    $wheres[] = "date >= " . strtotime('1/1/' . $_REQUEST['archive'] . ' 00:00:00') . " AND date <= " . strtotime('12/31/' . $_REQUEST['archive'] . ' 23:59:59');
 } else {
     // filter by date/time range
     if ($_REQUEST['start'] && $_REQUEST['end']) {
-        $sql .= "date >= $_REQUEST[start] AND date <= $_REQUEST[end] AND ";
+        $wheres[] = "date >= {$_REQUEST['start']} AND date <= {$_REQUEST['end']} AND ";
     } else {
-        $sql .= "year = '$year' AND ";
-
         // new fires, within the last 12 hours
         if ($category == 'new') {
-            $sql .= "date >= ".strtotime('-12 hours')." AND ";
-        // all, new, rx or smoke checks
-        } else if ($category == 'smk' || $category == 'rx' || $category == 'all,new' || $category == 'all,new,smk' || $category == 'all,new,rx' || $category == 'all,new,smk,rx' || $category == 'smk,rx' || $category == 'canada') {
-            $sql .= "";
-        // all fires, older than 12 hours ago
+            $wheres[] = "date >= " . strtotime('-12 hours') . " AND ";
+            // all, new, rx or smoke checks
+        } else if (in_array($category, $moreThanJustAll)) {
+            $wheres[] = "";
+            // all fires, older than 12 hours ago
         } else {
-            $sql .= "date < ".strtotime('-12 hours')." AND ";
+            $wheres[] = "date < " . strtotime('-12 hours') . " AND ";
         }
     }
-    if ($category == 'all' || $category == 'new' || $category == 'all,new' || $category == 'canada') {
-        $sql .= "(type = 'Wildfire' OR type = 'Complex')";
-    } else if ($category == 'smk') {
-        $sql .= "type = 'Smoke Check'";
-    } else if ($category == 'rx') {
-        $sql .= "type = 'Prescribed Fire'";
-    } else if ($category == 'all,new,smk') {
-        $sql .= "(type = 'Wildfire' OR type = 'Complex' OR type = 'Smoke Check')";
-    } else if ($category == 'all,new,rx') {
-        $sql .= "(type = 'Wildfire' OR type = 'Complex' OR type = 'Prescribed Fire')";
-    } else if ($category == 'all,new,smk,rx') {
-        $sql .= "(type = 'Wildfire' OR type = 'Complex' OR type = 'Smoke Check' OR type = 'Prescribed Fire')";
+    $wheres[] = "year = $year AND ";
+
+    $typeMap = [
+        'all' => ['Wildfire', 'Complex'],
+        'new' => ['Wildfire', 'Complex'],
+        'all,new' => ['Wildfire', 'Complex'],
+        'canada' => ['Wildfire', 'Complex'],
+        'smk' => ['Smoke Check'],
+        'rx' => ['Prescribed Fire'],
+        'all,new,smk' => ['Wildfire', 'Complex', 'Smoke Check'],
+        'all,new,rx' => ['Wildfire', 'Complex', 'Prescribed Fire'],
+        'all,new,smk,rx' => ['Wildfire', 'Complex', 'Smoke Check', 'Prescribed Fire']
+    ];
+
+    if (isset($typeMap[$category])) {
+        $types = "'" . implode("','", $typeMap[$category]) . "'";
+        $wheres[] = " type IN ($types)";
     }
 }
 
 // filter by agency
 if ($_REQUEST['agency'] == 'NWCG') {
-    $sql .= " AND agency = ''";
+    $wheres[] = " AND agency = ''";
 } else if ($_REQUEST['agency']) {
-    $sql .= " AND agency = '".$_REQUEST['agency']."'";
+    $wheres[] = " AND agency = '{$_REQUEST['agency']}'";
 }
 
 // filter by state
 if ($_REQUEST['state']) {
-    $sql .= " AND state = '".$_REQUEST['state']."'";
+    $wheres[] = " AND state = '{$_REQUEST['state']}'";
 }
 
-// looks to exclude any fires that have already been out for 3 days or more (to help speed up queries)
-/*if (!isset($_REQUEST['archive']) && (!$_REQUEST['start'] || !$_REQUEST['end'])) {
-    $outAgo = strtotime('-3 days');
-    $sql .= " AND (status NOT LIKE '%s:3:\"Out\";%' OR (status LIKE '%s:3:\"Out\";%' AND REPLACE(SUBSTRING_INDEX(status, '\"Out\";i:', -1), \";}\", \"\") > ".$outAgo."))";
-}*/
-
+// if retrieving wildfires based on bounding box
 if (isset($_REQUEST['bbox'])) {
-    $sql .= " AND (lat >= $ymin AND lat <= $ymax) AND (lon >= $xmax AND lon <= $xmin)";
+    $wheres[] = " AND (lat >= $ymin AND lat <= $ymax) AND (lon >= $xmax AND lon <= $xmin)";
 }
 
 // finish sql statement
-$sql .= " AND display = 1 ORDER BY ".($_REQUEST['order'] ?: 'date')." DESC";
+$sortColumn = $_REQUEST['order'] ?? 'date';
+$allowedSorts = ['date', 'updated', 'acres', 'captured', 'name'];
+
+if (!in_array($sortColumn, $allowedSorts, true)) $sortColumn = 'date';
+
+$sql .= implode(' AND ', $wheres) . " ORDER BY $sortColumn DESC";
 $sql = str_replace(' AND  AND ', ' AND ', $sql);
 
-/*if ($category == 'test') {
-    $sql = "SELECT * FROM wildfires WHERE geo LIKE '%la grande%' AND year = 2024 AND display = 1 ORDER BY date DESC LIMIT 5";
-} */
+////if ($category == 'test') {
+////$sql = "SELECT * FROM wildfires WHERE geo LIKE '%la grande%' AND year = 2024 AND display = 1 ORDER BY date DESC LIMIT 5";
+////}
 
+// run MySQL query
 ////echo $sql;exit();
 $result = mysqli_query($con, $sql);
 $total = 0;
 
 while ($row = mysqli_fetch_assoc($result)) {
     $status = !empty($row['status']) ? json_decode($row['status']) : [];
-
+    
     if ($category == 'test') {
         $show_fire = true;
     } else {
-        $show_fire = wildfireAlgorithm($category, $row['type'], $status, $row, $_REQUEST['archive']);
+        $show_fire = wildfireAlgorithm($category, $row['type'], $status, $row, $_REQUEST['archive'], false);
     }
 
     if ($show_fire && $row['state'] != '') {
@@ -88,9 +95,9 @@ while ($row = mysqli_fetch_assoc($result)) {
             $url = wildfireURL($row['wfid'], $name, $row['state']);
 
             if (strpos($row['incidentID'], '-NWCG-') !== false) {
-                $inciweb[] = $row['state'].$name;
+                $inciweb[] = $row['state'] . $name;
             }
-            
+
             // if a fire hasn't been updated in a month and is >1k acres, set the status to Out
             if (floatval($row['acres']) > 1000 && time() - $row['updated'] > 60 * 60 * 24 * 30) {
                 $status = ['Out' => intval($row['updated'])];
@@ -148,12 +155,12 @@ if ($inciweb) {
     $n = 0;
     foreach ($features as $a) {
         $prop = $a['properties'];
-        if (in_array($prop['state'].$prop['name'], $inciweb) && $prop['type'] != 'Complex' && $prop['dispatch'] == 'NWCG') {
+        if (in_array($prop['state'] . $prop['name'], $inciweb) && $prop['type'] != 'Complex' && $prop['dispatch'] == 'NWCG') {
             unset($features[$n]);
             $total -= 1;
         }
         $n++;
-    } 
+    }
 }
 
 if ($features) {

@@ -475,7 +475,7 @@ class Weather {
                 u = holder.querySelector('.updated');
 
             if (isPremium) {
-                btnHtml = `<a href="#" class="btn btn-orange btn-sm" style="margin:1em 0 0" data-lat="${this.lat}" data-lon="${this.lon}" data-action="incident_wx-fwf" onclick="return false">View the full fire forecast</a>`
+                btnHtml = `<a href="#" class="btn btn-orange btn-sm" style="margin:0" data-lat="${this.lat}" data-lon="${this.lon}" data-action="incident_wx-fwf" onclick="return false">View the full fire forecast</a>`
             } else {
                 btnHtml = `<a href="#" class="btn btn-sm btn-orange" style="margin:1em 0 0" data-action="marketing-cta" data-utm="acres_history" onclick="return false"><i class="fas fa-lock"></i> Upgrade to view forecast</a>`;
             };

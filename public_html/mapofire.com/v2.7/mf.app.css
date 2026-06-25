@@ -288,8 +288,9 @@ nav.hide .nav-wrapper .logo img {
     height: 16px;
     padding: 2px;
     font-size: 11px;
+    letter-spacing: -0.5px;
     color: #fff;
-    line-height: 0;
+    line-height: 1;
     text-align: center;
     background-color: #d93d3d;
     border-radius: 50%;

@@ -118,6 +118,7 @@ $newDispatchCenters = [
     'WAPCC',
     'WAPSC',
     'WASPC',
+    'WAYAC',
     'WIWIC',
     'WYCDC',
     'WYCPC'

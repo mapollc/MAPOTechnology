@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Trending Fires Comparisons</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+    <table style="width:100%" cellpadding="6" cellspacing="0" border="1">
+        <thead>
+            <tr>
+                <th colspan="5">ACTUAL TRENDING FIRES</th>
+                <th colspan="5" style="border-left:2px solid black">SCORED TRENDING FIRES</th>
+            </tr>
+            <tr style="text-align: left;">
+                <th>Rank</th>
+                <th>Fire Name</th>
+                <th>Acres</th>
+                <th>Clicks</th>
+                <th>Score</th>
+                <th style="border-left:2px solid black">Rank</th>
+                <th>Fire Name</th>
+                <th>Acres</th>
+                <th>Clicks</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody id="content"></tbody>
+    </table>
+
+    <script>
+        const content = document.querySelector('#content');
+
+        async function getActual() {
+            const rows = [];
+            const api = await fetch('https://api.mapotechnology.com/v1/events?key=50e2c43f8f63ff0ed20127ee2487f15e&actual=1');
+
+            if (api.ok) {
+                const json = await api.json();
+
+                if (json.top) {
+                    json.top.forEach((e, i) => {
+                        if (i < 20) {
+                            rows.push(`<tr>
+                            <td>${i+1}</td>
+                            <td>${e.data.name} (${e.data.state})</td>
+                            <td>${e.data.acres}</td>
+                            <td>${e.count}</td>
+                            <td>--</td>
+                            <td colspan="3" class="cs"></td>
+                        </tr>`);
+                        }
+                    });
+
+                    content.innerHTML = rows.join('');
+                }
+            }
+
+
+            getScored();
+        }
+
+        async function getScored() {
+            const rows = [];
+            const api = await fetch('https://api.mapotechnology.com/v1/events?key=50e2c43f8f63ff0ed20127ee2487f15e&limit=20');
+
+            if (api.ok) {
+                const json = await api.json();
+
+                if (json.top) {
+                    json.top.forEach((e, i) => {
+                        rows.push(`<td style="border-left:2px solid black">${i+1}</td>
+                            <td>${e.data.name} (${e.data.state})</td>
+                            <td>${e.data.acres}</td>
+                            <td>${e.count}</td>
+                            <td>${e.score.toFixed(4)}</td>`);
+                    });
+
+                    document.querySelectorAll('#content tr').forEach((e, i) => {
+                        e.querySelector('.cs').remove();
+                        e.insertAdjacentHTML('beforeend', rows[i]);
+                    });
+                }
+            }
+        }
+
+        window.onload = () => {
+            getActual();
+        };
+    </script>
+</body>
+
+</html>

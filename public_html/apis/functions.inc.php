@@ -834,15 +834,13 @@ function getLocation($con, $coords, $returnArray = false, $sameState = null)
                 }
             }
 
-            if ($newBestCity) {
-                $chosenCity = $newBestCity;
-            }
+            if ($newBestCity) $chosenCity = $newBestCity;
         }
 
         if ($chosenCity) {
             $dist = number_format($chosenCity['distance'], 1);
             $bearing = getBearing($chosenCity['lat'], $chosenCity['lon'], $coords[0], $coords[1]);
-            $near = $dist . ' miles ' . $bearing . ' of ' . $chosenCity['city'] . ', ' . $chosenCity['state'];
+            $near = "$dist miles $bearing of {$chosenCity['city']}, {$chosenCity['state']}";
 
             return $returnArray ? $chosenCity : (trim($chosenCity['city']) && trim($chosenCity['state']) ? $near : '');
         } else {
@@ -927,7 +925,7 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
     $parts = [];
     $show_fire = false;
     $time = time();
-    $timeDiff = time() - $row['date'];
+    $timeDiff = time() - (int)$row['date'];
     ////$week2 = strtotime('-5 days');
     $last2 = 60 * 60 * 2;
     ////$last12 = 60 * 60 * 12;
@@ -941,7 +939,7 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
     $status = empty($status) || !is_array($status) ? [] : $status;
     $isUTL = utlPresent($row);
 
-    if ($row['updated'] > $day5 && !$isUTL) {
+    if ((int)$row['updated'] > $day5 && !$isUTL) {
         $show_fire = true;
         $parts[] = [1, true];
     }
@@ -962,7 +960,7 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
         $parts[] = [4, false];
     }
 
-    if ($time - intval($row['updated']) > $days3 || empty(intval($row['updated']))) {
+    if ($time - (int)$row['updated'] > $days3 || empty((int)$row['updated'])) {
         $show_fire = false;
         $parts[] = [6, false];
     }

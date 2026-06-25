@@ -1,8 +1,82 @@
 <?
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
-/*include_once '../db.ini.php';
-include_once '../apis/functions.inc.php';*/
+include_once '../db.ini.php';
+//include_once '../apis/functions.inc.php';
+
+function sitRep()
+{
+    $queryParams = [
+        'where'          => "1=1",
+        'returnGeometry' => 'false',
+        'outFields'      => 'UniqueFireIdentifier,Team_Type,SIT_FixedWing,Crews,Dozers,Engines,Helicopters,CALC_TotalStructuresThreatened,SIT_Type1Tankers,SIT_Type2Tankers,SIT_Type3Tankers,SIT_Type4Tankers',
+        'f'              => 'geojson'
+    ];
+
+    // 3. Build the safe, perfectly encoded URL
+    $url = "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/EGP_Active_Incidents_Prod_Public_View/FeatureServer/0/query?" . http_build_query($queryParams);
+    $json = json_decode(@file_get_contents($url));
+
+    if (empty($json->features)) return null;
+
+    $queries = [];
+    foreach ($json->features as $fire) {
+        $p = $fire->properties;
+
+        $data = [
+            'teamType' => $p->Team_Type ?? 0,
+            'stuctures' => $p->CALC_TotalStructuresThreatened ?? 0,
+            'ground' => [
+                'crews' => $p->Crews ?? 0,
+                'dozers' => $p->Dozers ?? 0,
+                'engines' => $p->Engines ?? 0
+            ],
+            'aircraft' => [
+                'fixedWing' => $p->SIT_FixedWing ?? 0,
+                'helicopters' => $p->Helicopters ?? 0,
+                'tankers' => [
+                    'type1' => $p->SIT_Type1Tankers ?? 0,
+                    'type2' => $p->SIT_Type2Tankers ?? 0,
+                    'type3' => $p->SIT_Type3Tankers ?? 0,
+                    'type4' => $p->SIT_Type4Tankers ?? 0
+                ]
+            ]
+        ];
+
+        $resources = json_encode($data);
+        $queries[] = "UPDATE wildfiresSupp SET resources = '$resources' WHERE incidentID = '{$p->UniqueFireIdentifier}'";
+    }
+
+    return $queries;
+}
+
+echo implode(';', sitRep()).';';
+
+/*$result = mysqli_query($con, "SELECT wfid, state, lat, lon FROM `wildfires` WHERE wfid = 148860437");
+while ($row = mysqli_fetch_assoc($result)) {
+    $coords = [$row['lat'], $row['lon']];
+    $state = $row['state'];
+    $getLocation = getLocation($con, $coords, false, $state);
+    $getCounty = getCounty($con, $coords);
+    $geo = mysqli_real_escape_string($con, $getLocation);
+    $near = null;
+    
+    if ($getCounty) {
+        $near = $getCounty;
+    } else {
+        $near = [
+            'county' => null,
+            'fips' => null
+        ];
+    }
+    $near['near'] = $getLocation ? $getLocation : null;
+    $near = mysqli_real_escape_string($con, json_encode($near));
+
+    echo "UPDATE wildfires SET near = '$near', geo = '$geo' WHERE wfid = $row[wfid]
+";
+}
+
+mysqli_close($con);
 
 /*$names = [];
 $result = mysqli_query($con, "SELECT city, lat, lon FROM cities WHERE state_prefix = 'OR' ORDER BY city ASC");
@@ -49,8 +123,7 @@ $count = array_column(mysqli_fetch_all($result, MYSQLI_ASSOC), 'total', 'agency'
 
 arsort($count);
 
-print_r($count);*/
-exit();
+print_r($count);*//*
 
 function isValidCoordinate($lat, $lon)
 {
@@ -106,7 +179,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 
     mysqli_query($con, "UPDATE wildfires SET near = '$geo' WHERE wfid = $row[wfid]");
     echo 'Done with wfid #'. $row['wfid'] . ' ('.$row['year'].')...
-';*/
+';*//*
 }
 
 mysqli_close($con);

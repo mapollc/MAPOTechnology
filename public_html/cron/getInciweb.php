@@ -272,7 +272,7 @@ for ($i = 0; $i < count($xml->channel->item); $i++) {
 
         // add or update to inciweb database
         $sqlQueries .= "INSERT INTO inciweb (incident_id,state,year,name,incident_info,data,contact,photo,captured,updated)
-            VALUES('$iid','$state','$year','$name','$incidentInfo','$content','$contact','$photo','$time','$time')
+            VALUES('$iid','$state',$year,'$name','$incidentInfo','$content','$contact','$photo','$time','$time')
             ON DUPLICATE KEY UPDATE incident_id = VALUES(incident_id), state = '$state', year = '$year', name = VALUES(name), incident_info = '$incidentInfo', data = '$content', photo = '$photo', contact = '$contact', captured = VALUES(captured), updated = '$time';";
 
         // add or update to wildfires database

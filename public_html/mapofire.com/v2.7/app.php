@@ -134,7 +134,7 @@ $javascript = str_replace(['{{title}}', '{{desc}}'], [$title, $desc], $javascrip
             <div class="bd"></div>
             <div class="loading">
                 <img src="//mapotechnology.com/assets/images/mapofire_logo_200.png" fetchpriority="high" alt="Map of Fire logo" title="Map of Fire" style="height:50px">
-                <div class="s"></div><span>Loading wildfires...</span>
+                <div class="s"></div><span>Preparing map...</span>
             </div>
 
             <div class="filter-controls">

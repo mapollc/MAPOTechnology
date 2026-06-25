@@ -1,25 +1,22 @@
 {
     "version": 8,
-    "sprite": "https://www.arcgis.com/sharing/rest/content/items/4b43d1f071fc4f30b7e799fe8c73f546/resources/sprites/sprite-1754519492353",
-    "glyphs": "https://tiles.arcgis.com/tiles/gGHDlz6USftL5Pau/arcgis/rest/services/FSBasemap_20240617/VectorTileServer/resources/fonts/{fontstack}/{range}.pbf",
+    "name": "USFS 2016",
+    "metadata": {
+        "maputnik:renderer": "mlgljs"
+    },
     "sources": {
         "esri": {
             "type": "vector",
-            "bounds": [
-                -180,
-                4.40482,
-                -28.4482,
-                73.3321
+            "tiles": [
+                "https://tiles.arcgis.com/tiles/gGHDlz6USftL5Pau/arcgis/rest/services/FSBasemap_20240617/VectorTileServer/tile/{z}/{y}/{x}.pbf"
             ],
             "minzoom": 2,
             "maxzoom": 19,
-            "scheme": "xyz",
-            "url": "https://tiles.arcgis.com/tiles/gGHDlz6USftL5Pau/arcgis/rest/services/FSBasemap_20240617/VectorTileServer",
-            "tiles": [
-                "https://tiles.arcgis.com/tiles/gGHDlz6USftL5Pau/arcgis/rest/services/FSBasemap_20240617/VectorTileServer/tile/{z}/{y}/{x}.pbf"
-            ]
+            "scheme": "xyz"
         }
     },
+    "sprite": "https://www.arcgis.com/sharing/rest/content/items/4b43d1f071fc4f30b7e799fe8c73f546/resources/sprites/sprite-1754519492353",
+    "glyphs": "https://tiles.arcgis.com/tiles/gGHDlz6USftL5Pau/arcgis/rest/services/FSBasemap_20240617/VectorTileServer/resources/fonts/{fontstack}/{range}.pbf",
     "layers": [
         {
             "id": "Lands/Foreign Land GTAC",
@@ -24398,5 +24395,6 @@
                 "text-halo-width": 1
             }
         }
-    ]
+    ],
+    "id": "usfs2016"
 }

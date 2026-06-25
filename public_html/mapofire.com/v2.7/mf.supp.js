@@ -154,14 +154,21 @@ class NearbyEvacuations {
             if (isNear) {
                 const level = feature.properties.level,
                     notes = feature.properties.notes || '',
-                    county = feature.properties.county || '';
+                    county = feature.properties.county || '',
+                    time = feature.properties.updated || 0;
 
-                if (!grouped[level]) grouped[level] = { level: level, notes: new Set(), counties: new Set() };
+                if (!grouped[level]) grouped[level] = {
+                    level: level,
+                    notes: new Set(),
+                    counties: new Set(),
+                    updated: new Set()
+                };
 
                 if (notes.search('Evac Zone Name') >= 0) fnotes = RegExp(/Evac Zone Name: (.*?)\s\//gm).exec(notes)[1];
 
                 grouped[level].notes.add(fnotes);
                 grouped[level].counties.add(county);
+                grouped[level].updated.add(time);
             }
         });
 
@@ -169,6 +176,7 @@ class NearbyEvacuations {
             level: group.level,
             notes: Array.from(group.notes),
             counties: Array.from(group.counties),
+            updated: Math.max.apply(null, Array.from(group.updated))
         }));
 
         return active;
@@ -359,7 +367,7 @@ class Weather {
             <div class="item"><div class="t">Temperature</div><div class="v">${Math.round(t)}&deg;${tunit}</div></div>
             <div class="item"><div class="t">Feels Like</div><div class="v">${feelsLike}&deg;${tunit}</div></div>
             <div class="item"><div class="t">Wet-Bulb Temp.</div><div class="v">${wetBulb != null ? `${wetBulb}&deg;${tunit}` : 'N/A'}</div></div>
-            <div class="item"><div class="t">Humidity</div><div class="v">${rh}%</div></div>
+            <div class="item"><div class="t">Humidity</div><div class="v">${rh ? `${rh}%` : 'N/A'}</div></div>
             <div class="item"><div class="t">Wind</div><div class="v">${wind}</div></div>
             <div class="item"><div class="t">Last report</div><div class="v">${updated}</div></div>
             ${(!hasPermissions ? `<a href="#" data-action="marketing-cta" data-utm="wx_stn" onclick="return false" class="btn btn-sm btn-yellow" style="display:block;margin:0 auto">Upgrade to see more data</a>` : '')}`;
@@ -576,7 +584,7 @@ class Weather {
                     //}
                 });
 
-            if (update) {
+            if (update && map.getSource('stns')) {
                 map.getSource('stns').setData({
                     type: 'FeatureCollection',
                     features: feat
@@ -824,6 +832,8 @@ function isVisible(div) {
 }
 
 function timeAgo(t, w, c) {
+    if (t === 'undefined' || !t) return '';
+
     const plural = (v) => { return v > 1 ? 's' : ''; },
         subUnit = (d, s, r) => { return Math.floor(((d / s) - Math.floor(d / s)) * r); },
         now = c ?? Date.now(),

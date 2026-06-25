@@ -939,7 +939,7 @@ class Stats {
     createTableRow(table, fire) {
         const prop = fire.properties,
             geo = `7/${fire.geometry.coordinates[0]}/${fire.geometry.coordinates[1]}`,
-            div = document.createElement('div'); console.log(fire);
+            div = document.createElement('div');
 
         div.classList.add('row');
         div.addEventListener('click', () => {

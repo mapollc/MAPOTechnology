@@ -152,7 +152,7 @@ if ($function == 'create' && !$permission->fire()->add() || $function == 'modify
 
             <div class="btn-group">
                 <input type="submit" class="btn btn-green" name="create" value="<?= $function == 'modify' ? 'Save' : 'Create' ?> Incident">
-                <input type="button" class="btn" value="Go Back" onclick="window.location.href='../wildfires'">
+                <input type="button" class="btn" value="Go Back" onclick="history.go(-1)">
             </div>
         </form>
 <? }

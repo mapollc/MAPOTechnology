@@ -1348,7 +1348,7 @@ export class Evacuations {
                         <summary style="font-weight:400">${stateLabels[z.state]?.name} &ndash; ${z.county} County</summary>
                         <span style="font-size:15px">${z.notes}</span>
                     </details>
-                    <p class="updated" style="text-align:left;color:#4a4a4a">Last updated ${timeAgo(z.updated)} by ${stateLabels[z.state]?.name} OEM</p>
+                    <p class="updated" style="text-align:left;color:#4a4a4a">Last updated ${z.updated ? timeAgo(z.updated) : 'N/A'} by ${stateLabels[z.state]?.name} OEM</p>
                 </div>`);
             });
 
@@ -1823,7 +1823,7 @@ export class Layers {
             ]);
 
             if (update && data) {
-                map.getSource(modisID).setData(data);
+                if (map.getSource(modisID)) map.getSource(modisID).setData(data);
             } else {
                 if (!map.getSource(modisID)) {
                     map.addSource(modisID, {
@@ -1861,7 +1861,7 @@ export class Layers {
                         }
                     });
 
-                    mapMouseOver(modisID);
+                    //mapMouseOver(modisID);
                 }
             }
         } else {
@@ -4011,7 +4011,7 @@ export class Wildfires {
             if (fireStats != null) {
                 const p = document.createElement('p');
                 p.classList.add('fireStats');
-                p.innerHTML = `<i class="far fa-chart-line-up"></i><span>${fireStats}</span>`;
+                p.innerHTML = `<i class="far fa-chart-line-up"></i><span style="display:block;line-height:1.2">${fireStats}</span>`;
                 $('#acres_history').parentElement.appendChild(p);
             }
         }
@@ -4318,7 +4318,7 @@ export class Wildfires {
                 // Wait for source load before displaying
                 await new Promise(resolve => {
                     const check = () => {
-                        if (map.isSourceLoaded(`${type}_fires`)) {
+                        if (map.getSource(`${type}_fires`) && map.isSourceLoaded(`${type}_fires`)) {
                             this.displayFires(type, i);
                             resolve();
                         } else {
@@ -4602,25 +4602,28 @@ export class Wildfires {
                 scrd = modal.querySelector('span.coords');
 
             // if nearby evacuations exist, show them on the modal
-            if (nearbyEvacs) {
-                let theEvacs = '';
+            if (nearbyEvacs.length) {
+                let theEvacs = [];
 
-                if (nearbyEvacs.length > 0) {
-                    nearbyEvacs.reverse().forEach(z => {
-                        const nomen = (z.level == 1 ? 'Be Ready' : (z.level == 2 ? 'Be Set' : 'Leave Immediately'));
+                nearbyEvacs.reverse().forEach(z => {
+                    const nomen = (z.level == 1 ? 'Be Ready' : (z.level == 2 ? 'Be Set' : 'Leave Immediately'));
 
-                        theEvacs += `<div class="evac level${z.level}">
-                            <h3><span class="evac-circ l${z.level}"></span>Level ${z.level}: ${nomen}</h3>
-                            <details>
-                                <summary>${formatArray(z.counties)} Count${(z.counties.length == 1 ? 'y' : 'ies')}</summary>
-                                <span style="font-size:15px">${z.notes.join(', ')}</span>
-                            </details>
-                            <p class="updated" style="text-align:left;color:#4a4a4a">Last updated ${timeAgo(z.updated)} by ${stateLabels[z.state]?.name} OEM</p>
-                        </div>`;
-                    });
+                    theEvacs.push(`<div class="evac level${z.level}">
+                        <div class="evacTitle">
+                            <h3>
+                                <span class="evac-circ l${z.level}"></span>
+                                Level ${z.level}: ${nomen}
+                            </h3>
+                        </div>
+                        <details>
+                            <summary style="font-weight:400">${formatArray(z.counties)} Count${(z.counties.length == 1 ? 'y' : 'ies')}</summary>
+                            <span style="font-size:15px">${z.notes.join(', ')}</span>
+                        </details>
+                        <p class="updated" style="text-align:left">Last updated ${timeAgo(z.updated)}</p>
+                    </div>`);
+                });
 
-                    $('.incident #incWX').insertAdjacentHTML('beforebegin', `<div class="evacs">${theEvacs}</div>`);
-                }
+                document.querySelector('.incident #curwx').parentElement.insertAdjacentHTML('beforebegin', `<div class="evacs">${theEvacs.join('')}</div>`);
             }
 
             // get incident weather
@@ -4692,7 +4695,8 @@ export class Wildfires {
                 break;
         }
 
-        return settings.archive == null ? ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#777', pc] : '#777';
+        return settings.archive == null ? [
+            'case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#777', pc] : '#777';
     }
 
     async intlPerimeters(update = false) {
@@ -4796,7 +4800,7 @@ export class Wildfires {
             y = (settings.archive ? settings.archive : config.curTime.getFullYear()),
             min = settings.perimeters().minSize(),
             pc = this.perimeterColor(settings.perimeters().color()),
-            o = 'OBJECTID,attr_UniqueFireIdentifier,poly_IncidentName,attr_IncidentName,poly_DateCurrent,poly_GISAcres,poly_Acres_AutoCalc,poly_MapMethod,attr_POOState,attr_ContainmentDateTime,attr_FireOutDateTime',
+            o = 'OBJECTID,attr_UniqueFireIdentifier,poly_IncidentName,attr_IncidentName,poly_DateCurrent,poly_GISAcres,poly_Acres_AutoCalc,poly_MapMethod,attr_POOState,attr_ContainmentDateTime,attr_PercentContained,attr_FireOutDateTime',
             perimName = 'attr_IncidentName',
             w = `attr_FireDiscoveryDateTime>=TIMESTAMP '${y}-01-01 00:00:00'`;
 
@@ -6535,7 +6539,7 @@ export function marketing(override = false, utm = null) {
                 'variant': pick
             });
 
-            window.location.href = config.purchaseLink(utm ? utm : 'popup');
+            window.location.href = purchaseLink(utm ? utm : 'popup');
             inits.clickListener.closeDataForm();
         });
 

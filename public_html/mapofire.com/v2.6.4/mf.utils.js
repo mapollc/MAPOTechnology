@@ -1306,7 +1306,7 @@ export class Evacuations {
 
         btn.style.display = 'block';
         btn.dataset.tooltip = `Evacuations (${this.evacCount})`;
-        if (this.evacCount > 0) btn.innerHTML = `<span class="notify${this.evacCount > 9 ? ' m10' : ''}">${this.evacCount > 9 ? '9+' : this.evacCount}</span>`;
+        if (this.evacCount > 0) btn.innerHTML = `<span class="notify${this.evacCount > 9 ? ' m10' : ''}">${this.evacCount > 100 ? '9+' : this.evacCount}</span>`;
     }
 
     clickListener() {

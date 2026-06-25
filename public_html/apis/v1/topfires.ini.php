@@ -36,18 +36,21 @@ function trendScore($count, $acres, $discovered, $stats)
     return ($clicks * $wClicks) + ($acres * $wAcres) + ($recency * $wRecent);
 }
 
-$memcache = new Memcached();
-$memcache->addServer('127.0.0.1', 11211);
-$cacheKey = "trendingFires_$version" . isset($_REQUEST['limit']) ? "_{$_REQUEST['limit']}" : '';
-$cache = $memcache->get($cacheKey);
-$cacheTime = $memcache->get("$cacheKey-time");
+    $memcache = new Memcached();
+    if (!count($memcache->getServerList())) $memcache->addServer('127.0.0.1', 11211);
 
-if ($cache !== false && $cacheTime !== false && filemtime(__DIR__ . '/topfires.ini.php') < $cacheTime) {
+    $cacheKey = "trendingFires_$version" . (isset($_REQUEST['actual']) ? "_actual" : '') . (isset($_REQUEST['limit']) ? "_{$_REQUEST['limit']}" : '');
+    $cache = $memcache->get($cacheKey);
+    
+if ($cache !== false) {
     $topFires = $cache['top'] ?? null;
     $total = $cache['total'] ?? 0;
     $isCached = true;
 } else {
-    $result = mysqli_query($con, "SELECT t.*, w.status, w.date AS discovered, w.acres FROM topFires AS t INNER JOIN wildfires AS w ON w.wfid = t.wfid  ORDER BY t.count DESC LIMIT 200");
+    $result = mysqli_query($con, "SELECT t.*, w.status, w.date AS discovered, w.acres 
+    FROM topFires AS t
+    INNER JOIN wildfires AS w ON w.wfid = t.wfid
+    ORDER BY t.count DESC LIMIT 200");
 
     $stats = null;
     $top = [];
@@ -84,58 +87,63 @@ if ($cache !== false && $cacheTime !== false && filemtime(__DIR__ . '/topfires.i
         ];
     }
 
-    if (!empty($clickVals) && !empty($acreVals)) {
-        $stats = [
-            'min_clicks' => min($clickVals),
-            'max_clicks' => max($clickVals),
-            'min_acres'  => min($acreVals),
-            'max_acres'  => max($acreVals)
-        ];
+    if (!isset($_REQUEST['actual'])) {
+        if (!empty($clickVals) && !empty($acreVals)) {
+            $stats = [
+                'min_clicks' => min($clickVals),
+                'max_clicks' => max($clickVals),
+                'min_acres'  => min($acreVals),
+                'max_acres'  => max($acreVals)
+            ];
 
-        foreach ($top as &$fire) {
-            $fire['score'] = trendScore(
-                $fire['count'],
-                $fire['acres'],
-                $fire['discovered'],
-                $stats
-            );
-        }
-        unset($fire);
-    }
-
-    if (!empty($top)) {
-        usort($top, fn($a, $b) => $b['score'] <=> $a['score']);
-
-        $topFires = [];
-        $total = 0;
-        $clicks = 0;
-
-        $limit = isset($_REQUEST['limit']) ? max(1, (int)$_REQUEST['limit']) : 10;
-        $maxItems = min($limit, count($top));
-
-        for ($i = 0; $i < $maxItems; $i++) {
-            unset($top[$i]['discovered']);
-            unset($top[$i]['acres']);
-            $topFires[] = $top[$i];
-
-            $total++;
-            $clicks += $top[$i]['count'];
+            foreach ($top as &$fire) {
+                $fire['score'] = trendScore(
+                    $fire['count'],
+                    $fire['acres'],
+                    $fire['discovered'],
+                    $stats
+                );
+            }
+            unset($fire);
         }
 
-        $avgClicks = $total > 0 ? $clicks / $total : 0;
+        if (!empty($top)) {
+            usort($top, fn($a, $b) => $b['score'] <=> $a['score']);
 
-        foreach ($topFires as &$fire) {
-            $fire['trending'] = $fire['count'] >= $avgClicks;
+            $topFires = [];
+            $total = 0;
+            $clicks = 0;
+
+            $limit = isset($_REQUEST['limit']) ? max(1, (int)$_REQUEST['limit']) : 10;
+            $maxItems = min($limit, count($top));
+
+            for ($i = 0; $i < $maxItems; $i++) {
+                unset($top[$i]['discovered']);
+                unset($top[$i]['acres']);
+                $topFires[] = $top[$i];
+
+                $total++;
+                $clicks += $top[$i]['count'];
+            }
+
+            $avgClicks = $total > 0 ? $clicks / $total : 0;
+
+            foreach ($topFires as &$fire) {
+                $fire['trending'] = $fire['count'] >= $avgClicks;
+            }
+            unset($fire);
+        } else {
+            $topFires = null;
+            $total = 0;
         }
-        unset($fire);
     } else {
-        $topFires = null;
-        $total = 0;
+        $topFires = $top;
+        $total = count($top);
     }
-
-    $memcache->set($cacheKey, ['top' => $topFires, 'total' => $total], 900);
-    $memcache->set("$cacheKey-time", time(), 900);
 }
+
+$output = ['top' => $topFires, 'total' => $total];
+$memcache->set($cacheKey, $output, 900);
 
 $returnJson = ['top' => $topFires, 'total' => $total];
 

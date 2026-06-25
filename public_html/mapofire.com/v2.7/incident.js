@@ -31,7 +31,7 @@ const numberFormat = (n, d = 2) => {
 
         return `<div class="grid top-align">
             <div class="card dispatch">
-            <h3>Dispatch Center</h3>
+            <h3 style="margin-bottom:0.5em">Dispatch Center</h3>
                 <dt class="label large">${center.name} (${center.agency})</dt>
                 <dd><p style="padding-bottom:0">${center.location}</p>${website}</dd>
             </div>
@@ -232,7 +232,7 @@ self.onmessage = (e) => {
             <div class="grid cols-${fr.image != null && !inciweb ? 3 : 2} top-align">
                 <div class="card initial">
                     <dt class="label icon fa-location-dot">Initial Location</dt>
-                    <dd>${near}</dd>
+                    <dd>${near ?? 'N/A'}</dd>
 
                     <dt class="label icon fa-tower-observation">Responsible Agency</dt>
                     <dd>${jdesc}</dd>

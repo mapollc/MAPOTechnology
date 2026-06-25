@@ -1,5 +1,5 @@
 <?
-function getStructures($coords)
+/*function getStructures($coords)
 {
 
     $geo = [
@@ -60,76 +60,81 @@ function evacOR()
     return $evac;
 }
 
-if ($_GET['test'] == 1) {
-    $evacuations = [];
-    $states = ['OR', 'WA', 'CA'];
+if ($_GET['test'] == 1) {*/
 
-    for ($i = 0; $i < count($states); $i++) {
-        $fileName = '/home/mapo/public_html/cron/cache/evacs_' . $states[$i] . '.json';
+$memcache = new Memcached();
+if (!count($memcache->getServerList())) $memcache->addServer('127.0.0.1', 11211);
 
-        if (file_exists($fileName)) {
-            $arr = json_decode(file_get_contents($fileName), true);
+$evacCacheKey = 'evacuations' . (isset($_REQUEST['state']) ? "_{$_REQUEST['state']}" : '');
+$cache = $memcache->get($evacCacheKey);
 
-            if (count($arr) > 0) {
-                $evacuations = array_merge($arr, $evacuations);
-            }
-        }
-    }
+if ($cache !== false) {
+    $isCached = true;
+    return $returnJson = json_decode($cache);
+}
 
-    usort($evacuations, function ($a, $b) {
-        $levelA = $a['properties']['level'];
-        $levelB = $b['properties']['level'];
+$evacuations = [];
+$states = isset($_REQUEST['state']) ? [$_REQUEST['state']] : ['OR', 'WA', 'CA'];
 
-        if ($levelA !== $levelB) {
-            return $levelB <=> $levelA;
-        }
+for ($i = 0; $i < count($states); $i++) {
+    $fileName = "/home/mapo/public_html/cron/cache/evacs_$states[$i].json";
 
-        $updatedA = $a['properties']['updated'];
-        $updatedB = $b['properties']['updated'];
+    if (file_exists($fileName)) {
+        $arr = json_decode(file_get_contents($fileName), true);
 
-        return $updatedB <=> $updatedA;
-    });
-
-    $returnJson = ['type' => 'FeatureCollection', 'features' => $evacuations ? $evacuations : null];
-} else {
-    $cachefilename = 'evacuations';
-    $memcache = new Memcached();
-    $memcache->addServer('127.0.0.1', 11211);
-    $cache = $memcache->get($cachefilename);
-
-    if (!$cache || ((time() - $memcache->get($cachefilename . '-time')) > 450) || (filemtime(root() . 'evacuations.ini.php') > $memcache->get($cachefilename . '-time'))) {
-        $evac = [];
-        $california = evacCA();
-        $oregon = evacOR();
-
-        if (count($california) > 0) {
-            $evac = array_merge($california, $evac);
-        }
-
-        if (count($oregon) > 0) {
-            $evac = array_merge($oregon, $evac);
-        }
-
-        usort($evac, function ($a, $b) {
-            $levelA = $a['properties']['level'];
-            $levelB = $b['properties']['level'];
-
-            if ($levelA !== $levelB) {
-                return $levelB <=> $levelA;
-            }
-
-            $updatedA = $a['properties']['updated'];
-            $updatedB = $b['properties']['updated'];
-
-            return $updatedB <=> $updatedA;
-        });
-
-        $returnJson = ['type' => 'FeatureCollection', 'features' => $evac ? $evac : null];
-        $memcache->set($cachefilename, json_encode($returnJson), 450);
-        $memcache->set($cachefilename . '-time', time(), 450);
-    } else {
-        $isCached = true;
-        $cache = json_decode($cache);
-        $returnJson = $cache;
+        if (count($arr) > 0) $evacuations = [...$arr, ...$evacuations];
     }
 }
+
+usort($evacuations, function ($a, $b) {
+    $levelA = $a['properties']['level'];
+    $levelB = $b['properties']['level'];
+
+    if ($levelA !== $levelB) return $levelB <=> $levelA;
+
+    $updatedA = $a['properties']['updated'];
+    $updatedB = $b['properties']['updated'];
+
+    return $updatedB <=> $updatedA;
+});
+
+$out = ['type' => 'FeatureCollection', 'features' => $evacuations ?: null];
+//$memcache->set($evacCacheKey, json_encode($out), 450);
+
+return $returnJson = $out;
+/*}
+
+$cacheKey = 'evacuations';
+$memcache = new Memcached();
+if (!count($memcache->getServerList())) $memcache->addServer('127.0.0.1', 11211);
+$cache = $memcache->get($cacheKey);
+
+if ($cache !== false) {
+    $isCached = true;
+    $cache = json_decode($cache);
+    return $returnJson = $cache;
+}
+
+$evac = [];
+$california = evacCA();
+$oregon = evacOR();
+
+if (count($california) > 0) $evac = [...$california, ...$evac];
+if (count($oregon) > 0) $evac = [...$oregon, ...$evac];
+
+usort($evac, function ($a, $b) {
+    $levelA = $a['properties']['level'];
+    $levelB = $b['properties']['level'];
+
+    if ($levelA !== $levelB) {
+        return $levelB <=> $levelA;
+    }
+
+    $updatedA = $a['properties']['updated'];
+    $updatedB = $b['properties']['updated'];
+
+    return $updatedB <=> $updatedA;
+});
+
+$returnJson = ['type' => 'FeatureCollection', 'features' => $evac ?: null];
+$memcache->set($cacheKey, json_encode($returnJson), 450);*/

@@ -1,129 +1,178 @@
 <?
+define('API_CACHE_ENABLED', true);
+
+function generateCacheKey($category)
+{
+    global $_REQUEST;
+
+    return "api-fires_$category" .
+        (!empty($_REQUEST['archive']) ? "_{$_REQUEST['archive']}" : '') .
+        (!empty($_REQUEST['agency']) ? "_{$_REQUEST['agency']}" : '') .
+        (!empty($_REQUEST['state']) ? "_{$_REQUEST['state']}" : '') .
+        (!empty($_REQUEST['start']) && !empty($_REQUEST['end']) ? "_{$_REQUEST['start']}{$_REQUEST['end']}" : '') .
+        (!empty($_REQUEST['sort']) ? "_{$_REQUEST['sort']}" : '') .
+        (!empty($_REQUEST['order']) ? "_{$_REQUEST['order']}" : '');
+}
+
+function getDispatchZones()
+{
+    static $zones = null;
+
+    if ($zones === null) $zones = json_decode(file_get_contents('../cron/dispatch_zones.json'));
+
+    return $zones;
+}
+
+function dispatchZones($id)
+{
+    static $lookup = null;
+
+    if ($lookup === null) {
+        $lookup = [];
+
+        foreach (getDispatchZones() as $zone) {
+            $lookup[$zone->unit] = $zone;
+        }
+    }
+
+    $parts = explode('-', $id);
+    $unit = $parts[1] ?? '';
+
+    return $lookup[$unit]
+        ?? (object)[
+            'agency' => null,
+            'area' => null,
+            'logo' => null
+        ];
+}
+
 $category = $_GET['method'];
 $year = date('Y');
 
-function dispatchZones($id) {
-    global $dzones;
-    $r = ['agency' => null, 'area' => null, 'logo' => null];
-
-    for ($i = 0; $i < count($dzones); $i++) {
-        $unit = $dzones[$i]->unit;
-        if ($unit == explode('-', $id)[1]) {
-            $r = $dzones[$i];
-            break;
-        }
-    }
-
-    return $r;
-}
-
-function generateCacheKey($category) {
-    global $_REQUEST;
- 
-    return 'api-fires_'.$category.
-            ($_REQUEST['archive'] ? '_'.$_REQUEST['archive'] : '').
-            ($_REQUEST['agency'] ? '_'.$_REQUEST['agency'] : '').
-            ($_REQUEST['state'] ? '_'.$_REQUEST['state'] : '').
-            ($_REQUEST['start'] && $_REQUEST['end'] ? '_'.$_REQUEST['start'].$_REQUEST['end'] : '').
-            ($_REQUEST['sort'] ? '_'.$_REQUEST['sort'] : '').
-            ($_REQUEST['order'] ? '_'.$_REQUEST['order'] : '');
-}
-
 if ($category == 'stats') {
-    require_once 'fire-stats.ini.php';
-} else if ($category == 'incident') {
-    require_once 'fire-info.ini.php';
-} else if ($category == 'canada') {
-    $weeks1 = strtotime('-7 days');
-    $weeks3 = strtotime('-3 weeks');
-    $months6 = strtotime('-6 months');
-    $sql = "SELECT * FROM ca_wildfires WHERE year = $year AND (((date >= $weeks3 AND CAST(acres AS float) < 1000 AND status != 'Under control') OR (date >= $weeks1 AND CAST(acres AS float) < 1000 AND status = 'Under control')) OR (date >= $months6 AND CAST(acres AS float) >= 1000)) AND display = 1 ORDER BY ".($_REQUEST['order'] ? ($_REQUEST['order'] == 'acres' ? 'CAST(acres AS float)' : $_REQUEST['order']) : 'CAST(date AS float)')." DESC";
-
-    $result = mysqli_query($con, $sql);
-
-    $total = 0;
-    while ($row = mysqli_fetch_assoc($result)) {
-        $url = 'wildfire/' . $row['wfid'] . '/canada/' . strtolower(str_replace('--', '-', str_replace('_', '-', str_replace(' ', '-', $row['name'])))) . '-fire';
-
-        $features[] = [
-            'type' => 'Feature',
-            'geometry' => [
-                'type' => 'Point',
-                'coordinates' => [
-                    floatval($row['lon']),
-                    floatval($row['lat'])
-                ]
-            ],
-            'properties' => [
-                'wfid' => intval($row['wfid']),
-                'province' => $row['province'],
-                'name' => str_replace('_', ' ', $row['name']),
-                'type' => 'Wildfire',
-                'acres' => floatval($row['acres']),
-                'status' => ($row['status'] ? $row['status'] : null),
-                'near' => null,
-                'url' => $url,
-                'time' => [
-                    'year' => intval($row['year']),
-                    'discovered' => floatval($row['date']),
-                    'captured' => floatval($row['captured']),
-                    'updated' => floatval($row['updated']),
-                    'timezone' => $row['timezone']
-                ]
-            ]
-        ];
-
-        $total++;
-    }
-
-    $returnJson = ['type' => 'FeatureCollection', 'features' => $features, 'totalFires' => $total];
-} else {
-    if (isset($_REQUEST['bbox'])) {
-        $js = json_decode(urldecode($_REQUEST['bbox']));
-        $ymin = $js->ymin;
-        $ymax = $js->ymax;
-        $xmin = $js->xmin;
-        $xmax = $js->xmax;
-    } else {
-        $cacheExpires = time() + ($_REQUEST['archive'] ? 31557600 : 300);
-        $cachefilename = generateCacheKey($category);
-        $memcache = new Memcached();
-        $memcache->addServer('127.0.0.1', 11211); 
-        $cache = $memcache->get($cachefilename);
-        $cacheTime = $memcache->get("$cachefilename-time");
-        $apiUpdated = filemtime(root().'wildfires.ini.php') > $cacheTime;
-        $apiUpdated2 = filemtime(root().'getWildfires.inc.php') > $cacheTime;
-    }
-
-    // if a memcached object doesn't exist, the script was updated since last cached, or the memcached object is expired
-    // otherwise use memcached data
-    if (!$cache || $apiUpdated || $apiUpdated2 || time() - $cacheTime > $cacheExpires) {
-        $cacheResult = mysqli_fetch_assoc(mysqli_query($con, "SELECT cache_data, expires FROM wildfire_api_cache WHERE cache_key = '$cachefilename' LIMIT 1"));
-
-        // if data is cached in database and not expired, use it and then set the memcached object
-        // otherwise we need to query the database for fresh data
-        if ($cacheResult && $cacheResult['expires'] > time() && !$apiUpdated && !$apiUpdated2) {
-            $isCached = true;
-            $isCachedType = 'mariadb';
-            $returnJson = json_decode($cacheResult['cache_data']);
-
-            $memcache->set($cachefilename, json_encode($returnJson), $cacheExpires);
-            $memcache->set("$cachefilename-time", time(), $cacheExpires);
-        } else {
-            require_once 'getWildfires.inc.php';
-
-            if (!isset($_REQUEST['bbox'])) {
-                executeQuery('ssi', [$cachefilename, json_encode($returnJson), $cacheExpires], "REPLACE INTO wildfire_api_cache (cache_key, cache_data, expires) VALUES (?,?,?)");
-                $memcache->set($cachefilename, json_encode($returnJson), $cacheExpires);
-                $memcache->set("$cachefilename-time", time(), $cacheExpires);
-            }
-        }
-    } else {
-        $isCached = true;
-        $isCachedType = 'memcache';
-        $updateForCacheTime = $memcache->get("$cachefilename-time");
-        $cache = json_decode($cache);
-        ////$cache->cached = true;
-        $returnJson = $cache;
-    }
+    return include 'fire-stats.ini.php';
 }
+
+if ($category == 'incident') {
+    return include 'helpers/fireIncident.inc.php';
+}
+
+if ($category == 'canada') {
+    return include 'helpers/canadaFires.inc.php';
+}
+
+// CHANGED: only initialize Memcached when caching is enabled
+$mem = null;
+if (API_CACHE_ENABLED) {
+    $mem = new Memcached();
+    $mem->addServer('127.0.0.1', 11211);
+}
+
+$cacheKey = generateCacheKey($category);
+
+// -------------------------
+// BBOX requests bypass cache
+// -------------------------
+if (isset($_REQUEST['bbox'])) {
+    $js = json_decode(urldecode($_REQUEST['bbox']));
+
+    $ymin = $js->ymin;
+    $ymax = $js->ymax;
+    $xmin = $js->xmin;
+    $xmax = $js->xmax;
+
+    require_once 'helpers/getWildfires.inc.php';
+
+    return $returnJson;
+}
+
+// -------------------------
+// Development mode
+// -------------------------
+
+// CHANGED: completely bypass cache logic when disabled
+if (!API_CACHE_ENABLED) {
+    require_once 'helpers/getWildfires.inc.php';
+    return $returnJson;
+}
+
+// -------------------------
+// Cache settings
+// -------------------------
+
+$ttl = !empty($_REQUEST['archive']) ? 31557600 : 300;
+$now = time();
+
+$cache = $mem->get($cacheKey);
+$cacheTimeRaw = $mem->get("$cacheKey-time");
+$cacheTime = is_numeric($cacheTimeRaw) ? (int)$cacheTimeRaw : 0;
+
+$lockKey = "$cacheKey-lock";
+
+// CHANGED: determine validity once
+$isCacheValid = $cache && $cacheTime > 0 && (($now - $cacheTime) < $ttl);
+
+// -------------------------
+// Serve valid cache
+// -------------------------
+if ($isCacheValid) {
+    $isCached = true;
+
+    $returnJson = json_decode($cache);
+    if ($returnJson === null && json_last_error() !== JSON_ERROR_NONE) $mem->delete($cacheKey);
+
+    return $returnJson;
+}
+
+// -------------------------
+// Stale cache handling
+// -------------------------
+
+$hasCache = !empty($cache);
+
+// CHANGED: acquire lock once
+$gotLock = $mem->add($lockKey, 1, 20);
+
+if (!$gotLock) {
+
+    // CHANGED: serve stale cache while another request rebuilds
+    if ($hasCache) {
+        $isCached = true;
+
+        $returnJson = json_decode($cache);
+        if ($returnJson === null && json_last_error() !== JSON_ERROR_NONE) $mem->delete($cacheKey);
+
+        return $returnJson;
+    }
+
+    // CHANGED: no cache and another process rebuilding
+    return [
+        'error' => 'warming cache'
+    ];
+}
+
+// -------------------------
+// Build fresh data
+// -------------------------
+
+try {
+
+    require_once 'helpers/getWildfires.inc.php';
+
+    // CHANGED: cache writes only occur when build succeeds
+    $json = json_encode($returnJson);
+
+    $mem->set($cacheKey, $json, $ttl);
+    $mem->set("$cacheKey-time", $now, $ttl);
+
+    executeQuery(
+        'ssi',
+        [$cacheKey, $json, $now + $ttl],
+        "REPLACE INTO wildfire_api_cache (cache_key, cache_data, expires) VALUES (?,?,?)"
+    );
+} finally {
+    // CHANGED: always release lock
+    $mem->delete($lockKey);
+}
+
+return $returnJson;

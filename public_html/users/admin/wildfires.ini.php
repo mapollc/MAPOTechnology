@@ -57,7 +57,7 @@ function is_duplicate_fire($current_fire, $last_fire, $acres_threshold = 10.0, $
 }
 
 // create or modify a MAPO-entered incident
-if (isset($_POST['create']) && $_POST['create'] == 'Save Incident') {
+if (isset($_POST['create']) && ($_POST['create'] == 'Create Incident' || $_POST['create'] == 'Save Incident')) {
     $time = time();
     $date = strtotime($_POST['discovered']);
     $incNumOnly = str_pad($_POST['num'], '6', '0', STR_PAD_LEFT);
@@ -193,8 +193,8 @@ if (isset($_POST['action']) && $_POST['action'] == 'Save Changes') {
 
     // if an image was uploaded, add to DB
     if ($uploadOk && $newFileName != null) {
-        mysqli_query($con, "INSERT INTO wildfiresSupp (incidentID, fuels, causes, behavior, cost, people, image)
-            VALUES ('$incidentNum', '[]', '[]', '[]', NULL, NULL, '$newFileName') ON DUPLICATE KEY UPDATE image = VALUES(image)");
+        mysqli_query($con, "INSERT INTO wildfiresSupp (incidentID, fuels, causes, behavior, cost, people, image, resources)
+            VALUES ('$incidentNum', '[]', '[]', '[]', NULL, NULL, '$newFileName', NULL) ON DUPLICATE KEY UPDATE image = VALUES(image)");
     }
 
     // if acres is different, add historical change
@@ -212,14 +212,11 @@ if (isset($_POST['action']) && $_POST['action'] == 'Save Changes') {
 // clear API cache of wildfires
 if ($_GET['cache'] == 'clear') {
     $memcache = new Memcached();
-    $memcache->addServer('127.0.0.1', 11211);
-    $keys = ['all', 'new', 'rx', 'smk', 'all,new', 'all,new,smk', 'all,new,smk,rx'];
+    if (!count($memcache->getServerList())) $memcache->addServer('127.0.0.1', 11211);
 
-    foreach ($keys as $key) {
-        $key = 'api-fires_' . $key;
-
-        if ($memcache->get($key)) {
-            $memcache->delete($key);
+    foreach ($memcache->getAllKeys() as $key) {
+        if (str_contains($key, 'fire-incident') || str_contains($key, 'api-fires')) {
+            if ($memcache->get($key)) $memcache->delete($key);
         }
     }
 

@@ -709,7 +709,7 @@ async function getFavoriteTrails() {
         content.push('<div class="message info">You currently don\'t have any favorite trails.</div>');
     }
 
-    document.querySelector('#favtrails').innerHTML = content.join('');
+    if (content.length > 1) document.querySelector('#favtrails').innerHTML = content.join('');
 }
 
 async function getUploads() {
@@ -731,7 +731,7 @@ async function getUploads() {
         content.push('<div class="message info">You haven\'t uploaded any content to Map of Trails.</div>');
     }
 
-    document.querySelector('#uploads').innerHTML = content.join('');
+    if (content.length > 1) document.querySelector('#uploads').innerHTML = content.join('');
 }
 
 async function geocode(a, b) {

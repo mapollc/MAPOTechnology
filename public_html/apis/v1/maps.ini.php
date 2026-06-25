@@ -16,15 +16,20 @@ if ($method == 'style') {
     if (!file_exists($path)) {
         $returnJson = ['response' => 'error', 'code' => 404, 'msg' => 'The tilejson style does not exist or cannot be found'];
     } else {
-        $json = json_decode(file_get_contents($path), true);
+        $json = json_decode(file_get_contents($path), $style == 'usfs' ? false : true);
 
-        $json['sprite'] = inlineURL('sprites', $style);
-        $json['glyphs'] = inlineURL('fonts', 'all') . '&fontstack={fontstack}&range={range}';
+        if ($style != 'usfs') {
+            $json['sprite'] = inlineURL('sprites', $style);
+            $json['glyphs'] = inlineURL('fonts', 'all') . '&fontstack={fontstack}&range={range}';
+        } else {
+            $json->sprite = inlineURL('sprites', $style);
+            $json->glyphs = inlineURL('fonts', 'all') . '&fontstack={fontstack}&range={range}';
+        }
 
         $returnJson = $json;
     }
 } else if ($method == 'sprites') {
-    $path = "/home/mapo/public_html/mapofire.com/data/maps/sprites/$style.json";
+    $path = "/home/mapo/public_html/mapofire.com/data/maps/sprites/$style";
 
     if (!file_exists($path)) {
         $returnJson = ['response' => 'error', 'code' => 404, 'msg' => 'The tilejson style does not exist or cannot be found'];

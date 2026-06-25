@@ -6,7 +6,7 @@ if (!filter_var($host, FILTER_VALIDATE_IP) && $host !== 'localhost') {
     $host = '.' . implode('.', array_slice($parts, -2));
 }
 
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
 error_reporting(E_ERROR | E_PARSE);
 
 ini_set('opcache.enable', 0);
