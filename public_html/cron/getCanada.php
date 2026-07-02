@@ -2,7 +2,7 @@
 ////ini_set('display_errors', 1);
 ////error_reporting(E_PARSE);
 
-include_once '../db.ini.php';
+include_once '../config.inc.php';
 include_once '/home/mapo/public_html/apis/functions.inc.php';
 
 function tz($z) {

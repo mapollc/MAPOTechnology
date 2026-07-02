@@ -1,5 +1,5 @@
 <?
-include_once '../db.ini.php';
+include_once '../config.inc.php';
 require_once './secure.inc.php';
 include_once '/home/mapo/public_html/subs.inc.php';
 require_once 'permissions.inc.php';
@@ -18,6 +18,18 @@ $doNotEdit = [1, 2];
 $superAdmin = in_array($_SESSION['uid'], $doNotEdit) ? true : false;
 $securePages = array('wildfires', /*'billing',*/ 'admin');
 $lock = '<i class="far fa-lock"></i>';
+$gaccs = [
+    'AICC' => 'Alaska Interagency Coordination Center',
+    'EACC' => 'Eastern Area Coordination Center',
+    'GBCC' => 'Great Basin Coordination Center',
+    'NRCC' => 'Northern Rockies Coordination Center',
+    'NWCC' => 'Northwest Coordination Center',
+    'ONCC' => 'Northern California Geographic Coordination Center',
+    'OSCC' => 'Southern California Geographic Coordination Center',
+    'RMCC' => 'Rocky Mountain Area Coordinaton Center',
+    'SACC' => 'Southern Area Coordination Center',
+    'SWCC' => 'Southwest Coordination Center'
+];
 
 function inviteUser($org_key, $gid, $orgName, $email)
 {
@@ -55,7 +67,8 @@ function message($type, $m, $info = false, $center = false)
     return '<div style="margin-bottom:1em" class="message ' . ($info ? 'info' : ($type ? 'success' : 'error')) . ($center ? ' center' : '') . '">' . $m . '</div>';
 }
 
-function validSubscription($user, $planID = null) {
+function validSubscription($user, $planID = null)
+{
     if ($planID != null && $user['subscriptions'] != null) {
         for ($i = 0; $i < count($user['subscriptions']); $i++) {
             if ($user['subscriptions'][$i]['plan'] == $planID && $user['subscriptions'][$i]['active'] == 1 && $user['subscriptions'][$i]['ends'] > time()) {

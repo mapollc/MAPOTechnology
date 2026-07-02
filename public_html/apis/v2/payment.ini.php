@@ -1,6 +1,6 @@
 <?
 if ($method == 'subscriptions') {
-    ////require_once '/home/mapo/public_html/db.ini.php';
+    ////require_once '/home/mapo/public_html/config.inc.php';
     require_once '/home/mapo/stripe/init.php';
     require_once '/home/mapo/public_html/subs.inc.php';
 

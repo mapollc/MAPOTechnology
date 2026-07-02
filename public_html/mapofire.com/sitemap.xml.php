@@ -3,7 +3,7 @@ $noMysql = true;
 header('Content-type: text/xml');
 header('Expires: ' . gmdate('D, d M Y H:i:s T', strtotime('+1 hour')));
 header('Cache-Control: max-age=3600');
-include_once '../db.ini.php';
+include_once '../config.inc.php';
 
 $host = 'www.' . str_replace('www.', '', $_SERVER['HTTP_HOST']);
 $json = json_decode(file_get_contents('https://api.mapotechnology.com/v1/wildfires/all,new,smk,rx?format=1&key=50e2c43f8f63ff0ed20127ee2487f15e'));

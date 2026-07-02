@@ -143,11 +143,11 @@ if ($row) {
     // create inciweb json object
     if (!empty($row['incident_info']) || !empty($row['data'])) {
         $bkacres = '';
-        $contact = unserialize($row['contact']);
-        $inciweb = ['incident_info' => $row['incident_info'], 'current' => unserialize($row['data'])];
+        $contact = json_decode($row['contact'], true);
+        $inciweb = ['incident_info' => $row['incident_info'], 'current' => json_decode($row['data'], true)];
 
         if ($row['photo']) {
-            $ph = unserialize($row['photo']);
+            $ph = json_decode($row['photo'], true);
             $inciweb['photo'] = ['url' => $ph[0], 'caption' => $ph[1]];
         }
 
@@ -156,7 +156,7 @@ if ($row) {
 
         $fire['inciweb'] = $inciweb;
 
-        $aa = unserialize($row['data']);
+        $aa = json_decode($row['data'], true);
         foreach (($aa['data']['Current Situation'] ?? []) as $k) {
             if ($k['desc'] == 'Size') {
                 $bkacres = str_replace([' Acres', ','], ['', ''], $k['info']);

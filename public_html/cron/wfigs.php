@@ -6,7 +6,7 @@ error_reporting(E_ERROR | E_PARSE);
 
 date_default_timezone_set('UTC');
 
-require_once '/home/mapo/public_html/db.ini.php';
+require_once '/home/mapo/public_html/config.inc.php';
 include_once '/home/mapo/public_html/apis/functions.inc.php';
 include_once '/home/mapo/public_html/cron/dispatch.inc.php';
 
@@ -162,7 +162,7 @@ function sitRep($irwinIDs)
 
         $data = [
             'teamType' => $p->Team_Type ?? 0,
-            'stuctures' => $p->CALC_TotalStructuresThreatened ?? 0,
+            'structures' => $p->CALC_TotalStructuresThreatened ?? 0,
             'ground' => [
                 'crews' => $p->Crews ?? 0,
                 'dozers' => $p->Dozers ?? 0,
@@ -192,10 +192,10 @@ $runQuery = true;
 $currentTime = time();
 $sqlQueries = [];
 
-$minutes = 30;
+$minutes = 90;
 $last20Mins = date('m/d/Y%20H:i:s', strtotime("-$minutes minutes"));
 $dispatchCenters = $newDispatchCenters;
-//$dispatchCenters = ['ORBMC'];
+#$dispatchCenters = ['WACWC'];
 
 $finalTotal = 0;
 $suppCount = 0;
@@ -240,8 +240,7 @@ foreach ($dispatchCenters as $center) {
             $times       = $fire->times();
             $year        = $times['year'];
             $date        = $times['discovered'];
-            $geo = '';
-            //$geo         = getLocation($con, $fire->getCoords(), false, $state);
+            $geo         = getLocation($con, $fire->getCoords(), false, $state);
             $geolocation = mysqli_real_escape_string($con, $geo);
             $acres       = $fire->size();
             $status      = mysqli_real_escape_string($con, $fire->status());
@@ -272,8 +271,8 @@ foreach ($dispatchCenters as $center) {
                     type      = VALUES(type),
                     lat       = VALUES(lat),
                     lon       = VALUES(lon),
-                    geo       = VALUES(geo),
-                    near      = VALUES(near),
+                    geo       = CASE WHEN VALUES(geo) <> '' AND geo <> VALUES(geo) THEN VALUES(geo) ELSE geo END,
+                    near      = CASE WHEN VALUES(near) <> '' AND near <> VALUES(near) THEN VALUES(near) ELSE near END,
                     acres     = VALUES(acres),
                     `status`  = VALUES(`status`),
                     updated   = '$currentTime',
@@ -305,14 +304,14 @@ foreach ($dispatchCenters as $center) {
 
             $isUndeterminedOnly = count($c) === 1 && strcasecmp(reset($c), 'Undetermined') === 0;
 
-            // Only queue supplemental records if they actually contain meaningful data points
-            if (!(empty($f) && empty($fb) && $cost === 'NULL' && $ppl === 'NULL' && ($isUndeterminedOnly || empty($c)))) {
-                $behaveStr = mysqli_real_escape_string($con, json_encode(array_values($fb)));
-                $causeStr  = mysqli_real_escape_string($con, json_encode(array_values($c)));
-                $fuelStr   = mysqli_real_escape_string($con, json_encode(array_values($f)));
+            //// Only queue supplemental records if they actually contain meaningful data points
+            ////if (!(empty($f) && empty($fb) && $cost === 'NULL' && $ppl === 'NULL' && ($isUndeterminedOnly || empty($c)))) {
+            $behaveStr = mysqli_real_escape_string($con, json_encode(array_values($fb)));
+            $causeStr  = mysqli_real_escape_string($con, json_encode(array_values($c)));
+            $fuelStr   = mysqli_real_escape_string($con, json_encode(array_values($f)));
 
-                if ($fuelStr !== '[]' || $behaveStr !== '[]' || $causeStr !== '[]' || $cost !== 'NULL' || $ppl !== 'NULL') {
-                    $sqlQueries[] = "INSERT INTO wildfiresSupp (incidentID, fuels, causes, behavior, cost, people, image, resources)
+            if ($fuelStr !== '[]' || $behaveStr !== '[]' || $causeStr !== '[]' || $cost !== 'NULL' || $ppl !== 'NULL') {
+                $sqlQueries[] = "INSERT INTO wildfiresSupp (incidentID, fuels, causes, behavior, cost, people, image, resources)
                         VALUES ('$incidentNum', '$fuelStr', '$causeStr', '$behaveStr', $cost, $ppl, NULL, NULL)
                         ON DUPLICATE KEY UPDATE
                             fuels    = VALUES(fuels),
@@ -321,9 +320,9 @@ foreach ($dispatchCenters as $center) {
                             cost     = VALUES(cost),
                             people   = VALUES(people),
                             resources = VALUES(resources)";
-                    $suppCount++;
-                }
+                $suppCount++;
             }
+            ////}
 
             $irwinIDs[] = $prop->IrwinID;
             $centerTotal++;
@@ -334,7 +333,7 @@ foreach ($dispatchCenters as $center) {
     ////$irwinIDs = ['{7C9D552D-EB84-4CB3-8976-5873EFB213A5}'];
 
     $sitrep = sitRep($irwinIDs);
-    //echo $sitrep;
+    ////echo $sitrep;
 
     if ($sitrep !== null) {
         $sqlQueries = [...$sqlQueries, ...$sitrep];

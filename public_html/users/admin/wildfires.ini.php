@@ -195,6 +195,7 @@ if (isset($_POST['action']) && $_POST['action'] == 'Save Changes') {
     if ($uploadOk && $newFileName != null) {
         mysqli_query($con, "INSERT INTO wildfiresSupp (incidentID, fuels, causes, behavior, cost, people, image, resources)
             VALUES ('$incidentNum', '[]', '[]', '[]', NULL, NULL, '$newFileName', NULL) ON DUPLICATE KEY UPDATE image = VALUES(image)");
+        logEvent("Added an image to a wildfire incident (<a href=\"https://mapotechnology.com/account/admin/wildfires/edit?wfid={$_POST['wfid']}\">view</a>)");
     }
 
     // if acres is different, add historical change

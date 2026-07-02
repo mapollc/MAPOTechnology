@@ -1,5 +1,5 @@
 <?
-include('../db.ini.php');
+include('../config.inc.php');
 include('../apis/functions.inc.php');
 
 $json = json_decode(file_get_contents('https://d3kcsn1y1fg3m9.cloudfront.net/gis/routes/snostorm_routes_OR.json'));

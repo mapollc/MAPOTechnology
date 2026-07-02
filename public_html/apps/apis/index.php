@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-require_once '/home/mapo/public_html/db.ini.php';
+require_once '/home/mapo/public_html/config.inc.php';
 
 $api = $_REQUEST['api'];
 $method = $_REQUEST['method'];

@@ -1,6 +1,6 @@
 <?
 session_start();
-include('config.inc.php');
+include_once 'config.inc.php';
 $a = mysqli_query($con, "SELECT * FROM $db.agencies ORDER BY agency_id ASC");
 while($ag = mysqli_fetch_assoc($a)){
  $agencies .= '<option value="'.strtolower($ag[agency_id]).'">('.$ag[agency_id].') '.$ag[shortname].'</option>';

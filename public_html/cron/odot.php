@@ -1,7 +1,7 @@
 <?
 ini_set('display_errors', 1);
 date_default_timezone_set('America/Los_Angeles');
-include('../db.ini.php');
+include('../config.inc.php');
 
 function r($t){
     if (substr($t, 0, 1)=='I') {

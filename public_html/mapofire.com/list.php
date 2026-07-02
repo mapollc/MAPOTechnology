@@ -1,6 +1,6 @@
 <?
 $noMysql = true;
-require_once '../db.ini.php';
+require_once '../config.inc.php';
 require_once '../apis/functions.inc.php';
 
 function fireStatus($v) {

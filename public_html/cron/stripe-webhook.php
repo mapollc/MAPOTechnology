@@ -7,7 +7,7 @@ ini_set('display_errors', 1);
 error_reporting(E_PARSE && E_ERROR);
 
 require_once '/home/mapo/stripe/init.php';
-require_once '/home/mapo/public_html/db.ini.php';
+require_once '/home/mapo/public_html/config.inc.php';
 
 /*function getPlan($theID)
 {
@@ -114,7 +114,7 @@ switch ($type) {
 
 mysqli_close($con);
 
-/*include_once('/home/mapo/public_html/db.ini.php');
+/*include_once('/home/mapo/public_html/config.inc.php');
 
 \Stripe\Stripe::setApiKey($stripeSecretKey);
 

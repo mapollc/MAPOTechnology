@@ -1,5 +1,5 @@
 <?
-include('config.inc.php');
+include 'config.inc.php';
 
 header('Content-type: application/json');
 ini_set('display_errors', 0);

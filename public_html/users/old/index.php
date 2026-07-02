@@ -8,7 +8,7 @@ $companyName = 'MAPO LLC.';
 
 print_r($_SESSION);
 
-include_once('../db.ini.php');
+include_once('../config.inc.php');
 require_once('secure.inc.php');
 
 $page = $_GET['page'];

@@ -1,7 +1,7 @@
 <?
 ini_set('display_errors',1);
 include_once('../apis/functions.inc.php');
-include_once('../db.ini.php');
+include_once('../config.inc.php');
 
 $MINIMUM_DISTANCE = 30;
 $DELIVER_TYPE = 'email';

@@ -1,5 +1,5 @@
 <?
-require_once 'config.ini.php';
+require_once 'config.inc.php';
 $page = null;
 $title = '';
 

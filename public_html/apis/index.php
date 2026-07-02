@@ -91,7 +91,7 @@ function root()
     return $_SERVER['DOCUMENT_ROOT'] . '/v' . $version . '/';
 }
 
-include_once '/home/mapo/public_html/db.ini.php';
+include_once '/home/mapo/public_html/config.inc.php';
 require_once '/home/mapo/public_html/apis/functions.inc.php';
 
 $api = $_REQUEST['api'];

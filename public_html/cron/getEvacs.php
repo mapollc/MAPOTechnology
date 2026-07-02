@@ -14,9 +14,23 @@ function evacCA()
     for ($i = 0; $i < count($cali); $i++) {
         $e = $cali[$i]->properties;
         $level = $e->STATUS == 'Evacuation Order' ? '3' : ($e->STATUS == 'Evacuation Warning' ? '2' : '1');
-        $prop = ['id' => $e->OBJECTID, 'state' => 'CA', 'county' => ucwords(strtolower($e->COUNTY)), 'level' => $level, 'notes' => $e->NOTES, 'zoneID' => $e->ZONE_ID, 'updated' => round($e->EditDate / 1000)];
 
-        $evac[] = ['id' => $e->OBJECTID, 'type' => 'Feature', 'geometry' => $cali[$i]->geometry, 'properties' => $prop];
+        $prop = [
+            'id' => $e->OBJECTID,
+            'state' => 'CA',
+            'county' => ucwords(strtolower($e->COUNTY)),
+            'level' => $level,
+            'notes' => $e->NOTES,
+            'zoneID' => $e->ZONE_ID,
+            'updated' => round($e->EditDate / 1000)
+        ];
+
+        $evac[] = [
+            'id' => $e->OBJECTID,
+            'type' => 'Feature',
+            'geometry' => $cali[$i]->geometry,
+            'properties' => $prop
+        ];
     }
 
     return $evac;
@@ -32,8 +46,22 @@ function evacOR()
     for ($i = 0; $i < count($ore); $i++) {
         $e = $ore[$i]->properties;
         $notes = "Evac Zone Name: $e->Evac_Area_Name / Structures: $e->StructuresWithin / Addresses: $e->AddressesWithin / Population: $e->PopulationWithin";
-        $prop = ['id' => $e->OBJECTID, 'state' => 'OR', 'county' => $e->County, 'level' => $e->Fire_Evacuation_Level, 'notes' => $notes, 'updated' => round($e->last_edited_date / 1000)];
-        $evac[] = ['id' => $e->OBJECTID, 'type' => 'Feature', 'geometry' => $ore[$i]->geometry, 'properties' => $prop];
+
+        $prop = [
+            'id' => $e->OBJECTID,
+            'state' => 'OR',
+            'county' => $e->County,
+            'level' => $e->Fire_Evacuation_Level,
+            'notes' => $notes,
+            'updated' => round($e->last_edited_date / 1000)
+        ];
+
+        $evac[] = [
+            'id' => $e->OBJECTID,
+            'type' => 'Feature',
+            'geometry' => $ore[$i]->geometry,
+            'properties' => $prop
+        ];
     }
 
     return $evac;
@@ -68,9 +96,25 @@ function evacWA()
 
     for ($i = 0; $i < count($json->features); $i++) {
         $e = $json->features[$i]->properties;
+
+        $county = trim(str_replace(['County', '_'], ['', ' '], $e->county));
         $level = str_contains($e->evactype, 'Level 3') ? '3' : (str_contains($e->evactype, 'Level 2') ? '2' : '1');
-        $prop = ['id' => $e->objectid, 'state' => 'WA', 'county' => str_replace(' County', '', $e->county), 'level' => $level, 'notes' => $e->incidentna, 'updated' => round($e->dateedited ?? $e->date_added ?? 0 / 1000)];
-        $evac[] = ['id' => $e->objectid, 'type' => 'Feature', 'geometry' => $json->features[$i]->geometry, 'properties' => $prop];
+
+        $prop = [
+            'id' => $e->objectid,
+            'state' => 'WA',
+            'county' => $county,
+            'level' => $level,
+            'notes' => $e->incidentna,
+            'updated' => round($e->dateedited ?? $e->date_added ?? 0 / 1000)
+        ];
+
+        $evac[] = [
+            'id' => $e->objectid,
+            'type' => 'Feature',
+            'geometry' => $json->features[$i]->geometry,
+            'properties' => $prop
+        ];
     }
 
     return $evac;

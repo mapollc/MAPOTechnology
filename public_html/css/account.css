@@ -1106,7 +1106,8 @@ form label+.input {
     padding: 0.5em;
 }*/
 
-.table thead th.ctrl, .table tbody td.ctrl {
+.table thead th.ctrl,
+.table tbody td.ctrl {
     min-width: 0;
     width: 21px;
 }
@@ -1175,12 +1176,52 @@ form label+.input {
     text-align: right;
 }
 
-.cad-card .grid {
+/*.cad-card .grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(200px, 1fr));
     justify-items: flex-start;
     align-items: flex-start;
-    gap: 15px;
+    gap: 1em;
+}
+
+.cad-card > .grid:not(:first-of-type) {
+    margin-top: 1em;
+}*/
+
+.cad-card fieldset {
+    padding: 1em 0.5em 0 1em;
+    margin-bottom: 1em;
+    border: 1px solid rgb(0 57 92 / 24%);
+    border-radius: 4px;
+}
+
+.cad-card fieldset legend {
+    font-size: 18px;
+    color: var(--blue);
+    padding: 0 .5em;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.cad-card .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(218px, 1fr));
+    gap: .75em;
+    width: 100%;
+    margin-bottom: .75em;
+}
+
+.cad-card .grid.small {
+    grid-template-columns: repeat(auto-fit, minmax(125px, max-content));
+    justify-content: start;
+}
+
+.cad-card .item {
+    padding: 0.75em;
+    border: 1px solid #e9e9e9;
+    background-color: #f9f9f9;
+    border-radius: 4px;
 }
 
 .cad-card .item div.label {
@@ -1200,11 +1241,16 @@ form label+.input {
     cursor: not-allowed;
 }
 
+.cad-card input[type=file] {
+    background-color: #fff;
+}
+
 .cad-card .item span {
     display: block;
     font-family: 'Segoe UI', sans-serif;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 400;
+    line-height: 1.3;
     color: #464646;
 }
 
@@ -1469,6 +1515,7 @@ form label+.input {
         background-size: 90%;
     }
 }
+
 /*.sub {
     width: 100%;
     border: 1px solid #e9e9e9;

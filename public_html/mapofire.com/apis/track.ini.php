@@ -31,6 +31,8 @@ if ($method == 'list') {
         $result = mysqli_query($con, $sql);
         while ($row = mysqli_fetch_assoc($result)) {
             if ($_REQUEST['meta'] == 1) {
+                $status = empty($row['status']) ? false : json_decode($row['status'], true);
+
                 $f[] = [
                     'wfid' => intval($row['wfid']),
                     'incidentId' => $row['incidentId'],
@@ -40,7 +42,7 @@ if ($method == 'list') {
                     'type' => $row['type'],
                     'acres' => /*$uid == 1 ? $row['acres'] - 1000 : */ $row['acres'],
                     'geo' => $row['geo'],
-                    'status' => unserialize($row['status']),
+                    'status' => $status,
                     'url' => wildfireURL($row['wfid'], $row['name'], $row['state'])
                 ];
             } else {

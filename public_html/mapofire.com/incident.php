@@ -41,7 +41,7 @@ if (!isset($_COOKIE['token']) && $_SESSION['uid']) {
 }
 
 $noMysql = true;
-include_once '/home/mapo/public_html/db.ini.php';
+include_once '/home/mapo/public_html/config.inc.php';
 include_once '/home/mapo/public_html/subs.inc.php';
 
 function metaDesc($fireName, $near, $near_long, $acres, $fire) {

@@ -18,7 +18,7 @@ if ($_GET['devel'] == 1) {
 
 require_once '/home/mapo/stripe/init.php';
 require_once '/home/mapo/public_html/subs.inc.php';
-require_once '/home/mapo/public_html/db.ini.php';
+require_once '/home/mapo/public_html/config.inc.php';
 
 function checkPreviousTrials()
 {

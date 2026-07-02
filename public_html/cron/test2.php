@@ -1,79 +1,79 @@
 <?
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
-include_once '../db.ini.php';
-//include_once '../apis/functions.inc.php';
+/*include_once '../config.inc.php';
 
-function sitRep()
-{
-    $queryParams = [
-        'where'          => "1=1",
-        'returnGeometry' => 'false',
-        'outFields'      => 'UniqueFireIdentifier,Team_Type,SIT_FixedWing,Crews,Dozers,Engines,Helicopters,CALC_TotalStructuresThreatened,SIT_Type1Tankers,SIT_Type2Tankers,SIT_Type3Tankers,SIT_Type4Tankers',
-        'f'              => 'geojson'
-    ];
+/*$sqlQueries = '';
+$result = mysqli_query($con, "SELECT id, incident_info, data, contact, photo FROM inciweb ORDER BY updated DESC");
+while ($row = mysqli_fetch_assoc($result)) {
+    $data = '';
+    $contact = '';
+    $photo = '';
 
-    // 3. Build the safe, perfectly encoded URL
-    $url = "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/EGP_Active_Incidents_Prod_Public_View/FeatureServer/0/query?" . http_build_query($queryParams);
-    $json = json_decode(@file_get_contents($url));
-
-    if (empty($json->features)) return null;
-
-    $queries = [];
-    foreach ($json->features as $fire) {
-        $p = $fire->properties;
-
-        $data = [
-            'teamType' => $p->Team_Type ?? 0,
-            'stuctures' => $p->CALC_TotalStructuresThreatened ?? 0,
-            'ground' => [
-                'crews' => $p->Crews ?? 0,
-                'dozers' => $p->Dozers ?? 0,
-                'engines' => $p->Engines ?? 0
-            ],
-            'aircraft' => [
-                'fixedWing' => $p->SIT_FixedWing ?? 0,
-                'helicopters' => $p->Helicopters ?? 0,
-                'tankers' => [
-                    'type1' => $p->SIT_Type1Tankers ?? 0,
-                    'type2' => $p->SIT_Type2Tankers ?? 0,
-                    'type3' => $p->SIT_Type3Tankers ?? 0,
-                    'type4' => $p->SIT_Type4Tankers ?? 0
-                ]
-            ]
-        ];
-
-        $resources = json_encode($data);
-        $queries[] = "UPDATE wildfiresSupp SET resources = '$resources' WHERE incidentID = '{$p->UniqueFireIdentifier}'";
+    if ($row['data'] != '') {
+        $data = mysqli_real_escape_string($con, json_encode(unserialize($row['data'])));
     }
 
-    return $queries;
+    if ($row['contact'] != '') {
+        $contact = mysqli_real_escape_string($con, json_encode(unserialize($row['contact'])));
+    }
+
+    if ($row['photo'] != '') {
+        $photo = mysqli_real_escape_string($con, json_encode(unserialize($row['photo'])));
+    }
+
+    $sqlQueries .= "UPDATE inciweb SET data = '$data', contact = '$contact', photo = '$photo' WHERE id = $row[id];";
 }
 
-echo implode(';', sitRep()).';';
+$runSQL = mysqli_multi_query($con, $sqlQueries);
+if ($runSQL) {
+    do {
+        if ($result = mysqli_store_result($con)) {
+            while ($row = mysqli_fetch_row($result)) {
+            }
+            mysqli_free_result($result);
+        }
+        if (mysqli_more_results($con)) {
+        }
+    } while (mysqli_next_result($con));
+}
 
-/*$result = mysqli_query($con, "SELECT wfid, state, lat, lon FROM `wildfires` WHERE wfid = 148860437");
+include_once '../apis/functions.inc.php';
+
+////$sqlQueries = '';
+$result = mysqli_query($con, "SELECT wfid, state, lat, lon FROM wildfires WHERE state != '' AND near LIKE '%\"near\":null%' OR near LIKE '%\"near\":\"\"%' ORDER BY date DESC");
 while ($row = mysqli_fetch_assoc($result)) {
     $coords = [$row['lat'], $row['lon']];
     $state = $row['state'];
     $getLocation = getLocation($con, $coords, false, $state);
-    $getCounty = getCounty($con, $coords);
-    $geo = mysqli_real_escape_string($con, $getLocation);
-    $near = null;
-    
-    if ($getCounty) {
-        $near = $getCounty;
-    } else {
-        $near = [
+
+    if ($getLocation !== null) {
+        $getLocation = getLocation($con, $coords, false, $state);
+        $getCounty = getCounty($con, $coords);
+        $nearArr = $getCounty ?? [
             'county' => null,
             'fips' => null
         ];
-    }
-    $near['near'] = $getLocation ? $getLocation : null;
-    $near = mysqli_real_escape_string($con, json_encode($near));
 
-    echo "UPDATE wildfires SET near = '$near', geo = '$geo' WHERE wfid = $row[wfid]
-";
+        if ($getLocation) $nearArr['near'] = $getLocation;
+        $near = mysqli_real_escape_string($con, json_encode($nearArr));
+
+        mysqli_query($con, "UPDATE wildfires SET near = '$near', geo = '$getLocation' WHERE wfid = $row[wfid]");
+        echo 'Updated wfid #' . $row['wfid'] . ' location to ' . $near . PHP_EOL;
+    }
+}
+
+/*$runSQL = mysqli_multi_query($con, $sqlQueries) or die(mysqli_error($con));
+if ($runSQL) {
+    do {
+        if ($result = mysqli_store_result($con)) {
+            while ($row = mysqli_fetch_row($result)) {
+            }
+            mysqli_free_result($result);
+        }
+        if (mysqli_more_results($con)) {
+        }
+    } while (mysqli_next_result($con));
 }
 
 mysqli_close($con);
@@ -184,7 +184,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 mysqli_close($con);
 
-/*include_once '../db.ini.php';
+/*include_once '../config.inc.php';
 include_once '../apis/functions.inc.php';
 
 $result = mysqli_query($con, "SELECT wfid, geo, lat, lon FROM wildfires WHERE year = 2025 AND near = '' ORDER BY updated DESC LIMIT 10");
@@ -262,7 +262,7 @@ foreach ($statesArray as $state => $sn) {
 }
 /*ini_set('display_errors', 1);
 error_reporting(E_PARSE && E_ERROR);
-include_once '../db.ini.php';
+include_once '../config.inc.php';
 include_once '../apis/functions.inc.php';
 
 $year = date('Y');
@@ -418,7 +418,7 @@ if (!empty($sqlBatch)) {
 mysqli_close($con);
 
 /*ini_set('display_errors',1);
-include_once '../db.ini.php';
+include_once '../config.inc.php';
 include_once '../apis/functions.inc.php';
 
 print_r(getLocation2($con, [45.9629, -118.9953], true));

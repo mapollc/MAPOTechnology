@@ -79,7 +79,7 @@ if ($_SESSION['role'] != 'ADMIN') {
     }
 
     /*if (!$_SESSION['mtsettings'] && $_SESSION['uid']) {
-    include('../db.ini.php');
+    include('../config.inc.php');
     $user_settings = unserialize(mysqli_fetch_assoc(mysqli_query($con, "SELECT settings FROM trail_settings WHERE uid = '$_SESSION[uid]'"))['settings']);
     mysqli_close($con);
     

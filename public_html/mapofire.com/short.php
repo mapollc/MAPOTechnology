@@ -10,7 +10,7 @@ $cache = $memcache->get($cacheKey);
 if ($cache) {
     $url = $cache;
 } else {
-    include_once '/home/mapo/public_html/db.ini.php';
+    include_once '/home/mapo/public_html/config.inc.php';
     include_once '/home/mapo/public_html/apis/functions.inc.php';
 
     $fire = executeQuery(

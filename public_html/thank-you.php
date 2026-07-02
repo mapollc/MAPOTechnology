@@ -2,7 +2,7 @@
 $domain = 'https://www.mapotechnology.com/';
 $host = str_replace('www.', '', $_SERVER['HTTP_HOST']);
 ini_set('session.cookie_domain', ".$host");
-include_once 'db.ini.php';
+include_once 'config.inc.php';
 
 session_start();
 

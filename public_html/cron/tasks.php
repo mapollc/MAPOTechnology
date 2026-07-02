@@ -3,7 +3,8 @@ date_default_timezone_set('America/Los_Angeles');
 ini_set('display_errors', 1);
 error_reporting(E_ERROR | E_PARSE);
 
-include_once '../db.ini.php';
+include_once '../config.inc.php';
+include_once '../apis/functions.inc.php';
 
 $now = time();
 $year = date('Y', $now);
@@ -198,7 +199,7 @@ function freshenTopFires()
     if ($memcache->get('trendingFires_v1')) $memcache->delete('trendingFires_v1');
     if ($memcache->get('trendingFires_v2')) $memcache->delete('trendingFires_v2');
 
-    $ago = strtotime('-15 minutes');
+    $ago = strtotime('-5 minutes');
     return ["DELETE FROM topFires WHERE time < $ago"];
 }
 
@@ -208,7 +209,7 @@ function updateLocations()
     $time = strtotime('-1 day');
     $queries = [];
 
-    $result = mysqli_query($con, "SELECT wfid, state, lat, lon FROM `wildfires` WHERE date >= $time AND near LIKE '%\"near\":\"\"%'");
+    $result = mysqli_query($con, "SELECT wfid, state, lat, lon FROM `wildfires` WHERE date >= $time AND (near LIKE '%\"near\":null%' OR near LIKE '%\"near\":\"\"%')");
     while ($row = mysqli_fetch_assoc($result)) {
         $coords = [$row['lat'], $row['lon']];
         $state = $row['state'];
@@ -245,7 +246,7 @@ echo 'Top fires algorithm refreshed...
 ';
 
 // update locations of any fires that are lacking a location
-$sqlQueries = [...$sqlQueries, updateLocations()];
+$sqlQueries = [...$sqlQueries, ...updateLocations()];
 echo 'Updated locations of location-less wildfires...
 ';
 

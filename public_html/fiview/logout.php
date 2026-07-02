@@ -1,5 +1,5 @@
 <?
-include('config.inc.php');
+include_once 'config.inc.php';
 
 ini_set('session.cookie_lifetime', $cookieLength);
 ini_set('session.gc_maxlifetime', $cookieLength);
@@ -12,7 +12,7 @@ $_SESSION = array();
 session_unset();
 session_regenerate_id();
   
-setcookie('agency', $row[agency], ['expires' => time() - $cookieLength, 'path' => '/', 'domain' => $cookieURL, 'samesite' => 'Strict']);
+setcookie('agency', $row['agency'], ['expires' => time() - $cookieLength, 'path' => '/', 'domain' => $cookieURL, 'samesite' => 'Strict']);
 
 header('Location: '.$domain.'?logout=1');
 ?>

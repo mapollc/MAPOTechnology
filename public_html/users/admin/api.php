@@ -65,7 +65,7 @@ function getMapbox($datasetID)
     return json_decode($result);
 }
 
-include_once '../../db.ini.php';
+include_once '../../config.inc.php';
 include_once '/home/mapo/public_html/apis/functions.inc.php';
 
 $callback = $_REQUEST['callback'];

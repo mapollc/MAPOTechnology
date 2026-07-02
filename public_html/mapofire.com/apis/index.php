@@ -12,7 +12,7 @@ session_start();
 $start = microtime(true);
 date_default_timezone_set('America/Los_Angeles');
 
-include('../../db.ini.php');
+include('../../config.inc.php');
 
 /*function get_data($url){
     $ch = curl_init();

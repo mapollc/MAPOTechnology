@@ -1353,6 +1353,73 @@ async function complete() {
         });
     }
 
+    if (pageName == 'admin/wildfires/edit' && window.location.search.includes('history=1')) {
+        loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js').then(() => {
+            const k = acresHistory.map(e => Number(e.updated) * 1000).reverse();
+            const v = acresHistory.map(e => Number(e.acres)).reverse();
+
+            new Chart(document.querySelector('#history-chart'), {
+                type: 'line',
+                data: {
+                    labels: k,
+                    datasets: [{
+                        label: 'Acres',
+                        data: v,
+                        borderColor: '#ff5722',
+                        backgroundColor: 'rgba(255,87,34,.15)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title(items) {
+                                    return new Date(Number(items[0].label)).toLocaleString([], {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: '2-digit'
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'nearest'
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                callback(value) {
+                                    return new Date(this.getLabelForValue(value)).toLocaleString([], {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: '2-digit'
+                                    });
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        });
+    }
+
     // ADMIN: wildfire management (specifically these pages)
     if (pageName == 'admin/wildfires' || pageName == 'admin/wildfires/duplicates') {
         const query = new QueryWildfires();

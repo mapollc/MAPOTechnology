@@ -1,7 +1,7 @@
 <?
 ini_set('display_errors',0);
 session_start();
-include('config.inc.php');
+include_once 'config.inc.php';
 
 if(isset($_POST[action]) && $_POST[action]=='login'){
  $user = mysqli_real_escape_string($con, $_POST[username]);

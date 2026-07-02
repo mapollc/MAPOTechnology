@@ -739,7 +739,7 @@ function calculateMedian(array $numbers)
     }
     sort($numbers, SORT_NUMERIC);
     $count = count($numbers);
-    $middleIndex = floor($count / 2);
+    $middleIndex = (int)floor($count / 2);
 
     return ($count % 2 === 1) ? $numbers[$middleIndex] : ($numbers[$middleIndex - 1] + $numbers[$middleIndex]) / 2;
 }

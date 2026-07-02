@@ -1,6 +1,6 @@
 <?
 $noMysql = true;
-include_once('/home/mapo/public_html/db.ini.php');
+include_once('/home/mapo/public_html/config.inc.php');
 
 function stdDev($total, $arr) {
     $num_of_elements = count($arr);

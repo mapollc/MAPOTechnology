@@ -1,5 +1,5 @@
 <?
-include_once('db.ini.php');
+include_once 'config.inc.php';
 $fuels = array('Brush', 'Grass', 'Grass-Shrub', 'Slash', 'Timber');
 
 function mean($arr) {

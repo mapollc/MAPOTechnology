@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['credential'])) {
     exit();
 }
 
-require_once '../db.ini.php';
+require_once '../config.inc.php';
 require_once '../subs.inc.php';
 
 // set GUID if in query parameters

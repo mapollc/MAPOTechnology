@@ -1,7 +1,7 @@
 <?
 session_start();
 
-include_once('../db.ini.php');
+include_once('../config.inc.php');
 $sql = mysqli_query($con, "SELECT * FROM snow_dashboards WHERE active = 1 ORDER BY state ASC, dashboard ASC");
 mysqli_close($con);
 

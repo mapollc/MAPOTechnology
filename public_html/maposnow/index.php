@@ -28,7 +28,7 @@ date_default_timezone_set('America/Los_Angeles');
 
 $settings = array('state' => $_GET['state'], 'dashboard' => $_GET['dashboard']);
 
-include_once('../db.ini.php');
+include_once('../config.inc.php');
 $sql = mysqli_query($con, "SELECT * FROM snow_dashboards WHERE active = 1 ORDER BY state ASC, dashboard ASC");
 mysqli_close($con);
 

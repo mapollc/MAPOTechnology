@@ -66,6 +66,6 @@ if (count($failed) > 0) {
     $failed = [];
 }
 
-/*include_once '/home/mapo/public_html/db.ini.php';
+/*include_once '/home/mapo/public_html/config.inc.php';
 logEvent('Retrieved wildfire data from WildCAD-E', true);
 mysqli_close($con);*/

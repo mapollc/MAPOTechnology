@@ -120,7 +120,7 @@ if ($priceID) {
         }
     } else {
         if (!$_REQUEST['customer_email']) {
-            include_once 'db.ini.php';
+            include_once 'config.inc.php';
             
             $row = mysqli_fetch_assoc(mysqli_query($con, "SELECT cid FROM billing AS b LEFT JOIN users AS u ON b.email = u.email WHERE u.uid = $_SESSION[uid] LIMIT 1"));
 

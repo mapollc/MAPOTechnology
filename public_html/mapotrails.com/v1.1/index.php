@@ -64,7 +64,7 @@ if (isset($_SESSION['uid'])) {
 
 // If map settings are NOT stored in a session variable
 if (!$_SESSION['mtsettings'] && $_SESSION['uid']) {
-    include('../db.ini.php');
+    include('../config.inc.php');
     $user_settings = unserialize(mysqli_fetch_assoc(mysqli_query($con, "SELECT settings FROM trail_settings WHERE uid = '$_SESSION[uid]'"))['settings']);
     mysqli_close($con);
     
@@ -81,7 +81,7 @@ if (!$_SESSION['mtsettings'] && $_SESSION['uid']) {
 // If user is logged in, set the user variables for the app
 /*if ($_SESSION['uid']) {
     if (!$_SESSION['subscribe']) {
-        include_once('/home/mapo/public_html/db.ini.php');
+        include_once('/home/mapo/public_html/config.inc.php');
         $bill = mysqli_fetch_assoc(mysqli_query($con, "SELECT subscription FROM billing AS b LEFT JOIN users AS u ON b.email = u.email AND plan = 'price_1NmiH6IpCdpJm6cTP1rELzPw' AND uid = '$_SESSION[uid]' AND active = 1 ORDER BY b.created DESC LIMIT 1"));
         mysqli_close($con);
     }

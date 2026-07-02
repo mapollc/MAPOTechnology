@@ -1,7 +1,7 @@
 <?
 ini_set('display_errors',1);
 error_reporting(E_ALL);
-include_once '../db.ini.php';
+include_once '../config.inc.php';
 /* => ﻿GEOID
             [1] => STUSPS
             [2] => NAME

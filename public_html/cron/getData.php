@@ -93,13 +93,14 @@ function isValidIncident($incidentType, $coords)
     return ($incidentType == 'Prescribed Fire' || $incidentType == 'Wildfire' || $incidentType == 'Smoke Check' || $incidentType == 'Smoke check') && ($coords[0] != '' && $coords[1] != '' && $coords[0] != '0' && $coords[1] != '0' && $coords[0] != '-' && $coords[1] != '-') ? true : false;
 }
 
-require '/home/mapo/public_html/db.ini.php';
+require '/home/mapo/public_html/config.inc.php';
 include_once '/home/mapo/public_html/apis/functions.inc.php';
 include_once '/home/mapo/public_html/cron/dispatch.inc.php';
-#$newDispatchCenters = ['COFTC'];
+#$newDispatchCenters = ['UTRFC'];
 
 $runQuery = true;
 $checkOldData = true;
+$totalProcessed = 0;
 
 foreach ($newDispatchCenters as $center) {
     $startTime = microtime(true);
@@ -143,33 +144,39 @@ foreach ($newDispatchCenters as $center) {
                     $incidentUnit = $data->getUnit();
 
                     // checks if there has been any new information added or modified for this incident
-                    if ($checkOldData && json_encode($fire) != json_encode($prevfire)) {
+                    if ($checkOldData && json_encode($fire) !== json_encode($prevfire)) {
+                        ////if (str_contains($fire->name, 'Cottonwood')) {
                         $coords = $data->getCoords();
 
                         // Only proccess data if it is the following types of incidents, there are coordinates, and if the fire is >=50 acres OR the fire is <50 acres and is < 1 month old
                         if (isValidIncident($incidentType, $coords)) {
                             $state = getState($coords);
+                            $time = time();
+                            $nearArr = [];
 
                             // Only process data if we haven't already done this incident ID and the incident ID isn't missing the unit identifier
                             if (!in_array($incidentNum, $usfsIDs) && $year <= date('Y') && !str_contains($incidentNum, '--')) {
-                                $time = time();
                                 $timezone = getTimezone($coords);
                                 $getLocation = getLocation($con, $coords, false, $state);
                                 $getCounty = getCounty($con, $coords);
-                                $near = $getCounty ?: [
+                                $nearArr = $getCounty ?? [
                                     'county' => null,
                                     'fips' => null
                                 ];
-                                $near['near'] = $getLocation ?: null;
-                                $near = mysqli_real_escape_string($con, json_encode($near));
+
+                                if ($getLocation) $nearArr['near'] = $getLocation;
+                                $near = mysqli_real_escape_string($con, json_encode($nearArr));
 
                                 $name = mysqli_real_escape_string($con, incidentName($fire->name, $incidentNum));
-                                $incidentType = strpos($name, ' RX') !== FALSE || substr($name, 0, 5) == ' Burn' ? 'Prescribed Fire' : $incidentType;
+                                $incidentType = str_contains($name, ' RX') || substr($name, 0, 5) == ' Burn' ? 'Prescribed Fire' : $incidentType;
                                 $acres = $fire->acres;
                                 $notes = mysqli_real_escape_string($con, $fire->webComment);
                                 $fuels = mysqli_real_escape_string($con, $fire->fuels);
                                 $geo = mysqli_real_escape_string($con, $getLocation);
-                                $resources = mysqli_real_escape_string($con, $fire->resources[0] == '' || $fire->resources[0] == '*******' ? '' : implode(', ', $fire->resources));
+                                $resources = mysqli_real_escape_string(
+                                    $con,
+                                    $fire->resources[0] == '' || $fire->resources[0] == '*******' ? '' : implode(', ', $fire->resources)
+                                );
                                 $fs = json_decode($fire->fire_status);
                                 $fireStatus = [];
 
@@ -179,19 +186,13 @@ foreach ($newDispatchCenters as $center) {
                                 }
 
                                 // if fire is contained
-                                if ($fs->contain != null) {
-                                    $fireStatus['Contain'] = strtotime($fs->contain);
-                                }
+                                if ($fs->contain != null) $fireStatus['Contain'] = strtotime($fs->contain);
 
                                 // if fire is controlled
-                                if ($fs->control != null) {
-                                    $fireStatus['Control'] = strtotime($fs->control);
-                                }
+                                if ($fs->control != null) $fireStatus['Control'] = strtotime($fs->control);
 
                                 // if fire is out
-                                if ($fs->out != null) {
-                                    $fireStatus['Out'] = strtotime($fs->out);
-                                }
+                                if ($fs->out != null) $fireStatus['Out'] = strtotime($fs->out);
 
                                 $status = count($fireStatus) > 0 ? json_encode($fireStatus) : '';
 
@@ -216,8 +217,8 @@ foreach ($newDispatchCenters as $center) {
                                     type = VALUES(type),
                                     lat = VALUES(lat),
                                     lon = VALUES(lon),
-                                    geo = VALUES(geo),
-                                    near = VALUES(near),
+                                    geo = CASE WHEN VALUES(geo) <> '' AND geo <> VALUES(geo) THEN VALUES(geo) ELSE geo END,
+                                    near = CASE WHEN VALUES(near) <> '' AND near <> VALUES(near) THEN VALUES(near) ELSE near END,
                                     acres = VALUES(acres),
                                     `status` = VALUES(`status`),
                                     notes = CASE WHEN (notes IS NULL OR notes = '') AND VALUES(notes) <> '' THEN VALUES(notes) ELSE notes END,
@@ -264,11 +265,12 @@ foreach ($newDispatchCenters as $center) {
                             }
                         } while (mysqli_next_result($con));
 
-                        echo 'Finished with ' . $center . ' (modified ' . $count . ' incidents)...
-';
+                        $totalProcessed += $count;
+                        echo "Finished with $center (modified $count incidents)...
+";
                     } else {
-                        echo 'Unable to update data for ' . $center . '...
-';
+                        echo "Unable to update data for $center...
+";
                     }
                 } else {
                     echo $sqlQueries;
@@ -276,14 +278,13 @@ foreach ($newDispatchCenters as $center) {
             }
         }
     } else {
-        echo 'No WildCAD data exists for ' . $center . '...
-';
+        echo "No WildCAD data exists for $center...
+";
     }
 }
 
 $elapsed = microtime(true) - $startAPITime;
-echo 'Wildfire data processed in ' . ($elapsed > 1 ? round($elapsed, 3) . 's' : round($elapsed, 4) . 'ms') . '
-';
+echo "Processed wildfire data for $totalProcessed incidents in " . ($elapsed > 1 ? round($elapsed, 3) . 's' : round($elapsed, 4) . 'ms') . PHP_EOL;
 
 /*if (cleanup()) {
     echo 'Wildfire data cleaned up...

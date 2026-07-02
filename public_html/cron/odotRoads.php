@@ -1,6 +1,6 @@
 <?
 ini_set('display_errors', 1);
-include_once '../db.ini.php';
+include_once '../config.inc.php';
 
 function getODOT($url) {
 

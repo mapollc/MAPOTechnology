@@ -6,7 +6,7 @@ error_reporting(E_ERROR | E_PARSE);
 ini_set('session.cookie_domain', ".$domain");
 session_start();
 
-require '/home/mapo/public_html/db.ini.php';
+require '/home/mapo/public_html/config.inc.php';
 
 $vars = '';
 $time = time();

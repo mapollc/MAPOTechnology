@@ -4,7 +4,7 @@
 
 exit();
 
-include('/home/mapo/public_html/db.ini.php');
+include('/home/mapo/public_html/config.inc.php');
 include('/home/mapo/public_html/apis/functions.inc.php');
 $category = $_GET['method'];
 $year = date('Y');
