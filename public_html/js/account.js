@@ -1733,7 +1733,8 @@ if (document.querySelector('input[type=tel]')) {
 window.addEventListener('click', async (e) => {
     const target = e.target,
         searchResults = document.querySelector('.search-results'),
-        sidebar = document.querySelector('.sidebar');
+        sidebar = document.querySelector('.sidebar'),
+        menuIcon = target.closest('#menuIcon');
 
     if (document.querySelector('#dialog') != null && target.id == 'close') {
         closeDialog();
@@ -1747,9 +1748,12 @@ window.addEventListener('click', async (e) => {
         createDialog('Unfavorite this trail?', 'Are you sure you want to unfavorite this trail?', 'Unfavorite', 'unfavorite(' + e.target.dataset.tid + ')');
     }
 
-    if (target.id == 'menuIcon' || target.closest('#menuIcon')) {
-        target.classList.toggle('fa-bars');
-        target.classList.toggle('fa-times');
+    if (menuIcon) {
+        const icon = menuIcon.querySelector('i');
+
+        icon.classList.toggle('fa-bars');
+        icon.classList.toggle('fa-times');
+
         document.querySelector('.sidebar').classList.toggle('open');
     }
 
