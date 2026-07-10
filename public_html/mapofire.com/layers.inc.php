@@ -85,6 +85,15 @@ $lay = array(
             'perms2' => ['PREMIUM'],
             'default' => false,
             'app' => true
+        ],
+        [
+            'id' => 'tfrs',
+            'name' => 'Temporary Flight Restrictions',
+            'perms' => true,
+            'perms2' => ['PREMIUM', 'PRO'],
+            'default' => false,
+            'app' => false,
+            'testing' => true
         ]
     ],
     'wx' => [
@@ -411,7 +420,8 @@ $layerDesc = array(
     ],
     'evac' => [
         'See detailed mapping of evacuation areas in Oregon & California',
-        'Show fire departments, hospitals, and medical locations'
+        'Show fire departments, hospitals, and medical locations',
+        'Overlay FAA temporary flight restrictions (TFRs)'
     ],
     'wx' => [
         'Overlay lightning strikes within the last hour',

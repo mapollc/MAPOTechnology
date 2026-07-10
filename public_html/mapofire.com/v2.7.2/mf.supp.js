@@ -155,12 +155,14 @@ class NearbyEvacuations {
                 const level = feature.properties.level,
                     notes = feature.properties.notes || '',
                     county = feature.properties.county || '',
+                    state = feature.properties.state || '',
                     time = feature.properties.updated || 0;
 
                 if (!grouped[level]) grouped[level] = {
                     level: level,
                     notes: new Set(),
                     counties: new Set(),
+                    states: new Set(),
                     updated: new Set()
                 };
 
@@ -168,6 +170,7 @@ class NearbyEvacuations {
 
                 grouped[level].notes.add(fnotes);
                 grouped[level].counties.add(county);
+                grouped[level].states.add(state);
                 grouped[level].updated.add(time);
             }
         });
@@ -176,6 +179,7 @@ class NearbyEvacuations {
             level: group.level,
             notes: Array.from(group.notes),
             counties: Array.from(group.counties),
+            state: Array.from(group.states),
             updated: Math.max.apply(null, Array.from(group.updated))
         }));
 
@@ -1247,6 +1251,7 @@ async function onMapClick(e) {
         const wfClass = new (await loadUtils()).Wildfires();
         let clickedCounty = null,
             sources = [],
+            tfrs = [],
             fire_layers = ['all_fires', 'new_fires', 'smk_fires', 'rx_fires'];
 
         features.forEach(feature => sources.push(feature.source));
@@ -1289,15 +1294,15 @@ async function onMapClick(e) {
                     const p = feature.properties;
                     const t = JSON.parse(p.time);
                     const data = {
-                            wfid: p.wfid,
-                            name: p.name,
-                            state: p.state,
-                            type: p.type,
-                            incidentID: p.incidentId,
-                            acres: p.acres,
-                            discovered: Number(t.discovered),
-                            updated: Number(t.updated)
-                        };
+                        wfid: p.wfid,
+                        name: p.name,
+                        state: p.state,
+                        type: p.type,
+                        incidentID: p.incidentId,
+                        acres: p.acres,
+                        discovered: Number(t.discovered),
+                        updated: Number(t.updated)
+                    };
 
                     wfClass.logFire(data.wfid, data);
                     wfClass.incident(data.wfid, true);
@@ -1431,6 +1436,7 @@ async function onMapClick(e) {
                 break;
             }
 
+            // fire department and hospital locations
             if (feature.source == 'firemed') {
                 const cityState = `${feature.properties.CITY}, ${feature.properties.STATE} ${feature.properties.ZIPCODE}`,
                     type = feature.properties.type == 'hosp' ? 'Hospital' : (feature.properties.type == 'ems' ? 'Emergency Medical Services' : 'Fire Department');
@@ -1442,6 +1448,11 @@ async function onMapClick(e) {
                 );
 
                 break;
+            }
+
+            // TFRs
+            if (feature.source == 'tfrs') {
+                tfrs.push(feature);
             }
 
             // on air quality click
@@ -1702,6 +1713,62 @@ async function onMapClick(e) {
 
                 break;
             }
+        }
+
+        // if there are any TFRs clicked on, show that info
+        if (tfrs.length) {
+            const content = [];
+
+            tfrs.sort((a, b) => b.properties.issued - a.properties.issued)
+                .forEach(ea => {
+                    const prop = ea.properties;
+                    const airspace = JSON.parse(prop.airspace);
+                    const artcc = JSON.parse(prop.artcc);
+                    const time = JSON.parse(prop.valid);
+                    const alt = `From ${airspace.altitude[0] == '0 ft' ? 'the surface' : airspace.altitude[0]} up to 
+                    ${airspace.upper ? 'and including' : ''} ${airspace.altitude[1]} MSL`;
+
+                    const utc = (unix) => new Intl.DateTimeFormat('en-US', {
+                        timeZone: 'UTC',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                        timeZoneName: 'short'
+                    }).format(new Date(unix * 1000)).replace(/,(?=\s\d{2}:\d{2})\s/, ' at ');
+
+                    content.push(`<div class="tfrs">
+                    <a href="https://tfr.faa.gov/tfr3/?page=detail_${prop.id.replace('/', '_')}" target="blank"><h4>TFR ${prop.id}</h4></a>
+                    <div class="row">
+                        <b>Issued</b>
+                        <p>${utc(prop.issued)}</p>
+                    </div>
+                    <div class="row">
+                        <b>Effective Date(s)</b>
+                        <p>From ${utc(time.from)} to ${utc(time.to)}</p>
+                    </div>
+                    <div class="row">
+                        <b>Location</b>
+                        <p>${prop.location}</p>
+                    </div>
+                    <div class="row">
+                        <b>Purpose</b>
+                        <p>${prop.purpose}</p>
+                    </div>
+                    <div class="row">
+                        <b>Altitude</b>
+                        <p>${alt}</p>
+                    </div>
+                    <div class="row" style="color:var(--blue-gray)">
+                        <b>Contact</b>
+                        <p>${artcc.name} Center (${artcc.id}), Phone ${artcc.phone}, Frequency ${artcc.freq}</p>
+                    </div>
+                </div>`);
+                });
+
+            createDataForm('TFRs', `<p class="updated" style="text-align:left;color:#555">Refer to the FAA website for official airspace information.</p>${content.join('')}`);
         }
     }
 }

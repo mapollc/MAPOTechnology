@@ -373,6 +373,7 @@ const layerActions = {
     // evacuations & firemed
     'evac': { layers: ['evac', 'evac_outline', 'evac_title'] },
     'firemed': { layers: ['firemed'], exe: () => { config.layersHandler.firemed(); } },
+    'tfrs': { layers: ['tfrs', 'tfrs_outline', 'tfrs_title'], exe: () => { config.layersHandler.tfrs(); } },
 
     // weather
     'lightning1': { layers: ['lightning1'] },
@@ -814,7 +815,12 @@ function addDynamicControls() {
         $('.filter-controls').appendChild(evacBtn);
     }
 
-    if (inits.evacuations?.evacsLoaded) inits.evacuations?.evacHelper();
+    const to = setInterval(() => {
+        if (inits.evacuations?.evacsLoaded) {
+            inits.evacuations?.evacHelper();
+            clearInterval(to);
+        }
+    }, 500);
 }
 
 async function loadMapIcons() {
@@ -860,48 +866,48 @@ async function init() {
         attributionControl: false
     });
 
+    mapControls.push(new maplibregl.FullscreenControl({
+        container: document.body
+    }));
+
+    mapControls.push(new maplibregl.NavigationControl({
+        showCompass: true,
+        showZoom: true,
+        visualizePitch: true
+    }));
+
+    mapControls.push(new maplibregl.GeolocateControl({
+        positionOptions: {
+            enableHighAccuracy: true
+        },
+        fitBoundsOptions: {
+            maxZoom: 10.16
+        },
+        trackUserLocation: true,
+        showUserHeading: true
+    }));
+
+    map.addControl(
+        new utils.MFAttribControl({
+            compact: true,
+            collapseBelow: 920
+        }),
+        'bottom-right'
+    );
+
+    map.addControl(
+        new maplibregl.ScaleControl({
+            unit: 'imperial'
+        }),
+        'bottom-left'
+    );
+
+    addDynamicControls();
+
     // add map controls
     map.once('load', async () => {
         map.getCanvas().setAttribute('role', 'region');
         map.getCanvas().ariaLabel = $('meta[name=description]').content;
-
-        mapControls.push(new maplibregl.FullscreenControl({
-            container: document.body
-        }));
-
-        mapControls.push(new maplibregl.NavigationControl({
-            showCompass: true,
-            showZoom: true,
-            visualizePitch: true
-        }));
-
-        mapControls.push(new maplibregl.GeolocateControl({
-            positionOptions: {
-                enableHighAccuracy: true
-            },
-            fitBoundsOptions: {
-                maxZoom: 10.16
-            },
-            trackUserLocation: true,
-            showUserHeading: true
-        }));
-
-        map.addControl(
-            new utils.MFAttribControl({
-                compact: true,
-                collapseBelow: 920
-            }),
-            'bottom-right'
-        );
-
-        map.addControl(
-            new maplibregl.ScaleControl({
-                unit: 'imperial'
-            }),
-            'bottom-left'
-        );
-
-        addDynamicControls();
     });
 
     map.once('styledata', () => {
@@ -909,6 +915,8 @@ async function init() {
 
         // preload sample images of the basemaps
         tileConfig.forEach((item, index) => {
+            if (!item.imgs) return;
+
             const img = new Image();
             img.src = `${ENV.domain}assets/images/icons/fire/basemaps/${item.imgs}.png`;
             tileConfig[index].cache = img;
@@ -1526,7 +1534,7 @@ document.onreadystatechange = async () => {
     };
 
     const complete = async () => {
-        const q = $('#q');
+        const q = document.querySelector('#q');
 
         // if the user is on an Android device, show the download app banner
         const recommendPlay = localStorage.getItem('recommend_google_play');

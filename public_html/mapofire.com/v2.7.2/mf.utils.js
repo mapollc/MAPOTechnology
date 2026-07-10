@@ -823,8 +823,13 @@ export class Search {
                         li.dataset.type = 'incident';
                         li.dataset.wfid = p.wfid;
                         li.title = name;
-                        li.innerHTML = `<span class="icon fire fas fa-fire"></span><h3>${name}<span>${p.type} in ${stateLabels[p.state]?.name}${isAustralia ? ', Australia' : ''} &middot;
-                            <b>${acresDisp}</b>${status != '' ? ` &middot; <span class="fstatus ${status}">${ucfirst(status)}` : ''}</span></span></h3>`;
+                        li.innerHTML = `<span class="icon fire fas fa-fire"></span>
+                            <h3>
+                                ${name}
+                                <span>${p.type} in <b>${stateLabels[p.state]?.name}${isAustralia ? ', Australia' : ''}</b>&nbsp;&middot;&nbsp;${acresDisp}${status != '' ? `&nbsp;&middot;&nbsp;
+                                    <span class="fstatus ${status}">${ucfirst(status)}` : ''}</span>
+                                </span>
+                            </h3>`;
                         this.results.appendChild(li);
 
                         count++;
@@ -1301,7 +1306,7 @@ export class Evacuations {
     }
 
     evacHelper() {
-        const btn = $('.control.evacBtn');
+        const btn = document.querySelector('.control.evacBtn');
         if (!btn) return;
 
         btn.style.display = 'block';
@@ -3547,6 +3552,86 @@ export class Layers {
             }
         }
     }
+
+    async tfrs(update = false) {
+        const data = await api(`${ENV.apiURL}tfrs`);
+
+        if (update) {
+            map.getSource('tfrs').setData(data);
+        } else {
+            if (data && data.features.length > 0) {
+                if (!map.getSource('tfrs')) {
+                    map.addSource('tfrs', {
+                        type: 'geojson',
+                        data: data
+                    });
+                }
+
+                if (!map.getLayer('tfrs')) {
+                    map.addLayer({
+                        id: 'tfrs',
+                        type: 'fill',
+                        source: 'tfrs',
+                        paint: {
+                            'fill-color': '#c73800',
+                            'fill-opacity': 0.05
+                        },
+                        layout: {
+                            visibility: 'visible'
+                        }
+                    });
+
+                    mapMouseOver('tfrs');
+                }
+
+                if (!map.getLayer('tfrs_outline')) {
+                    map.addLayer({
+                        id: 'tfrs_outline',
+                        type: 'line',
+                        source: 'tfrs',
+                        paint: {
+                            'line-color': '#c73800',
+                            'line-width': 2,
+                            'line-dasharray': [5, 4]
+                        },
+                        layout: {
+                            visibility: 'visible'
+                        }
+                    });
+
+                    mapMouseOver('tfrs_outline');
+                }
+
+                if (!map.getLayer('tfrs_title')) {
+                    map.addLayer({
+                        id: 'tfrs_title',
+                        type: 'symbol',
+                        minzoom: 5.7,
+                        source: 'tfrs',
+                        paint: {
+                            'text-color': '#444',
+                            'text-halo-color': '#fff',
+                            'text-halo-blur': 1,
+                            'text-halo-width': 2
+                        },
+                        layout: {
+                            'symbol-placement': 'line',
+                            'symbol-spacing': 400,
+                            'text-font': config.fonts.source(),
+                            'text-field': 'Temporary Flight Restriction',
+                            'text-justify': 'center',
+                            'text-size': 12,
+                            'text-max-width': 8,
+                            'text-anchor': 'center',
+                            'text-offset': [0, 1.5],
+                            'text-letter-spacing': 0.05,
+                            visibility: 'visible'
+                        }
+                    });
+                }
+            }
+        }
+    }
 }
 
 export class Wildfires {
@@ -4025,11 +4110,20 @@ export class Wildfires {
     findFire(id, incId = null, logFire = false) {
         let found = null;
 
-        if (id != null) found = activeIncidents.get(Number(id)) ?? null;
-
-        for (const i of activeIncidents.values()) {
-            if (i.properties.incidentId == incId) found = i; break;
+        if (id != null) {
+            found = activeIncidents.get(Number(id)) ?? null;
         }
+
+        if (!found && incId != null) {
+            for (const i of activeIncidents.values()) {
+                if (i.properties.incidentId == incId) {
+                    found = i;
+                    break;
+                }
+            }
+        }
+
+        if (!found) return null;
 
         if (logFire) {
             const p = found.properties;
@@ -4641,7 +4735,7 @@ export class Wildfires {
                             <summary style="font-weight:400">${formatArray(z.counties)} Count${(z.counties.length == 1 ? 'y' : 'ies')}</summary>
                             <span style="font-size:15px">${z.notes.join(', ')}</span>
                         </details>
-                        <p class="updated" style="text-align:left">Last updated ${timeAgo(z.updated)}</p>
+                        <p class="updated" style="text-align:left">Last updated ${timeAgo(z.updated)} via ${stateLabels[z.state[0]].name} OEM</p>
                     </div>`);
                 });
 
@@ -5840,14 +5934,16 @@ export class ClickListener {
 
             // Add the icon and label
             const img = document.createElement('img');
-            img.src = `${ENV.domain}assets/images/icons/fire/basemaps/${tile.imgs}.png`;
-            if (!hasPerms) img.style.opacity = '0.5';
+            if (tile.imgs) {
+                img.src = `${ENV.domain}assets/images/icons/fire/basemaps/${tile.imgs}.png`;
+                if (!hasPerms) img.style.opacity = '0.5';
+            }
 
             const label = document.createElement('label');
             label.innerHTML = `${tile.name}${(tile.permissions.length ? `<p>${tile.permissions[0]}</p>` : '')}`;
 
             // Assemble the list item
-            descDiv.appendChild(img);
+            if (tile.imgs) descDiv.appendChild(img);
             descDiv.appendChild(label);
             listItem.appendChild(radioDiv);
             listItem.appendChild(descDiv);
@@ -6619,7 +6715,9 @@ export function addTrending() {
     const standby = searchResults.querySelector('li.standby');
     let count = 0;
 
-    inits.trending = true;
+    searchResults.querySelectorAll('li.standby').forEach(li => {
+        if (li !== standby) li.remove();
+    });
 
     searchResults.style.display = 'flex';
     standby.innerHTML = '<h6 style="color:var(--box-border);font-size:18px;cursor:auto;user-select:none">Trending incidents...</h6>';

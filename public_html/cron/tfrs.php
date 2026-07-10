@@ -159,7 +159,7 @@ if ($json->features) {
                         'artcc' => [
                             'id' => $p->CNS_LOCATION_ID,
                             'name' => artcc($p->CNS_LOCATION_ID),
-                            'phone' => $details->txtAddrPOCPhone,
+                            'phone' => $details->txtAddrCoordPhone,
                             'freq' => $details->valFreqPOC
                         ],
                         'airspace' => [

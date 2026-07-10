@@ -256,6 +256,10 @@ strong {
     color: #efefef;
 }
 
+.incident .evac .updated {
+    margin-top: 1em;
+}
+
 .evac .evacTitle {
     display: inline-flex;
     width: 100%;
@@ -355,7 +359,7 @@ span.evac-circ.l3 {
 }
 
 .popup .content {
-    max-height: calc(100vh / 2);
+    max-height: calc(100dvh / 2);
     background: var(--box-border);
     padding: var(--spacing);
     border-radius: 5px;
@@ -403,7 +407,7 @@ span.evac-circ.l3 {
 .popup .item {
     display: flex;
     gap: 0.5em;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     margin-bottom: 0.5em;
     font-size: 14px;
@@ -442,6 +446,29 @@ span.evac-circ.l3 {
 
 .popup.tall .item .v {
     text-align: left;
+}
+
+.tfrs {
+    margin: 1em 0 0 0;
+}
+
+.tfrs h4 {
+    margin-bottom: 0.33em;
+    font-size: 18px;
+    color: var(--blue);
+}
+
+.tfrs .row {
+    display: inline-flex;
+    width: 100%;
+    align-items: flex-start;
+    gap: 0.5em;
+    margin-bottom: 4px;
+}
+
+.tfrs .row b {
+    min-width: 30%;
+    font-size: 14px;
 }
 
 #modal img {
@@ -1969,7 +1996,7 @@ span.status.out {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: calc(100% - 2em);
+    width: calc(100dvw - 2em);
     max-width: 500px;
     max-height: calc(100% - 3em);
     background-color: #fff;
@@ -3011,6 +3038,13 @@ span.status.out {
         transform: unset;
     }
 
+}
+
+@media (max-width: 425px) {
+    #data-form .tfrs .row {
+        flex-direction: column;
+        gap: 0.25em;
+    }
 }
 
 @media (max-width: 400px) {

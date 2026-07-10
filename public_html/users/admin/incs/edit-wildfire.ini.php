@@ -105,6 +105,22 @@ if (!$permission->fire()->edit()) {
         $status = getStatus($fireStatus, $row['notes'], $type, $acres);
         $hasSitRep = $row['sitRep'] !== null;
         $sr = $hasSitRep ? json_decode($row['sitRep']) : null;
+
+        $request = time() - $row['date'] < 43200 ? 'new' : 'all';
+        $alg = wildfireAlgorithm($request, $row['type'], (!empty($row['status']) ? json_decode($row['status']) : []), $row, '', true);
+
+        $conditions = [
+            ['Updated within the last 5 days and is not "UTL"' => true],
+            ['"Started < 24 hours ago and is not "UTL"' => false],
+            ["Acreage is 0 or unknown and started > 1 day ago" => false],
+            ['Type is "smoke check" and started > 2 hours ago and acreage is 0 or "UTL"' => false],
+            ["Updated > 3 days ago" => false],
+            ['Status is "out" and started > 3 days ago' => false],
+            ['Status is "contain" or "control" and started > 5 days ago and acreage is <= 1' => false],
+            ["Acreage is < 50 and started > 1 month ago" => false],
+            ["Acreage is > 1000 and started < 1 month ago" => true],
+            ["Is a new fire and not historical" => true]
+        ];
 ?>
 
         <form action="" method="post" enctype="multipart/form-data">
@@ -317,6 +333,17 @@ if (!$permission->fire()->edit()) {
                         <legend>Meta</legend>
                         <div class="grid">
                             <div class="item">
+                                <div class="label">Incident Photo</div>
+                                <input type="file" name="incPhoto" id="incPhoto" class="field" style="color:#444;font-size:14px;font-weight:400" accept="image/png, image/jpeg">
+                                <? if ($row['incPhoto'] != null) {
+                                    $path = "../../../assets/images/mapofire/incidents/$row[incPhoto]";
+                                    echo "<a target=\"_blank\" href=\"$path\"><img loading=\"lazy\" style=\"max-width:200px\" src=\"$path\"></a>";
+                                } ?>
+                            </div>
+                        </div>
+
+                        <div class="grid">
+                            <div class="item">
                                 <div class="label">Inciweb Data</div>
                                 <span><?= $inciweb == 0 ? 'No' : 'Yes' ?></span>
                             </div>
@@ -339,12 +366,14 @@ if (!$permission->fire()->edit()) {
 
                         <div class="grid">
                             <div class="item">
-                                <div class="label">Incident Photo</div>
-                                <input type="file" name="incPhoto" id="incPhoto" class="field" style="color:#444;font-size:14px;font-weight:400" accept="image/png, image/jpeg">
-                                <? if ($row['incPhoto'] != null) {
-                                    $path = "../../../assets/images/mapofire/incidents/$row[incPhoto]";
-                                    echo "<a target=\"_blank\" href=\"$path\"><img loading=\"lazy\" style=\"max-width:200px\" src=\"$path\"></a>";
-                                } ?>
+                                <div class="label">Algorithm Output</div>
+                                <? for ($i = 0; $i < count($alg[0]); $i++) {
+                                    foreach ($conditions[$i] as $k => $v) {
+                                        echo "<span><b>$k</b>: " . ($v === true ? 'True' : 'False') . '</span>';
+                                    }
+                                }
+                                echo "<span><b>Default show on map:</b> " . ($alg[1] == 1 ? 'Yes' : 'No') . "</span>";
+                                ?>
                             </div>
                         </div>
                     </fieldset>

@@ -100,7 +100,7 @@ const getInciweb = () => {
     `);
 
     inciwebFields.forEach((field, i) => {
-        if (inciweb.current.data[field]) {
+        if (inciweb.current.data[field].length) {
             const useCols = inciwebIDs[i] == 'inciwx' || inciwebIDs[i] == 'otlk' ? 1 : 2;
 
             content.push(`<div class="block" id="${inciwebIDs[i]}">

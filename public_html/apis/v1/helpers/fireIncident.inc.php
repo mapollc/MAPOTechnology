@@ -171,12 +171,12 @@ if ($row) {
         if ($bkacres > $row['acres']) $fire['properties']['acres'] = $bkacres;
 
         // remove coordinates from inciweb data
-        $bi = $fire['inciweb']['current']['data']['Basic Information'];
-        for ($i = 0; $i < count($bi); $i++) {
-            if ($bi[$i]['desc'] == 'Coordinates') {
-                unset($fire['inciweb']['current']['data']['Basic Information'][$i]);
-            }
-        }
+        $fire['inciweb']['current']['data']['Basic Information'] = array_values(
+            array_filter(
+                $fire['inciweb']['current']['data']['Basic Information'],
+                fn($item) => !in_array($item['desc'], ['Coordinates', 'Last Updated', 'Fire Discovered'], true)
+            )
+        );
 
         // remove size (acres) from inciweb data
         $cs = $fire['inciweb']['current']['data']['Current Situation'];

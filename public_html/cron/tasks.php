@@ -164,6 +164,7 @@ function inciwebContainment()
 
     return $q;
 }
+
 function expireSessions()
 {
     global $con;
@@ -231,9 +232,9 @@ function updateLocations()
 }
 
 // if an inciweb fire says a fire is 100% contained, update the wildfires database with that info
-$sqlQueries = [...$sqlQueries, ...inciwebContainment()];
+/*$sqlQueries = [...$sqlQueries, ...inciwebContainment()];
 echo 'Wildfires DB updated with contained status from Inciweb...
-';
+';*/
 
 // expire any sessions that show as active, but have expired according to current time
 $sqlQueries = [...$sqlQueries, ...expireSessions()];

@@ -946,7 +946,7 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
 
     if ($timeDiff > $day1 && $isUTL) {
         $show_fire = false;
-        $parts[] = [1, false];
+        $parts[] = [2, false];
     }
 
     #if ($noAcres && ($timeDiff > $onemonth)) {
@@ -962,27 +962,27 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
 
     if ($time - (int)$row['updated'] > $days3 || empty((int)$row['updated'])) {
         $show_fire = false;
-        $parts[] = [6, false];
+        $parts[] = [5, false];
     }
 
     if (is_array($status) && $status['Out'] && $timeDiff > $days3) {
         $show_fire = false;
-        $parts[] = [7, false];
+        $parts[] = [6, false];
     }
 
     if (is_array($status) && ($status['Contain'] || $status['Control']) && $timeDiff > $day5 && $acres <= 1) {
         $show_fire = false;
-        $parts[] = [8, false];
+        $parts[] = [7, false];
     }
 
     if ($acres < 50 && $timeDiff > $onemonth) {
         $show_fire = false;
-        $parts[] = [9, false];
+        $parts[] = [8, false];
     }
 
     if ($acres > 1000 && $timeDiff < 60 * 60 * 24 * (365.25 / 12)) {
         $show_fire = true;
-        $parts[] = [5, true];
+        $parts[] = [9, true];
     }
 
     if ($archive != '' && $archive != 0 || $request == 'new') {
@@ -990,7 +990,7 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
         $parts[] = [10, true];
     }
 
-    return $p ? $parts : $show_fire;
+    return $p ? [$parts, $show_fire] : $show_fire;
 }
 
 /*function wildfireAlgorithm2($request, $inc_type, $status, $row, $archive, $p = false/*, $week2, $weekold*//*)

@@ -372,7 +372,7 @@ class InciwebParser
 
     public function getYear()
     {
-        return $this->year;
+        return $this->year ?? date('Y');
     }
 }
 
@@ -383,15 +383,13 @@ $sqlQueries = [];
 $xml = simplexml_load_file('https://inciweb.wildfire.gov/incidents/rss.xml');
 $count = 0;
 
-////for ($i = 0; $i < 1; $i++) {
-for ($i = 0; $i < count($xml->channel->item); $i++) {
+for ($i = 16; $i < 17; $i++) {
+////for ($i = 0; $i < count($xml->channel->item); $i++) {
     $time = time();
     $stat = [];
 
     $link = $xml->channel->item[$i]->link;
-    ////$link = 'http://inciweb.wildfire.gov/incident-information/ututs-iron';
     $iid = $xml->channel->item[$i]->guid[0];
-    ////$iid = 328135;
     $file = getIncident($link);
     $parser = new InciwebParser($file);
 
@@ -404,14 +402,16 @@ for ($i = 0; $i < count($xml->channel->item); $i++) {
 
     $contact = mysqli_real_escape_string($con, json_encode($parser->contacts()));
     $pic = $parser->getPhoto();
+
     if ($pic[0] == null || $pic[1] == null) {
         $photo = '';
     } else {
         $photo = mysqli_real_escape_string($con, json_encode($pic));
     }
 
-    if (date('Y') == $year) {
-        $json = json_decode(file_get_contents("https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?where=IncidentName+LIKE+%27%25" . strtolower(str_replace(' ', '+', $name)) . "%25%27+AND+POOState+%3D+%27US-$state%27&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&relationParam=&returnGeodetic=false&outFields=UniqueFireIdentifier%2CContainmentDateTime%2CControlDateTime%2CFireOutDateTime&returnGeometry=true&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&returnZ=false&returnM=false&returnExceededLimitFeatures=true&sqlFormat=none&f=geojson"));
+    //if (date('Y') == $year) {
+        $arcgis = "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?where=IncidentName+LIKE+%27%25" . strtolower(str_replace(' ', '+', $name)) . "%25%27+AND+POOState+%3D+%27US-$state%27&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&relationParam=&returnGeodetic=false&outFields=UniqueFireIdentifier%2CContainmentDateTime%2CControlDateTime%2CFireOutDateTime&returnGeometry=true&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&returnZ=false&returnM=false&returnExceededLimitFeatures=true&sqlFormat=none&f=geojson";
+        $json = json_decode(file_get_contents($arcgis));
         $incidentNum = $json->features[0]->properties->UniqueFireIdentifier ?? "$year-NWCG-$iid";
 
         if (!empty($json->features) && is_array($json->features)) {
@@ -452,7 +452,7 @@ for ($i = 0; $i < count($xml->channel->item); $i++) {
         $sqlQueries[] = "UPDATE wildfires SET acres = CASE WHEN '$acres' > acres THEN '$acres' ELSE acres END WHERE incidentID = '$incidentNum'";
 
         $count++;
-    }
+    //}
 
     echo 'Processed ' . ($i + 1) . ' of ' . count($xml->channel->item) . ' incidents from Inciweb...
 ';

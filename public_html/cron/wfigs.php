@@ -140,6 +140,20 @@ function isValidIncident(?string $type, array $coords): bool
 
 function sitRep($irwinIDs)
 {
+    function allZeros($value): bool
+    {
+        if (is_array($value)) {
+            foreach ($value as $v) {
+                if (!allZeros($v)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        return (int)$value === 0;
+    }
+
     if (empty($irwinIDs)) return null;
 
     $ids = implode(',', array_map(fn($id) => "'$id'", $irwinIDs));
@@ -180,6 +194,8 @@ function sitRep($irwinIDs)
             ]
         ];
 
+        if (allZeros($data)) return null;
+
         $resources = json_encode($data);
         $queries[] = "UPDATE wildfiresSupp SET resources = '$resources' WHERE incidentID = '{$p->UniqueFireIdentifier}'";
     }
@@ -194,8 +210,8 @@ $sqlQueries = [];
 
 $minutes = 90;
 $last20Mins = date('m/d/Y%20H:i:s', strtotime("-$minutes minutes"));
-$dispatchCenters = $newDispatchCenters;
-#$dispatchCenters = ['WACWC'];
+#$dispatchCenters = $newDispatchCenters;
+$dispatchCenters = ['ORBMC'];
 
 $finalTotal = 0;
 $suppCount = 0;
