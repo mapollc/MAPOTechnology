@@ -17,35 +17,35 @@ if (count($json) > 0) {
         $fire = $json[$i];
         $name = str_replace(' Fire', '', $fire->Name);
         $started = strtotime($fire->Started);
-        $start = strtotime(date('m/d/Y', $started).' 00:00:00 PST');
-        $end = strtotime(date('m/d/Y', $started).' 23:59:59 PST');
+        $start = strtotime(date('m/d/Y', $started) . ' 00:00:00 PST');
+        $end = strtotime(date('m/d/Y', $started) . ' 23:59:59 PST');
         $acres = $fire->AcresBurned;
 
         $get = mysqli_fetch_assoc(mysqli_query($con, "SELECT incidentId FROM wildfires WHERE year = $year AND state = 'CA' AND name LIKE '%$name%' AND date >= $start AND date <= $end AND display = 1"));
         $incidentNum = $get['incidentId'];
 
         if ($acres != '' && $incidentNum) {
-            $sqlQueries .= "INSERT INTO acres_history (incidentID,acres,updated) SELECT incidentID, acres, updated FROM wildfires WHERE incidentID = '$incidentNum' AND NOT EXISTS (SELECT 1 FROM acres_history WHERE acres_history.acres = '$acres' AND acres_history.incidentID = '$incidentNum');";
-            $sqlQueries .= "UPDATE wildfires SET acres = '$acres', updated = '$time' WHERE year = $year AND state = 'CA' AND name LIKE '%$name%' AND date >= $start AND date <= $end;";
+            $sqlQueries[] = "INSERT INTO acres_history (incidentID,acres,updated) SELECT incidentID, acres, updated FROM wildfires WHERE incidentID = '$incidentNum' AND NOT EXISTS (SELECT 1 FROM acres_history WHERE acres_history.acres = '$acres' AND acres_history.incidentID = '$incidentNum')";
+            $sqlQueries[] = "UPDATE wildfires SET acres = '$acres', updated = '$time' WHERE year = $year AND state = 'CA' AND name LIKE '%$name%' AND date >= $start AND date <= $end";
         }
     }
 }
 
-$sqlQueries .= "UPDATE dispatch_centers SET cad_update = '$time' WHERE agency = 'CAL FIRE';";
+$sqlQueries[] = "UPDATE dispatch_centers SET cad_update = '$time' WHERE agency = 'CAL FIRE'";
 
 // add or update wildfires in database
-if (!$runQuery) {
-    echo $sqlQueries;
-} else {
-    $runSQL = mysqli_multi_query($con, $sqlQueries) or die(mysqli_error($con));
-    if ($runSQL) {
+if ($runQuery && !empty($sqlQueries) && count($sqlQueries) > 0) {
+    $runSQL = implode(';', $sqlQueries);
+
+    if (mysqli_multi_query($con, $runSQL)) {
         do {
             if ($result = mysqli_store_result($con)) {
-                while ($row = mysqli_fetch_row($result)) { }
                 mysqli_free_result($result);
             }
-            if (mysqli_more_results($con)) { }
         } while (mysqli_next_result($con));
+
+        echo "Finished with $theAgency (modified $count incidents)...
+";
     }
 }
 

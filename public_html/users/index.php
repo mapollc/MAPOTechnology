@@ -117,7 +117,7 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
     <? if ($method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet.min.css">
     <? }
-    if ($page == 'mapofire') {?>
+    if ($page == 'mapofire') { ?>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@<?= $versions['maplibre'] ?>/dist/maplibre-gl.min.css">
     <? } ?>
     <link rel="shortcut icon" href="//mapotechnology.com/images/favicon.ico" type="image/x-icon" />
@@ -161,11 +161,11 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
                 if ($permission->fire()->add() || $permission->fire()->edit()) { ?>
                     <li><a href="<?= $linkURL ?>admin/wildfires"><span>Wildfire Management</span><?= $lock ?></a></li>
                 <? }
-                if ($permission->view()->reports() || $permission->manage()->reports()) { ?>
-                    <li><a href="<?= $linkURL ?>admin/crowdsource"><span>Crowdsource Reports</span><?= $lock ?></a></li>
-                <? }
                 if ($permission->manage()->dispatch()) { ?>
                     <li><a href="<?= $linkURL ?>admin/dispatch"><span>Dispatch Centers</span><?= $lock ?></a></li>
+                <? }
+                if ($permission->view()->reports() || $permission->manage()->reports()) { ?>
+                    <li><a href="<?= $linkURL ?>admin/crowdsource"><span>Crowdsource Reports</span><?= $lock ?></a></li>
                 <? }
                 if ($permission->view()->avys()) { ?>
                     <li><a href="<?= $linkURL ?>admin/avalanches"><span>Avalanche Accidents</span><?= $lock ?></a></li>
@@ -219,10 +219,14 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
 
     <div id="shadow"></div>
 
-    <script>const uid = <?= $_SESSION['uid'] ?>, token = '<?= $_COOKIE['token'] ?>';let userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;</script>
+    <script>
+        const uid = <?= $_SESSION['uid'] ?>,
+            token = '<?= $_COOKIE['token'] ?>';
+        let userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;
+    </script>
     <? if ($method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
         <script src="https://cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet-src.min.js"></script>
-    <? } 
+    <? }
     if ($page == 'mapofire') { ?>
         <script src="//cdn.jsdelivr.net/npm/maplibre-gl@<?= $versions['maplibre'] ?>/dist/maplibre-gl.min.js"></script>
     <? } ?>

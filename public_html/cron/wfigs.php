@@ -96,7 +96,7 @@ class Incident
     {
         $p = $this->properties;
         $status = array_filter([
-            'Contain' => !empty($p->ContainmentDateTime) ? round($p->ContainmentDateTime / 1000) : (!empty($p->PercentContained) ? -1 : null),
+            'Contain' => !empty($p->ContainmentDateTime) ? round($p->ContainmentDateTime / 1000) : null,
             'Control' => !empty($p->ControlDateTime) ? round($p->ControlDateTime / 1000) : null,
             'Out'     => !empty($p->FireOutDateTime) ? round($p->FireOutDateTime / 1000) : null,
         ], fn($v) => $v !== null);
@@ -137,23 +137,22 @@ function isValidIncident(?string $type, array $coords): bool
 // ==========================================
 // IRWIN SIT REP 209 RESOURCES
 // ==========================================
+function allZeros($value): bool
+{
+    if (is_array($value)) {
+        foreach ($value as $v) {
+            if (!allZeros($v)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    return (int)$value === 0;
+}
 
 function sitRep($irwinIDs)
 {
-    function allZeros($value): bool
-    {
-        if (is_array($value)) {
-            foreach ($value as $v) {
-                if (!allZeros($v)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        return (int)$value === 0;
-    }
-
     if (empty($irwinIDs)) return null;
 
     $ids = implode(',', array_map(fn($id) => "'$id'", $irwinIDs));
@@ -210,8 +209,9 @@ $sqlQueries = [];
 
 $minutes = 90;
 $last20Mins = date('m/d/Y%20H:i:s', strtotime("-$minutes minutes"));
-#$dispatchCenters = $newDispatchCenters;
-$dispatchCenters = ['ORBMC'];
+#$last20Mins = date('m/d/Y%20H:i:s', strtotime("1/1/2026 00:00:00"));
+$dispatchCenters = $newDispatchCenters;
+#$dispatchCenters = ['ORBMC'];
 
 $finalTotal = 0;
 $suppCount = 0;
@@ -261,7 +261,7 @@ foreach ($dispatchCenters as $center) {
             $acres       = $fire->size();
             $status      = mysqli_real_escape_string($con, $fire->status());
             $timezone    = getTimezone($fire->getCoords());
-            $near        = mysqli_real_escape_string($con, $fire->geocode($geo));
+            $near        = mysqli_real_escape_string($con, $fire->geocode($geo ?: ''));
 
             $fuelList = array_filter([$prop->PrimaryFuelModel ?? null, $prop->SecondaryFuelModel ?? null]);
             $fuels    = implode(', ', $fuelList);

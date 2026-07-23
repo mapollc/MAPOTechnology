@@ -383,8 +383,8 @@ $sqlQueries = [];
 $xml = simplexml_load_file('https://inciweb.wildfire.gov/incidents/rss.xml');
 $count = 0;
 
-for ($i = 16; $i < 17; $i++) {
-////for ($i = 0; $i < count($xml->channel->item); $i++) {
+////for ($i = 16; $i < 17; $i++) {
+for ($i = 0; $i < count($xml->channel->item); $i++) {
     $time = time();
     $stat = [];
 

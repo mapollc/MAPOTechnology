@@ -62,13 +62,14 @@ if ($category == 'canada') {
 }
 
 // CHANGED: only initialize Memcached when caching is enabled
-$mem = null;
-if (API_CACHE_ENABLED) {
-    $mem = new Memcached();
-    $mem->addServer('127.0.0.1', 11211);
-}
+$mem = new Memcached();
+if (!count($mem->getServerList())) $mem->addServer('127.0.0.1', 11211);
 
 $cacheKey = generateCacheKey($category);
+
+if (!API_CACHE_ENABLED) {
+    $mem->delete($cacheKey);
+}
 
 // -------------------------
 // BBOX requests bypass cache

@@ -13,7 +13,7 @@ $customerID = mysqli_fetch_assoc(mysqli_query($con, "SELECT cid FROM billing WHE
 $group = mysqli_fetch_assoc(mysqli_query($con, "SELECT g.group_id, name AS org_name FROM group_users AS gu INNER JOIN groups AS g ON g.group_id = gu.group_id WHERE email = '$row[email]' LIMIT 1"));
 
 $location = json_decode($row['location']);
-$loc = $location ? "$location->city, " . convertState($location->state, 2) . " $location->zip" : '';
+$loc = $location ? "$location->city, " . convertState($location->state, 1) . " $location->zip" : '';
 $perms = unserialize($row['permissions']);
 
 if ($function == 'edit' && !$row) {
@@ -22,10 +22,10 @@ if ($function == 'edit' && !$row) {
     for ($i = 0; $i < count($userPermissions); $i++) {
         $ex = isset($userPermissions[$i]['extra']) ? '[' . $userPermissions[$i]['extra'] . ']' : '';
         $thePerm = isset($userPermissions[$i]['extra']) ? $perms[$userPermissions[$i]['category']][$userPermissions[$i]['perm']][$userPermissions[$i]['extra']] : $perms[$userPermissions[$i]['category']][$userPermissions[$i]['perm']];
-        $permCols .= '<div class="checkbox" style="display:block;margin-bottom:3px">' .
-            '<input type="checkbox" id="p' . $i . '" name="perms[' . $userPermissions[$i]['category'] . '][' . $userPermissions[$i]['perm'] . ']' . $ex . '" value="1"' .
+        $permCols .= "<div class=\"checkbox\" style=\"display:block;margin-bottom:3px\">" .
+            "<input type=\"checkbox\" id=\"p$i\" name=\"perms[{$userPermissions[$i]['category']}][{$userPermissions[$i]['perm']}]$ex\" value=\"1\"" .
             ($thePerm == 1 ? ' checked' : '') . '>' .
-            '<label for="p' . $i . '">' . $userPermissions[$i]['name'] . '</label></div>';
+            "<label for=\"p$i\">{$userPermissions[$i]['name']}</label></div>";
     }
 ?>
     <h1><?= $function == 'create' ? 'Create New ' : 'Edit' ?> User Account<?= $function == 'edit' ? ': ' . $row['first_name'] . ' ' . $row['last_name'] : '' ?></h1>

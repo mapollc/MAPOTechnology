@@ -72,7 +72,7 @@
 
 class NearbyEvacuations {
     constructor(y, x) {
-        this.bufferMiles = 25;
+        this.bufferMiles = 17.5;
         this.x = x;
         this.y = y;
         this.point = [x, y];
@@ -1060,19 +1060,21 @@ function newFiresReport() {
     let content = document.createElement('ul');
     content.classList.add('new_fires');
 
-    dataView.newFires.forEach(fire => {
-        const li = document.createElement('li'),
-            name = fire.properties.name.replace(' Fire', '') + (fire.properties.type == 'Wildfire' ? ' Fire' : ''),
-            near = fire.properties.near,
-            acres = fire.properties.acres,
-            size = conversion.sizeFormat(acres);
+    dataView.newFires
+        .sort((a, b) => Number(b.properties.acres ?? 0) - Number(a.properties.acres ?? 0))
+        .forEach(fire => {
+            const li = document.createElement('li'),
+                name = fire.properties.name.replace(' Fire', '') + (fire.properties.type == 'Wildfire' ? ' Fire' : ''),
+                near = fire.properties.near,
+                acres = fire.properties.acres,
+                size = conversion.sizeFormat(acres);
 
-        li.dataset.action = 'new-fires';
-        li.dataset.lat = fire.geometry.coordinates[1];
-        li.dataset.lon = fire.geometry.coordinates[0];
-        li.innerHTML = `<div class="pert"><h3>${name}</h3><span class="near">${near}</div></div><span class="disc">${size}</span>`;
-        content.appendChild(li);
-    });
+            li.dataset.action = 'new-fires';
+            li.dataset.lat = fire.geometry.coordinates[1];
+            li.dataset.lon = fire.geometry.coordinates[0];
+            li.innerHTML = `<div class="pert"><h3>${name}</h3><span class="near">${near}</div></div><span class="disc">${size}</span>`;
+            content.appendChild(li);
+        });
 
     createDataForm('New, Fast Growing Fires', content.outerHTML);
 }

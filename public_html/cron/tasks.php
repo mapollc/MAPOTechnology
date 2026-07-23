@@ -147,7 +147,7 @@ function inciwebContainment()
     global $con;
     global $year;
 
-    $q = [];
+    /*$q = [];
     $iw = mysqli_query($con, "SELECT state, year, name, data FROM `inciweb` WHERE year = $year");
     while ($row = mysqli_fetch_assoc($iw)) {
         $arr = unserialize($row['data'])['data'];
@@ -162,7 +162,7 @@ function inciwebContainment()
         }
     }
 
-    return $q;
+    return $q;*/
 }
 
 function expireSessions()

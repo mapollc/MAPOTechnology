@@ -168,13 +168,31 @@ if ($row) {
         }
 
         // if acreage reported by inciweb is greater than acres reported by dispatch, use inciweb
-        if ($bkacres > $row['acres']) $fire['properties']['acres'] = $bkacres;
+        if ($bkacres > $row['acres']) {
+            $fire['properties']['acres'] = $bkacres;
+        }
 
         // remove coordinates from inciweb data
+        $seen = [];
         $fire['inciweb']['current']['data']['Basic Information'] = array_values(
             array_filter(
                 $fire['inciweb']['current']['data']['Basic Information'],
-                fn($item) => !in_array($item['desc'], ['Coordinates', 'Last Updated', 'Fire Discovered'], true)
+                function ($item) use (&$seen) {
+                    if (in_array($item['desc'], [
+                        'Coordinates',
+                        'Last Updated',
+                        'Fire Discovered'
+                    ], true)) {
+                        return false;
+                    }
+
+                    if (isset($seen[$item['desc']])) {
+                        return false;
+                    }
+
+                    $seen[$item['desc']] = true;
+                    return true;
+                }
             )
         );
 

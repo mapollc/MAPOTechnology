@@ -17,8 +17,6 @@ ini_set("error_log", './error_log');
 ini_set('session.cookie_domain', $host);
 date_default_timezone_set('America/Los_Angeles');
 
-session_start();
-
 $startAPITime = microtime(true);
 $noMetadata = false;
 $failed = 0;
@@ -100,8 +98,8 @@ $function = $_REQUEST['function'];
 $format = $_REQUEST['format'];
 $version = isset($_GET['version']) ? (int) $_GET['version'] : 1;
 $allowBrowser = true;
-$needSess = array('logFire', 'session', 'favorite', 'profile', 'trackFires', 'user', 'upload');
-$needCon2 = array('favorite', 'trails', 'upload');
+$needSess = ['profile', 'account', 'user', 'user-content', 'session', 'track'];
+$needCon2 = ['favorite', 'trails', 'upload'];
 $isCached = false;
 $isCachedType = null;
 
@@ -110,15 +108,15 @@ if ($_SERVER['REQUEST_URI'] == '/') {
         '<h2>API Server</h2><iframe frameborder="0" style="width:191px;height:30px" src="https://status.mapotechnology.com/badge?theme=light"></iframe></div>';
 } else {
     if (!isset($_GET['version'])) {
-        $returnJson = ['error' => array('response' => 'error', 'code' => 404, 'msg' => 'An API version has not been specified.')];
+        $returnJson = ['error' => ['response' => 'error', 'code' => 404, 'msg' => 'An API version has not been specified.']];
     } else {
         if (empty($allowedDomain)) {
             $failed = 1;
-            $returnJson = ['error' => array('response' => 'error', 'code' => 400, 'msg' => 'The token you specified is not valid')];
+            $returnJson = ['error' => ['response' => 'error', 'code' => 400, 'msg' => 'The token you specified is not valid']];
         } else {
             if ($_SERVER['HTTP_REFERER'] == '' && $allowBrowser === false) {
                 $failed = 1;
-                $returnJson = array('reponse' => 'error', 'code' => 403, 'msg' => 'You cannot access this data via browser window');
+                $returnJson = ['reponse' => 'error', 'code' => 403, 'msg' => 'You cannot access this data via browser window'];
             } else {
                 if (in_array($api, $needCon2)) {
                     $con2 = mapoTrailsDB();
@@ -195,6 +193,10 @@ if ($_SERVER['REQUEST_URI'] == '/') {
                 if ($file == null || !file_exists($path)) {
                     $returnJson = ['response' => 'error', 'code' => 404, 'msg' => 'The API resource you\'re looking for doesn\'t exist.'];
                 } else {
+                    if (in_array($file, $needSess)) {
+                        session_start();
+                    }
+
                     include_once $path;
                 }
             }
@@ -211,7 +213,7 @@ if ($_SERVER['REQUEST_URI'] == '/') {
         'time' => gmdate('Y-m-d\TH:i:sP', $updateForCacheTime ? $updateForCacheTime : time()),
         'response' => ($elapsed > 1 ? round($elapsed, 3) . 's' : round($elapsed, 4) . 'ms')
     ];
-    $thereq = $api . ($method ? '/' . $method : '') . ($function ? '/' . $function : '');
+    $thereq = $api . ($method ? "/$method" : '') . ($function ? "/$function" : '');
 
     ////mysqli_query($con, "INSERT INTO apiUsage (request,token,origin,time,response,cache,elapsed) VALUES('$thereq','$_REQUEST[key]','$output_array[1]','$now','$failed','$cac','$elapsed')");
 

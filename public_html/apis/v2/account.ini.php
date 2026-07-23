@@ -228,7 +228,7 @@ if ($method == 'getFires') {
     $currentPage = $_REQUEST['results'] ?? 1;
     $offset = ($currentPage - 1) * $rowsPerPage;
 
-    if ($mode == 'duplicates') {
+    if ($function == 'duplicates') {
         $year = date('Y');
         $where = preg_replace('/AND\s([a-z]+)\s=\s/m', 'AND t1.$1 = ', str_replace(['AND display = \'1\'', 'AND display = \'0\''], ['', ''], $where)) . ' AND date > ' . strtotime('-1 week');
         $query = "SELECT t1.* FROM wildfires t1 JOIN (SELECT state, name, MAX(date) as max_date FROM wildfires WHERE $when AND display = 1 GROUP BY state, name HAVING COUNT(*) > 1) t2 ON t1.state = t2.state AND t1.name = t2.name WHERE t1.year = $year AND t1.display = 1 $where ORDER BY t1.state ASC, t1.name ASC, t1.acres DESC";
@@ -240,7 +240,7 @@ if ($method == 'getFires') {
 
     $sql = mysqli_query($con, $query);
 
-    if ($mode == 'duplicates') $totalRows = mysqli_num_rows($sql);
+    if ($function == 'duplicates') $totalRows = mysqli_num_rows($sql);
 
     while ($row = mysqli_fetch_assoc($sql)) {
         $row['name'] = incidentName($row['name'], $row['incidentID'], $row['type']);

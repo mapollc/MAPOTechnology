@@ -94,7 +94,7 @@ if (!$permission->fire()->edit()) {
             $inciweb = mysqli_num_rows(mysqli_query($con, "SELECT captured FROM inciweb FORCE INDEX(idx_year_state_name) WHERE year = {$row['year']} AND name LIKE '%{$row['name']}%' AND state = '{$row['state']}' LIMIT 1"));
         }
 
-        date_default_timezone_set($row['timezone']);
+        date_default_timezone_set($row['timezone'] ?? 'America/Los_Angeles');
         $type = $row['type'];
         $geocode = json_decode($row['near']);
         $acres = $row['acres'];

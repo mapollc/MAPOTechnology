@@ -79,6 +79,7 @@ $sql = str_replace(' AND  AND ', ' AND ', $sql);
 ////echo $sql;exit();
 $result = mysqli_query($con, $sql);
 $total = 0;
+$features = [];
 
 while ($row = mysqli_fetch_assoc($result)) {
     $status = !empty($row['status']) ? json_decode($row['status']) : [];
@@ -109,7 +110,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 'incidentId' => $row['incidentID'],
                 'county' => json_decode($row['near'])->county,
                 'state' => $row['state'],
-                'dispatch' => ($row['agency'] ? $row['agency'] : 'NWCG'),
+                'dispatch' => $row['agency'] ?: 'NWCG',
                 'name' => $name,
                 'type' => $row['type'],
                 'acres' => floatval($row['acres']),
@@ -145,6 +146,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 ],
                 'properties' => $fire
             ];
+            
             $total++;
         }
     }

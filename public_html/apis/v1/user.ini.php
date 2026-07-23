@@ -435,7 +435,11 @@ class SSO
     function getSubscriptions($email)
     {
         global $plan;
-        $sub = executeQuery('s', [$email], "SELECT cid, subscription, trial, plan, created, start, end AS ends, status, cancel_end_period FROM billing WHERE email = ? AND status != 'expired' ORDER BY created DESC");
+        $sub = executeQuery(
+            'si',
+            [$email, time()],
+            "SELECT cid, subscription, trial, plan, created, start, end AS ends, status, cancel_end_period FROM billing WHERE email = ?  AND (status != 'expired' OR status = 'expired' AND cancel_end_period = 1 AND end > ?) ORDER BY created DESC"
+        );
 
         if (isset($sub['error'])) {
             return ['error' => true, 'message' => $sub['message']];

@@ -389,31 +389,42 @@ class QueryWildfires {
             <td>${this.listOfFires.dataset.edit == '1' ? `<a style="font-weight:400!important" href="${url}">edit</a>&nbsp;|&nbsp;<a style="font-weight:400!important" target="blank" href="//mapofire.com/${fire.url}">view</a>${dupURL}` : ''}</td>`;
     }
 
-    isDuplicateFire(currentFire, lastFire, acresThreshold = 10.0, idLastDigits = 3) {
+    isDuplicateFire(currentFire, lastFire, acresThreshold = 10.0, idLastDigits = 3, staleHours = 12) {
         if (!currentFire || !lastFire) return false;
 
-        const currentNameState = (currentFire.state + currentFire.name).toLowerCase();
-        const lastNameState = (lastFire.state + lastFire.name).toLowerCase();
+        const currentNameState = (currentFire.state + currentFire.name).toLowerCase().trim();
+        const lastNameState = (lastFire.state + lastFire.name).toLowerCase().trim();
+
+        if (currentNameState !== lastNameState) {
+            return false;
+        }
+
+        const stale = Number(currentFire.updated) - Number(lastFire.updated) > staleHours * 3600;
+
+        if (stale) {
+            return true;
+        }
 
         const currentIdSuffix = String(currentFire.incidentID).slice(-idLastDigits);
         const lastIdSuffix = String(lastFire.incidentID).slice(-idLastDigits);
 
-        let acresMatch = false;
-
-        const currentAcres = parseFloat(currentFire.acres);
-        const lastAcres = parseFloat(lastFire.acres);
-
-        if (currentAcres === 0 || lastAcres === 0 || isNaN(currentAcres) || isNaN(lastAcres)) {
-            acresMatch = true;
-        } else {
-            const acresDifference = Math.abs(currentAcres - lastAcres);
-            acresMatch = acresDifference <= acresThreshold;
+        if (currentIdSuffix === lastIdSuffix) {
+            return true;
         }
 
-        const nameStateMatch = currentNameState === lastNameState;
-        const idSuffixMatch = currentIdSuffix === lastIdSuffix;
+        const currentAcres = Number(currentFire.acres);
+        const lastAcres = Number(lastFire.acres);
 
-        return nameStateMatch && acresMatch && idSuffixMatch;
+        if (
+            !isNaN(currentAcres) &&
+            !isNaN(lastAcres) &&
+            currentAcres > 0 &&
+            lastAcres > 0
+        ) {
+            return Math.abs(currentAcres - lastAcres) <= acresThreshold;
+        }
+
+        return false;
     }
 }
 

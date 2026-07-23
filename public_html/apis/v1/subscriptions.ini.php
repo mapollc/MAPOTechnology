@@ -1,31 +1,51 @@
 <?
+include_once '/home/mapo/public_html/subs.inc.php';
+
 $token = $_REQUEST['token'];
-$now = time();
-$fields = "id AS bid, subscription AS sid, plan, trial AS is_trial, b.created AS purchased, start AS period_start, end AS period_end, active AS active_subscription";
-$sql = "SELECT $fields FROM sessions AS s LEFT JOIN users AS u ON s.uid = u.uid LEFT JOIN billing AS b ON b.email = u.email WHERE s.expires > ? AND active = 1 AND token = ? ORDER BY end DESC";
-$validToken = validToken($token);
+$email = $_REQUEST['email'];
 
-if ($validToken) {
-    $result = executeQuery('is', [$now, $token], $sql);
+return $returnJson =[];
 
-    if (!isset($result['error'])) {
-        //while ($row = mysqli_fetch_assoc($result)) {
-            foreach ($result as $k => $v) {
-                if ($k == 'bid' || $k == 'purchased' || $k == 'period_start' || $k == 'period_end') {
-                    $value = floatval($v);
-                } else if ($k == 'active_subscription' || $k == 'is_trial') {
-                    $value = $v == 1 ? true : false;
-                } else {
-                    $value = $v;
-                }
+if (!$email) {
+    return $returnJson = ['error' => true, 'code' => 1, 'message' => 'An invalid email was provided.'];
+}
 
-                $subs[$k] = $value;
-            }
-            //$subs = $ea;
-        //}
+$sub = executeQuery('si', [$email, time()], "SELECT cid, subscription, trial, plan, created, start, end AS ends, status, cancel_end_period FROM billing WHERE email = ? AND (status != 'expired' OR status = 'expired' AND cancel_end_period = 1 AND end > ?) ORDER BY created DESC");
 
-        $returnJson = array('subscriptions' => $subs);
-    }
+if (isset($sub['error'])) {
+    return $returnJson = ['error' => true, 'code' => 2, 'message' => $sub['message']];
 } else {
-    $returnJson = array('error' => true, 'message' => 'An invalid token was provided');
+    if (empty($sub)) {
+        return $returnJson = [];
+    } else {
+        if (isset($sub['cid'])) {
+            $plan->setPlan(null, $sub['plan']);
+            $sub['name'] = $plan->getName();
+            $sub['id'] = $plan->getPriceName() ? $plan->getPriceName() : null;
+
+            $sub['start'] = intval($sub['start']);
+            $sub['ends'] = intval($sub['ends']);
+            $sub['created'] = intval($sub['created']);
+            $sub['cancel_end_period'] = $sub['cancel_end_period'] == 1 ? true : false;
+
+            return $returnJson = [$sub];
+        } else {
+            $allSubs = [];
+
+            foreach ($sub as $s) {
+                $plan->setPlan(null, $s['plan']);
+                $s['name'] = $plan->getName();
+                $s['id'] = $plan->getPriceName() ? $plan->getPriceName() : null;
+
+                $s['start'] = intval($s['start']);
+                $s['ends'] = intval($s['ends']);
+                $s['created'] = intval($s['created']);
+                $s['cancel_end_period'] = $s['cancel_end_period'] == 1 ? true : false;
+
+                $allSubs[] = $s;
+            }
+
+            return $returnJson = $allSubs;
+        }
+    }
 }

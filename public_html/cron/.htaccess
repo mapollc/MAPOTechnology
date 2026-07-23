@@ -1,6 +1,6 @@
 RewriteEngine On
 RewriteBase /
-Options -Indexes
+Options +Indexes
 Options +FollowSymlinks
 
 RewriteCond %{REQUEST_URI} ^/cache/gis/.*\.txt$ [NC]

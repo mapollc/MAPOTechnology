@@ -25,5 +25,5 @@ if (!$_REQUEST['data']) {
         "INSERT INTO topFires (wfid, data, count, time) VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE time = ?, count = count + ?");
     }
 
-    $returnJson = array('success' => '1');
+    $returnJson = ['success' => '1'];
 }

@@ -799,42 +799,46 @@ export class Search {
                 }
             } else {
                 activeIncidents.forEach(f => {
-                    let use = false;
-                    const isAustralia = f.isAustralia ?? false,
-                        p = f.properties,
-                        name = p.name,
-                        acresDisp = conversion.sizeFormat(p.acres),
-                        fstat = p.status,
-                        status = (p.time.year < config.curTime.getFullYear() ? 'out' : config.wildfire.getStatus(fstat, p.notes)),
-                        j = name.toLowerCase().split(' ');
+                        let use = false;
 
-                    for (let i = 0; i < j.length; i++) {
-                        if (j[i].search(this.query) >= 0) {
-                            use = true;
-                            break;
+                        const isIntl = (f.properties?.isCanada ?? false) || (f.properties?.isAustralia ?? false),
+                            p = f.properties,
+                            name = p.name,
+                            acresDisp = conversion.sizeFormat(p.acres),
+                            fstat = p.status,
+                            status = (p.time.year < config.curTime.getFullYear() ? 'out' : config.wildfire.getStatus(fstat, p.notes)),
+                            j = name.toLowerCase().split(' ');
+
+                        for (let i = 0; i < j.length; i++) {
+                            if (j[i].search(this.query) >= 0) {
+                                use = true;
+                                break;
+                            }
                         }
-                    }
 
-                    if (name.toLowerCase().search(this.query) >= 0) use = true;
+                        if (name.toLowerCase().search(this.query) >= 0) use = true;
 
-                    if (use) {
-                        const li = document.createElement('li');
-                        li.dataset.action = 'sr-onclick';
-                        li.dataset.type = 'incident';
-                        li.dataset.wfid = p.wfid;
-                        li.title = name;
-                        li.innerHTML = `<span class="icon fire fas fa-fire"></span>
+                        if (use && !isIntl) {
+                            const li = document.createElement('li');
+                            const state = stateLabels[p.state]?.name;
+
+                            li.dataset.action = 'sr-onclick';
+                            li.dataset.type = 'incident';
+                            li.dataset.wfid = p.wfid;
+                            li.title = name;
+                            li.innerHTML = `<span class="icon fire fas fa-fire"></span>
                             <h3>
                                 ${name}
-                                <span>${p.type} in <b>${stateLabels[p.state]?.name}${isAustralia ? ', Australia' : ''}</b>&nbsp;&middot;&nbsp;${acresDisp}${status != '' ? `&nbsp;&middot;&nbsp;
+                                <span>${p.type}${state ? ` in <b>${state}</b>` : ''}&nbsp;&middot;&nbsp;${acresDisp}${status != '' ? `&nbsp;&middot;&nbsp;
                                     <span class="fstatus ${status}">${ucfirst(status)}` : ''}</span>
                                 </span>
                             </h3>`;
-                        this.results.appendChild(li);
+                            this.results.appendChild(li);
 
-                        count++;
-                    }
-                });
+                            console.log(f.properties);
+                            count++;
+                        }
+                    });
             }
         }
 
@@ -4184,9 +4188,9 @@ export class Wildfires {
         data.features.forEach(fire => {
             const discover = Math.round(fire.attributes.ignition_date / 1000),
                 json = {
-                    isAustralia: true,
                     geometry: { type: 'Point', coordinates: [fire.centroid.x, fire.centroid.y] },
                     properties: {
+                        isAustralia: true,
                         wfid: fire.attributes.fire_id,
                         name: fire.attributes.fire_name,
                         state: fire.attributes.state == 'WA' ? 'WAA' : (fire.attributes.state == 'NT' ? 'NTT' : fire.attributes.state),
@@ -4207,6 +4211,8 @@ export class Wildfires {
 
         if (fires != null && fires.features != null) {
             fires.features.forEach((f, n) => {
+                fires['features'][n]['properties']['isCanada'] = true;
+
                 statuses.forEach((stats) => {
                     if (f.properties.status && f.properties.status.search(stats) >= 0) {
                         fires['features'][n]['properties'][stats] = true;
@@ -4495,7 +4501,6 @@ export class Wildfires {
             }
 
             if (!map.getLayer(`${fireLayerName}_title`)) {
-                console.log(type, this.fireTextSize(type, 'offset'));
                 map.addLayer({
                     id: `${fireLayerName}_title`,
                     type: 'symbol',
