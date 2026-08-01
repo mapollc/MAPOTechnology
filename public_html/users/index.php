@@ -21,7 +21,7 @@ $queryParams = ltrim(rtrim($queryParams, '&'), '&');
 
 $page = $_GET['page'];
 $pageFile = "$page.ini.php";
-$versions = ['leaflet' => '1.9.4', 'jquery' => '3.6.4', 'maplibre' => '5.17.0'];
+$versions = ['leaflet' => '1.9.4', 'jquery' => '4.0.0', 'maplibre' => '6.1.0'];
 $method = $_GET['method'] ?: false;
 $function = $_GET['function'] ?: false;
 $path = $page . ($method ? "/$method" : '');

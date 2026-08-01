@@ -86,7 +86,13 @@
         <div class="card dark">
             <h2>Wildfires Near You</h2>
             <? if ($user['location']) { ?>
-                <p class="help">Current wildfires burning within 50 miles of you (<a href="settings/location"><?= $user['location']->city . ', ' . $user['location']->state ?></a>).</p>
+                <p class="help">Current wildfires burning within <select id="nearbyFiresDist">
+                    <option value="10">10 miles</option>
+                    <option value="15">15 miles</option>
+                    <option value="25">25 miles</option>
+                    <option value="35">35 miles</option>
+                    <option value="50">50 miles</option>
+                </select> of you (<a href="settings/location"><?= $user['location']->city . ', ' . $user['location']->state ?></a>).</p>
 
                 <div id="nearby">
                     <div class="spinner"></div>

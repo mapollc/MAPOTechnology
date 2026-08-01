@@ -1,1 +1,4 @@
 /vendor/
+/mapofire.com/src/node_modules
+/mapofire.com/src/eslint.config.mjs
+/mapofire.com/src/vite.config.mjs

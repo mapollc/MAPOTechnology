@@ -87,10 +87,12 @@ function plural($v)
     return $v > 1 ? 's' : '';
 }
 
-function ago($timestamp)
+function ago($timestamp, $fromTime = null)
 {
-    if ($timestamp == 0) return 'Never';
-    $diff = time() - (int) $timestamp;
+    if ($timestamp === 0) return 'Never';
+
+    $diff = ($fromTime ?? time()) - (int)$timestamp;
+
     if ($diff < 10) return 'Just now';
 
     $units = [
@@ -195,7 +197,7 @@ function agent($ua)
         $start = str_replace('Generic_', '', $ua->device->brand) . ' ' . $ua->device->model . ' using ';
     }
 
-    $start . $ua->ua->family . ($version ? " ($version)" : '') . " on " . $ua->os->family . " $osVersion";
+    return $start . $ua->ua->family . ($version ? " ($version)" : '') . " on " . $ua->os->family . " $osVersion";
 }
 
 function createToken($payload, $expires = null)

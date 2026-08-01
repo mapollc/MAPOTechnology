@@ -37,7 +37,7 @@ if (!$permission->fire()->edit()) {
 
     function formatTime($t)
     {
-        if (time() - $t > 86400) return date('l, F j, Y - g:i A T', $t);
+        if (time() - $t > 86400) return date('D, n/j/Y @ g:i A T', $t);
         else return ago($t);
     }
 
@@ -107,19 +107,19 @@ if (!$permission->fire()->edit()) {
         $sr = $hasSitRep ? json_decode($row['sitRep']) : null;
 
         $request = time() - $row['date'] < 43200 ? 'new' : 'all';
-        $alg = wildfireAlgorithm($request, $row['type'], (!empty($row['status']) ? json_decode($row['status']) : []), $row, '', true);
+        $alg = wildfireAlgorithm($request, $row['type'], empty($row['status']) ? [] : json_decode($row['status'], true), $row, '', true);
 
         $conditions = [
-            ['Updated within the last 5 days and is not "UTL"' => true],
-            ['"Started < 24 hours ago and is not "UTL"' => false],
+            ['Updated <= 5 days ago and is not "UTL"' => false],
+            ['Started > 1 day ago and is "UTL"' => false],
             ["Acreage is 0 or unknown and started > 1 day ago" => false],
             ['Type is "smoke check" and started > 2 hours ago and acreage is 0 or "UTL"' => false],
-            ["Updated > 3 days ago" => false],
+            ["Updated > 3 days ago or never been updated" => false],
             ['Status is "out" and started > 3 days ago' => false],
             ['Status is "contain" or "control" and started > 5 days ago and acreage is <= 1' => false],
             ["Acreage is < 50 and started > 1 month ago" => false],
             ["Acreage is > 1000 and started < 1 month ago" => true],
-            ["Is a new fire and not historical" => true]
+            ['Is a "historical fires" or "new fires" request' => true]
         ];
 ?>
 
@@ -160,6 +160,7 @@ if (!$permission->fire()->edit()) {
                                         <th>Update Time</th>
                                         <th>Acres</th>
                                         <th>Change Since Last Update</th>
+                                        <th>Time Since Last Update</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -168,6 +169,8 @@ if (!$permission->fire()->edit()) {
                                         $next = $history[$i + 1] ?? null;
                                         $diff = $next ? $h['acres'] - $next['acres'] : 0;
                                         $up = $diff > 0;
+
+                                        $deltaTime = ago($next['updated'], $h['updated']);
                                     ?>
                                         <tr>
                                             <td><?= date('n/j/Y g:i A', $h['updated']) ?></td>
@@ -184,6 +187,9 @@ if (!$permission->fire()->edit()) {
                                                     echo '--';
                                                 } ?>
                                             </td>
+                                            <td>
+                                                <?= $next ? str_replace(' ago', '', $deltaTime) : '--' ?>
+                                            </td>
                                         </tr>
                                     <? } ?>
                                 </tbody>
@@ -193,13 +199,17 @@ if (!$permission->fire()->edit()) {
                 } else { ?>
                     <a href="./edit?wfid=<?= $_GET['wfid'] ?>&history=1" class="btn btn-yellow" style="margin:0 0 1em 0!important">View Acres History</a>
 
-                    <fieldset>
-                        <legend>Times</legend>
+                    <details open>
+                        <summary>Times</summary>
 
                         <div class="grid small">
                             <div class="item">
                                 <div class="label">Fire Year</div>
                                 <span><?= $row['year'] ?></span>
+                            </div>
+                            <div class="item">
+                                <div class="label">Incident Timezone</div>
+                                <span><?= tz($row['timezone']) ?> Time</span>
                             </div>
                             <div class="item">
                                 <div class="label">Last Updated</div>
@@ -213,15 +223,11 @@ if (!$permission->fire()->edit()) {
                                 <div class="label">Captured</div>
                                 <span><?= formatTime($row['captured']) ?></span>
                             </div>
-                            <div class="item">
-                                <div class="label">Incident Timezone</div>
-                                <span><?= tz($row['timezone']) ?> Time</span>
-                            </div>
                         </div>
-                    </fieldset>
+                    </details>
 
-                    <fieldset>
-                        <legend>Basic Details</legend>
+                    <details open>
+                        <summary>Basic Details</summary>
 
                         <div class="grid">
                             <div class="item">
@@ -233,8 +239,8 @@ if (!$permission->fire()->edit()) {
                                 <span><?= convertState($row['state'], 1) . " ($row[state])" ?></span>
                             </div>
                             <div class="item">
-                                <div class="label">County</div>
-                                <span><?= "$geocode->county County" ?></span>
+                                <div class="label">County (FIPS)</div>
+                                <span><?= "{$geocode->county} County ({$geocode->fips})" ?></span>
                             </div>
                             <div class="item">
                                 <div class="label">Nearest Location</div>
@@ -246,7 +252,7 @@ if (!$permission->fire()->edit()) {
                             <div class="item">
                                 <div class="label">Coordinates</div>
                                 <span>
-                                    <a href="https://www.mapofire.com/#13/<?= "$row[lat]/$row[lon]" ?>"><?= "$row[lat], $row[lon]" ?></a><br>
+                                    <a target="_blank" href="https://www.mapofire.com/#13/<?= "$row[lat]/$row[lon]" ?>"><?= "$row[lat], $row[lon]" ?></a><br>
                                     <?= decimalToDMS($row['lat'], 'lat') . ', ' . decimalToDMS($row['lon'], 'lon') ?>
                                 </span>
                             </div>
@@ -260,18 +266,19 @@ if (!$permission->fire()->edit()) {
                             </div>
                             <div class="item">
                                 <div class="label">Jurisdiction</div>
-                                <span><?= ($row['unit'] ? "$row[unit]" : '') . ($row['org'] ? " &ndash; {$row['org']}" . ($row['area'] ? ': ' . $row['area'] : '') : 'None') ?></span>
+                                <span><?= ($row['org'] ? $row['org'] . ($row['area'] ? ": {$row['area']}" : '') . ($row['unit'] ? " ($row[unit])" : '') : 'None') ?></span>
                             </div>
                         </div>
 
-                    </fieldset>
+                    </details>
 
-                    <fieldset>
-                        <legend>Attributes</legend>
+                    <details open>
+                        <summary>Attributes</summary>
+
                         <div class="grid">
                             <div class="item">
                                 <div class="label">Size</div>
-                                <input type="number" name="acres" class="field" style="max-width:106px" step="0.02" placeholder="0" value="<?= $acres ?>" <?= $status == 'out' ? ' disabled' : '' ?>>
+                                <input type="number" name="acres" class="field" style="max-width:106px" step="0.02" placeholder="0" value="<?= $acres ?>" <?= $status == 'out' ? ' disabled title="This fire is out so acreage cannot be changed"' : '' ?>>
                             </div>
                             <div class="item">
                                 <div class="label">Behavior</div>
@@ -291,10 +298,11 @@ if (!$permission->fire()->edit()) {
                             </div>
 
                         </div>
-                    </fieldset>
+                    </details>
 
-                    <fieldset>
-                        <legend>SitRep</legend>
+                    <details open>
+                        <summary>SitRep</summary>
+
                         <div class="grid">
                             <div class="item">
                                 <div class="label">IMT Type</div>
@@ -327,20 +335,10 @@ if (!$permission->fire()->edit()) {
                                 <span><?= $hasSitRep ? $sr->aircraft->helicopters : 0 ?></span>
                             </div>
                         </div>
-                    </fieldset>
+                    </details>
 
-                    <fieldset>
-                        <legend>Meta</legend>
-                        <div class="grid">
-                            <div class="item">
-                                <div class="label">Incident Photo</div>
-                                <input type="file" name="incPhoto" id="incPhoto" class="field" style="color:#444;font-size:14px;font-weight:400" accept="image/png, image/jpeg">
-                                <? if ($row['incPhoto'] != null) {
-                                    $path = "../../../assets/images/mapofire/incidents/$row[incPhoto]";
-                                    echo "<a target=\"_blank\" href=\"$path\"><img loading=\"lazy\" style=\"max-width:200px\" src=\"$path\"></a>";
-                                } ?>
-                            </div>
-                        </div>
+                    <details open>
+                        <summary>Meta</summary>
 
                         <div class="grid">
                             <div class="item">
@@ -353,30 +351,46 @@ if (!$permission->fire()->edit()) {
                             </div>
                             <div class="item">
                                 <div class="label">Displayed on Map</div>
-                                <div class="radio" style="margin:0">
+                                <div class="radio" style="margin:0" title="Display fire on map according to algorithm">
                                     <input type="radio" id="d1" name="display" value="1" <?= $row['display'] == 1 ? ' checked' : '' ?>>
                                     <label for="d1">Yes</label>
                                 </div>
-                                <div class="radio" style="margin:0">
+                                <div class="radio" style="margin:0" title="Do NOT display fire on map regardless of algorithm">
                                     <input type="radio" id="d2" name="display" value="0" <?= $row['display'] != 1 ? ' checked' : '' ?>>
                                     <label for="d2">No</label>
                                 </div>
                             </div>
                         </div>
+                    </details>
+
+                    <details>
+                        <summary>Incident Photo</summary>
+                        <div class="grid">
+                            <div class="item">
+                                <div class="label">Incident Photo</div>
+                                <input type="file" name="incPhoto" id="incPhoto" class="field" style="color:#444;font-size:14px;font-weight:400" accept="image/png, image/jpeg">
+                                <? if ($row['incPhoto'] != null) {
+                                    $path = "../../../assets/images/mapofire/incidents/$row[incPhoto]";
+                                    echo "<a target=\"_blank\" href=\"$path\"><img loading=\"lazy\" style=\"max-width:200px\" src=\"$path\"></a>";
+                                } ?>
+                            </div>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>Algorithm Output</summary>
 
                         <div class="grid">
                             <div class="item">
-                                <div class="label">Algorithm Output</div>
-                                <? for ($i = 0; $i < count($alg[0]); $i++) {
-                                    foreach ($conditions[$i] as $k => $v) {
-                                        echo "<span><b>$k</b>: " . ($v === true ? 'True' : 'False') . '</span>';
-                                    }
+                                <?
+                                foreach ($alg[0] as $k => $v) {
+                                    echo "<span style=\"color:var(--" . ($v == 1 ? 'green' : 'red') . ")\"><b>" . array_keys($conditions[$k - 1])[0] . ":</b> " . ($v == 1 ? 'True' : 'False') . "</span>";
                                 }
                                 echo "<span><b>Default show on map:</b> " . ($alg[1] == 1 ? 'Yes' : 'No') . "</span>";
                                 ?>
                             </div>
                         </div>
-                    </fieldset>
+                    </details>
 
                     <div class="btn-group" style="margin:0!important">
                         <input type="submit" class="btn btn-green" name="action" value="Save Changes">

@@ -10,6 +10,7 @@ require '/home/mapo/public_html/config.inc.php';
 
 $vars = '';
 $time = time();
+$apiKey = '50e2c43f8f63ff0ed20127ee2487f15e';
 $token = trim($_REQUEST['token'] ?? '');
 $next = $_REQUEST['next'] ?? '';
 $redirectURL = '';

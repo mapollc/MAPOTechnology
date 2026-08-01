@@ -1,6 +1,6 @@
 <?
-////ini_set('display_errors', 1);
-////error_reporting(E_ERROR && E_PARSE);
+ini_set('display_errors', 1);
+error_reporting(E_ERROR && E_PARSE);
 
 // set the base URL for this app
 $host = preg_replace('/(www\.)?([a-z]+)\.([a-z]+)/', '$2.$3', $_SERVER['HTTP_HOST']);
@@ -9,7 +9,7 @@ $baseURL = '//mapofire.com/';
 $root = '/home/mapo/public_html/mapofire.com/';
 
 // get the current map version to load all relevant files
-$version = !isset($_GET['version']) || empty($_GET['version']) ? file_get_contents('/home/mapo/public_html/mapofire.com/version.txt') : $_GET['version'];
+$version = !isset($_GET['version']) || empty($_GET['version']) ? file_get_contents('/home/mapo/public_html/mapofire.com/beta/version.txt') : $_GET['version'];
 
 ini_set('session.cookie_domain', ".$host");
 
@@ -126,28 +126,20 @@ if (isset($_GET['country']) && isset($_GET['archive'])) {
     exit();
 }
 
-// mapbox & maplibre sdk version
-$mapboxVersion = '3.18.1';
-$maplibreVersion = '5.17.0';
+// get build date
+$buildDate = date('Y-m-d\TH:i:sP', filemtime("/home/mapo/public_html/mapofire.com/dist/$version/js/app.js"));
 
 //ga4 ID
-$ga_id = /*$host == 'wildfiremap.org' ? 'G-2DNCL70GJF' : */ 'G-X03WWLX3BJ';
-
-// get subscription array
-#include_once '/home/mapo/public_html/subs.inc.php';
-
-$files = ['index.php', 'mf.app.css', 'mf.app.js', 'mf.supp.css', 'mf.supp.js', 'mf.utils.js'];
-foreach ($files as $file) {
-    $times[] = filemtime("{$root}v$version/$file");
-}
-$buildDate = date('Y-m-d\TH:i:sO', max($times));
+$ga_id = 'G-X03WWLX3BJ';
 
 // parse layers json from layers.inc.php
 $jsLayers = json_encode($layers);
 $jsLayers = str_replace('perms2', 'perms', preg_replace('/(,"perms":(true|false))/', '', $jsLayers));
 
+$appPath = "{$root}dist/app.php";
+
 // load the current index.php file for the version
-if (file_exists("{$root}v$version/app.php")) {
+if (file_exists($appPath)) {
     //$dark_mode = $_COOKIE['dark_mode'] && $_COOKIE['dark_mode'] == 'true' ? true : false;
 
     $country = ucwords(str_replace('-', ' ', $_GET['country']));
@@ -162,21 +154,21 @@ if (file_exists("{$root}v$version/app.php")) {
 
     $isLoggedIn = $_SESSION['token'] ? 'true' : 'false';
     $javascript .= "window.isAuthUser=$isLoggedIn;
-    const version='$version',
-    mbVersion='$maplibreVersion',
-    buildDate='$buildDate',
+    const VERSION='$version',
+    BUILD_DATE='$buildDate',
     country=" . ($country ? "'$country'" : 'null') . ",
     state=" . ($state ? "'$state'" : 'null') . ",
     county=" . ($county ? "'$county'" : 'null') . ",
     defaultTitle='{{title}}',
     defaultDesc='{{desc}}'," .
     ($_GET['archive'] ? "historical='$_GET[archive]'," : '') .
-    "layers=" . $jsLayers . ";";
+    "layers=$jsLayers;";
 
     $javascript = preg_replace('/(\n|\r|\s{2,})/', '', $javascript);
 
-    require_once "{$root}v$version/app.php";
-} else {
-    http_response_code(404);
-    include_once '../error.php';
+    require_once $appPath;
+    return;
 }
+
+http_response_code(404);
+include_once '../error.php';

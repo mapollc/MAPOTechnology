@@ -59,7 +59,7 @@ if ($_REQUEST['state']) {
 
 // if retrieving wildfires based on bounding box
 if (isset($_REQUEST['bbox'])) {
-    $wheres[] = " AND (lat >= $ymin AND lat <= $ymax) AND (lon >= $xmax AND lon <= $xmin)";
+    $wheres[] = " AND ((lat BETWEEN $ymin AND $ymax) AND (lon BETWEEN $xmin AND $xmax))";
 }
 
 // finish sql statement
@@ -76,7 +76,7 @@ $sql = str_replace(' AND  AND ', ' AND ', $sql);
 ////}
 
 // run MySQL query
-////echo $sql;exit();
+////if ($_GET['test'] == 1) {echo $sql;exit();}
 $result = mysqli_query($con, $sql);
 $total = 0;
 $features = [];

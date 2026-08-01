@@ -20,8 +20,8 @@ function evacCA()
             'state' => 'CA',
             'county' => ucwords(strtolower($e->COUNTY)),
             'level' => $level,
+            'zoneID' => str_replace('US-CA-', '', $e->ZONE_ID),
             'notes' => $e->NOTES,
-            'zoneID' => $e->ZONE_ID,
             'updated' => round($e->EditDate / 1000)
         ];
 
@@ -52,6 +52,7 @@ function evacOR()
             'state' => 'OR',
             'county' => $e->County,
             'level' => $e->Fire_Evacuation_Level,
+            'zoneID' => str_replace('US-OR-', '', $e->Evac_Area_Name),
             'notes' => $notes,
             'updated' => round($e->last_edited_date / 1000)
         ];

@@ -20,7 +20,7 @@ if ($customerID) {
     try {
         $portal = $stripe->billingPortal->sessions->create([
             'customer' => $customerID,
-            'return_url' => ($_GET['next'] ? $_GET['next'] : 'https://www.mapotechnology.com/account/billing' . (isset($_GET['ref']) ? '?ref=' . $_GET['ref'] : '') . (isset($_GET['devel']) ? '?devel=' . $_GET['devel'] : '')),
+            'return_url' => $_GET['next'] ?: 'https://www.mapotechnology.com/account/billing' . (isset($_GET['ref']) ? '?ref=' . $_GET['ref'] : '') . (isset($_GET['devel']) ? '?devel=' . $_GET['devel'] : ''),
         ]);
     } catch (Exception $e) {
         if (!str_contains($e->getMessage(), 'No such')) echo message(false, $e->getMessage());
@@ -81,13 +81,12 @@ if (isset($_GET['checkout_id'])) {
 
             <h1 style="text-align:center">Subscriptions & Billing</h1>
 
-            <?
-            if ($num == 0) { ?>
+            <? if ($num == 0) { ?>
                 <p style="text-align:center">
                     You're not currently subscribed. Unlock premium and professional features to get the most out of our service.
                 </p>
                 <div class="btn-group" style="width:100%;justify-content:center">
-                    <a href="https://www.mapotechnology.com/purchase/mapofire?ref=account&customer_email=<?= $user['email'] ?><?= ($customerID ? '&cid=' . $customerID : '') ?>" class="btn btn-green"><?= $customerID ? 'Get access to premium features' : 'Start Your Free Trial' ?></a>
+                    <a href="https://www.mapotechnology.com/purchase/mapofire?ref=account&customer_email=<?= $user['email'] ?><?= ($customerID ? "&cid=$customerID" : '') ?>" class="btn btn-green"><?= $customerID ? 'Get access to premium features' : 'Start Your Free Trial' ?></a>
                     <? if ($portal) {
                         echo "<a class=\"btn btn-black\" href=\"$portal->url\">Manage Payment Methods</a>";
                     } ?>
@@ -139,23 +138,23 @@ if (isset($_GET['checkout_id'])) {
                         <div class="sub">
                             <h2 style="font-size:21px"><?= $product->getName() ?></h2>
 
-                            <? if ($canceled) { ?>
-                                <span class="sub-badge" style="background-color:#f8d7da;color:#721c24;">canceled</span>
-                                <? } else {
-                                if ($row['trial']) { ?>
-                                    <span class="sub-badge" style="background-color:#fceabb;color:#6b4f00;">trial</span>
-                                <? } else { ?>
-                                    <span class="sub-badge" style="background-color:#d4edda;color:#155724;">active</span>
-                            <? }
+                            <? if ($canceled) {
+                                echo '<span class="sub-badge" style="background-color:#f8d7da;color:#721c24;">canceled</span>';
+                            } else {
+                                if ($row['trial']) {
+                                    echo '<span class="sub-badge" style="background-color:#fceabb;color:#6b4f00;">trial</span>';
+                                } else {
+                                    echo '<span class="sub-badge" style="background-color:#d4edda;color:#155724;">active</span>';
+                                }
                             } ?>
 
                             <p style="padding-top:1em"><b>Billing cycle:</b> <?= date('M j, Y', $row['start']) . ' - ' . date('M j, Y', $row['end']) ?></p>
-                            <? if (!$canceled) { ?>
-                                <p id="next-pymt"><b>Next payment:</b> $<?= $product->getTotalPrice() ?> on <?= date('M j, Y', $row['end']) ?></p>
-                            <? } ?>
-                            <p><b>Payment method:</b> <?= $howPay ?> </p>
-
                             <? if (!$canceled) {
+                                echo "<p id=\"next-pymt\"><b>Next payment:</b> \${$product->getTotalPrice()} on " . date('M j, Y', $row['end']) . "</p>";
+                            }
+                            echo "<p><b>Payment method:</b> $howPay</p>";
+
+                            if (!$canceled) {
                                 if ($row['trial'] == 1) {
                                     $text = 'Your free trial will end on ' . date('F j, Y', $row['end']) . '. After that, your default payment method will be charged automatically.';
                                 } else {
@@ -168,9 +167,9 @@ if (isset($_GET['checkout_id'])) {
                                     <a class="btn btn-red" href="#" id="cancel" <?= $_GET['ref'] == 'com.mapollc.mapofire' ? ' data-app="1"' : '' ?> data-sid="<?= $row['subscription'] ?>" data-name="<?= $product->getName() ?>" onclick="return false">Cancel subscription</a>
                                 </div>
                             <? }
-                            if ($canceled) { ?>
-                                <span id="can-notice" class="help">Your subscription has been canceled and will remain active until <?= date('F j, Y', $row['end']) ?>.</span>
-                            <? } ?>
+                            if ($canceled) {
+                                echo '<span id="can-notice" class="help">Your subscription has been canceled and will remain active until ' . date('F j, Y', $row['end']) . '.</span>';
+                            } ?>
 
                             <!--<div id="btns-can" class="btn-group" <?= $canceled ? ' style="display:none"' : '' ?>>
                                 <a href="#" id="cancel-now" data-sid="<?= $row['subscription'] ?>" class="btn btn-sm btn-red" onclick="return false">Cancel Now</a>
@@ -187,7 +186,7 @@ if (isset($_GET['checkout_id'])) {
                             <a href="billing/portal?cid=<?= $customerID . (isset($_GET['ref']) ? '&ref=' . $_GET['ref'] : '') ?>" style="font-size:14px">Manage Payment Methods</a>
                         </div>
             <? } catch (Exception $e) {
-                        //echo $e->getMessage();
+                        //echo message(false, $e->getMessage());
                     }
                 }
             } ?>
@@ -258,5 +257,3 @@ if (isset($_GET['checkout_id'])) {
         </div>
     </div>
 </div>
-<? //}
-?>

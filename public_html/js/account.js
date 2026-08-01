@@ -3,8 +3,7 @@ const host = `https://${window.location.host}/`,
     apiURL = 'https://api.mapotechnology.com/v1/',
     mapofireAPI = 'https://mapofire.com/api/v1/',
     usersAPI = 'account/secure/apis/',
-    apiKey = 'c196d0958608ad2b7d4af2be078ecc54',
-    WILDFIRE_NEARBY_DIST = 50;
+    apiKey = 'c196d0958608ad2b7d4af2be078ecc54';
 
 const stateLabels = {
     'AL': 'Alabama',
@@ -72,7 +71,8 @@ let calc,
     //token = '',
     wildfires = [],
     keywordResults,
-    centerMarker;
+    centerMarker,
+    WILDFIRE_NEARBY_DIST = 50;
 
 async function api(uri, fields = null, v2 = false, forAuth = false) {
     if (!navigator.onLine) {
@@ -144,12 +144,15 @@ function loadScript(src) {
     });
 }
 
-function goBack(url) {
-    if (history.length > 1) {
-        history.go(-1);
+function goBack(fallbackUrl) {
+    const sameSite = document.referrer && new URL(document.referrer).origin === location.origin;
+
+    if (sameSite && history.length > 1) {
+        history.back();
     } else {
-        window.location.href = url;
+        window.location.href = fallbackUrl;
     }
+
     return false;
 }
 
@@ -249,7 +252,7 @@ class QueryWildfires {
         document.querySelector('#resultsNum').innerHTML = '';
         this.listOfFires.querySelector('tbody').innerHTML = '<tr><td colspan="10" style="text-align:center"><div class="spinner"></div></td></tr>';
 
-        const resp = await api(apiURL + 'account/getFires' + (pageName.search('duplicates') >= 0 ? '/duplicates' : ''), body, true);
+        const resp = await api(`${apiURL}account/getFires` + (pageName.search('duplicates') >= 0 ? '/duplicates' : ''), body, true);
         this.success(resp);
     }
 
@@ -331,10 +334,10 @@ class QueryWildfires {
     }
 
     size(a) {
-        if (a === '' || a === null || a === undefined) return 'Unknown';
+        if (a === '' || a === null || a === undefined) return 'Unk';
 
         const acres = parseFloat(a);
-        if (isNaN(acres)) return 'Unknown';
+        if (isNaN(acres)) return 'Unk';
 
         // format to 2 decimals
         let o = acres.toFixed(2);
@@ -365,28 +368,31 @@ class QueryWildfires {
     }
 
     createCols(fire) {
-        const options = {
+        const dateOptions = {
             year: 'numeric',
-            month: 'numeric',
-            day: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        }, timeOptions = {
             hour: 'numeric',
             minute: '2-digit',
             hour12: true
         };
-        const date = this.now - fire.date > 86400 ? new Intl.DateTimeFormat('en-US', options).format(fire.date * 1000).replace(',', '') : timeAgo(fire.date),
-            url = `../admin/wildfires/${fire.owner == 'mapo' ? 'modify' : 'edit'}?wfid=${fire.wfid}`,
-            dupURL = pageName == 'admin/wildfires/duplicates' ? `&nbsp;|&nbsp;<a href="#" class="hidefrommap" data-wfid="${fire.wfid}" onclick="return false">hide</a>` : '';
 
-        return `<td>${fire.incidentID}</td>
-            <td>${fire.state}</td>
+        const date = this.now - fire.date > 9000 ? `${new Intl.DateTimeFormat('en-US', dateOptions).format(fire.date * 1000)} - ${new Intl.DateTimeFormat('en-US', timeOptions).format(fire.date * 1000)}` : timeAgo(fire.date);
+        const url = `../admin/wildfires/${fire.owner == 'mapo' ? 'modify' : 'edit'}?wfid=${fire.wfid}`;
+        const dupURL = pageName == 'admin/wildfires/duplicates' ? `&nbsp;|&nbsp;<a href="#" class="hidefrommap" data-wfid="${fire.wfid}" onclick="return false">hide</a>` : '';
+
+        return `<td>${stateLabels[fire.state]}</td>
+            <td>${fire.incidentID}</td>
             <td>${fire.type}</td>
             <td>${fire.name}</td>
-            <td>${date}</td>
             <td>${this.size(fire.acres)}</td>
-            <td>${timeAgo(fire.updated)}</td>
+            <td>${date}</td>
             <td>${fire.display == '1' ? 'Yes' : 'No'}</td>
             <td>${fire.owner}</td>
-            <td>${this.listOfFires.dataset.edit == '1' ? `<a style="font-weight:400!important" href="${url}">edit</a>&nbsp;|&nbsp;<a style="font-weight:400!important" target="blank" href="//mapofire.com/${fire.url}">view</a>${dupURL}` : ''}</td>`;
+            <td>${timeAgo(fire.updated)}</td>
+            <td>${this.listOfFires.dataset.edit == '1' ? `<a style="font-weight:400!important" href="${url}">edit</a>
+            &nbsp;|&nbsp;<a style="font-weight:400!important" target="_blank" href="//mapofire.com/${fire.url}">view</a>${dupURL}` : ''}</td>`;
     }
 
     isDuplicateFire(currentFire, lastFire, acresThreshold = 10.0, idLastDigits = 3, staleHours = 12) {
@@ -441,7 +447,7 @@ class Calculate {
         return dist;
     }
 
-    bearing(startLat, startLng, destLat, destLng) {
+    bearing(startLat, startLng, destLat, destLng, raw = false) {
         startLat = this.deg2rad(startLat);
         startLng = this.deg2rad(startLng);
         destLat = this.deg2rad(destLat);
@@ -451,7 +457,9 @@ class Calculate {
             x = Math.cos(startLat) * Math.sin(destLat) - Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng),
             brng = Math.atan2(y, x);
 
-        return this.getCompassDirection((this.rad2deg(brng) + 360) % 360);
+        const out = (this.rad2deg(brng) + 360) % 360;
+
+        return raw ? out : this.getCompassDirection(out);
     }
 
     getCompassDirection(bearing) {
@@ -494,11 +502,11 @@ async function getCrowdsource() {
             const rpt = data.properties;
 
             return `<tr>
-                    <td>#${rpt.reportId}</td>
-                    <td>${stateLabels[rpt.state]}</td>
-                    <td>${timeAgo(rpt.reported)}</td>
-                    <td><a target="_blank" href="./admin/crowdsource/view?id=${data.id}">view</a></td>
-                </tr>`;
+                <td>#${rpt.reportId}</td>
+                <td>${stateLabels[rpt.state]}</td>
+                <td>${timeAgo(rpt.reported)}</td>
+                <td><a target="_blank" href="./admin/crowdsource/view?id=${data.id}">view</a></td>
+            </tr>`;
         });
 
     if (rows == 0) {
@@ -520,98 +528,96 @@ async function getCrowdsource() {
     container.innerHTML = content;
 }
 
-async function getFires() {
-    const resp = await api(apiURL + 'wildfires/all,new,smk');
+async function getFires(refresh = false) {
+    const nearby = document.getElementById('nearby');
+
+    if (refresh) {
+        nearby.innerHTML = '<div class="spinner"></div>';
+    }
+
+    const resp = await api(`${apiURL}wildfires/all,new,smk`);
     wildfires = resp.features;
 
-    if (userLocation) {
-        const nearby = document.getElementById('nearby');
+    if (!userLocation) return;
 
-        if (!resp.features.length) {
-            nearby.innerHTML = '<div class="message info">There are no wildfires currently near you.</div>';
-        } else {
-            let content = [];
-
-            content.push('<div class="table-responsive"><table class="table small"><thead><tr><th>Name</th><th>Type</th><th>Location</th></tr></thead><tbody>');
-
-            resp.features.forEach(f => {
-                const lat = f.geometry.coordinates[1],
-                    lon = f.geometry.coordinates[0],
-                    dist = calc.distance(lat, lon, userLocation.lat, userLocation.lon);
-
-                if (dist <= WILDFIRE_NEARBY_DIST) {
-                    const name = f.properties.name,
-                        type = f.properties.type,
-                        url = f.properties.url.replace('wildfire/', 'fires/'),
-                        bear = calc.bearing(lat, lon, userLocation.lat, userLocation.lon);
-
-                    content.push(`<tr>
-                    <td><a target="blank" href="https://mapofire.com/${url}">${name}${(type != 'Smoke Check' ? ' Fire' : '')}</td>
-                    <td>${ucwords(type)}</td>
-                    <td>${Math.round(dist)} miles ${bear} of you</td>
-                </tr>`);
-                }
-            });
-
-            content.push('</tbody></table></div>');
-
-            nearby.innerHTML = content.join('');
-        }
+    if (!resp.features.length) {
+        nearby.innerHTML = '<div class="message info">There are no wildfires currently near you.</div>';
+        return;
     }
+
+    let content = [];
+
+    content.push('<div class="table-responsive"><table class="table small"><thead><tr><th>Name</th><th>Type</th><th>Location</th></tr></thead><tbody>');
+
+    resp.features
+        .map(f => ({
+            feature: f,
+            dist: calc.distance(userLocation.lat, userLocation.lon, f.geometry.coordinates[1], f.geometry.coordinates[0])
+        }))
+        .filter(f => f.dist <= WILDFIRE_NEARBY_DIST)
+        .sort((a, b) => a.dist - b.dist)
+        .forEach(({ feature: f, dist }) => {
+            const lat = f.geometry.coordinates[1],
+                lon = f.geometry.coordinates[0],
+                name = f.properties.name,
+                type = f.properties.type,
+                url = f.properties.url.replace('wildfire/', 'fires/'),
+                bear = calc.bearing(userLocation.lat, userLocation.lon, lat, lon, true);
+
+            content.push(`<tr>
+                <td><a target="blank" href="https://mapofire.com/${url}?utm_campaign=mapofire&utm_medium=wildfires_near_you&utm_source=account">${name}${(type != 'Smoke Check' ? ' Fire' : '')}</td>
+                <td>${ucwords(type)}</td>
+                <td>
+                    <i class="fas fa-location-arrow" style="width:18px;margin-right:.5em;color:var(--orange);transform:rotate(${Number(bear - 45)}deg)"></i>
+                    <span>${Math.round(dist)} miles ${calc.getCompassDirection(bear)} of you</span>
+                </td>
+            </tr>`);
+        });
+
+    content.push('</tbody></table></div>');
+
+    nearby.innerHTML = content.join('');
 }
 
 function getMyLoc(target) {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            const resp = await api(`${apiURL}geocode/reverse`, [
-                ['lat', position.coords.latitude],
-                ['lon', position.coords.longitude]
-            ], true);
-
-            const a = resp.geocode.city,
-                b = resp.geocode.state_name,
-                c = resp.geocode.zip_code,
-                lat = resp.geocode.lat,
-                lon = resp.geocode.lon,
-                d = { city: a, state: b, zip: c, lat: lat, lon: lon };
-
-            document.querySelector('input[name=city]').value = a;
-            document.querySelector('input[name=state]').value = b;
-            document.querySelector('input[name=zip]').value = c;
-            document.querySelector('input[name=lat]').value = lat;
-            document.querySelector('input[name=lon]').value = lon;
-            document.querySelector('input[name=location]').value = JSON.stringify(d);
-            target.disabled = false;
-            target.value = 'Use current location';
-        });
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
     }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+        const resp = await api(`${apiURL}geocode/reverse`, [
+            ['lat', position.coords.latitude],
+            ['lon', position.coords.longitude]
+        ], true);
+
+        const a = resp.geocode.city,
+            b = resp.geocode.state_name,
+            c = resp.geocode.zip_code,
+            lat = resp.geocode.lat,
+            lon = resp.geocode.lon,
+            d = { city: a, state: b, zip: c, lat: lat, lon: lon };
+
+        if (document.querySelector('input[name=zip]').value === String(c)) {
+            alert('You current location and device location are the same.');
+        }
+
+        document.querySelector('input[name=city]').value = a;
+        document.querySelector('input[name=state]').value = b;
+        document.querySelector('input[name=zip]').value = c;
+        document.querySelector('input[name=lat]').value = lat;
+        document.querySelector('input[name=lon]').value = lon;
+        document.querySelector('input[name=location]').value = JSON.stringify(d);
+        target.disabled = false;
+        target.value = 'Use current location';
+
+        document.querySelector('input[name=location]').dispatchEvent(new Event('change', { bubbles: true }))
+    });
 }
 
 function findFire(wfid) {
     return wildfires.find(f => f.properties.wfid == wfid) ?? null;
 }
-
-/*function getStatus(s, n, t = 'Wildfire', ac = '0') {
-    let a = ac.toString().toLowerCase();
-    if (!s && !n) return 'active';
-
-    if (s) {
-        if (s.Out) return 'out';
-        if (s.Control) return 'controlled';
-        if (s.Contain) return 'contained';
-        if (Object.keys(s).length > 0) return '';
-    }
-
-    const notes = n?.toLowerCase() || '';
-    if (notes.includes('contain')) return 'contained';
-    if (notes.includes('control')) return 'controlled';
-
-    if (t == 'Smoke Check' && (a == '0' || a == 'unknown' || a == '')) {
-        return 'unknown';
-    }
-
-    return 'active';
-}*/
 
 async function downloadUserData() {
     try {
@@ -654,55 +660,64 @@ function downloadFile(name, url) {
 }
 
 async function getFavoriteFires() {
-    return await api(host + usersAPI + 'favFires', null, false, true);
+    return await api(`${host}${usersAPI}favFires`, null, false, true);
 }
 
 function displayFavFires(resp) {
     const ff = document.querySelector('#favfires');
 
-    if (resp.response.fires) {
-        const validFires = resp.response.fires.filter(f => findFire(f.wfid) != null);
-
-        if (validFires.length) {
-            const rows = validFires.map(f => {
-                const name = f.name,
-                    type = f.type,
-                    geo = f.geo,
-                    url = f.url;
-
-                return `<tr>
-                <td><a target="blank" href="https://mapofire.com/${url}">${name}${(type != 'Smoke Check' ? ' Fire' : '')}</a></td>
-                <td>${geo}</td>
-                <td class="ctrl"><div id="unfollow" data-wfid="${f.wfid}" title="Unfollow this incident" class="far fa-ellipsis-vertical control unfollow"></div></td>
-            </tr>`;
-            });
-
-            const content = `<div class="table-responsive">
-            <table class="table small">
-                <thead>
-                    <tr><th>Name</th><th>Location</th><th class="ctrl"></th></tr>
-                </thead>
-                <tbody>
-                    ${rows.join('')}
-                </tbody>
-            </table>
-        </div>`;
-
-            ff.innerHTML = content;
-        } else {
-            ff.innerHTML = '<div class="message info">You are not currently following any active wildfires.</div>';
-        }
-    } else {
+    if (!resp.response.fires) {
         ff.innerHTML = '<div class="message info">You are not currently following any active wildfires.</div>';
+        return;
     }
+
+    const validFires = resp.response.fires.filter(f => findFire(f.wfid) != null);
+
+    if (!validFires.length) {
+        ff.innerHTML = '<div class="message info">You are not currently following any active wildfires.</div>';
+        return;
+    }
+
+    const rows = validFires.map(f => {
+        const name = f.name,
+            type = f.type,
+            geo = f.geo,
+            url = f.url;
+
+        return `<tr>
+            <td><a target="blank" href="https://mapofire.com/${url}?utm_campaign=mapofire&utm_medium=tracked_fires&utm_source=account">${name}${(type != 'Smoke Check' ? ' Fire' : '')}</a></td>
+            <td>${geo}</td>
+            <td class="ctrl"><div id="unfollow" data-wfid="${f.wfid}" title="Unfollow this incident" class="far fa-ellipsis-vertical control unfollow"></div></td>
+        </tr>`;
+    });
+
+    const content = `<div class="table-responsive">
+        <table class="table small">
+            <thead>
+                <tr><th>Name</th><th>Location</th><th class="ctrl"></th></tr>
+            </thead>
+            <tbody>
+                ${rows.join('')}
+            </tbody>
+        </table>
+    </div>`;
+
+    ff.innerHTML = content;
 }
 
 async function getFavoriteTrails() {
-    let content = [];
-    const resp = await api(host + usersAPI + 'favtrails', null, false, true);
+    const favTrails = document.querySelector('#favtrails');
+    const resp = await api(`${host}${usersAPI}favtrails`, null, false, true);
 
-    if (resp.response != null && resp.response.length) {
-        resp.response.forEach((f) => {
+    if (!resp.response || resp.response.length === 0) {
+        favTrails.innerHTML = '<div class="message info">You currently don\'t have any favorite trails.</div>';
+        return;
+    }
+
+    let content = [];
+
+    resp.response
+        .forEach(f => {
             const id = f.id,
                 title = f.title,
                 url = f.url;
@@ -716,33 +731,32 @@ async function getFavoriteTrails() {
                 </div>
             </div>`);
         });
-    } else {
-        content.push('<div class="message info">You currently don\'t have any favorite trails.</div>');
-    }
 
-    if (content.length > 1) document.querySelector('#favtrails').innerHTML = content.join('');
+    favTrails.innerHTML = content.join('');
 }
 
 async function getUploads() {
-    let content = [];
+    const ups = document.querySelector('#uploads');
     const resp = await api(`${host}${usersAPI}userUploads`, null, false, true);
 
-    if (resp.response != null && resp.response.length) {
-        content.push('<div class="table-responsive"><table class="table small"><thead><tr><th>Name</th><th>Type</th><th>Size</th><th>Created</th></tr></thead><tbody>');
+    if (!resp.response || resp.response.length === 0) {
+        ups.innerHTML = '<div class="message info">You haven\'t uploaded any content to Map of Trails.</div>';
+        return;
+    }
 
-        resp.response.forEach(f => {
+    let content = ['<div class="table-responsive"><table class="table small"><thead><tr><th>Name</th><th>Type</th><th>Size</th><th>Created</th></tr></thead><tbody>'];
+
+    resp.response
+        .forEach(f => {
             content.push(`<tr>
                 <td><a href="#" onclick="downloadFile('${f.fileName}', '${f.file}')">${f.fileName}</a></td>
                 <td>${f.type}</td><td>${calc.formatBytes(f.size)}</td><td>${timeAgo(f.created)}</td>
             </tr>`);
         });
 
-        content.push('</tbody></table></div>');
-    } else {
-        content.push('<div class="message info">You haven\'t uploaded any content to Map of Trails.</div>');
-    }
+    content.push('</tbody></table></div>');
 
-    if (content.length > 1) document.querySelector('#uploads').innerHTML = content.join('');
+    ups.innerHTML = content.join('');
 }
 
 async function geocode(a, b) {
@@ -805,32 +819,44 @@ function createDialog(title, text, affirm = 'Yes', func) {
 }
 
 async function unfollow(wfid) {
-    const total = document.querySelectorAll('#favfires .row').length,
-        resp = await api(`${mapofireAPI}trackFires/remove`, [['wfid', wfid]], false, true);
+    const favfires = document.querySelector('#favfires');
+    const total = favfires.querySelectorAll('.row').length;
 
-    if (resp.success && resp.success == 'removed') {
-        closeDialog();
+    try {
+        const resp = await api(`${mapofireAPI}trackFires/remove`, [['wfid', wfid]], false, true);
 
-        document.querySelectorAll('#favfires .data-item').forEach((f) => {
-            if (f.dataset.wfid == wfid) f.remove();
-        });
+        if (resp.success && resp.success == 'removed') {
+            closeDialog();
 
-        if (total - 1 == 0) document.querySelector('#favfires').innerHTML = '<div class="message error">You are not currently following any wildfires.</div>';
+            favfires.querySelectorAll('.data-item').forEach(f => {
+                if (f.dataset.wfid == wfid) f.remove();
+            });
+
+            if (total - 1 == 0) favfires.innerHTML = '<div class="message error">You are not currently following any wildfires.</div>';
+        }
+    } catch (err) {
+        console.error(err);
     }
 }
 
 async function unfavorite(tid) {
-    const resp = await api(host + usersAPI + 'favtrails', [['method', 'remove'], ['tid', tid]]),
-        total = document.querySelectorAll('#favtrails .row').length;
+    const favtrails = document.querySelector('#favtrails');
+    const total = favtrails.querySelectorAll('.row').length;
 
-    if (resp.response.success == 1) {
-        closeDialog();
+    try {
+        const resp = await api(`${host}${usersAPI}favtrails`, [['method', 'remove'], ['tid', tid]]);
 
-        document.querySelectorAll('#favtrails .row').forEach((f) => {
-            if (f.dataset.tid == tid) f.remove();
-        });
+        if (resp.response.success == 1) {
+            closeDialog();
 
-        if (total - 1 == 0) document.querySelector('#favtrails').innerHTML = '<div class="message error">You currently don\'t have any favorite trails.</div>';
+            favtrails.querySelectorAll('.row').forEach(f => {
+                if (f.dataset.tid == tid) f.remove();
+            });
+
+            if (total - 1 == 0) favtrails.innerHTML = '<div class="message error">You currently don\'t have any favorite trails.</div>';
+        }
+    } catch (err) {
+        console.error(err);
     }
 }
 
@@ -955,7 +981,7 @@ async function cancelSub(fields, cancelNow, isApp, msg) {
         shadow.style.display = 'none';
     }
 
-    cancels.innerHTML = '<div class="spinner" style="width:20px;height:20px"></div><span>Processing...</span>';
+    document.querySelector('#cancels').innerHTML = '<div class="spinner" style="width:20px;height:20px"></div><span>Processing...</span>';
 
     const data = await api(`${apiURL}payment/subscriptions/cancel`, fields, true);
 
@@ -1109,35 +1135,37 @@ function billing() {
 async function getInvoices() {
     const invoiceDiv = document.querySelector('#invoices');
 
-    if (invoiceDiv) {
-        const inv = await api(`${host}${usersAPI}invoices`);
+    if (!invoiceDiv) return;
 
-        if (inv.response == null || inv.response.data.length == 0) {
-            invoiceDiv.innerHTML = '<p>There are no invoices or receipts for your account.</p>';
-        } else {
-            let table = [`<div class="table-responsive">
+    const inv = await api(`${host}${usersAPI}invoices`);
+
+    if (inv.response == null || inv.response.data.length == 0) {
+        invoiceDiv.innerHTML = '<p>There are no invoices or receipts for your account.</p>';
+        return;
+    }
+
+    let table = [`<div class="table-responsive">
             <table class="table small"><thead><tr><th>Invoice #</th><th>Date</th><th>Amount</th><th>Status</th><th>Receipt</th></tr></thead><tbody>`];
 
-            inv.response.data.forEach((invoice) => {
-                let amt = invoice.amount_remaining,
-                    links = [];
+    inv.response.data
+        .forEach(invoice => {
+            let amt = invoice.amount_remaining,
+                links = [];
 
-                if (invoice.status == 'paid') amt = invoice.amount_paid;
-                if (invoice.hosted_invoice_url) links.push(`<a target="blank" href="${invoice.hosted_invoice_url}">View</a>`);
-                if (invoice.invoice_pdf) links.push(` &nbsp;&middot;&nbsp; <a href="${invoice.invoice_pdf}">Download</a>`);
+            if (invoice.status == 'paid') amt = invoice.amount_paid;
+            if (invoice.hosted_invoice_url) links.push(`<a target="blank" href="${invoice.hosted_invoice_url}">View</a>`);
+            if (invoice.invoice_pdf) links.push(` &nbsp;&middot;&nbsp; <a href="${invoice.invoice_pdf}">Download</a>`);
 
-                table.push(`<tr>
+            table.push(`<tr>
                 <td>${invoice.number ? invoice.number : (invoice.status == 'Draft' ? invoice.status : 'N/A')}</td>
                 <td>${new Date(invoice.created * 1000).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
                 <td>$${(amt / 100).toFixed(2)}</td>
                 <td><span class="inv-paid${invoice.status != 'paid' ? ' no' : ''}">${invoice.status}</span></td>
                 <td>${links.join('')}</td>
             </tr>`);
-            });
+        });
 
-            invoiceDiv.innerHTML = `${table.join('')}</tbody></table></div>`;
-        }
-    }
+    invoiceDiv.innerHTML = `${table.join('')}</tbody></table></div>`;
 }
 
 async function doSearch(q) {
@@ -1148,12 +1176,13 @@ async function doSearch(q) {
         const resp = await api(`${apiURL}search`, [['citiesonly', 1], ['q', q]], true);
 
         if (resp.results != null) {
-            resp.results.forEach(s => {
-                const data = s.data,
-                    name = `${data.city}, ${data.state} ${data.zip}`;
+            resp.results
+                .forEach(s => {
+                    const data = s.data;
+                    const name = `${data.city}, ${data.state} ${data.zip}`;
 
-                results.push(`<div class="result" data-name="${name}" data-lat="${s.lat}" data-lon="${s.lon}">${name}</div>`);
-            });
+                    results.push(`<div class="result" data-name="${name}" data-lat="${s.lat}" data-lon="${s.lon}">${name}</div>`);
+                });
 
             if (results.length) sr.innerHTML = results.join('');
         }
@@ -1188,9 +1217,29 @@ async function complete() {
 
     // home page
     if (pageName == 'home') {
+        // allow the user to change the distance from them they see wildfire data
+        const nearbyKey = 'mapo.account.nearbyDist';
+        const changeNearbyDist = document.getElementById('nearbyFiresDist');
+        const nearbyDistVal = localStorage.getItem(nearbyKey);
+
+        changeNearbyDist.addEventListener('change', (e) => {
+            const newVal = e.target.value;
+            WILDFIRE_NEARBY_DIST = newVal;
+
+            localStorage.setItem(nearbyKey, newVal);
+            getFires(true);
+        });
+
+        WILDFIRE_NEARBY_DIST = nearbyDistVal ?? 50;
+        changeNearbyDist.value = nearbyDistVal ?? 50;
+
+        // get list of all fires (display nearby)
         await getFires();
+
+        // get favorite fires once the entire list is retrieved
         getFavoriteFires().then(response => displayFavFires(response));
 
+        // get everything else
         getCrowdsource();
         getFavoriteTrails();
         getUploads();
@@ -1205,6 +1254,16 @@ async function complete() {
     if (pageName == 'settings/location') {
         const sr = document.querySelector('.search-results');
         const q = document.querySelector('#q');
+        const sub = document.querySelector('input[type=submit]');
+
+        const locJson = document.querySelector('input[name=location]');
+        const initLocJson = locJson.value;
+
+        sub.disabled = true;
+
+        locJson.addEventListener('change', (e) => {
+            if (initLocJson != e.target.value) sub.disabled = false;
+        });
 
         q.addEventListener('focus', () => {
             sr.style.display = 'block';
@@ -1735,11 +1794,9 @@ document.onreadystatechange = async () => {
     }
 };
 
-if (document.querySelector('input[type=tel]')) {
-    document.querySelector('input[type=tel]').addEventListener('keyup', (e) => {
-        e.target.value = formatPhoneNumber(e.target.value);
-    });
-}
+document.querySelector('input[type=tel]')?.addEventListener('keyup', (e) => {
+    e.target.value = formatPhoneNumber(e.target.value);
+});
 
 window.addEventListener('click', async (e) => {
     const target = e.target,
@@ -1818,6 +1875,8 @@ window.addEventListener('click', async (e) => {
             document.querySelector('input[name=lon]').value = lon;
             document.querySelector('input[name=location]').value = JSON.stringify(data);
             document.querySelector('#q').value = '';
+
+            document.querySelector('input[name=location]').dispatchEvent(new Event('change', { bubbles: true }))
         }
 
         document.querySelector('.search-results').style.display = 'none';

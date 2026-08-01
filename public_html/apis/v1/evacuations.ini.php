@@ -66,6 +66,7 @@ $memcache = new Memcached();
 if (!count($memcache->getServerList())) $memcache->addServer('127.0.0.1', 11211);
 
 $evacCacheKey = 'evacuations' . (isset($_REQUEST['state']) ? "_{$_REQUEST['state']}" : '');
+if ($_GET['test'] == 1) $memcache->delete($evacCacheKey);
 $cache = $memcache->get($evacCacheKey);
 
 if ($cache !== false) {
@@ -82,7 +83,7 @@ for ($i = 0; $i < count($states); $i++) {
     if (file_exists($fileName)) {
         $arr = json_decode(file_get_contents($fileName), true);
 
-        if (count($arr) > 0) $evacuations = [...$arr, ...$evacuations];
+        if ($arr && count($arr) > 0) $evacuations = [...$arr, ...$evacuations];
     }
 }
 

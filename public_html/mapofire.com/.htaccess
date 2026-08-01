@@ -37,6 +37,7 @@ RedirectMatch 301 ^/wildfire/(.*)$ /fires/$1
 #RewriteRule ^wildfire/([^/]*)/([^/]*)$ /incident.php?wfid=$1&name=$2 [L,QSA]
 #RewriteRule ^wildfire/([^/]*)/([^/]*)/([^/]*)$ /incident.php?wfid=$1&firestate=$2&name=$3 [L,QSA]
 RewriteRule ^wfid/([^/]*)$ /index.php?wfid=$1 [L,QSA]
+RewriteRule ^beta/fires/([^/]*)/([^/]*)/([^/]*)$ /beta/index.php?wfid=$1&firestate=$2&name=$3 [L,QSA]
 RewriteRule ^fires/([^/]*)/([^/]*)/([^/]*)$ /index.php?wfid=$1&firestate=$2&name=$3 [L,QSA]
 RewriteRule ^perimeter/([^/]*)$ /index.php?id=$1 [L,QSA]
 RewriteRule ^weather/alert/([^/]*)$ /index.php?wxid=$1 [L,QSA]
@@ -68,6 +69,8 @@ RewriteRule ^purchase$ /subscribe.php [L,QSA]
 
 # SITEMAP
 RewriteRule ^sitemap.xml$ /sitemap.xml.php [L,QSA]
+
+RedirectMatch 403 \.map$
 
 # BEGIN Expire headers  
 <IfModule mod_expires.c>  

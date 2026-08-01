@@ -157,7 +157,6 @@ if (!$gotLock) {
 // -------------------------
 
 try {
-
     require_once 'helpers/getWildfires.inc.php';
 
     // CHANGED: cache writes only occur when build succeeds

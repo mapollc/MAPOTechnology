@@ -65,7 +65,7 @@ class SSO
         $this->googleCerts = $this->memcache->get('google_certs');
     }
 
-    function isJson($string)
+    private function isJson($string)
     {
         json_decode($string);
         return json_last_error() === JSON_ERROR_NONE;
@@ -91,7 +91,7 @@ class SSO
         }
     }
 
-    function createToken($payload, $expires = null)
+    private function createToken($payload, $expires = null)
     {
         $payload['iss'] = $this->domain;
         $payload['aud'] = $this->issuer;
@@ -103,13 +103,13 @@ class SSO
         return JWT::encode($payload, $this->secretKey, 'HS256');
     }
 
-    function decodeToken($token)
+    private function decodeToken($token)
     {
         JWT::$leeway = 60;
         return (array) JWT::decode($token, new Key($this->secretKey, 'HS256'));
     }
 
-    function tokenStatus($token)
+    private function tokenStatus($token)
     {
         try {
             $decoded = $this->decodeToken($token);
@@ -132,7 +132,7 @@ class SSO
         }
     }
 
-    function validateToken($token)
+    public function validateToken($token)
     {
         //$validToken['status'] = 'expired';
         $validToken = $this->tokenStatus($token);
@@ -146,7 +146,7 @@ class SSO
         };
     }
 
-    function validatePassword($pass)
+    private function validatePassword($pass)
     {
         $error = false;
         $msgs = [];
@@ -179,7 +179,7 @@ class SSO
         return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode(hash_hmac('sha256', $e[0] . '.' . $e[1], 'MapoLLC.Q1.w.2.e.34', true)));
     }*/
 
-    function productConfig()
+    private function productConfig()
     {
         global $function;
 
@@ -203,7 +203,7 @@ class SSO
         };
     }
 
-    function in($e)
+    /*private function in($e)
     {
         $total = $e + 900 - time();
 
@@ -212,9 +212,9 @@ class SSO
         } else {
             return round($total / 60, 0) . ' minutes';
         }
-    }
+    }*/
 
-    function sql($cols = '', $s)
+    private function sql($cols = '', $s)
     {
         $q = 'SELECT u.uid, first_name, last_name, u.email, u.phone, password, u.location, u.created, role, provider, last_active{cols} FROM users AS u';
         return str_replace('{cols}', $cols, $q) . ' ' . $s;
@@ -223,7 +223,7 @@ class SSO
     private function bruteForce($email, $record = false)
     {
         $emailKey = "login:email:" . strtolower($email);
-        $ipKey = "login:ip:" . $this->ip;
+        $ipKey = "login:ip:{$this->ip}";
 
         if ($record) {
             $emailAttempts = $this->memcache->increment($emailKey, 1);
@@ -252,7 +252,7 @@ class SSO
         }
     }
 
-    function authenticate()
+    public function authenticate()
     {
         global $_SESSION;
 
@@ -319,7 +319,7 @@ class SSO
         }
     }
 
-    function loginWithGoogle()
+    public function loginWithGoogle()
     {
         $error = false;
         $code = null;
@@ -406,7 +406,7 @@ class SSO
         if ($error) return ['response' => 'error', 'isGoogle' => true, 'code' => $code, 'msg' => $msg];
     }
 
-    function returnURL($next)
+    public function returnURL($next)
     {
         global $method;
 
@@ -432,7 +432,7 @@ class SSO
         }
     }
 
-    function getSubscriptions($email)
+    private function getSubscriptions($email)
     {
         global $plan;
         $sub = executeQuery(
@@ -478,7 +478,7 @@ class SSO
         }
     }
 
-    function getUser($row, $expires, $subscribe)
+    private function getUser($row, $expires, $subscribe)
     {
         global $method;
         global $function;
@@ -528,7 +528,7 @@ class SSO
         return $out;
     }
 
-    function devices()
+    public function devices()
     {
         if ($this->fields['mode'] == 'terminate') {
             executeQuery('is', [$this->fields['sid'], $this->fields['token']], "UPDATE sessions SET expires = 0 WHERE sid = ? AND token = ?");
@@ -581,7 +581,7 @@ class SSO
         }
     }
 
-    function user()
+    public function user()
     {
         global $function;
         $fields = 'u.uid, s.guid, first_name, last_name, u.email, u.phone, password, u.location, u.created, role, provider, last_active, token, expires';
@@ -624,7 +624,7 @@ class SSO
         }
     }
 
-    function login($row)
+    private function login($row)
     {
         $time = time();
         $expires = $time + 60 * 60 * 24 * 7;
@@ -708,7 +708,7 @@ class SSO
         ];
     }
 
-    function logout()
+    public function logout()
     {
         global $_SESSION;
         $invalid = ['response' => 'error', 'code' => 1, 'msg' => 'An invalid token was provided.'];
@@ -749,7 +749,7 @@ class SSO
         }
     }
 
-    function forgot()
+    public function forgot()
     {
         $email = $this->fields['email'];
 
@@ -780,7 +780,7 @@ class SSO
         }
     }
 
-    function reset()
+    public function reset()
     {
         $pass = $this->fields['pass'];
         $oauth = $this->fields['oauth_token'];
@@ -848,7 +848,7 @@ class SSO
         }
     }
 
-    function invitation()
+    public function invitation()
     {
         $error = false;
         $code = 0;
@@ -924,7 +924,7 @@ class SSO
         }
     }
 
-    function confirmation()
+    public function confirmation()
     {
         $error = false;
         $msg = '';
@@ -983,7 +983,7 @@ class SSO
         }
     }
 
-    function generatePassword($length = 22)
+    private function generatePassword($length = 22)
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+<>?';
         $password = '';
@@ -1024,7 +1024,7 @@ class SSO
         return implode(' ', $parts);
     }
 
-    function createAccount($fname, $lname, $email, $pass, $role, $phone, $location, $thirdParty = 0, $needToConfirm = true)
+    private function createAccount($fname, $lname, $email, $pass, $role, $phone, $location, $thirdParty = 0, $needToConfirm = true)
     {
         $out = [];
         $tok = $this->createToken(['email' => $email]);
@@ -1087,7 +1087,7 @@ class SSO
         return $out;
     }
 
-    function register($google = false)
+    public function register($google = false)
     {
         $error = false;
         $msgs = [];
@@ -1167,7 +1167,7 @@ class SSO
         }
     }
 
-    function update()
+    public function update()
     {
         global $function;
 
@@ -1216,7 +1216,7 @@ class SSO
         }
     }
 
-    function globalRateCheck()
+    public function globalRateCheck()
     {
         global $method;
 

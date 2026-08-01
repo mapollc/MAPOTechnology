@@ -938,56 +938,57 @@ function wildfireAlgorithm($request, $inc_type, $status, $row, $archive, $p = fa
     //$status = $status != false && !empty($status) && $status != '' ? (is_array($status) ? $status : unserialize($status)) : [];
     $status = empty($status) || !is_array($status) ? [] : $status;
     $isUTL = utlPresent($row);
+    $parts = [1 => null, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null, 8 => null, 9 => null, 10 => null];
 
     if ((int)$row['updated'] > $day5 && !$isUTL) {
         $show_fire = true;
-        $parts[] = [1, true];
+        $parts[1] = true;
     }
 
     if ($timeDiff > $day1 && $isUTL) {
         $show_fire = false;
-        $parts[] = [2, false];
+        $parts[2] = false;
     }
 
     #if ($noAcres && ($timeDiff > $onemonth)) {
     if ($noAcres && ($timeDiff > $day1)) {
         $show_fire = false;
-        $parts[] = [3, false];
+        $parts[3] = false;
     }
 
     if ($inc_type == 'Smoke Check' && ($timeDiff > $last2 && $noAcres || $isUTL)) {
         $show_fire = false;
-        $parts[] = [4, false];
+        $parts[4] = false;
     }
 
     if ($time - (int)$row['updated'] > $days3 || empty((int)$row['updated'])) {
         $show_fire = false;
-        $parts[] = [5, false];
+        $parts[5] = false;
     }
 
     if (is_array($status) && $status['Out'] && $timeDiff > $days3) {
         $show_fire = false;
-        $parts[] = [6, false];
+        $parts[6] = false;
     }
 
     if (is_array($status) && ($status['Contain'] || $status['Control']) && $timeDiff > $day5 && $acres <= 1) {
         $show_fire = false;
-        $parts[] = [7, false];
+        $parts[7] = false;
     }
 
     if ($acres < 50 && $timeDiff > $onemonth) {
         $show_fire = false;
-        $parts[] = [8, false];
+        $parts[8] = false;
     }
 
     if ($acres > 1000 && $timeDiff < 60 * 60 * 24 * (365.25 / 12)) {
         $show_fire = true;
-        $parts[] = [9, true];
+        $parts[9] = true;
     }
 
     if ($archive != '' && $archive != 0 || $request == 'new') {
         $show_fire = true;
-        $parts[] = [10, true];
+        $parts[10] = true;
     }
 
     return $p ? [$parts, $show_fire] : $show_fire;
@@ -1114,12 +1115,8 @@ function guideUrl($s, $ty, $id)
 function bbox($bbox, $lat, $lon)
 {
     $bbox = json_decode($bbox);
-    $latmin = $bbox->ymin;
-    $latmax = $bbox->ymax;
-    $lonmin = $bbox->xmin;
-    $lonmax = $bbox->xmax;
 
-    return (($lat >= $latmin && $lat <= $latmax) && ($lon >= $lonmax && $lon <= $lonmin) ? true : false);
+    return $lat >= $bbox->ymin && $lat <= $bbox->ymax && $lon >= $bbox->xmin && $lon <= $bbox->xmax;
 }
 
 function sd_square($x, $mean)

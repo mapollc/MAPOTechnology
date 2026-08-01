@@ -195,96 +195,95 @@ foreach ($newDispatchCenters as $center) {
             }
         }
 
-        if ($json) {
+        // if there is a JSON response from wildcad
+        if ($json->data) {
             // last time the CAD was updated
             $cadLastUpdated = strtotime($json->retrieved) + date('Z');
 
-            // if there is a JSON response from wildcad
-            if ($json->data) {
-                date_default_timezone_set('America/Los_Angeles');
+            date_default_timezone_set('America/Los_Angeles');
 
-                // loop through each incident in the API
-                for ($i = 0; $i < count($json->data); $i++) {
-                    $fire = $json->data[$i];
+            // loop through each incident in the API
+            for ($i = 0; $i < count($json->data); $i++) {
+                $fire = $json->data[$i];
 
-                    // get data from class
-                    $data = new GetData($con, $fire);
+                // get data from class
+                $data = new GetData($con, $fire);
 
-                    $date = $data->getDate();
-                    $incidentType = $data->getIncidentType();
-                    $year = $data->year();
-                    $incidentNum = $data->getIncidentNum();
-                    $incNumOnly = $data->getIncNumOnly();
-                    $incidentUnit = $data->getUnit();
+                $date = $data->getDate();
+                $incidentType = $data->getIncidentType();
+                $year = $data->year();
+                $incidentNum = $data->getIncidentNum();
+                $incNumOnly = $data->getIncNumOnly();
+                $incidentUnit = $data->getUnit();
 
-                    $prevfire = $previous[$incidentNum] ?? null;
+                $prevfire = $previous[$incidentNum] ?? null;
 
-                    // checks if there has been any new information added or modified for this incident
-                    if (CHECK_OLD_DATA && ($previous[$incidentNum] ?? null) === json_encode($fire)) {
-                        continue;
-                    }
+                // checks if there has been any new information added or modified for this incident
+                if (CHECK_OLD_DATA && json_encode($fire) === $prevfire) {
+                    continue;
+                }
 
-                    $coords = $data->getCoords();
+                $coords = $data->getCoords();
 
-                    // Only proccess data if it is the following types of incidents, there are coordinates, and if the fire is >=50 acres OR the fire is <50 acres and is < 1 month old
-                    if (isValidIncident($incidentType, $coords)) {
-                        $time = time();
-                        $nearArr = [];
-                        $state = null;
-                        $timezone = null;
-                        $getLocation = null;
-                        $near = null;
+                // Only proccess data if it is the following types of incidents, there are coordinates, and if the fire is >=50 acres OR the fire is <50 acres and is < 1 month old
+                if (isValidIncident($incidentType, $coords)) {
+                    $time = time();
+                    $nearArr = [];
+                    $state = null;
+                    $timezone = null;
+                    $getLocation = null;
+                    $near = null;
 
-                        // Only process data if we haven't already done this incident ID and the incident ID isn't missing the unit identifier
-                        if (!isset($usfsIDs[$incidentNum]) && $year <= date('Y') && !str_contains($incidentNum, '--')) {
-                            // if latitude/longitude changed from previous dataset, then we need to geocode the incident
-                            $needsGeocoded = !isset($existingIncs[$incidentNum]) ||
-                                $existingIncs[$incidentNum]['lat'] !== (float) $coords[0] ||
-                                $existingIncs[$incidentNum]['lon'] !== (float) $coords[1];
+                    // Only process data if we haven't already done this incident ID and the incident ID isn't missing the unit identifier
+                    if (!isset($usfsIDs[$incidentNum]) && $year <= date('Y') && !str_contains($incidentNum, '--')) {
+                        // if latitude/longitude changed from previous dataset, then we need to geocode the incident
+                        $needsGeocoded = !isset($existingIncs[$incidentNum]) ||
+                            $existingIncs[$incidentNum]['lat'] !== (float) $coords[0] ||
+                            $existingIncs[$incidentNum]['lon'] !== (float) $coords[1];
 
-                            if ($needsGeocoded) {
-                                $state = getState($coords);
-                                $timezone = getTimezone($coords);
-                                $getLocation = getLocation($con, $coords, false, $state);
-                                $getCounty = getCounty($con, $coords);
-                                $nearArr = $getCounty ?? [
-                                    'county' => null,
-                                    'fips' => null
-                                ];
+                        if ($needsGeocoded) {
+                            $state = getState($coords);
+                            $timezone = getTimezone($coords);
+                            $getLocation = getLocation($con, $coords, false, $state);
+                            $getCounty = getCounty($con, $coords);
+                            $nearArr = $getCounty ?? [
+                                'county' => null,
+                                'fips' => null
+                            ];
 
-                                if ($getLocation) {
-                                    $nearArr['near'] = $getLocation;
-                                }
-
-                                $near = json_encode($nearArr);
-                            } else {
-                                $state = $existingIncs[$incidentNum]['state'];
-                                $timezone = $existingIncs[$incidentNum]['tz'];
-                                $getLocation = $existingIncs[$incidentNum]['geo'];
-                                $near = $existingIncs[$incidentNum]['near'];
+                            if ($getLocation) {
+                                $nearArr['near'] = $getLocation;
                             }
 
-                            $name = mysqli_real_escape_string($con, incidentName($fire->name, $incidentNum));
-                            $incidentType = str_contains($name, ' RX') || substr($name, 0, 5) == ' Burn' ? 'Prescribed Fire' : $incidentType;
-                            $acres = $fire->acres;
-                            $notes = $data->notes();
-                            $fuels = $data->fuels();
-                            $resources = $data->resources();
-                            $status = $data->getStatus();
+                            $near = json_encode($nearArr);
+                        } else {
+                            $state = $existingIncs[$incidentNum]['state'];
+                            $timezone = $existingIncs[$incidentNum]['tz'];
+                            $getLocation = $existingIncs[$incidentNum]['geo'];
+                            $near = $existingIncs[$incidentNum]['near'];
+                        }
 
-                            // if the incident is a smoke check but is reporting an acreage, change the incident type to "wildfire"
-                            if ($incidentType == 'Smoke Check' && ($acres != '' && $acres != 'Unknown' && $acres > 0)) {
-                                $incidentType = 'Wildfire';
-                            }
+                        $name = mysqli_real_escape_string($con, incidentName($fire->name, $incidentNum));
+                        $incidentType = str_contains($name, ' RX') || substr($name, 0, 5) == ' Burn' ? 'Prescribed Fire' : $incidentType;
+                        $acres = $fire->acres;
+                        $notes = $data->notes();
+                        $fuels = $data->fuels();
+                        $resources = $data->resources();
+                        $status = $data->getStatus();
 
-                            // Convert to SQL values
-                            $sqlState = $state !== null ? "'" . mysqli_real_escape_string($con, $state) . "'" : "NULL";
-                            $sqlTimezone = $timezone !== null ? "'" . mysqli_real_escape_string($con, $timezone) . "'" : "NULL";
-                            $sqlGeo = $getLocation !== null ? "'" . mysqli_real_escape_string($con, $geo) . "'" : "NULL";
-                            $sqlNear = $near !== null ? "'" . mysqli_real_escape_string($con, $near) . "'" : "NULL";
+                        // if the incident is a smoke check but is reporting an acreage, change the incident type to "wildfire"
+                        if ($incidentType == 'Smoke Check' && ($acres != '' && $acres != 'Unknown' && $acres > 0)) {
+                            $incidentType = 'Wildfire';
+                        }
 
-                            // prepare mysql statements
-                            $sqlQueries .= "INSERT INTO wildfires (
+                        // Convert to SQL values
+                        $sqlState = $state !== null ? "'" . mysqli_real_escape_string($con, $state) . "'" : "NULL";
+                        $sqlTimezone = $timezone !== null ? "'" . mysqli_real_escape_string($con, $timezone) . "'" : "NULL";
+                        $sqlGeo = "'" . mysqli_real_escape_string($con, $getLocation ?? '') . "'";
+                        $sqlNear = $near !== null ? "'" . mysqli_real_escape_string($con, $near) . "'" : "NULL";
+
+                        // prepare mysql statements
+                        $sqlQueries .= "INSERT INTO wildfires (
                                     incidentID,incidentNumOnly,state,agency,unit,`year`,`date`,name,type,
                                     lat,lon,geo,near,acres,`status`,notes,resources,fuels,captured,updated,
                                     timezone,display,owner
@@ -317,55 +316,51 @@ foreach ($newDispatchCenters as $center) {
                                     owner = VALUES(owner);
                                 ";
 
-                            if ($acres != '') {
-                                $sqlQueries .= "INSERT INTO acres_history (incidentID,acres,updated)
+                        if ($acres != '') {
+                            $sqlQueries .= "INSERT INTO acres_history (incidentID,acres,updated)
                                         SELECT incidentID, acres, updated FROM wildfires WHERE incidentID = '$incidentNum' AND NOT EXISTS
                                         (SELECT 1 FROM acres_history WHERE acres_history.acres = '$acres' AND acres_history.incidentID = '$incidentNum');";
-                            }
-
-                            $count++;
                         }
 
-                        // add FS incident ID to array to reduce duplicated work
-                        $usfsIDs[$incidentNum] = true;
+                        $count++;
                     }
+
+                    // add FS incident ID to array to reduce duplicated work
+                    $usfsIDs[$incidentNum] = true;
                 }
+            }
 
-                if ($cadLastUpdated > 0) {
-                    $altcenter = str_replace('--', '-', $altcenter);
-                    $sqlQueries .= "UPDATE dispatch_centers SET cad_update = '$cadLastUpdated' WHERE agency = '$center' OR agency = '$altcenter';";
-                }
+            if ($cadLastUpdated > 0) {
+                $altcenter = str_replace('--', '-', $altcenter);
+                $sqlQueries .= "UPDATE dispatch_centers SET cad_update = '$cadLastUpdated' WHERE agency = '$center' OR agency = '$altcenter';";
+            }
 
-                // add or update wildfires in database
-                if ($runQuery) {
-                    $runSQL = mysqli_multi_query($con, $sqlQueries) or die(mysqli_error($con));
+            // add or update wildfires in database
+            if ($runQuery) {
+                $runSQL = mysqli_multi_query($con, $sqlQueries) or die(mysqli_error($con));
 
-                    if ($runSQL) {
-                        do {
-                            if ($result = mysqli_store_result($con)) {
-                                while ($row = mysqli_fetch_row($result)) {
-                                }
-                                mysqli_free_result($result);
+                if ($runSQL) {
+                    do {
+                        if ($result = mysqli_store_result($con)) {
+                            while ($row = mysqli_fetch_row($result)) {
                             }
-                            if (mysqli_more_results($con)) {
-                            }
-                        } while (mysqli_next_result($con));
+                            mysqli_free_result($result);
+                        }
+                        if (mysqli_more_results($con)) {
+                        }
+                    } while (mysqli_next_result($con));
 
-                        $totalProcessed += $count;
-                        echo "Finished with $center (modified $count incidents)...
-";
-                    } else {
-                        echo "Unable to update data for $center...
-";
-                    }
+                    $totalProcessed += $count;
+                    echo "Finished with $center (modified $count incidents)..." . PHP_EOL;
                 } else {
-                    echo $sqlQueries;
+                    echo "Unable to update data for $center..." . PHP_EOL;
                 }
+            } else {
+                echo $sqlQueries;
             }
         }
     } else {
-        echo "No WildCAD data exists for $center...
-";
+        echo "No WildCAD data exists for $center..." . PHP_EOL;
     }
 }
 

@@ -588,6 +588,18 @@ span.data {
     margin: 0;
 }
 
+#nearbyFiresDist {
+    display: inline-block;
+    background-color: #fff;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    padding: 2px 4px;
+    font-family: 'Roboto';
+    font-size: 14px;
+    outline: 0;
+    user-select: none;
+}
+
 .message {
     display: block;
     padding: 1em;
@@ -1188,20 +1200,27 @@ form label+.input {
     margin-top: 1em;
 }*/
 
-.cad-card fieldset {
-    padding: 1em 0.5em 0 1em;
+.cad-card fieldset,
+.cad-card details {
+    padding: 1em;
     margin-bottom: 1em;
     border: 1px solid rgb(0 57 92 / 24%);
     border-radius: 4px;
 }
 
-.cad-card fieldset legend {
+.cad-card fieldset legend,
+.cad-card details summary {
     font-size: 18px;
     color: var(--blue);
-    padding: 0 .5em;
+    padding: 0;
     text-transform: uppercase;
     font-weight: 600;
     letter-spacing: 1px;
+    cursor: pointer;
+}
+
+.cad-card details[open] summary {
+    margin-bottom: 1em;
 }
 
 .cad-card .grid {
