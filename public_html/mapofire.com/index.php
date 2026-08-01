@@ -9,7 +9,14 @@ $baseURL = '//mapofire.com/';
 $root = '/home/mapo/public_html/mapofire.com/';
 
 // get the current map version to load all relevant files
-$version = !isset($_GET['version']) || empty($_GET['version']) ? file_get_contents('/home/mapo/public_html/mapofire.com/beta/version.txt') : $_GET['version'];
+$version = trim($_GET['version'] ?? '') ?: file_get_contents("$root/version.txt");
+$appPath = "{$root}dist/app-$version.php";
+
+// get build date
+$buildDate = date('Y-m-d\TH:i:sP', filemtime("$root/dist/$version/js/app.js"));
+
+//ga4 ID
+$ga_id = 'G-X03WWLX3BJ';
 
 ini_set('session.cookie_domain', ".$host");
 
@@ -34,75 +41,8 @@ if (isset($_SESSION['visited']) && time() - $_SESSION['visited'] > 600) {
 }
 $_SESSION['visited'] = time();
 
-$provinces = [
-    'alberta',
-    'british columbia',
-    'manitoba',
-    'new brunswick',
-    'newfoundland',
-    'northwest territories',
-    'nova scotia',
-    'nunavut',
-    'ontario',
-    'prince edward island',
-    'quebec',
-    'saskatchewan',
-    'yukon'
-];
-
-$states = array_merge($provinces, [
-    'alabama',
-    'alaska',
-    'arizona',
-    'arkansas',
-    'california',
-    'colorado',
-    'connecticut',
-    'delaware',
-    'district of columbia',
-    'florida',
-    'georgia',
-    'hawaii',
-    'idaho',
-    'illinois',
-    'indiana',
-    'iowa',
-    'kansas',
-    'kentucky',
-    'louisiana',
-    'maine',
-    'maryland',
-    'massachusetts',
-    'michigan',
-    'minnesota',
-    'mississippi',
-    'missouri',
-    'montana',
-    'nebraska',
-    'nevada',
-    'new hampshire',
-    'new jersey',
-    'new mexico',
-    'new york',
-    'north carolina',
-    'north dakota',
-    'ohio',
-    'oklahoma',
-    'oregon',
-    'pennsylvania',
-    'rhode island',
-    'south carolina',
-    'south dakota',
-    'tennessee',
-    'texas',
-    'utah',
-    'vermont',
-    'virginia',
-    'washington',
-    'west virginia',
-    'wisconsin',
-    'wyoming'
-]);
+$provinces = ['alberta', 'british columbia', 'manitoba', 'new brunswick', 'newfoundland', 'northwest territories', 'nova scotia', 'nunavut', 'ontario', 'prince edward island', 'quebec', 'saskatchewan', 'yukon'];
+$states = [...$provinces, 'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado', 'connecticut', 'delaware', 'district of columbia', 'florida', 'georgia', 'hawaii', 'idaho', 'illinois', 'indiana', 'iowa', 'kansas', 'kentucky', 'louisiana', 'maine', 'maryland', 'massachusetts', 'michigan', 'minnesota', 'mississippi', 'missouri', 'montana', 'nebraska', 'nevada', 'new hampshire', 'new jersey', 'new mexico', 'new york', 'north carolina', 'north dakota', 'ohio', 'oklahoma', 'oregon', 'pennsylvania', 'rhode island', 'south carolina', 'south dakota', 'tennessee', 'texas', 'utah', 'vermont', 'virginia', 'washington', 'west virginia', 'wisconsin', 'wyoming'];
 
 // redirect for misinformed urls
 if (isset($_GET['state']) && !in_array(strtolower(str_replace('-', ' ', $_GET['state'])), $states)) {
@@ -126,17 +66,9 @@ if (isset($_GET['country']) && isset($_GET['archive'])) {
     exit();
 }
 
-// get build date
-$buildDate = date('Y-m-d\TH:i:sP', filemtime("/home/mapo/public_html/mapofire.com/dist/$version/js/app.js"));
-
-//ga4 ID
-$ga_id = 'G-X03WWLX3BJ';
-
 // parse layers json from layers.inc.php
 $jsLayers = json_encode($layers);
 $jsLayers = str_replace('perms2', 'perms', preg_replace('/(,"perms":(true|false))/', '', $jsLayers));
-
-$appPath = "{$root}dist/app.php";
 
 // load the current index.php file for the version
 if (file_exists($appPath)) {
@@ -161,8 +93,8 @@ if (file_exists($appPath)) {
     county=" . ($county ? "'$county'" : 'null') . ",
     defaultTitle='{{title}}',
     defaultDesc='{{desc}}'," .
-    ($_GET['archive'] ? "historical='$_GET[archive]'," : '') .
-    "layers=$jsLayers;";
+        ($_GET['archive'] ? "historical='$_GET[archive]'," : '') .
+        "layers=$jsLayers;";
 
     $javascript = preg_replace('/(\n|\r|\s{2,})/', '', $javascript);
 
