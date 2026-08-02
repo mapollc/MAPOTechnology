@@ -227,7 +227,7 @@ export function setHeaders(title, urlPath, description) {
 export function unsetHeaders() {
     const h = window.location.href;
 
-    if (h.search('fires') >= 0 || h.search('perimeter') >= 0 || h.search('weather/') >= 0 || h.search('risk') >= 0) {
+    if (['fires', 'perimeter', 'weather/', 'risk'].some(path => h.includes(path))) {
         window.history.pushState({
             "pageTitle": document.title
         }, '', h.replace(window.location.pathname, (config.settings.archive == null ? '' : `/archive/${config.settings.archive}`)));

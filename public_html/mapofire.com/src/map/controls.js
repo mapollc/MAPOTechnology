@@ -30,6 +30,10 @@ export function toggleLayer(e) {
     } else if (action.exe) {
         executeToggle(layerId, action, checked);
     } else {
-        action.layers.forEach(id => global.map.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none'));
+        action.layers.forEach(id => {
+            if (!global.map.getLayer(id)) return;
+
+            global.map.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none');
+        });
     }
 }

@@ -2,19 +2,30 @@ import { storage, api } from '../utils/helpers.js'
 
 import { global } from './state.js'
 
-import IncidentWorker from '../workers/incident.js?worker';
-import WWAsWorker from '../workers/wwas.js?worker';
-import FWFWorker from '../workers/fwf.js?worker';
+const incidentWorker = new Worker(
+    new URL('../workers/incident.js', import.meta.url),
+    { type: 'module' }
+);
+
+const fwfWorker = new Worker(
+    new URL('../workers/fwf.js', import.meta.url),
+    { type: 'module' }
+);
+
+const wwasWorker = new Worker(
+    new URL('../workers/wwas.js', import.meta.url),
+    { type: 'module' }
+);
 
 export const ENV = {
     origin: window.location.origin,
     host: `//${window.location.host.replace('www.', '')}/`,
-    baseURL: `${window.location.origin}/beta/`,
+    baseURL: `${window.location.origin}/`,
     domain: '//mapotechnology.com/',
     apiURL: '//api.mapotechnology.com/v1/',
     debug: window.location.search.includes('version'),
     PLATFORM_MAP: {
-        'wlidfiremap.org': 'wildfiremap',
+        'wildfiremap.org': 'wildfiremap',
         'fireweatheravalanche.org': 'fireweatheravalanche'
     }/*,
     originalConsole: {},
@@ -70,9 +81,9 @@ export const config = {
     firemedZoomLevel: 9,
     toolsInstance: null,
     workers: {
-        incident: new IncidentWorker(),
-        fwf: new FWFWorker(),
-        wwas: new WWAsWorker()
+        incident: incidentWorker,
+        fwf: fwfWorker,
+        wwas: wwasWorker
     },
     fog: {
         'sky-color': '#33bbff',

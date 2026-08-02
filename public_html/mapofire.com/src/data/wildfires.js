@@ -74,7 +74,7 @@ export class Wildfires {
     fireIcon(t) {
         const now = Date.now() / 1000,
             acres = ['to-number', ['coalesce', ['get', 'acres'], 0]],
-            discovered = ['to-number', ['coalesce', ['get', 'discovered', ['get', 'time']], now]],
+            discovered = ['to-number', ['coalesce', ['get', 'discovered', ['object', ['get', 'time']]], now]],
             baseCase = ['==', ['get', 'type'], 'Complex'],
             statusChecks = [
                 ['==', ['get', 'Out'], true], 'fire-icon-out',
@@ -106,7 +106,11 @@ export class Wildfires {
             [
                 'all',
                 ['has', 'time'],
-                ['<', ['to-number', ['coalesce', ['get', 'year', ['get', 'time']], 9999]], config.curTime.getFullYear()]
+                [
+                    '<',
+                    ['to-number', ['coalesce', ['get', 'year', ['get', 'time']], 9999]],
+                    config.curTime.getFullYear()
+                ]
             ],
             'fire-icon-out',
             ...statusChecks,
@@ -729,8 +733,8 @@ export class Wildfires {
                             'text-offset': [
                                 'case',
                                 ['>', ['to-number', ['get', 'acres']], 1000],
-                                [0, 1.3],
-                                [0, 1]
+                                ['literal', [0, 1.3]],
+                                ['literal', [0, 1]]
                             ],
                             'text-allow-overlap': false,
                             'text-letter-spacing': 0.05,
@@ -1260,7 +1264,7 @@ export class Wildfires {
                         type: 'fill',
                         source: src,
                         paint: {
-                            'fill-opacity': 0.3,
+                            'fill-opacity': 0.45,
                             'fill-color': pc
                         },
                         layout: { visibility: vis }
@@ -1315,7 +1319,7 @@ export class Wildfires {
                 type: 'fill',
                 source: 'perimeters',
                 paint: {
-                    'fill-opacity': 0.3,
+                    'fill-opacity': 0.45,
                     'fill-color': pc
                 },
                 layout: {

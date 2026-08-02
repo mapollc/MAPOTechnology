@@ -1,4 +1,5 @@
 import maplibregl from '../map/maplibre.js';
+
 import { ENV, config, debugMode, getPlatform, tileConfig } from '../app/config.js';
 import { global, impactHeader, noneTracked, premFeature, impact, modal } from '../app/state.js';
 
@@ -730,7 +731,7 @@ export class ClickListener {
     async account() {
         if (!config.settings.user) {
             const guid = document.cookie.split('; ').find(row => row.startsWith('guid='))?.split('=')[1] || null,
-                url = `${ENV.domain.replace('//', '//auth.')}login?service=${config.getPlatform()}&next=${encodeURIComponent(window.location.href)}${(guid ? `&guid=${guid}` : '')}`;
+                url = `${ENV.domain.replace('//', '//auth.')}login?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}${(guid ? `&guid=${guid}` : '')}`;
             ////console.log(url);
             window.location.href = url;
             return;

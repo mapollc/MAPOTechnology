@@ -5,7 +5,7 @@ function generateCacheKey($category)
 {
     global $_REQUEST;
 
-    return "api-fires_$category" .
+    return "api_v$version-fires_$category" .
         (!empty($_REQUEST['archive']) ? "_{$_REQUEST['archive']}" : '') .
         (!empty($_REQUEST['agency']) ? "_{$_REQUEST['agency']}" : '') .
         (!empty($_REQUEST['state']) ? "_{$_REQUEST['state']}" : '') .

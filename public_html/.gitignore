@@ -2,4 +2,5 @@
 /mapofire.com/src/node_modules
 /mapofire.com/dist
 /mapofire.com/src/eslint.config.mjs
-/mapofire.com/src/vite.config.mjs
+/mapofire.com/src/webpack.config.js
+/mapofire.com/src/package-lock.json

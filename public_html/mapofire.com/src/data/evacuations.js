@@ -404,9 +404,10 @@ export class NearbyEvacuations {
         let grouped = {};
 
         global.inits.evacuations.activeEvacuations.forEach(feature => {
+            let fnotes = '';
+
             const geom = feature.geometry;
-            let fnotes = '',
-                polygons = geom?.type === 'Polygon' ? [geom.coordinates[0]] : geom.coordinates.flat();
+            const polygons = !geom ? [] : (geom?.type === 'Polygon' ? [geom.coordinates[0]] : geom.coordinates.flat());
 
             const isNear = polygons.some(ring =>
                 this.isPointNearPolygon(ring)

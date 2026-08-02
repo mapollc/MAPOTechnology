@@ -1,10 +1,11 @@
 <?
-#ini_set('display_errors',1);
-#error_reporting(E_ALL);
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 include_once '../config.inc.php';
 include_once '../apis/functions.inc.php';
 
-function inc($s) {
+function inc($s)
+{
     if (substr($s, 0, 2) == date('y')) {
         return $s;
     } else {
@@ -12,60 +13,99 @@ function inc($s) {
     }
 }
 
-$sqlQueries = '';
+$runQuery = true;
+
 $time = time();
 $year = date('Y');
-$irwins = [];
-$url = 'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations/FeatureServer/0/query?where=FireDiscoveryDateTime+%3E%3D+DATE+%2701%2F01%2F'.$year.'+00%3A00%3A00%27+AND+IncidentTypeCategory+%3D+%27CX%27&returnGeometry=false&outFields=IrwinID,IncidentName,UniqueFireIdentifier&f=json';
-$json = json_decode(file_get_contents($url), true);
 
-for ($x = 0; $x < count($json['features']); $x++) {
-    $prop = $json['features'][$x]['attributes'];  
-    $name = ucwords(strtolower($prop['IncidentName']));
-    $irwinID = $prop['IrwinID'];
-    $id = explode('-', $prop['UniqueFireIdentifier']);
-    $incID = $id[0].'-'.$id[1].'-'.inc($id[2]);
+$sqlQueries = [];
+$irwins = [];
+
+echo '=========  Getting list of complexes =========' . PHP_EOL;
+
+$baseURL = 'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations/FeatureServer/0/query';
+$url = "$baseURL?where=FireDiscoveryDateTime+%3E%3D+DATE+%2701%2F01%2F{$year}+00%3A00%3A00%27+AND+IncidentTypeCategory+%3D+%27CX%27&returnGeometry=false&outFields=IrwinID,IncidentName,UniqueFireIdentifier&f=json";
+$json = json_decode(file_get_contents($url));
+
+if (!$json->features) return;
+
+foreach ($json->features as $fire) {
+    $attr = $fire->attributes;
+    $incidentID = $attr->UniqueFireIdentifier;
+    $orginalName = $attr->IncidentName;
+    $name = incidentName($attr->IncidentName, $incidentID, 'Wildfire');
+    $irwinID = $attr->IrwinID;
 
     $irwins[] = [
         $irwinID,
         [
-            $year, $incID, $name, $time
+            $year,
+            $incidentID,
+            $name,
+            $time
         ]
     ];
+
+    echo "Getting complex: $orginalName ===> $name ($incidentID) | IRWIN ID: $irwinID" . PHP_EOL;
 }
 
+echo '=========  Finding child fires of each complex =========' . PHP_EOL;
+
 foreach ($irwins as $irwin) {
-    $json = json_decode(file_get_contents('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations/FeatureServer/0/query?where=CpxID+LIKE+%27'.$irwin[0].'%27&outFields=IncidentName%2C+UniqueFireIdentifier&returnGeometry=false&f=json'));
+    $json = json_decode(file_get_contents("$baseURL?where=CpxID+LIKE+%27{$irwin[0]}%27&outFields=IncidentName%2C+UniqueFireIdentifier&returnGeometry=true&f=json"));
+
+    if (!$json->features) continue;
 
     foreach ($json->features as $feat) {
-        $id = explode('-', $feat->attributes->UniqueFireIdentifier);
-        $incNum = $id[0].'-'.$id[1].'-'.inc($id[2]);
-        $childName = incidentName($feat->attributes->IncidentName, $incNum);
+        $prop = $feat->attributes;
+        $lat = $feat->geometry->y ?? 'NULL';
+        $lon = $feat->geometry->x ?? 'NULL';
+
+        $id = explode('-', $prop->UniqueFireIdentifier);
+        $incNum = "$id[0]-$id[1]-" . inc($id[2]);
+        $childName = mysqli_real_escape_string($con, incidentName($prop->IncidentName, $incNum, 'Wildfire'));
+
         $year = $irwin[1][0];
         $incID = $irwin[1][1];
-        $name = $irwin[1][2];
+        $name = mysqli_real_escape_string($con, $irwin[1][2]);
         $time = $irwin[1][3];
 
-        $sqlQueries .= "INSERT IGNORE INTO complexes (year,incidentID,irwinID,name,child_fire,child_name,updated) VALUES('$year','$incID','$irwin[0]','$name','$incNum','$childName','$time');";
+        $sqlQueries[] = "INSERT INTO complexes (
+                year,incidentID,irwinID,name,lat,lon,child_fire,child_name,updated
+            ) VALUES(
+                $year,'$incID','$irwin[0]','$name',$lat,$lon,'$incNum','$childName',$time
+            )
+            ON DUPLICATE KEY UPDATE
+                irwinID = VALUES(irwinID),
+                name = VALUES(name),
+                lat = VALUES(lat),
+                lon = VALUES(lon),
+                child_name = VALUES(child_name),
+                updated = VALUES(updated)
+        ";
     }
 }
 
-$runSQL = mysqli_multi_query($con, $sqlQueries) or die(mysqli_error($con));
+$queries = implode(';', $sqlQueries);
 
-if ($runSQL) {
-    do {
-        if ($result = mysqli_store_result($con)) {
-            while ($row = mysqli_fetch_row($result)) {}
-            mysqli_free_result($result);
-        }
-        if (mysqli_more_results($con)) {}
-    } while (mysqli_next_result($con));
+if ($runQuery) {
+    $runSQL = mysqli_multi_query($con, $queries) or die(mysqli_error($con));
 
-    echo 'Finished updating wildfire complexes...
-';
+    if ($runSQL) {
+        do {
+            if ($result = mysqli_store_result($con)) {
+                while ($row = mysqli_fetch_row($result)) {
+                }
+                mysqli_free_result($result);
+            }
+            if (mysqli_more_results($con)) {
+            }
+        } while (mysqli_next_result($con));
+    }
+
+    echo '=========  Finished parsing complexes & children fires =========' . PHP_EOL;
 } else {
-    echo 'Unable to update wildfire complexes...
-';
+    echo $queries;
 }
 
 mysqli_close($con);

@@ -1,38 +1,6 @@
 <?
 if ($category == 'complexes') {
-    $features = [];
-    $year = date('Y');
-    $result = mysqli_query($con, "SELECT year, incidentID, name, lat, lon, child_fire, child_name FROM complexes WHERE year = $year ORDER BY name, child_name");
-
-    while ($row = mysqli_fetch_assoc($result)) {
-        $id = $row['incidentID'];
-
-        if (!isset($features[$id])) {
-            $features[$id] = [
-                'type' => 'Feature',
-                'geometry' => [
-                    'type' => 'Point',
-                    'coordinates' => [
-                        (float)$row['lon'],
-                        (float)$row['lat']
-                    ]
-                ],
-                'properties' => [
-                    'incidentID' => $row['incidentID'],
-                    'name'       => $row['name'],
-                    'year'       => (int)$row['year'],
-                    'children'   => []
-                ]
-            ];
-        }
-
-        $features[$id]['properties']['children'][] = [
-            'incidentID' => $row['child_fire'],
-            'name'       => $row['child_name']
-        ];
-    }
-
-    return $returnJson = ['type' => 'FeatureCollection', 'features' => array_values($features)];
+    include_once './complexes.inc.php';
 }
 
 $moreThanJustAll = ['smk', 'rx', 'all,new', 'all,new,smk', 'all,new,rx', 'all,new,smk,rx', 'smk,rx', 'canada'];

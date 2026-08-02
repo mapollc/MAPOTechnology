@@ -352,7 +352,7 @@ export async function onMapClick(e) {
 
         // loop through all features to see if county data is available
         for (let i = 0; i < features.length; i++) {
-            if (features[i].layer.id == 'us_counties') {
+            if (features[i].layer.id == 'counties') {
                 clickedCounty = features[i].properties.NAME;
                 break;
             }

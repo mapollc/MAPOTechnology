@@ -262,7 +262,7 @@ export async function startReportProcess(e) {
 
     // query the map for the county and state first before requesting from the API
     global.map.queryRenderedFeatures(e.point)?.forEach(feat => {
-        if (feat.layer.id == 'us_counties') {
+        if (feat.layer.id == 'counties') {
             data = { geocode: { county: { county: feat.properties.NAME.replace(' County', '') }, state: feat.properties.STATE } };
         }
     });

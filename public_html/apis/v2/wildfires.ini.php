@@ -1,11 +1,11 @@
 <?
-define('API_CACHE_ENABLED', true);
+define('API_CACHE_ENABLED', false);
 
 function generateCacheKey($category)
 {
     global $_REQUEST;
 
-    return "api-fires_$category" .
+    return "api_v$version-fires_$category" .
         (!empty($_REQUEST['archive']) ? "_{$_REQUEST['archive']}" : '') .
         (!empty($_REQUEST['agency']) ? "_{$_REQUEST['agency']}" : '') .
         (!empty($_REQUEST['state']) ? "_{$_REQUEST['state']}" : '') .
@@ -18,11 +18,7 @@ function getDispatchZones()
 {
     static $zones = null;
 
-    if ($zones === null) {
-        $zones = json_decode(
-            file_get_contents('../cron/dispatch_zones.json')
-        );
-    }
+    if ($zones === null) $zones = json_decode(file_get_contents('../cron/dispatch_zones.json'));
 
     return $zones;
 }
@@ -58,21 +54,22 @@ if ($category == 'stats') {
 }
 
 if ($category == 'incident') {
-    return include 'fire-info.ini.php';
+    return include 'helpers/fireIncident.inc.php';
 }
 
 if ($category == 'canada') {
-    return include 'canadaFires.inc.php';
+    return include 'helpers/canadaFires.inc.php';
 }
 
 // CHANGED: only initialize Memcached when caching is enabled
-$mem = null;
-if (API_CACHE_ENABLED) {
-    $mem = new Memcached();
-    $mem->addServer('127.0.0.1', 11211);
-}
+$mem = new Memcached();
+if (!count($mem->getServerList())) $mem->addServer('127.0.0.1', 11211);
 
 $cacheKey = generateCacheKey($category);
+
+if (!API_CACHE_ENABLED) {
+    $mem->delete($cacheKey);
+}
 
 // -------------------------
 // BBOX requests bypass cache
@@ -85,7 +82,7 @@ if (isset($_REQUEST['bbox'])) {
     $xmin = $js->xmin;
     $xmax = $js->xmax;
 
-    require_once 'getWildfires.inc.php';
+    require_once 'helpers/getWildfires.inc.php';
 
     return $returnJson;
 }
@@ -96,7 +93,7 @@ if (isset($_REQUEST['bbox'])) {
 
 // CHANGED: completely bypass cache logic when disabled
 if (!API_CACHE_ENABLED) {
-    require_once 'getWildfires.inc.php';
+    require_once 'helpers/getWildfires.inc.php';
     return $returnJson;
 }
 
@@ -160,8 +157,7 @@ if (!$gotLock) {
 // -------------------------
 
 try {
-
-    require_once 'getWildfires.inc.php';
+    require_once 'helpers/getWildfires.inc.php';
 
     // CHANGED: cache writes only occur when build succeeds
     $json = json_encode($returnJson);
