@@ -443,13 +443,14 @@ button.control:hover {
 /* START OVERRIDE MAPLIBRE CONTROL STYLES */
 .maplibregl-ctrl-attrib-inner {
     padding: 4px 0;
-    max-width: 400px;
-    overflow: hidden;
+    max-width: 340px;
+    font-size: 11px;
     color: rgb(0 0 0 / 75%);
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
     user-select: none;
+    overflow: hidden;
 }
 
 .maplibregl-ctrl-attrib.maplibregl-compact {

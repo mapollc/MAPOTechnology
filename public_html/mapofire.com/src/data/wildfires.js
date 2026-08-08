@@ -1,12 +1,13 @@
 import { ENV, config, debugMode } from '../app/config.js';
 import { global, modal } from '../app/state.js';
 
-import { storage, api, timeAgo, setHeaders, mapMouseOver, loadScript, formatArray, dateTime, getbbox } from '../utils/helpers.js';
+import { storage, api, timeAgo, loadScript, setHeaders, createDataForm, mapMouseOver, formatArray, dateTime, getbbox } from '../utils/helpers.js';
 import { stateLabels, DateFormatter } from '../utils/constants.js';
-import { ArcGISFeature } from '../map/arcgis.js';
 
+import { reorderLayers } from '../map/layers.js';
 import { modalZoom } from '../map/mapping.js';
 
+//import { Perimeters } from './perimeters.js';
 import { Weather } from './weather.js';
 import { NearbyEvacuations } from './evacuations.js';
 
@@ -29,14 +30,13 @@ export class Wildfires {
             'California Department of Forestry & Fire Protection': 'CAL FIRE',
             'California Department of Forestry and Fire Protection': 'CAL FIRE'
         };
-        this.REGION_BBOX = {
-            ca: [-141.0, 41.7, -52.6, 83.1],        // Canada approx
-            aus: [112.0, -44.0, 154.0, -10.0]       // Australia approx
-        }
+
+        this.TWO_MONTHS = 60 * 60 * 24 * (DateFormatter.daysInYear() / 6);
     }
 
     fireTextSize(t, which) {
         const thresh = t === 'new' ? 100 : 1000;
+        const isComplex = ['==', ['get', 'isComplex'], true];
         const isBig = [
             'all',
             ['>=', ['to-number', ['coalesce', ['get', 'acres'], 0]], thresh],
@@ -47,18 +47,26 @@ export class Wildfires {
 
         const config = {
             size: {
-                z5: [isBig, 12, 10],
-                z10: [isBig, 15, 13]
+                z5: [
+                    isComplex, 9, // Added: complex fire size @ z5
+                    isBig, 12,
+                    10
+                ],
+                z10: [
+                    isComplex, 11, // Added: complex fire size @ z10
+                    isBig, 15,
+                    13
+                ]
             },
             offset: {
                 z5: [
-                    isBig,
-                    ['literal', [0, 1.3]],
+                    isComplex, ['literal', [0, 1.2]], // Added: complex fire offset @ z5
+                    isBig, ['literal', [0, 1.3]],
                     ['literal', [0, 1.0]]
                 ],
                 z10: [
-                    isBig,
-                    ['literal', [0, 1.1]],
+                    isComplex, ['literal', [0, 1.1]], // Added: complex fire offset @ z10
+                    isBig, ['literal', [0, 1.1]],
                     ['literal', [0, 1.0]]
                 ]
             }
@@ -317,166 +325,167 @@ export class Wildfires {
     createChart(fireName, incID, hist) {
         if (hist.length <= 1) {
             document.querySelector('#acres_history').parentElement.parentElement.remove();
-        } else {
-            let lastTs = null;
+            return;
+        }
 
-            // reverse data to show oldest to newest
-            hist.sort((a, b) => a.updated - b.updated);
+        let lastTs = null;
 
-            const data = hist.map((h) => {
-                let ts = h.updated * 1000;
+        // reverse data to show oldest to newest
+        hist.sort((a, b) => a.updated - b.updated);
 
-                if (ts === lastTs) ts += 1;
+        const data = hist.map((h) => {
+            let ts = h.updated * 1000;
 
-                lastTs = ts;
-                return [ts, h.acres];
-            });
+            if (ts === lastTs) ts += 1;
 
-            const fireStats = this.fireStats(hist, incID),
-                gridColor = '#212d42',
-                fmt = { year: 'numeric', month: 'long', day: 'numeric' },
-                date1 = Intl.DateTimeFormat('en-US', fmt).format(data[0][0]),
-                date2 = Intl.DateTimeFormat('en-US', fmt).format(data[data.length - 1][0]),
-                dates = date1 == date2 ? ` on ${date1}` : ` from ${date1} to ${date2}`;
+            lastTs = ts;
+            return [ts, h.acres];
+        });
 
-            Highcharts.setOptions({
-                time: {
-                    timezone: 'America/Los_Angeles'
+        const fireStats = this.fireStats(hist, incID),
+            gridColor = '#212d42',
+            fmt = { year: 'numeric', month: 'long', day: 'numeric' },
+            date1 = Intl.DateTimeFormat('en-US', fmt).format(data[0][0]),
+            date2 = Intl.DateTimeFormat('en-US', fmt).format(data[data.length - 1][0]),
+            dates = date1 == date2 ? ` on ${date1}` : ` from ${date1} to ${date2}`;
+
+        Highcharts.setOptions({
+            time: {
+                timezone: 'America/Los_Angeles'
+            }
+        });
+
+        global.chart = Highcharts.chart('acres_history', {
+            chart: {
+                type: 'line',
+                style: {
+                    fontFamily: 'Roboto'
+                },
+                marginTop: 50,
+                backgroundColor: 'transparent'
+            },
+            accessibility: {
+                enabled: false
+            },
+            title: {
+                text: null
+            },
+            legend: {
+                itemStyle: {
+                    color: '#f1f1f1'
                 }
-            });
-
-            global.chart = Highcharts.chart('acres_history', {
-                chart: {
-                    type: 'line',
+            },
+            subtitle: {
+                text: `<b>${fireName} (${incID}) growth history ${dates}.</b>`,
+                useHTML: true,
+                verticalAlign: 'bottom',
+                align: 'left',
+                style: {
+                    color: 'rgb(255 255 255 / 80%)'
+                }
+            },
+            navigation: {
+                buttonOptions: {
+                    enabled: true
+                }
+            },
+            tooltip: {
+                xDateFormat: '%a, %b %e, %Y %l:%M %p',
+                shared: true
+            },
+            xAxis: {
+                type: 'datetime',
+                lineColor: gridColor,
+                tickColor: gridColor,
+                gridLineColor: gridColor,
+                gridLineWidth: 1,
+                labels: {
                     style: {
-                        fontFamily: 'Roboto'
+                        color: '#f1f1f1'
                     },
-                    marginTop: 50,
-                    backgroundColor: 'transparent'
-                },
-                accessibility: {
-                    enabled: false
-                },
+                    format: '{value:%b %e}'
+                }
+            },
+            yAxis: [{
+                lineWidth: 1,
+                lineColor: gridColor,
+                gridLineColor: gridColor,
+                gridLineWidth: 1,
                 title: {
-                    text: null
-                },
-                legend: {
-                    itemStyle: {
+                    text: 'Total Acres',
+                    style: {
                         color: '#f1f1f1'
                     }
                 },
-                subtitle: {
-                    text: `<b>${fireName} (${incID}) growth history ${dates}.</b>`,
-                    useHTML: true,
-                    verticalAlign: 'bottom',
-                    align: 'left',
+                labels: {
                     style: {
-                        color: 'rgb(255 255 255 / 80%)'
+                        color: '#fff'
                     }
                 },
-                navigation: {
-                    buttonOptions: {
-                        enabled: true
-                    }
-                },
-                tooltip: {
-                    xDateFormat: '%a, %b %e, %Y %l:%M %p',
-                    shared: true
-                },
-                xAxis: {
-                    type: 'datetime',
-                    lineColor: gridColor,
-                    tickColor: gridColor,
-                    gridLineColor: gridColor,
-                    gridLineWidth: 1,
-                    labels: {
-                        style: {
-                            color: '#f1f1f1'
-                        },
-                        format: '{value:%b %e}'
-                    }
-                },
-                yAxis: [{
-                    lineWidth: 1,
-                    lineColor: gridColor,
-                    gridLineColor: gridColor,
-                    gridLineWidth: 1,
-                    title: {
-                        text: 'Total Acres',
-                        style: {
-                            color: '#f1f1f1'
-                        }
-                    },
-                    labels: {
-                        style: {
-                            color: '#fff'
-                        }
-                    },
-                    min: 0
-                }],
-                series: [{
-                    name: 'Total Acres',
-                    type: 'line',
-                    data: data
-                }],
-                panning: true,
-                panKey: 'ctrl',
-                zooming: {
-                    type: 'xy'
-                },
-                exporting: {
-                    buttons: {
-                        contextButton: {
-                            symbolStroke: '#eee',
-                            theme: {
-                                fill: 'transparent',
-                                states: {
-                                    hover: {
-                                        fill: '#223260'
-                                    },
-                                    select: {
-                                        fill: '#223260'
-                                    }
+                min: 0
+            }],
+            series: [{
+                name: 'Total Acres',
+                type: 'line',
+                data: data
+            }],
+            panning: true,
+            panKey: 'ctrl',
+            zooming: {
+                type: 'xy'
+            },
+            exporting: {
+                buttons: {
+                    contextButton: {
+                        symbolStroke: '#eee',
+                        theme: {
+                            fill: 'transparent',
+                            states: {
+                                hover: {
+                                    fill: '#223260'
+                                },
+                                select: {
+                                    fill: '#223260'
                                 }
                             }
                         }
                     }
-                },
-                plotOptions: {
-                    series: {
-                        marker: {
-                            symbol: 'circle',
-                            fillColor: '#fff',
-                            enabled: true,
-                            radius: 3,
-                            lineWidth: 1,
-                            lineColor: null
-                        }
+                }
+            },
+            plotOptions: {
+                series: {
+                    marker: {
+                        symbol: 'circle',
+                        fillColor: '#fff',
+                        enabled: true,
+                        radius: 3,
+                        lineWidth: 1,
+                        lineColor: null
                     }
-                },
-                responsive: {
-                    rules: [{
-                        condition: {
-                            maxWidth: 600
-                        },
-                        chartOptions: {
-                            yAxis: {
-                                title: {
-                                    text: ''
-                                }
+                }
+            },
+            responsive: {
+                rules: [{
+                    condition: {
+                        maxWidth: 600
+                    },
+                    chartOptions: {
+                        yAxis: {
+                            title: {
+                                text: ''
                             }
                         }
-                    }]
-                },
-                colors: ['#e41616', '#ffd54f']
-            });
+                    }
+                }]
+            },
+            colors: ['#e41616', '#ffd54f']
+        });
 
-            if (fireStats != null) {
-                const p = document.createElement('p');
-                p.classList.add('fireStats');
-                p.innerHTML = `<i class="far fa-chart-line-up"></i><span style="display:block;line-height:1.2">${fireStats}</span>`;
-                document.querySelector('#acres_history').parentElement.appendChild(p);
-            }
+        if (fireStats != null) {
+            const p = document.createElement('p');
+            p.classList.add('fireStats');
+            p.innerHTML = `<i class="far fa-chart-line-up"></i><span style="display:block;line-height:1.2">${fireStats}</span>`;
+            document.querySelector('#acres_history').parentElement.appendChild(p);
         }
 
         return this;
@@ -788,10 +797,158 @@ export class Wildfires {
         }
     }
 
+    async getComplexes() {
+        const childIds = new Set();
+        const fires = await api(`${ENV.apiURL}wildfires/complexes`);
+
+        if (!fires?.features) return;
+
+        fires.features.forEach(({ properties }) => {
+            const children = properties.children
+                .map(f => this.findFire(null, f.incidentID, true))
+                .filter(Boolean);
+
+            if (!children.length) return;
+
+            children.forEach(({ incidentID }) => childIds.add(incidentID));
+
+            global.activeComplexes.set(properties.incidentID, {
+                name: properties.name,
+                children
+            });
+        });
+
+        this.displayComplexes(fires);
+
+        const source = global.map.getSource('all_fires');
+        const data = await source.getData();
+
+        data.features.forEach(feature => {
+            feature.properties.isComplex = childIds.has(feature.properties.incidentId);
+        });
+
+        source.setData(data);
+    }
+
+    async displayComplexes(data) {
+        if (!global.map.getSource('complexes')) {
+            global.map.addSource('complexes', {
+                type: 'geojson',
+                data: data,
+                cluster: config.clusterFires,
+                clusterMaxZoom: window.innerWidth < 600 ? 6 : 7,
+                clusterMinPoints: 20,
+                clusterRadius: 50
+            });
+        }
+
+        if (!global.map.getLayer('complexes')) {
+            global.map.addLayer({
+                id: 'complexes',
+                type: 'symbol',
+                source: 'complexes',
+                layout: {
+                    'icon-image': 'fire-icon-complex',
+                    'icon-size': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        3,
+                        0.125,
+                        6,
+                        0.25,
+                        9,
+                        0.375
+                    ],
+                    'icon-allow-overlap': true,
+                    visibility: 'visible'
+                }
+            });
+
+            mapMouseOver('complexes');
+        }
+
+        if (!global.map.getLayer('complexes_title')) {
+            global.map.addLayer({
+                id: 'complexes_title',
+                type: 'symbol',
+                source: 'complexes',
+                minzoom: 7,
+                paint: {
+                    'text-color': '#fff',
+                    'text-halo-color': '#111',
+                    'text-halo-blur': 50,
+                    'text-halo-width': 100
+                },
+                layout: {
+                    'symbol-placement': 'point',
+                    'text-font': config.fonts.source(),
+                    'text-field': ['get', 'name'],
+                    'text-justify': 'center',
+                    'text-size': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        7,
+                        12,
+                        12,
+                        17
+                    ],
+                    'text-transform': 'uppercase',
+                    'text-max-width': 8,
+                    'text-anchor': 'top',
+                    'text-offset': [0, 1.5],
+                    'text-allow-overlap': false,
+                    'text-letter-spacing': 0,
+                    visibility: 'visible'
+                }
+            });
+
+            mapMouseOver('complexes_title');
+        }
+    }
+
+    async showComplex(complex, geometry) {
+        let totalAcres = 0;
+        const updated = [];
+        let ul = document.createElement('ul');
+        ul.classList.add('new_fires');
+
+        complex?.children
+            .map(child => config.wildfire.findFire(null, child.incidentID))
+            .filter(Boolean)
+            .sort((a, b) => Number(b.properties?.acres ?? 0) - Number(a.properties?.acres ?? 0))
+            .forEach(fire => {
+                const li = document.createElement('li'),
+                    name = `${fire.properties.name.replace(' Fire', '')}${(fire.properties.type == 'Wildfire' ? ' Fire' : '')}`,
+                    near = fire.properties.near,
+                    size = global.conversion.sizeFormat(fire.properties.acres);
+
+                totalAcres += fire.properties.acres;
+                updated.push(fire.properties.time.updated);
+
+                li.dataset.action = 'new-fires';
+                li.dataset.lat = fire.geometry.coordinates[1];
+                li.dataset.lon = fire.geometry.coordinates[0];
+                li.dataset.wfid = fire.properties.wfid;
+                li.innerHTML = `<div class="pert"><h3>${name}</h3><span class="near">${near}</div></div><span class="disc">${size}</span>`;
+                ul.appendChild(li);
+            });
+
+        createDataForm(`${complex.name}`, `<div style="margin-bottom:1em">
+            <span style="font-size:14px;color:#888">
+                Last updated ${updated.length ? timeAgo(Math.max.apply(null, updated)) : 'N/A'} &middot; <b>Total size:</b> ${global.conversion.sizeFormat(totalAcres, true, false)} ${global.conversion.sizeUnit()}
+            </span>
+        </div>
+        ${ul.outerHTML}`);
+
+        return this;
+    }
+
     // get wildfires from API
     async getWildfires(update = false) {
         const qInput = document.querySelector('#q');
-        const types = ['all', 'new', 'smk', 'rx'];
+        const types = ['all', /*'new', */'smk', 'rx'];
 
         if (config.settings.archive) {
             const fires = await api(`${ENV.apiURL}wildfires/all`, [['archive', config.settings.archive], ['bbox', getbbox()]]);
@@ -823,6 +980,8 @@ export class Wildfires {
                     check();
                 });
             }));
+
+            this.getComplexes();
         }
 
         if (qInput) qInput.disabled = false;
@@ -851,7 +1010,7 @@ export class Wildfires {
         // add fires to map
         if (global.map.getSource(fireLayerName)) {
             if (!global.map.getLayer(fireLayerName)) {
-                global.map.addLayer({
+                const layer = {
                     id: fireLayerName,
                     type: 'symbol',
                     source: fireLayerName,
@@ -859,6 +1018,8 @@ export class Wildfires {
                         'icon-image': this.fireIcon(type),
                         'icon-size': [
                             'case',
+                            ['==', ['get', 'isComplex'], true],
+                            0.25,
                             ['==', ['get', 'Out'], true],
                             0.3,
                             0.4
@@ -866,7 +1027,9 @@ export class Wildfires {
                         'icon-allow-overlap': true,
                         visibility: vis
                     }
-                });
+                };
+
+                global.map.addLayer(layer);
 
                 mapMouseOver(fireLayerName);
             }
@@ -907,9 +1070,9 @@ export class Wildfires {
                             ['linear'],
                             ['zoom'],
                             5,
+                            ['case', ['==', ['get', 'isComplex'], true], 5, 7],
                             7,
-                            8,
-                            10
+                            ['case', ['==', ['get', 'isComplex'], true], 8, 10],
                         ],
                         'text-line-height': 1.0,
                         'text-anchor': 'top',
@@ -920,38 +1083,13 @@ export class Wildfires {
                     }
                 });
 
-                mapMouseOver(`${fireLayerName}_fire`);
+                mapMouseOver(`${fireLayerName}_title`);
             }
         }
 
-        /*if (type == 'rx' && global.map.getSource('perimeters')) {
-            global.map.moveLayer('perimeters_fill', 'all_fires');
-            global.map.moveLayer('perimeters_outline', 'all_fires');
-            global.map.moveLayer('perimeters_title', 'all_fires');
-        }*/
+        reorderLayers();
 
         return this;
-    }
-
-    getAssociatedPerim(fireName) {
-        if (!config.settings.isEnabled('perimeters')) return;
-
-        const src = global.map.getSource('perimeters')._data.geojson.features,
-            wait = setInterval(() => {
-                if (src) {
-                    const name = fireName.replace(/\s/gm, '').toLowerCase();
-                    clearInterval(wait);
-
-                    const results = src.filter(feat => {
-                        const p = feat.properties;
-
-                        return p.attr_IncidentName.replace(/\s/gm, '').toLowerCase() == name ||
-                            p.poly_IncidentName.replace(/\s/gm, '').toLowerCase() == name;
-                    });
-
-                    console.log(results);
-                }
-            }, 200);
     }
 
     doWeather(geo) {
@@ -1022,8 +1160,6 @@ export class Wildfires {
     }
 
     async incident(wfid, zoomIn = true) {
-        const TWO_MONTHS = 60 * 60 * 24 * (DateFormatter.daysInYear() / 6);
-
         if (zoomIn) {
             const coords = this.findFire(wfid);
             if (coords) modalZoom(coords.geometry.coordinates);
@@ -1043,13 +1179,15 @@ export class Wildfires {
 
         const fireLat = fire.geometry.lat;
         const fireLon = fire.geometry.lon;
-        const prop = fire.properties;
+
         const nearbyEvacs = await new NearbyEvacuations(fireLat, fireLon).get();
+
+        const prop = fire.properties;
         const fireIncName = this.fireName(prop.fireName, prop.type, prop.incidentId);
         const near = fire.geometry?.geo.near;
         const displayNear = !near || near == '' ? '' : ` near ${near.split(' of ')[1]}`;
         const acresHistory = prop.acres_history;
-        //const nearbyPerims = this.getAssociatedPerim(prop.fireName);
+        //const nearbyPerims = new Perimeters().getAssociatedPerim(prop.fireName);
 
         // change the URL in the browser
         setHeaders(`${fireIncName}${displayNear} - Current Incident Information and Wildfire Map`, prop.url,
@@ -1058,14 +1196,17 @@ export class Wildfires {
         if (fire.inciweb && fire.inciweb.photo) {
             document.querySelector('meta[property="og:image"]').setAttribute('content', `https://mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
             document.querySelector('meta[name="twitter:image"]').setAttribute('content', `https://mapofire.com/src/images/incident?path=${fire.inciweb.photo.url}`);
-        }
 
-        if (fire.inciweb && fire.inciweb.photo) {
             document.querySelector('meta[property="og:image:alt"]').setAttribute('content', fire.inciweb.photo.caption);
         }
 
+        const worker = new Worker(
+            new URL('../workers/incident.js', import.meta.url),
+            { type: 'module' }
+        );
+
         // send data to service worker
-        config.workers.incident.postMessage({
+        worker.postMessage({
             fire: {
                 json: incident,
                 fireName: fireIncName,
@@ -1073,7 +1214,7 @@ export class Wildfires {
                 status: this.getStatus(prop.status, prop.notes, prop.type, prop.acres)
             },
             role: config.settings.getUser().role(),
-            hasPermissions: config.settings.hasPermissions(),
+            hasPermissions: config.settings?.hasPermissions(),
             vars: {
                 domain: ENV.domain,
                 center: this.getDispatchCenter(fire.protection.dispatch),
@@ -1085,12 +1226,12 @@ export class Wildfires {
                     ago: timeAgo(fire.time.discovered),
                     useAgo: (Date.now() / 1000) - fire.time.discovered < 60 * 60 * 6
                 },
-                updated: (config.curTime.getTime() / 1000) - fire.time.updated > TWO_MONTHS ? dateTime(fire.time.updated, true) : timeAgo(fire.time.updated)
+                updated: (config.curTime.getTime() / 1000) - fire.time.updated > this.TWO_MONTHS ? dateTime(fire.time.updated, true) : timeAgo(fire.time.updated)
             }
         });
 
         // add content to modal after service worker finishes
-        config.workers.incident.onmessage = (event) => {
+        worker.onmessage = async (event) => {
             modal.querySelector('.content').innerHTML = event.data;
 
             const acHis = modal.querySelector('#acres_history'),
@@ -1125,7 +1266,7 @@ export class Wildfires {
             this.doWeather([fireLon, fireLat]);
 
             // remove any features that require a user to be subscribed
-            if (!config.settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
+            if (!config.settings?.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
                 acHis.style.height = 'unset';
                 acHis.innerHTML = '<a href="#" data-action="marketing-cta" data-utm="acres_history" class="btn btn-orange btn-lg" onclick="return false"><i class="fas fa-lock"></i>Upgrade to see growth history</a>';
                 /*document.querySelector('#acres_history').parentElement.parentElement.remove();*/
@@ -1158,225 +1299,6 @@ export class Wildfires {
                 }
             }
         };
-
-        return this;
-    }
-
-    perimeterColor(c) {
-        let pc;
-
-        switch (c) {
-            case 'default':
-            case 'red':
-                pc = '#f35a5a';
-                break;
-            case 'blue':
-                pc = '#3289d5';
-                break;
-            case 'orange':
-                pc = '#fb8c00';
-                break;
-            case 'green':
-                pc = '#388e3c';
-                break;
-            case 'purple':
-                pc = '#9c27b0';
-                break;
-            case 'brown':
-                pc = '#795548';
-                break;
-            case 'black':
-                pc = '#333';
-                break;
-        }
-
-        return config.settings.archive == null ? [
-            'case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#777', pc] : '#777';
-    }
-
-    async intlPerimeters(/*update = false*/) {
-        const vis = !config.settings.user || !config.settings.checkboxes() || config.settings.isEnabled('perimeters') ? 'visible' : 'none',
-            min = config.settings.perimeters().minSize() / 2.471,    // convert to hectres for the metric countries
-            pc = this.perimeterColor(config.settings.perimeters().color()),
-            b = global.map.getBounds(),
-            viewBBox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
-            intersects = (view, region) => {
-                return !(view[2] < region[0] || view[0] > region[2] || view[3] < region[1] || view[1] > region[3]);
-            },
-            loadPerimeter = async ({ id, url, where }) => {
-                const src = `${id}_perimeters`,
-                    outline = `${id}_perimeters_outline`,
-                    fill = `${id}_perimeters_fill`;
-
-                // the map isn't over Canada or Australia so there's no need to fetch perimeters for those areas
-                if (!intersects(viewBBox, this.REGION_BBOX[id])) return null;
-
-                if (!global.map.getSource(src)) {
-                    new ArcGISFeature(src, global.map, {
-                        url: url,
-                        precision: 6,
-                        where: where,
-                        outFields: '*'
-                    });
-                }
-                /*const data = await api(url, [
-                    ['where', where],
-                    ['outFields', '*'],
-                    ['resultType', 'tile'],
-                    ['geometry', getbbox()],
-                    ['geometryPrecision', 6],
-                    ['geometryType', 'esriGeometryEnvelope'],
-                    ['spatialRel', 'esriSpatialRelIntersects'],
-                    ['returnGeometry', true],
-                    ['f', 'geojson']
-                ]);
-     
-                if (update && global.map.getSource(src)) {
-                    global.map.getSource(src).setData(data);
-                    return;
-                }
-     
-                if (!global.map.getSource(src)) {
-                    global.map.addSource(src, { type: 'geojson', data });
-                }*/
-
-                if (!global.map.getLayer(outline)) {
-                    global.map.addLayer({
-                        id: outline,
-                        type: 'line',
-                        source: src,
-                        paint: {
-                            'line-width': [
-                                'case',
-                                ['boolean', ['feature-state', 'click'], false],
-                                3,
-                                1
-                            ],
-                            'line-color': pc
-                        },
-                        layout: { visibility: vis }
-                    });
-                }
-
-                if (!global.map.getLayer(fill)) {
-                    global.map.addLayer({
-                        id: fill,
-                        type: 'fill',
-                        source: src,
-                        paint: {
-                            'fill-opacity': 0.45,
-                            'fill-color': pc
-                        },
-                        layout: { visibility: vis }
-                    });
-
-                    mapMouseOver(fill);
-                }
-            };
-
-        await Promise.all([
-            loadPerimeter({
-                id: 'ca',
-                url: 'https://services.arcgis.com/wjcPoefzjpzCgffS/ArcGIS/rest/services/Active_Wildfire_Perimeters_in_Canada_View/FeatureServer/0',
-                where: `1=1 AND LASTDATE >= TIMESTAMP '${new Date().getFullYear()}-01-01 00:00:00' AND AREA >= ${min}`
-            }),
-            loadPerimeter({
-                id: 'aus',
-                url: 'https://services-ap1.arcgis.com/ypkPEy1AmwPKGNNv/arcgis/rest/services/Near_Real_Time_Bushfire_Boundaries_view/FeatureServer/3',
-                where: `1=1 AND fire_name IS NOT NULL AND area_ha >= ${min}`
-            })
-        ]);
-
-        return this;
-    }
-
-    async perimeters(update = false) {
-        let vis = !config.settings.user || !config.settings.checkboxes() || config.settings.isEnabled('perimeters') ? 'visible' : 'none',
-            y = (config.settings.archive ? config.settings.archive : config.curTime.getFullYear()),
-            min = config.settings.perimeters().minSize(),
-            pc = this.perimeterColor(config.settings.perimeters().color()),
-            o = 'OBJECTID,attr_UniqueFireIdentifier,poly_IncidentName,attr_IncidentName,poly_DateCurrent,poly_GISAcres,poly_Acres_AutoCalc,poly_MapMethod,attr_POOState,attr_ContainmentDateTime,attr_PercentContained,attr_FireOutDateTime',
-            perimName = 'attr_IncidentName',
-            w = `attr_FireDiscoveryDateTime>=TIMESTAMP '${y}-01-01 00:00:00'`;
-
-        if (!config.settings.archive) w += ` AND (poly_GISAcres > ${min} OR poly_Acres_AutoCalc > ${min}) AND attr_FireOutDateTime IS NULL`;
-
-        // get Canada wildfire perimeters if not in archive mode
-        if (!config.settings.archive) this.intlPerimeters(update);
-
-        if (!global.map.getSource('perimeters')) {
-            new ArcGISFeature('perimeters', global.map, {
-                url: 'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0',
-                precision: 6,
-                where: w,
-                outFields: o
-            });
-        }
-
-        if (!global.map.getLayer('perimeters_fill')) {
-            global.map.addLayer({
-                id: 'perimeters_fill',
-                type: 'fill',
-                source: 'perimeters',
-                paint: {
-                    'fill-opacity': 0.45,
-                    'fill-color': pc
-                },
-                layout: {
-                    visibility: vis
-                }
-            });
-        }
-
-        if (!global.map.getLayer('perimeters_outline')) {
-            global.map.addLayer({
-                id: 'perimeters_outline',
-                type: 'line',
-                source: 'perimeters',
-                paint: {
-                    'line-width': [
-                        'case',
-                        ['boolean', ['feature-state', 'click'], false],
-                        3,
-                        1
-                    ],
-                    'line-color': pc
-                },
-                layout: {
-                    visibility: vis
-                }
-            });
-        }
-
-        if (!global.map.getLayer('perimeters_title')) {
-            global.map.addLayer({
-                id: 'perimeters_title',
-                type: 'symbol',
-                source: 'perimeters',
-                minzoom: 5.8,
-                paint: {
-                    'text-color': config.settings.archive ? '#fff' : ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#333', '#fff'],
-                    'text-halo-color': config.settings.archive ? '#333' : ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#fff', '#ff0000'],
-                    'text-halo-blur': 1,
-                    'text-halo-width': 1
-                },
-                layout: {
-                    'symbol-placement': 'line',
-                    'symbol-spacing': 200,
-                    'text-font': config.fonts.din(),
-                    'text-field': ['upcase', ['concat', ['get', perimName], ' Fire']],
-                    'text-size': 13,
-                    'text-max-angle': 30,
-                    'text-padding': 5,
-                    'text-pitch-alignment': 'viewport',
-                    'text-rotation-alignment': 'map',
-                    'text-offset': [0, 1],
-                    visibility: vis
-                }
-            });
-
-            mapMouseOver('perimeters_fill');
-        }
 
         return this;
     }

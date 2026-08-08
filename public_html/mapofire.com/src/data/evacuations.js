@@ -3,12 +3,17 @@ import { global } from '../app/state.js';
 
 import { api, timeAgo, mapMouseOver, geojsonExtent, createDataForm } from '../utils/helpers.js';
 import { stateLabels } from '../utils/constants.js';
+import { getRings } from '../utils/geometry.js';
+
+import { reorderLayers } from '../map/layers.js';
 
 export class Evacuations {
     constructor() {
         this.activeEvacuations = null;
         this.evacCount = 0;
-        this.evacsLoaded = false;
+        this.centroids = [];
+
+        this.ready = this.load();
 
         this.zoneZoomLevel = {
             min: 10,
@@ -16,21 +21,257 @@ export class Evacuations {
         };
     }
 
-    async get() {
-        if (!this.evacsLoaded) {
-            const data = await api(`${ENV.apiURL}evacuations`);
+    static polygonCentroid(coords) {
+        if (!coords) return null;
 
-            // store active evacuations for use elsewhere within the map
-            if (!data?.features) {
-                return;
-            }
+        let area = 0;
+        let cx = 0;
+        let cy = 0;
 
-            this.activeEvacuations = data.features;
-            this.evacCount = this.activeEvacuations.length;
+        for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+            const [x0, y0] = coords[j];
+            const [x1, y1] = coords[i];
 
-            this.evacsLoaded = true;
-            this.displayEvacs(data);
+            const f = x0 * y1 - x1 * y0;
+
+            area += f;
+            cx += (x0 + x1) * f;
+            cy += (y0 + y1) * f;
         }
+
+        area *= 0.5;
+
+        if (area === 0) return coords[0];
+
+        return [
+            cx / (6 * area),
+            cy / (6 * area)
+        ];
+    }
+
+    async load() {
+        const data = await api(`${ENV.apiURL}evacuations`);
+
+        if (!data?.features) return;
+
+        this.activeEvacuations = data.features;
+        this.evacCount = this.activeEvacuations.length;
+
+        // calculate the centers of each evacuation zone
+        this.centroids = data.features.map(feature => {
+            const { geometry } = feature;
+
+            const ring = geometry?.type === 'Polygon'
+                ? geometry?.coordinates[0]
+                : geometry?.coordinates[0][0];
+
+            const ctr = Evacuations.polygonCentroid(ring);
+
+            return {
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: ctr
+                },
+                properties: feature.properties
+            };
+        });
+
+        this.displayEvacs(data);
+    }
+
+    async createEvacPatterns() {
+        const svgs = {
+            evac_level1: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDY0MCA2NDAiIGZpbGw9IiMwMjgyM2EiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMzcuNXB4LDI1cHgpIj48ZyBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSgxMDBweCwwKSI+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSgyMDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSg0MDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48L2c+PGcgc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCwxODBweCkiPjxwYXRoIHN0eWxlPSJ0cmFuc2Zvcm06dHJhbnNsYXRlKDAsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMjAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoNDAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PC9nPjxnIHN0eWxlPSJ0cmFuc2Zvcm06dHJhbnNsYXRlKDEwMHB4LDM2MHB4KSI+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSgyMDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSg0MDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48L2c+PGcgc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCw1NDBweCkiPjxwYXRoIHN0eWxlPSJ0cmFuc2Zvcm06dHJhbnNsYXRlKDAsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMjAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoNDAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PC9nPjwvZz48L3N2Zz4=',
+            evac_level2: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDY0MCA2NDAiIGZpbGw9IiNlZGQ2MDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMzcuNXB4LDI1cHgpIj48ZyBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSgxMDBweCwwKSI+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSgyMDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSg0MDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48L2c+PGcgc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCwxODBweCkiPjxwYXRoIHN0eWxlPSJ0cmFuc2Zvcm06dHJhbnNsYXRlKDAsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMjAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoNDAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PC9nPjxnIHN0eWxlPSJ0cmFuc2Zvcm06dHJhbnNsYXRlKDEwMHB4LDM2MHB4KSI+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSgyMDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSg0MDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48L2c+PGcgc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCw1NDBweCkiPjxwYXRoIHN0eWxlPSJ0cmFuc2Zvcm06dHJhbnNsYXRlKDAsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMjAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoNDAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PC9nPjwvZz48L3N2Zz4=',
+            evac_level3: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDY0MCA2NDAiIGZpbGw9IiNlNjAwMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMzcuNXB4LDI1cHgpIj48ZyBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSgxMDBweCwwKSI+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSgyMDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSg0MDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48L2c+PGcgc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCwxODBweCkiPjxwYXRoIHN0eWxlPSJ0cmFuc2Zvcm06dHJhbnNsYXRlKDAsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMjAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoNDAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PC9nPjxnIHN0eWxlPSJ0cmFuc2Zvcm06dHJhbnNsYXRlKDEwMHB4LDM2MHB4KSI+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSgyMDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48cGF0aCBzdHlsZT0idHJhbnNmb3JtOnRyYW5zbGF0ZSg0MDBweCwwKSBzY2FsZSguMSkiIGQ9Ik01OTQuNTMgNTA4LjYzIDYuMTggNTMuOWMtNi45Ny01LjQyLTguMjMtMTUuNDctMi44MS0yMi40NUwyMy4wMSA2LjE4QzI4LjQzLS44IDM4LjQ5LTIuMDYgNDUuNDcgMy4zN0w2MzMuODIgNDU4LjFjNi45NyA1LjQyIDguMjMgMTUuNDcgMi44MSAyMi40NWwtMTkuNjQgMjUuMjdjLTUuNDIgNi45OC0xNS40OCA4LjIzLTIyLjQ2IDIuODEiLz48L2c+PGcgc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMCw1NDBweCkiPjxwYXRoIHN0eWxlPSJ0cmFuc2Zvcm06dHJhbnNsYXRlKDAsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoMjAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PHBhdGggc3R5bGU9InRyYW5zZm9ybTp0cmFuc2xhdGUoNDAwcHgsMCkgc2NhbGUoLjEpIiBkPSJNNTk0LjUzIDUwOC42MyA2LjE4IDUzLjljLTYuOTctNS40Mi04LjIzLTE1LjQ3LTIuODEtMjIuNDVMMjMuMDEgNi4xOEMyOC40My0uOCAzOC40OS0yLjA2IDQ1LjQ3IDMuMzdMNjMzLjgyIDQ1OC4xYzYuOTcgNS40MiA4LjIzIDE1LjQ3IDIuODEgMjIuNDVsLTE5LjY0IDI1LjI3Yy01LjQyIDYuOTgtMTUuNDggOC4yMy0yMi40NiAyLjgxIi8+PC9nPjwvZz48L3N2Zz4='
+        };
+
+        for (const [name, src] of Object.entries(svgs)) {
+            const img = new Image();
+            img.src = src;
+
+            await img.decode();
+
+            if (!global.map.hasImage(name)) {
+                global.map.addImage(name, await createImageBitmap(img));
+            }
+        }
+    }
+
+    displayEvacs(data) {
+        this.createEvacPatterns();
+
+        if (!global.map.getSource('evac')) {
+            global.map.addSource('evac', {
+                type: 'geojson',
+                data: data
+            });
+        }
+
+        if (!global.map.getSource('evac_centriods')) {
+            global.map.addSource('evac_centriods', {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: this.centroids
+                }
+            });
+        }
+
+        if (!global.map.getLayer('evac_bg')) {
+            global.map.addLayer({
+                id: 'evac_bg',
+                type: 'fill',
+                source: 'evac',
+                minzoom: 4,
+                maxzoom: 14,
+                paint: {
+                    'fill-pattern': [
+                        'concat',
+                        'evac_level',
+                        ['to-string', ['to-number', ['get', 'level']]]
+                    ],
+                    'fill-opacity': [
+                        'case',
+                        ['==', ['to-number', ['get', 'level']], 2],
+                        1.0,
+                        0.55
+                    ]
+                },
+                layout: {
+                    visibility: config.settings.isEnabled('evac') ? 'visible' : 'none'
+                }
+            });
+        }
+
+        if (!global.map.getLayer('evac')) {
+            global.map.addLayer({
+                id: 'evac',
+                type: 'fill',
+                source: 'evac',
+                minzoom: 4,
+                paint: {
+                    'fill-color': [
+                        'case',
+                        ['==', ['to-number', ['get', 'level']], 2], '#edd601',
+                        ['==', ['to-number', ['get', 'level']], 3], '#e60000',
+                        '#02823a'
+                    ],
+                    'fill-opacity': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        4,
+                        0.3,
+                        8,
+                        0.2,
+                        10,
+                        0.1
+                    ]
+                },
+                layout: {
+                    visibility: config.settings.isEnabled('evac') ? 'visible' : 'none'
+                }
+            });
+
+            mapMouseOver('evac');
+        }
+
+        if (!global.map.getLayer('evac_outline')) {
+            global.map.addLayer({
+                id: 'evac_outline',
+                type: 'line',
+                source: 'evac',
+                minzoom: 4,
+                paint: {
+                    'line-color': '#333',
+                    'line-width': [
+                        'case',
+                        ['boolean', ['feature-state', 'click'], false],
+                        3,
+                        1
+                    ],
+                    'line-opacity': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        4,
+                        1.0,
+                        11,
+                        0.6
+                    ]
+                },
+                layout: {
+                    visibility: config.settings.isEnabled('evac') ? 'visible' : 'none'
+                }
+            });
+        }
+
+        if (!global.map.getLayer('evac_title')) {
+            global.map.addLayer({
+                id: 'evac_title',
+                type: 'symbol',
+                source: 'evac_centriods',
+                minzoom: this.zoneZoomLevel.min,
+                paint: {
+                    'text-color': '#333',
+                    'text-halo-color': '#fff',
+                    'text-halo-blur': 1,
+                    'text-halo-width': 2
+                },
+                layout: {
+                    'symbol-placement': 'point',
+                    'text-font': config.fonts.source(),
+                    'text-field': [
+                        'step',
+                        ['zoom'],
+                        [
+                            'case',
+                            ['==', ['to-number', ['get', 'level']], 2], 'Level 2: BE SET',
+                            ['==', ['to-number', ['get', 'level']], 3], 'Level 3: GO NOW',
+                            'Level 1: Be Ready'
+                        ],
+                        this.zoneZoomLevel.change,
+                        [
+                            'concat',
+                            ['coalesce', ['to-string', ['get', 'zoneID']], ''],
+                            '\n',
+                            [
+                                'case',
+                                ['==', ['to-number', ['get', 'level']], 2], 'Level 2: BE SET',
+                                ['==', ['to-number', ['get', 'level']], 3], 'Level 3: GO NOW',
+                                'Level 1: Be Ready'
+                            ]
+                        ]
+                    ],
+                    'text-justify': 'center',
+                    'text-size': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        this.zoneZoomLevel.min,
+                        10,
+                        14,
+                        16
+                    ],
+                    'text-max-width': [
+                        'step',
+                        ['zoom'],
+                        8,
+                        this.zoneZoomLevel.change,
+                        10
+                    ],
+                    'text-anchor': 'center',
+                    'text-offset': [0, 1],
+                    'text-letter-spacing': 0.05,
+                    visibility: config.settings.isEnabled('evac') ? 'visible' : 'none'
+                }
+            });
+        }
+
+        //global.map.moveLayer('evac', 'perimeters_fill');
+        reorderLayers();
     }
 
     clickListener() {
@@ -179,7 +420,7 @@ export class Evacuations {
 
         if (!layer) return;
         if (layer.visibility != 'visible') {
-            ['evac', 'evac_outline', 'evac_title'].forEach(n => global.map.setLayoutProperty(n, 'visibility', 'visible'));
+            ['evac', 'evac_outline', 'evac_bg', 'evac_title'].forEach(n => global.map.setLayoutProperty(n, 'visibility', 'visible'));
         }
 
         const feature = this.activeEvacuations.find(i => i.id == id),
@@ -192,143 +433,6 @@ export class Evacuations {
 
             global.inits.clickListener.closeDataForm();
         }
-    }
-
-    displayEvacs(data) {
-        if (!global.map.getSource('evac')) {
-            global.map.addSource('evac', {
-                type: 'geojson',
-                data: data
-            });
-        }
-
-        if (!global.map.getLayer('evac')) {
-            global.map.addLayer({
-                id: 'evac',
-                type: 'fill',
-                source: 'evac',
-                minzoom: 4,
-                paint: {
-                    'fill-color': [
-                        'case',
-                        ['==', ['to-number', ['get', 'level']], 2], '#edd601',
-                        ['==', ['to-number', ['get', 'level']], 3], '#e60000',
-                        '#02823a'
-                    ],
-                    'fill-opacity': [
-                        'interpolate',
-                        ['linear'],
-                        ['zoom'],
-                        4,
-                        0.3,
-                        8,
-                        0.2,
-                        10,
-                        0.1
-                    ]
-                },
-                layout: {
-                    visibility: config.settings.isEnabled('evac') ? 'visible' : 'none'
-                }
-            });
-
-            mapMouseOver('evac');
-        }
-
-        if (!global.map.getLayer('evac_outline')) {
-            global.map.addLayer({
-                id: 'evac_outline',
-                type: 'line',
-                source: 'evac',
-                minzoom: 4,
-                paint: {
-                    'line-color': '#333',
-                    'line-width': [
-                        'case',
-                        ['boolean', ['feature-state', 'click'], false],
-                        3,
-                        1
-                    ],
-                    'line-opacity': [
-                        'interpolate',
-                        ['linear'],
-                        ['zoom'],
-                        4,
-                        1.0,
-                        11,
-                        0.6
-                    ]
-                },
-                layout: {
-                    visibility: config.settings.isEnabled('evac') ? 'visible' : 'none'
-                }
-            });
-        }
-
-        if (!global.map.getLayer('evac_title')) {
-            global.map.addLayer({
-                id: 'evac_title',
-                type: 'symbol',
-                source: 'evac',
-                minzoom: this.zoneZoomLevel.min,
-                paint: {
-                    'text-color': '#333',
-                    'text-halo-color': '#fff',
-                    'text-halo-blur': 1,
-                    'text-halo-width': 2
-                },
-                layout: {
-                    'symbol-placement': 'point',
-                    'symbol-spacing': 400,
-                    'text-font': config.fonts.source(),
-                    'text-field': [
-                        'step',
-                        ['zoom'],
-                        [
-                            'case',
-                            ['==', ['to-number', ['get', 'level']], 2], 'Level 2: BE SET',
-                            ['==', ['to-number', ['get', 'level']], 3], 'Level 3: GO NOW',
-                            'Level 1: Be Ready'
-                        ],
-                        this.zoneZoomLevel.change,
-                        [
-                            'concat',
-                            ['coalesce', ['to-string', ['get', 'zoneID']], ''],
-                            '\n',
-                            [
-                                'case',
-                                ['==', ['to-number', ['get', 'level']], 2], 'Level 2: BE SET',
-                                ['==', ['to-number', ['get', 'level']], 3], 'Level 3: GO NOW',
-                                'Level 1: Be Ready'
-                            ]
-                        ]
-                    ],
-                    'text-justify': 'center',
-                    'text-size': [
-                        'interpolate',
-                        ['linear'],
-                        ['zoom'],
-                        this.zoneZoomLevel.min,
-                        10,
-                        14,
-                        16
-                    ],
-                    'text-max-width': [
-                        'step',
-                        ['zoom'],
-                        8,
-                        this.zoneZoomLevel.change,
-                        10
-                    ],
-                    'text-anchor': 'center',
-                    'text-offset': [0, 1],
-                    'text-letter-spacing': 0.05,
-                    visibility: config.settings.isEnabled('evac') ? 'visible' : 'none'
-                }
-            });
-        }
-
-        global.map.moveLayer('evac', 'perimeters_fill');
     }
 }
 
@@ -385,19 +489,10 @@ export class NearbyEvacuations {
         return false;
     }
 
-    get() {
-        return new Promise(resolve => {
-            if (global.inits.evacuations?.evacsLoaded) {
-                resolve(this.process());
-            } else {
-                const wait = setInterval(() => {
-                    if (global.inits.evacuations?.evacsLoaded) {
-                        clearInterval(wait);
-                        resolve(this.process());
-                    }
-                }, 500);
-            }
-        });
+    async get() {
+        await global.inits.evacuations.ready;
+
+        return this.process();
     }
 
     process() {
@@ -407,7 +502,8 @@ export class NearbyEvacuations {
             let fnotes = '';
 
             const geom = feature.geometry;
-            const polygons = !geom ? [] : (geom?.type === 'Polygon' ? [geom.coordinates[0]] : geom.coordinates.flat());
+            const polygons = getRings(geom);
+            //const polygons = !geom ? [] : (geom?.type === 'Polygon' ? [geom.coordinates[0]] : geom.coordinates.flat());
 
             const isNear = polygons.some(ring =>
                 this.isPointNearPolygon(ring)

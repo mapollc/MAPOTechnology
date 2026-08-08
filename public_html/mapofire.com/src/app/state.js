@@ -4,6 +4,9 @@ import { config } from './config.js';
 
 import { stateLabels } from '../utils/constants.js';
 
+const HOUR = 60 * 60;
+const currentHour = Math.floor(Date.now() / (HOUR * 1000)) * HOUR;
+
 export const global = {
     conversion: null,
     dispatchCenters: null,
@@ -11,6 +14,7 @@ export const global = {
     marker: null,
     chart: null,
     activeIncidents: new Map(),
+    activeComplexes: new Map(),
     loadingImages: new Set(),
     mapControls: [],
     dataView: {
@@ -44,10 +48,17 @@ export const global = {
         loadedPositions: new Set()
     },
     hrrrSmokeTime: {
-        init: gmtime(-3600),
-        fcst: gmtime(+3600)
+        init: currentHour * 1000,
+        fcst: (currentHour + HOUR - 1) * 1000
     }
 };
+
+export function updateHrrrSmokeTime() {
+    if (global.hrrrSmokeTime.init !== currentHour * 1000) {
+        global.hrrrSmokeTime.init = currentHour * 1000;
+        global.hrrrSmokeTime.fcst = (currentHour + HOUR - 1) * 1000;
+    }
+}
 
 export const modal = document.querySelector('#modal'),
     impact = document.querySelector('#impact'),

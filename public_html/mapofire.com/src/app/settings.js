@@ -64,7 +64,7 @@ export class Settings {
             if (id == 'perimColor') {
                 this.settings.perimeters.color = val;
 
-                let c = config.wildfire.perimeterColor(val);
+                let c = config.perimeters.perimeterColor(val);
                 const pcl = setInterval(() => {
                     if (global.map.isStyleLoaded()) {
                         clearInterval(pcl);

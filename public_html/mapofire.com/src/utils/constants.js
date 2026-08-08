@@ -5,6 +5,8 @@ export const DateFormatter = {
     daysInYear: (y = null) => { const year = y ?? new Date().getFullYear(); return (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 366 : 365; },
 };
 
+export const fireIcons = ['', 'out', 'big', 'controlled', 'contained', 'large', 'large-inactive', 'complex', 'new', 'new-big', 'rx', 'smoke'];
+
 export const stateLabels = {
     'AB': { name: 'Alberta', center: [-113.5, 54.5] },
     'ACT': { name: 'Australian Capital Territory', center: [149.0014, -35.4900] },
@@ -102,18 +104,16 @@ export const legend = {
     ],
     'items': {
         'fire': [
-            ['icon', '<div class="fire-icon new"><i class="fas fa-fire"></i></div>', '', 'New Fire'],
-            ['icon', '<div class="fire-icon new fast"><i class="fas fa-fire"></i></div>', '', 'Fast Growing Fire'],
-            ['icon', '<div class="fire-icon big"><i class="fas fa-fire"></i></div>', '', 'Active Fire (0-100 acres)'],
-            ['icon', '<div class="fire-icon"><i class="fas fa-fire"></i></div>', '', 'Active Fire (100-1000 acres)'],
-            ['icon', '<div class="fire-icon large"><i class="fas fa-fire"></i></div>', '', 'Active Fire (>1000 acres)'],
-            ['icon', `<div class="fire-icon complex"><i class="fad fa-fire-flame-curved" aria-hidden="true" style="position:absolute;left:2px;top:2px;color:rgb(255 255 255 / 100%)"></i>
-                <i class="fad fa-fire-flame-curved" aria-hidden="true" style="position:absolute;right:1px;bottom:2px;color:rgb(255 255 255 / 100%)"></i>
-                <div style="position:absolute;width:25px;border-bottom:1px solid rgb(255 255 255 / 68%);top:50%;transform:rotate(-45deg)"></div></div>`, '', 'Complex'],
-            ['icon', '<div class="fire-icon contain"><i class="fas fa-fire"></i></div>', '', 'Contained Fire'],
-            ['icon', '<div class="fire-icon controlled"><i class="fas fa-fire"></i></div>', '', 'Controlled Fire'],
-            ['icon', '<div class="fire-icon rx"><i class="fas fa-prescription"></i></div>', '', 'Prescribed Burn'],
-            ['icon', '<div class="fire-icon smkchk"><i class="fas fa-badge-check"></i></div>', '', 'Smoke Check']
+            ['img', 'new', '', 'New Fire', 16],
+            ['img', 'new-big', '', 'Fast Growing, New Fire', 24],
+            ['img', 'big', '', 'Active Fire (0-100 acres)', 16],
+            ['img', '', '', 'Active Fire (100-1000 acres)', 16],
+            ['img', 'large', '', 'Active Fire (>1000 acres)', 24],
+            ['img', 'complex', '', 'Fire Complex', 28],
+            ['img', 'contained', '', 'Contained Fire', 14],
+            ['img', 'controlled', '', 'Controlled Fire', 14],
+            ['img', 'rx', '', 'Prescribed Burn', 24],
+            ['img', 'smoke', '', 'Smoke Check', 16]
         ],
         'airQ': [
             ['color', '', '#00e400', 'Good (0-50)'],

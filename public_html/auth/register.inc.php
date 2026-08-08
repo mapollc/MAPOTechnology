@@ -34,4 +34,4 @@
     <label for="tos" style="display:inline;font-size:13px;line-height:1.5">By creating an account, you're indicating you have read and agree to our <a href="//mapotechnology.com/about/legal/terms">Terms</a> and <a href="//mapotechnology.com/about/legal/privacy">Privacy Policy</a>.</label>
 </div>
 
-<input type="submit" class="btn btn-lg btn-blue dis" disabled id="create" data-o="<?= isset($_GET['session_id']) ? 'Finalize Subscription' : 'Create Account' ?>" value="<?= isset($_GET['session_id']) ? 'Finalize Subscription' : 'Create Account' ?>">
+<input type="submit" class="btn btn-lg btn-blue dis" id="create" data-o="<?= isset($_GET['session_id']) ? 'Finalize Subscription' : 'Create Account' ?>" value="<?= isset($_GET['session_id']) ? 'Finalize Subscription' : 'Create Account' ?>">

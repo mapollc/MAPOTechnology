@@ -1,29 +1,43 @@
-import './styles/main.css';
-import "./styles/app.css";
-import "./styles/supp.css";
+import '../styles/main.css';
+import "../styles/app.css";
+import "../styles/supp.css";
 
-import { ENV, config, debugMode, tileConfig, fireIcons, loadDispatchCenters } from './app/config.js';
-import { global, searchResults, impact } from './app/state.js';
+import { ENV, config, getPlatform, tileConfig, loadDispatchCenters } from './config.js';
+import { global, searchResults, impact } from './state.js';
 
-import { stateLabels } from './utils/constants.js';
-import * as helper from './utils/helpers.js';
-import { ClickListener, ChangeListener } from './utils/listeners.js';
+import { stateLabels, fireIcons } from '../utils/constants.js';
+import * as helper from '../utils/helpers.js';
+import { ClickListener, ChangeListener } from '../utils/listeners.js';
 
-import maplibregl from './map/maplibre.js';
-import { ArcGISFeature } from './map/arcgis.js';
-import { osm, topofire, terrain, caltopo, Layers } from './map/layers.js';
-import * as mapping from './map/mapping.js';
-import { toggleLayer } from './map/controls.js';
+import maplibregl from '../map/maplibre.js';
+import { ArcGISFeature } from '../map/arcgis.js';
+import { osm, topofire, terrain, caltopo } from '../map/layers.js';
+import * as mapping from '../map/mapping.js';
+import { toggleLayer } from '../map/controls.js';
+//import { Layers } from './map/layerManager.js';
 
-import { NWS, Weather } from './data/weather.js';
-import { Wildfires } from './data/wildfires.js';
+import { NWS, Weather } from '../data/weather.js';
+import { Wildfires } from '../data/wildfires.js';
+import { Perimeters } from '../data/perimeters.js';
 
-import * as components from './ui/components.js';
+import * as components from '../ui/components.js';
 
 if (__DEBUG__) {
     Object.defineProperty(window, 'map', {
         get() {
             return global.map;
+        }
+    });
+
+    Object.defineProperty(window, 'global', {
+        get() {
+            return global;
+        }
+    });
+
+    Object.defineProperty(window, 'config', {
+        get() {
+            return config;
         }
     });
 }
@@ -106,9 +120,9 @@ class MFAttribControl extends maplibregl.AttributionControl {
         ////super._updateAttributions();
         this._innerContainer.innerHTML = `<a target="blank" href="https://maplibre.org/">MapLibre</a> | ` +
             `© <a target="blank" href="https://www.esri.com">Esri</a>, ` +
-            `© <a target="blank" href="https://mapterhorn.com">Mapterhorn</a>, ` +
-            `© <a target="blank" href="https://carto.com/about-carto/" rel="noopener">CARTO</a>, ` +
-            `© <a target="blank" href="http://www.openstreetmap.org/about/">OpenStreetMap</a> contributors`;
+            `<a target="blank" href="https://mapterhorn.com">Mapterhorn</a>, ` +
+            `<a target="blank" href="https://carto.com/about-carto/" rel="noopener">CARTO</a>, ` +
+            `<a target="blank" href="http://www.openstreetmap.org/about/">OpenStreetMap</a> contributors`;
     }
 }
 
@@ -138,57 +152,6 @@ async function getCounties() {
         });
     }
 
-    /*if (!global.map.getLayer('county-boundaries')) {
-        global.map.addLayer({
-            id: 'county-boundaries',
-            source: 'us_counties',
-            type: 'line',
-            minzoom: 6,
-            paint: {
-                'line-dasharray': [
-                    'step',
-                    ['zoom'],
-                    ['literal', [2, 0]],
-                    7,
-                    ['literal', [3, 4]],
-                    12,
-                    ['literal', [2, 3, 3, 4]]
-                ],
-                'line-opacity': [
-                    'step',
-                    ['zoom'],
-                    0,
-                    6.5,
-                    0.15,
-                    7,
-                    0.3,
-                    9.5,
-                    0.5,
-                    16,
-                    0.8
-                ],
-                'line-color': [
-                    'step',
-                    ['zoom'],
-                    '#484932',
-                    13,
-                    '#22221b',
-                    15,
-                    '#6e3066'
-                ],
-                'line-width': [
-                    'step',
-                    ['zoom'],
-                    1,
-                    12,
-                    2,
-                    16,
-                    1.5
-                ]
-            }
-        });
-    }*/
-
     /*global.map.addSource('property_lines', {
         type: 'raster',
         minzoom: 15,
@@ -206,7 +169,7 @@ async function getCounties() {
     });*/
 }
 
-function addDynamicControls() {
+async function addDynamicControls() {
     const useBottom = window.innerWidth <= 500;
     let evacBtn = document.querySelector('.evacBtn');
 
@@ -252,12 +215,11 @@ function addDynamicControls() {
         document.querySelector('.filter-controls').appendChild(evacBtn);
     }
 
-    const to = setInterval(() => {
-        if (global.inits.evacuations?.evacsLoaded) {
-            global.inits.evacuations?.evacHelper();
-            clearInterval(to);
-        }
-    }, 500);
+    // add the evacuations list btn to the map on they've been retrieved
+    if (global.inits.evacuations) {
+        await global.inits.evacuations.ready;
+        global.inits.evacuations.evacHelper();
+    }
 }
 
 async function loadMapIcons() {
@@ -308,8 +270,8 @@ function newFiresReport() {
 async function initializeMap() {
     // initialize the layers manager
     const [{ Layers }, { Convert }] = await Promise.all([
-        import('./map/layerManager.js'),
-        import('./utils/convert.js')
+        import('../map/layerManager.js'),
+        import('../utils/convert.js')
     ]);
 
     config.layersHandler = new Layers();
@@ -374,6 +336,9 @@ async function initializeMap() {
     global.map.once('load', async () => {
         global.map.getCanvas().setAttribute('role', 'region');
         global.map.getCanvas().ariaLabel = document.querySelector('meta[name=description]').content;
+
+        // add fire icons
+        loadMapIcons();
     });
 
     global.map.once('styledata', () => {
@@ -394,9 +359,9 @@ async function initializeMap() {
             document.querySelector('.filter-controls .search').style.display = 'inline-flex';
         }
 
-        if (global.map.getLayer('evac') && global.map.getLayer('perimeters_fill')) {
+        /*if (global.map.getLayer('evac') && global.map.getLayer('perimeters_fill')) {
             global.map.moveLayer('evac', 'perimeters_fill');
-        }
+        }*/
     });
 
     // handle on map style loaded event
@@ -412,9 +377,6 @@ async function initializeMap() {
         }
 
         global.map.setSky(config.fog);
-
-        // add fire icons
-        loadMapIcons();
 
         // overlay counties
         getCounties();
@@ -476,7 +438,7 @@ async function initializeMap() {
         // processing layers on startup
         config.layersHandler.init();
         config.wildfire.getWildfires();
-        config.wildfire.perimeters();
+        config.perimeters.get();
 
         const excludeTheseLayers = ['newFires', 'allFires', 'smokeChecks', 'rxBurns', 'perimeters'];
         const cbox = config.settings.checkboxes();
@@ -645,7 +607,7 @@ async function restoreState() {
     }
 
     // if user is trying to view historical fires without a subscription
-    if (!config.settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && window.location.href.match(/archive\/([0-9]+)/g) != null) {
+    if (!config.settings?.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) && window.location.href.match(/archive\/([0-9]+)/g) != null) {
         components.notify('info', 'You must upgrade to view historical fires. <a href="#" onclick="return false" data-action="marketing-cta" data-utm="archive_snackbar">Get access</a>', 6);
     }
 
@@ -685,7 +647,7 @@ async function restoreState() {
                 const [lat, lon] = id.split(',').map(Number);
                 const isValid = lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
 
-                if (isValid && config.settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
+                if (isValid && config.settings?.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
                     new Weather(lat, lon).fireWxFcst();
                 } else {
                     helper.unsetHeaders();
@@ -720,6 +682,8 @@ async function preload() {
     // get the user's IP address and UUID from the server (DONT BLOCK UI THREAD)
     if (!sessionStorage.getItem('mapofire.user_session')) {
         helper.api(`${ENV.host}api/v1/session/get`).then(sess => {
+            if (!sess) return;
+
             delete sess.metadata;
             sessionStorage.setItem('mapofire.user_session', JSON.stringify(sess));
         });
@@ -729,7 +693,7 @@ async function preload() {
         const getAcct = await helper.api(`${ENV.host}api/v1/user/get/mapofire`, null, false, true);
 
         if (getAcct?.response) {
-            const loginURL = `${ENV.domain.replace('//', '//auth.')}login?service=${config.getPlatform()}&next=${encodeURIComponent(window.location.href)}`;
+            const loginURL = `${ENV.domain.replace('//', '//auth.')}login?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}`;
             components.notify('info', `Your session has expired. Please <a href="${loginURL}">login again</a>.`, 3.25);
         } else {
             usr = getAcct?.user;
@@ -749,7 +713,7 @@ async function preload() {
 
     // create settings class based on user profile and settings
     try {
-        const { Settings } = await import('./app/settings.js');
+        const { Settings } = await import('./settings.js');
         config.settings = new Settings(usr);
     } catch (err) {
         console.error(err);
@@ -758,7 +722,7 @@ async function preload() {
     // get top clicked fires
     helper.api(`${ENV.apiURL}events?test=1`, [['limit', 6]], (config.settings.getUser().uid() == 1 ? true : false))
         .then(data => {
-            if (data.top) {
+            if (data?.top) {
                 global.dataView.topFires = data.top;
             }
         });
@@ -780,11 +744,12 @@ async function preload() {
         document.getElementById(insert).insertAdjacentElement('afterend', el);
     };
 
-    makeItem({ id: 'fwf', icon: 'cloud-bolt', span: 'Fire WX', insert: 'my-fire', ttip: 'Fire Weather Forecast' });
+    makeItem({ id: 'fwf', icon: 'lightning', span: 'Fire WX', insert: 'my-fire', ttip: 'Fire Weather Forecast' });
     makeItem({ id: 'archive', icon: 'calendars', span: 'Historical', insert: 'layers', ttip: 'Historical Fires' });
 
     // 1) start a wildfire class 2) get user's currently tracked wildfires 3) get austrailian bush fires
     config.wildfire = new Wildfires();
+    config.perimeters = new Perimeters();
     ['getTrackedFires', 'getBushfireNames'].forEach(fn => config.wildfire[fn]());
 }
 
@@ -805,7 +770,7 @@ async function initializeUI() {
     q.addEventListener('blur', () => global.inits.trending = false);
     q.addEventListener('focus', async () => {
         if (q.value == '' && !global.inits.trending && searchResults.querySelectorAll('li.trending').length == 0) {
-            const { addTrending } = await import('./ui/search.js');
+            const { addTrending } = await import('../ui/search.js');
             addTrending();
         }
     });
@@ -880,7 +845,7 @@ window.addEventListener('click', async (e) => {
         actionsThatOpenImpact = ['account', 'basemap', 'layers', 'legend', 'myfires', 'tools', 'back-my-content'],
         actionElement = target.closest('[data-action]'),
         action = actionElement ? actionElement.dataset.action : null,
-        canUse = config.settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM);
+        canUse = config.settings?.hasPermissions(config.PERMISSION_LEVELS.PREMIUM);
     //canUse = config.settings.subscriptions().valid() || config.settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN;
 
     const clicks = new ClickListener(target, searchResults);
@@ -1187,7 +1152,7 @@ window.addEventListener('keyup', helper.debounce((e) => {
 
         if (e.target.id == 'q' && config.runSearch) {
             document.querySelector('#clearSearch').style.display = e.target.value == '' ? 'none' : 'block';
-            const { Search } = await import('./ui/search.js');
+            const { Search } = await import('../ui/search.js');
 
             new Search(e.target.value).do();
 

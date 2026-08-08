@@ -126,17 +126,14 @@ $states = ['CA', 'OR', 'WA'];
 $functions = [evacCA(), evacOR(), evacWA()];
 
 for ($i = 0; $i < count($states); $i++) {
-    echo 'Starting ' . $states[$i] . ' evacuations...
-';
-    $data = json_encode($functions[$i]);
+    echo date('H:i:s') . ' Starting ' . $states[$i] . ' evacuations...' . PHP_EOL;
 
+    $data = json_encode($functions[$i]);
     $file = fopen("./cache/evacs_{$states[$i]}.json", 'w');
     fwrite($file, $data);
     fclose($file);
 
-    echo 'Finished with ' . $states[$i] . ' evacuations...
-';
+    echo date('H:i:s') . ' Finished with ' . $states[$i] . ' evacuations...' . PHP_EOL;
 }
 
-echo 'Evacuation JSON data has been completed...
-';
+echo 'Evacuation JSON data has been completed...' . PHP_EOL;

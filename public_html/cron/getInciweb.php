@@ -59,6 +59,7 @@ class InciwebParser
     private DOMXPath $xpath;
     private array $coords;
     private ?int $year;
+    private array $allKeys;
 
     public function __construct($html)
     {
@@ -73,6 +74,7 @@ class InciwebParser
 
         $this->coords = [];
         $this->year = null;
+        $this->allKeys = [];
     }
 
     private function clean($node)
@@ -221,7 +223,9 @@ class InciwebParser
 
             $parse = $this->parseItems($key, $this->innerHTML($td));
 
-            if ($key !== '') $data[] = $parse;
+            if ($key !== '' && !in_array($parse['desc'], $this->allKeys)) $data[] = $parse;
+
+            $this->allKeys[] = $parse['desc'];
         }
 
         return $data;
@@ -402,60 +406,52 @@ for ($i = 0; $i < count($xml->channel->item); $i++) {
 
     $contact = mysqli_real_escape_string($con, json_encode($parser->contacts()));
     $pic = $parser->getPhoto();
+    $photo = $pic[0] == null || $pic[1] == null ? '' : mysqli_real_escape_string($con, json_encode($pic));
 
-    if ($pic[0] == null || $pic[1] == null) {
-        $photo = '';
-    } else {
-        $photo = mysqli_real_escape_string($con, json_encode($pic));
+    $arcgis = "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?where=IncidentName+LIKE+%27%25" . strtolower(str_replace(' ', '+', $name)) . "%25%27+AND+POOState+%3D+%27US-$state%27&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&relationParam=&returnGeodetic=false&outFields=UniqueFireIdentifier%2CContainmentDateTime%2CControlDateTime%2CFireOutDateTime&returnGeometry=true&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&returnZ=false&returnM=false&returnExceededLimitFeatures=true&sqlFormat=none&f=geojson";
+    $json = json_decode(file_get_contents($arcgis));
+    $incidentNum = $json->features[0]->properties->UniqueFireIdentifier ?? "$year-NWCG-$iid";
+
+    if (!empty($json->features) && is_array($json->features)) {
+        if ($json->features[0]->properties->ContainmentDateTime) {
+            $stat['Contain'] = round($json->features[0]->properties->ContainmentDateTime / 1000);
+        }
+        if ($json->features[0]->properties->ControlDateTime) {
+            $stat['Control'] = round($json->features[0]->properties->ControlDateTime / 1000);
+        }
+        if ($json->features[0]->properties->FireOutDateTime) {
+            $stat['Out'] = round($json->features[0]->properties->FireOutDateTime / 1000);
+        }
     }
 
-    //if (date('Y') == $year) {
-        $arcgis = "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?where=IncidentName+LIKE+%27%25" . strtolower(str_replace(' ', '+', $name)) . "%25%27+AND+POOState+%3D+%27US-$state%27&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&relationParam=&returnGeodetic=false&outFields=UniqueFireIdentifier%2CContainmentDateTime%2CControlDateTime%2CFireOutDateTime&returnGeometry=true&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&returnZ=false&returnM=false&returnExceededLimitFeatures=true&sqlFormat=none&f=geojson";
-        $json = json_decode(file_get_contents($arcgis));
-        $incidentNum = $json->features[0]->properties->UniqueFireIdentifier ?? "$year-NWCG-$iid";
+    $acres = $acreage ?? 0;
+    $incidentType = str_contains($name, 'Prescribed') || str_contains($name, 'Pile Burning') || str_contains($name, ' RX')
+        ? 'Prescribed Fire' : (str_contains($name, ' Complex') ? 'Complex' : 'Wildfire');
+    $content = mysqli_real_escape_string($con, json_encode(['data' => $data]));
+    $status = $stat ? (count($stat) == 0 ? '' : json_encode($stat)) : '';
 
-        if (!empty($json->features) && is_array($json->features)) {
-            if ($json->features[0]->properties->ContainmentDateTime) {
-                $stat['Contain'] = round($json->features[0]->properties->ContainmentDateTime / 1000);
-            }
-            if ($json->features[0]->properties->ControlDateTime) {
-                $stat['Control'] = round($json->features[0]->properties->ControlDateTime / 1000);
-            }
-            if ($json->features[0]->properties->FireOutDateTime) {
-                $stat['Out'] = round($json->features[0]->properties->FireOutDateTime / 1000);
-            }
-        }
+    // add or update to inciweb database
+    $sqlQueries[] = "INSERT INTO inciweb (incident_id,state,year,name,incident_info,data,contact,photo,captured,updated)
+                VALUES('$iid','$state',$year,'$name','$incidentInfo','$content','$contact','$photo','$time','$time')
+                ON DUPLICATE KEY UPDATE
+                incident_id = VALUES(incident_id),
+                state = '$state',
+                year = '$year',
+                name = VALUES(name),
+                incident_info = '$incidentInfo',
+                data = '$content',
+                photo = '$photo',
+                contact = '$contact',
+                captured = VALUES(captured),
+                updated = '$time'
+                ";
 
-        $acres = $acreage ?? 0;
-        $incidentType = str_contains($name, 'Prescribed') || str_contains($name, 'Pile Burning') || str_contains($name, ' RX')
-            ? 'Prescribed Fire' : (str_contains($name, ' Complex') ? 'Complex' : 'Wildfire');
-        $content = mysqli_real_escape_string($con, json_encode(['data' => $data]));
-        $status = $stat ? (count($stat) == 0 ? '' : json_encode($stat)) : '';
+    // update wildfires database
+    $sqlQueries[] = "UPDATE wildfires SET acres = CASE WHEN '$acres' > acres THEN '$acres' ELSE acres END WHERE incidentID = '$incidentNum'";
 
-        // add or update to inciweb database
-        $sqlQueries[] = "INSERT INTO inciweb (incident_id,state,year,name,incident_info,data,contact,photo,captured,updated)
-            VALUES('$iid','$state',$year,'$name','$incidentInfo','$content','$contact','$photo','$time','$time')
-            ON DUPLICATE KEY UPDATE
-            incident_id = VALUES(incident_id),
-            state = '$state',
-            year = '$year',
-            name = VALUES(name),
-            incident_info = '$incidentInfo',
-            data = '$content',
-            photo = '$photo',
-            contact = '$contact',
-            captured = VALUES(captured),
-            updated = '$time'
-            ";
+    $count++;
 
-        // update wildfires database
-        $sqlQueries[] = "UPDATE wildfires SET acres = CASE WHEN '$acres' > acres THEN '$acres' ELSE acres END WHERE incidentID = '$incidentNum'";
-
-        $count++;
-    //}
-
-    echo 'Processed ' . ($i + 1) . ' of ' . count($xml->channel->item) . ' incidents from Inciweb...
-';
+    echo 'Processed ' . ($i + 1) . ' of ' . count($xml->channel->item) . ' incidents from Inciweb...' . PHP_EOL;
 }
 
 if (!empty($sqlQueries)) {
@@ -476,7 +472,6 @@ if (!empty($sqlQueries)) {
     }
 }
 
-echo "Completed adding/updating $count Inciweb incidents...
-";
+echo "Completed adding/updating $count Inciweb incidents..." . PHP_EOL;
 
 mysqli_close($con);

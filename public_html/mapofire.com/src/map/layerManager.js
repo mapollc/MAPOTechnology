@@ -1,5 +1,5 @@
 import { ENV, config } from "../app/config.js";
-import { global } from "../app/state.js";
+import { global, updateHrrrSmokeTime } from "../app/state.js";
 
 import { api, mapMouseOver, gmtime, getbbox } from "../utils/helpers.js";
 import { ClickListener } from '../utils/listeners.js';
@@ -16,22 +16,23 @@ import { notify } from '../ui/components.js';
 
 export class Layers {
     constructor() {
-        this.spcClimoDate = Date.now()/*Date.parse('1/1/2026')*/;
+        this.spcClimoDate = Date.now();
         this.loadedPositions = new Set();
         this.animationPosition = 0;
     }
 
     init() {
-        // add lightning layers to the map
-        this.lightning();
+        // add lightning layers to the map if they permissions
+        if (config.settings?.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
+            this.lightning();
+        }
 
         // get evacuations
         global.inits.evacuations = new Evacuations();
-        global.inits.evacuations.get();
     }
 
     async addTerrain() {
-        if (config.settings.hasPermissions(config.PERMISSION_LEVELS.PRO)) {
+        if (config.settings?.hasPermissions(config.PERMISSION_LEVELS.PRO)) {
             await getContourLibrary();
 
             if (!global.map.getSource('terrain')) {
@@ -47,7 +48,7 @@ export class Layers {
             // set 3d terrain
             global.map.setTerrain({
                 source: 'terrain',
-                exaggeration: 1.1
+                exaggeration: 1.2
             });
         }
     }
@@ -322,7 +323,7 @@ export class Layers {
 
     async modis(w, update = false) {
         const url = 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/Satellite_VIIRS_Thermal_Hotspots_and_Fire_Activity/FeatureServer/0/query',
-            n = (w == 1 ? '24' : (w == 2 ? '48' : '72')),
+            n = w == 1 ? '24' : (w == 2 ? '48' : '72'),
             modisID = `modis${n}`;
 
         const ts = (d) => {
@@ -367,7 +368,7 @@ export class Layers {
                         source: modisID,
                         layout: {
                             'icon-image': `modis${w}`,
-                            'icon-size': 0.5,
+                            'icon-size': 0.6,
                             'icon-allow-overlap': true
                         },
                         paint: {
@@ -1651,71 +1652,59 @@ export class Layers {
         }
     }
 
-    sfcSmoke(fcstHour = null) {
-        if (fcstHour == null) {
-            fcstHour = global.hrrrSmokeTime.fcst;
+    sfcSmoke() {
+        updateHrrrSmokeTime();
 
-            if (!global.map.getSource('sfcSmoke')) {
-                global.map.addSource('sfcSmoke', {
-                    type: 'raster',
-                    tiles: [
-                        `https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=sfc_smoke&x={x}&y={y}&z={z}&time=${fcstHour}&modelrun=${global.hrrrSmokeTime.init}&level=0`
-                    ],
-                    tileSize: 256
-                });
-            }
+        if (!global.map.getSource('sfcSmoke')) {
+            global.map.addSource('sfcSmoke', {
+                type: 'raster',
+                tiles: [
+                    `https://mapservices.weather.noaa.gov/raster/rest/services/air_quality/ndgd_smoke_sfc_1hr_avg_time/ImageServer/exportImage?F=image&FORMAT=PNG32&TRANSPARENT=true&LAYERS=show%3A0&time=${global.hrrrSmokeTime.init}%2C${global.hrrrSmokeTime.fcst}&SIZE=256%2C256&BBOXSR=3857&IMAGESR=3857&DPI=90&BBOX={bbox-epsg-3857}`
+                ],
+                tileSize: 256
+            });
+        }
 
-            if (!global.map.getLayer('sfcSmoke')) {
-                global.map.addLayer({
-                    id: 'sfcSmoke',
-                    type: 'raster',
-                    source: 'sfcSmoke',
-                    paint: {
-                        'raster-opacity': 0.75
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-        } else {
-            global.map.getSource('sfcSmoke').setTiles([
-                `https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=sfc_smoke&x={x}&y={y}&z={z}&time=${fcstHour}&modelrun=${global.hrrrSmokeTime.init}&level=0`
-            ]);
+        if (!global.map.getLayer('sfcSmoke')) {
+            global.map.addLayer({
+                id: 'sfcSmoke',
+                type: 'raster',
+                source: 'sfcSmoke',
+                paint: {
+                    'raster-opacity': 0.75
+                },
+                layout: {
+                    visibility: 'visible'
+                }
+            });
         }
     }
 
-    viSmoke(fcstHour = null) {
-        if (fcstHour == null) {
-            fcstHour = global.hrrrSmokeTime.fcst;
+    viSmoke() {
+        updateHrrrSmokeTime();
 
-            if (!global.map.getSource('viSmoke')) {
-                global.map.addSource('viSmoke', {
-                    type: 'raster',
-                    tiles: [
-                        `https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=vi_smoke&x={x}&y={y}&z={z}&time=${fcstHour}&modelrun=${global.hrrrSmokeTime.init}&level=0`
-                    ],
-                    tileSize: 256
-                });
-            }
+        if (!global.map.getSource('viSmoke')) {
+            global.map.addSource('viSmoke', {
+                type: 'raster',
+                tiles: [
+                    `https://mapservices.weather.noaa.gov/raster/rest/services/air_quality/ndgd_smoke_vert_1hr_avg_time/ImageServer/exportImage?F=image&FORMAT=PNG32&TRANSPARENT=true&LAYERS=show%3A0&time=${global.hrrrSmokeTime.init}%2C${global.hrrrSmokeTime.fcst}&SIZE=256%2C256&BBOXSR=3857&IMAGESR=3857&DPI=90&BBOX={bbox-epsg-3857}`
+                ],
+                tileSize: 256
+            });
+        }
 
-            if (!global.map.getLayer('viSmoke')) {
-                global.map.addLayer({
-                    id: 'viSmoke',
-                    type: 'raster',
-                    source: 'viSmoke',
-                    paint: {
-                        'raster-opacity': 0.75
-                    },
-                    layout: {
-                        visibility: 'visible'
-                    }
-                });
-            }
-        } else {
-            global.map.getSource('viSmoke').setTiles([
-                `https://apps.gsl.noaa.gov/smoke/wmts/image/hrrr_smoke?var=vi_smoke&x={x}&y={y}&z={z}&time=${fcstHour}&modelrun=${global.hrrrSmokeTime.init}&level=0`
-            ]);
+        if (!global.map.getLayer('viSmoke')) {
+            global.map.addLayer({
+                id: 'viSmoke',
+                type: 'raster',
+                source: 'viSmoke',
+                paint: {
+                    'raster-opacity': 0.75
+                },
+                layout: {
+                    visibility: 'visible'
+                }
+            });
         }
     }
 

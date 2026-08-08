@@ -1,0 +1,123 @@
+
+
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <link rel="preconnect" href="//services3.arcgis.com">
+    <link rel="preconnect" href="//ka-p.fontawesome.com">
+    <link rel="preconnect" href="//fonts.googleapis.com">
+    <link rel="preconnect" href="//fonts.gstatic.com" crossorigin>
+    <title>Wildfire Map: Track Live Fires, Smoke, & Lightning | Map of Fire</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#ffc65c" />
+    <meta name="description" content="Track wildfires & smoke across the US. Monitor fire spread, intensity, and lightning strikes. Stay informed with real-time updates on Map of Fire." />
+    <meta property="og:title" content="Wildfire Map: Track Live Fires, Smoke, & Lightning | Map of Fire" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="//mapotechnology.com/assets/images/preview_mapofire.png">
+    <meta property="og:image:alt" content="Map of Fire: Web App preview">
+    <meta property="og:image:width" content="1920">
+    <meta property="og:image:height" content="1080">
+    <meta property="og:site_name" content="Map of Fire" />
+    <meta property="og:url" content="https://mapofire.com/?version=3.0.1" />
+    <meta property="og:description" content="Track wildfires & smoke across the US. Monitor fire spread, intensity, and lightning strikes. Stay informed with real-time updates on Map of Fire." />
+    <meta name="twitter:title" content="Wildfire Map: Track Live Fires, Smoke, & Lightning | Map of Fire">
+    <meta name="twitter:description" content="Track wildfires & smoke across the US. Monitor fire spread, intensity, and lightning strikes. Stay informed with real-time updates on Map of Fire.">
+    <meta name="twitter:image" content="//mapotechnology.com/assets/images/preview_mapofire.png">
+    <link rel="apple-touch-icon" href="//mapotechnology.com/assets/images/mf-apple-touch-icon.png">
+    <link rel="icon" sizes="any" href="//mapotechnology.com/assets/images/mf-favicon.png">
+    <link rel="shortcut icon" href="//mapotechnology.com/assets/images/mf-favicon.ico" type="image/x-icon" />
+    <link rel="manifest" href="../dist/3.0.2/manifest.webmanifest">
+    <link rel="stylesheet" href="./styles/main.css">
+    <link rel="stylesheet" href="./styles/app.css">
+    <link rel="stylesheet" href="./styles/supp.css">
+    <link rel="preload" href="//fonts.googleapis.com/css2?family=Roboto:wght@300..700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@300..700&display=swap">
+    </noscript>
+    <link rel="canonical" href="https://mapofire.com/?version=3.0.2" />
+    </head>
+
+<body>
+
+    <div class="android-banner">
+        <div class="inner">
+            <span class="dismiss far fa-xmark" data-action="close-android"></span>
+            <div class="icon"></div>
+            <div class="text"><b>Map of Fire: Wildfire Map</b><span>Download on the Google Play Store</span></div>
+        </div>
+        <a href="//play.google.com/store/apps/details?id=com.mapollc.mapofire" class="btn btn-sm btn-yellow play_store_download" style="margin:0">Download</a>
+    </div>
+
+    <main>
+        <nav id="app-nav">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <a href="#" onclick="window.location.href=window.location.href;return false">
+                        <img src="//mapotechnology.com/assets/images/mapofire_icon_transparent.png" alt="Map of Fire logo" title="Map of Fire">
+                    </a>
+                </div>
+                <span id="dd-close" data-action="dropdown-nav" class="far fa-xmark"></span>
+                <ul>
+                    <li id="account" class="ttip light" data-tooltip="Your account" data-action="account"><i class="fas fa-user-circle"></i><span>Login</span></li>
+                    <li id="new_fires" class="ttip light" data-tooltip="New incidents" style="display:none"><i class="fas fa-fire-flame"></i><span>New Fires</span></li>
+                    <li class="ttip light" data-tooltip="Basemaps" data-action="basemap"><i class="far fa-grid"></i><span>Basemaps</span></li>
+                    <li id="layers" class="ttip light" data-tooltip="Map Layers" data-action="layers"><i class="far fa-layer-group"></i><span>Layers</span></li>
+                    <li id="legend" class="ttip light" data-tooltip="Map Legend" data-action="legend"><i class="far fa-list"></i><span>Legend</span></li>
+                    <li id="my-fire" class="ttip light" data-tooltip="My Fires" data-action="myfires"><i class="far fa-display-chart-up"></i><span>My Fires</span></li>
+                    <li id="refresh" class="ttip light" data-tooltip="Refresh Map" data-action="refresh"><i class="far fa-sync"></i><span>Refresh</span></li>
+                    <li id="report" class="ttip light" data-tooltip="Report an incident" data-action="report" data-active="0"><i class="far fa-location-plus"></i><span>Report</span></li>
+                    <li class="ttip light" data-tooltip="Go to dashboard" data-action="blazeboard"><i class="fas fa-chart-mixed"></i><span>Dashboard</span></li>
+                    <li id="save" class="ttip light" data-tooltip="Sync Settings" data-action="save"><i class="far fa-cloud-arrow-up"></i><span>Sync</span></li>
+                </ul>
+                <i class="fas fa-chevron-left" title="Toggle navigation" id="close-navbar" data-action="close-navbar" data-open="true"></i>
+            </div>
+        </nav>
+
+        <div class="app-wrapper">
+            <div id="map"></div>
+            <div class="bd"></div>
+            <div class="loading">
+                <img src="//mapotechnology.com/assets/images/mapofire_logo_200.png" fetchpriority="high" alt="Map of Fire logo" title="Map of Fire" style="height:50px">
+                <div class="s"></div><span>Preparing map...</span>
+            </div>
+
+            <div class="filter-controls">
+                <span id="menuIcon" data-action="dropdown-nav" class="far fa-bars"></span>
+                <div class="search control">
+                    <span class="far fa-magnifying-glass"></span>
+                    <input type="text" id="q" autocomplete="off" disabled placeholder="Search wildfires, cities, or coordinates">
+                    <span id="clearSearch" data-action="clear-search" class="far fa-xmark"></span>
+                    <ul id="search-results" class="control">
+                        <li class="standby" style="gap:.5em"><i class="fa-duotone fa-spinner-third"></i><span>Searching...</span></li>
+                    </ul>
+                </div>
+                <!--<div class="tools control"></div>
+                <div class="control button evacBtn ttip" data-action="evac_list" data-tooltip="Evacuations" style="display:none"></div>-->
+            </div>
+        </div>
+
+        <div id="modal">
+            <div class="close" data-action="close-modal">
+                <div class="handle"></div>
+            </div>
+            <div class="content"></div>
+        </div>
+
+        <div id="impact">
+            <header>
+                <h2 class="title"></h2>
+                <div class="impactClose" data-action="close-impact"><i class="fat fa-times"></i></div>
+            </header>
+            <div class="wrapper"></div>
+        </div>
+    </main>
+
+        <script>
+        function gtag(){}window.__DEBUG__ = true;window.isAuthUser=true;const VERSION='3.0.2',BUILD_DATE='2026-08-03T19:12:28-07:00',country=null,state=null,county=null,defaultTitle='Wildfire Map: Track Live Fires, Smoke, & Lightning | Map of Fire',defaultDesc='Track wildfires & smoke across the US. Monitor fire spread, intensity, and lightning strikes. Stay informed with real-time updates on Map of Fire.',layers={"categories":{"fire":"Wildfire","evac":"Evacuations","wx":"Weather","plan":"Planning Tools","gis":"GIS Layers","smoke":"Smoke","state":"State-Specific"},"layers":{"fire":[{"id":"newFires","name":"New Fires","perms":[],"default":true,"app":true,"desc":"New wildfires in the last 12 hours"},{"id":"allFires","name":"All Fires","perms":[],"default":true,"app":true,"desc":"All wildfire incidents reported more than 12 hours ago"},{"id":"smokeChecks","name":"Smoke Checks","perms":[],"default":true,"app":true,"desc":"Non-wildfire, smoke checks reported to dispatch centers"},{"id":"rxBurns","name":"Prescribed Burns","perms":[],"default":false,"app":true,"desc":"Active or planned prescribed burns"},{"id":"perimeters","name":"Wildfire Perimeters","perms":[],"default":true,"app":true,"desc":"Show latest, active mapped wildfire perimeters (some fires only)"},{"id":"modis24","name":"24-hr Satellite Heat Detection","perms":["PREMIUM","PRO"],"default":false,"app":true,"minZoom":7,"desc":"See hotspots in the last 24 hours"},{"id":"modis48","name":"48-hr Satellite Heat Detection","perms":["PRO"],"default":false,"app":true,"minZoom":7,"desc":"See hotspots over the last 24-48 hours"},{"id":"modis72","name":"72-hr Satellite Heat Detection","perms":["PRO"],"default":false,"app":true,"minZoom":7,"desc":"See hotspots over the last 48-72 hours"}],"evac":[{"id":"evac","name":"Evacuations","perms":[],"default":false,"app":true,"desc":"See detailed mapping of evacuation areas in Oregon & California"},{"id":"firemed","name":"Fire & EMS Locations","perms":["PREMIUM"],"default":false,"app":true,"desc":"Show fire departments, hospitals, and medical locations"},{"id":"tfrs","name":"Temporary Flight Restrictions","perms":["PREMIUM","PRO"],"default":false,"app":false,"testing":true,"desc":"Overlay FAA temporary flight restrictions (TFRs)"}],"wx":[{"id":"lightning1","name":"1-hr Lightning","perms":["PREMIUM"],"default":true,"app":true,"desc":"Overlay lightning strikes within the last hour"},{"id":"lightning24","name":"24-hr Lightning","perms":["PREMIUM","PRO"],"default":true,"app":true,"desc":"Overlay lightning strikes from the last 24 hours"},{"id":"airq","name":"Air Quality","perms":[],"default":false,"app":true,"desc":"See current air quality conditions from the EPA"},{"id":"wwas","name":"Weather Alerts","perms":[],"default":false,"app":true,"desc":"View current weather alerts from the NWS"},{"id":"spc","name":"Outlooks","perms":["PRO"],"default":false,"app":true,"desc":"Review current severe & fire outlooks from the SPC"},{"id":"stns","name":"Current Observations","perms":["PREMIUM","PRO"],"default":false,"app":true,"desc":"See current weather obs at remote automatic weather stations (RAWS)"},{"id":"radar","name":"Doppler Radar","perms":[],"default":false,"app":true,"desc":"See radar imagery from the last 2 hours"},{"id":"ndfd","name":"Forecast Models","perms":["PRO"],"default":false,"app":true,"desc":"Visualize various weather forecast models"},{"id":"visSatellite","name":"Visible Satellite","perms":[],"default":false,"app":true,"desc":"Visualize the most recent visible satellite imagery"},{"id":"irSatellite","name":"Infrared Satellite","perms":["PREMIUM","PRO"],"default":false,"app":true,"desc":"Visualize the most recent infrared satellite imagery"},{"id":"wvSatellite","name":"Water Vapor Satellite","perms":["PREMIUM","PRO"],"default":false,"app":true,"desc":"Visualize the most recent water vapor satellite imagery"}],"plan":[{"id":"erc","name":"Energy Release Component","perms":["PREMIUM","PRO"],"default":false,"app":true,"desc":"View observed and forecasted energy release component (ERC) values for fire danger"},{"id":"ev","name":"PNW Evacuation Vulnerability","perms":["PRO"],"default":false,"app":true,"desc":"View evacuation vulnerabilities from the PNW's most rural areas"},{"id":"sfp","name":"Significant Fire Potential","perms":["PREMIUM","PRO"],"default":false,"app":true,"desc":"Show significant fire potential outlooks"},{"id":"spcClimo","name":"SPC Fire Climatology","perms":["PREMIUM","PRO"],"default":false,"app":true,"desc":"Daily probability of a wildfire >100 acres using SPC climatology"},{"id":"nri","name":"FEMA Wildfire Risk Index","perms":["PRO"],"default":false,"app":true,"desc":"See each county's wildfire risk based on annual loss, vulnerability & resilience"},{"id":"rth","name":"Wildfire Risk to Homes","perms":["PREMIUM","PRO"],"default":false,"app":true,"desc":"Overlay wildfire risk to homes model"},{"id":"bp","name":"Wildfire Likelihood","perms":["PREMIUM","PRO"],"default":false,"app":true,"desc":"Overlay wildfire likelihood (burn probability) model"},{"id":"whp","name":"Wildfire Hazard Potential","perms":["PRO"],"default":false,"app":true,"desc":"Overlay wildfire supression difficulty model"},{"id":"wet","name":"Wildfire Exposure Type","perms":["PRO"],"default":false,"app":true,"desc":"Shows where direct wildfire or indirect sources threaten structures"},{"id":"drought","name":"Drought Monitor","perms":["PREMIUM","PRO"],"default":false,"app":true,"desc":"Overlay current drought conditions"},{"id":"power","name":"Major Powerlines","perms":["PRO"],"default":false,"app":true,"desc":"Overlay major powerlines across the US"},{"id":"fuels","name":"Fuels\/Vegetation","perms":["PREMIUM","PRO"],"default":false,"app":true,"desc":"Overlay fuel\/vegatation LANDFIRE model"}],"gis":[{"id":"nwsCWAs","name":"NWS County Warning Areas","perms":["PRO"],"default":false,"app":true,"desc":"Overlay NWS county warning areas"},{"id":"roads","name":"USFS Road Network","perms":["PRO"],"default":false,"app":true,"minZoom":11,"desc":"Show USFS road network"},{"id":"lands","name":"Federal Lands","perms":["PRO"],"default":false,"app":true,"desc":"Show federal land ownership"},{"id":"plss","name":"Township Range Section","perms":["PRO"],"default":false,"app":true,"desc":"Overlay TRS boundaries"},{"id":"dispatch","name":"Dispatch Boundaries","perms":["PRO"],"default":false,"app":true,"desc":"Show interagency dispatch center boundaries"},{"id":"gaccBounds","name":"GACC Boundaries","perms":["PRO"],"default":false,"app":true,"desc":"Show national Geographic Area Coordination Centers (GACCs)"}],"smoke":[{"id":"hms","name":"Smoke Detection","perms":["PREMIUM"],"default":false,"app":true,"desc":"Overlay NOAA's smoke detection and concentrations from GOES-16 & 18 satellite data"},{"id":"smokeFcst","name":"Smoke Forecast","perms":["PRO"],"default":false,"app":true,"desc":"See surface smoke forecast for the next hour"},{"id":"sfcSmoke","name":"Surface Smoke","perms":["PREMIUM","PRO"],"default":false,"app":false,"testing":true,"desc":"See HRRR near-surface smoke models (\u00b5g\/m<sup>3<\/sup>)"},{"id":"viSmoke","name":"Vertically Integrated Smoke","perms":["PRO"],"default":false,"app":false,"testing":true,"desc":"See HRRR vertically integrated smoke models (\u00b5g\/m<sup>3<\/sup>)"}],"state":[{"id":"odfFDR","name":"ODF Fire Danger","perms":["PREMIUM","PRO"],"default":false,"app":true,"desc":"Public fire danger on Oregon Department of Forestry lands"},{"id":"cdfFHSZ","name":"CA Fire Hazard Severity Zones","perms":["PRO"],"default":false,"app":true,"desc":"Overlay Cal Fire administrative unit boundaries"},{"id":"calfireUnits","name":"Cal Fire Administrative Units","perms":["PRO"],"default":false,"app":true,"desc":"Overlay Cal Fire fire hazard severity zones (FHSZ)"},{"id":"calfireAircraft","name":"Cal Fire Aircraft","perms":["PRO"],"default":false,"app":true,"desc":"Track Cal Fire's firefighting aircraft"}]},"build":"20260709"};    </script>
+    <script type="module" src="./main.js"></script>
+    <script async src="//kit.fontawesome.com/b7a6b6c2b4.js" crossorigin="anonymous"></script>
+</body>
+
+</html>

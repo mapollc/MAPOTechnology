@@ -23,7 +23,7 @@ export function toggleLayer(e) {
         }
     };
 
-    if (!action || !config.settings.hasPermissions(layerPerms)) return;
+    if (!action || !config.settings?.hasPermissions(layerPerms)) return;
 
     if (action.run) {
         action.run(checked);

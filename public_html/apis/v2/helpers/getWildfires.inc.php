@@ -1,6 +1,126 @@
 <?
+$category = $category == 'new' ? 'all' : $category;
+
 if ($category == 'complexes') {
-    include_once './complexes.inc.php';
+    $features = [];
+    $year = date('Y');
+    $result = mysqli_query($con, "SELECT year, incidentID, name, lat, lon, child_fire, child_name, c.unit, agency, area, logo
+        FROM complexes c
+        LEFT JOIN dispatch_zones dz ON dz.unit = c.unit
+        WHERE year = $year
+        ORDER BY name, child_name");
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        $id = $row['incidentID'];
+
+        // check if there is any inciweb data for this fire
+        $getInciweb = executeQuery(
+            'is',
+            [$row['year'], "%{$row['name']}%"],
+            "SELECT incident_info, data, contact, photo, updated AS inciweb_updated, captured AS inciweb_captured
+                    FROM inciweb FORCE INDEX(idx_year_state_name)
+                    WHERE year = ? AND name LIKE ?
+                    LIMIT 1"
+        );
+
+        if ($getInciweb) $row = [...$row, ...$getInciweb];
+
+        if (!isset($features[$id])) {
+            $features[$id] = [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'Point',
+                    'coordinates' => [
+                        (float)$row['lon'],
+                        (float)$row['lat']
+                    ]
+                ],
+                'properties' => [
+                    'incidentID' => $row['incidentID'],
+                    'name'       => $row['name'],
+                    'year'       => (int)$row['year'],
+                    'protection' => [
+                        'agency' => $row['agency'],
+                        'area'   => $row['area'],
+                        'unit'   => $row['unit'],
+                        'logo'   => $row['logo']
+                    ],
+                    'children'   => []
+                ]
+            ];
+
+            // create inciweb json object
+            if (!empty($row['incident_info']) || !empty($row['data'])) {
+                $bkacres = '';
+                $contact = json_decode($row['contact'], true);
+                $inciweb = ['incident_info' => $row['incident_info'], 'current' => json_decode($row['data'], true)];
+
+                if ($row['photo']) {
+                    $ph = json_decode($row['photo'], true);
+                    $inciweb['photo'] = ['url' => $ph[0], 'caption' => $ph[1]];
+                }
+
+                $inciweb['contacts'] = empty($contact['contact']) && empty($contact['pio']) ? null : $contact;
+                $inciweb['updated'] = floatval($row['inciweb_updated']);
+
+                $features[$id]['properties']['inciweb'] = $inciweb;
+
+                $aa = json_decode($row['data'], true);
+                foreach (($aa['data']['Current Situation'] ?? []) as $k) {
+                    if ($k['desc'] == 'Size') {
+                        $bkacres = str_replace([' Acres', ','], ['', ''], $k['info']);
+                    }
+
+                    if ($k['desc'] == 'Containment') {
+                        $contain = $k['info'];
+                    }
+                }
+
+                // if acreage reported by inciweb is greater than acres reported by dispatch, use inciweb
+                if ($bkacres > $row['acres']) {
+                    $fire['properties']['acres'] = $bkacres;
+                }
+
+                // remove coordinates from inciweb data
+                $seen = [];
+                $features[$id]['properties']['inciweb']['current']['data']['Basic Information'] = array_values(
+                    array_filter(
+                        $features[$id]['properties']['inciweb']['current']['data']['Basic Information'],
+                        function ($item) use (&$seen) {
+                            if (in_array($item['desc'], [
+                                'Coordinates',
+                                'Last Updated',
+                                'Fire Discovered'
+                            ], true)) {
+                                return false;
+                            }
+
+                            if (isset($seen[$item['desc']])) {
+                                return false;
+                            }
+
+                            $seen[$item['desc']] = true;
+                            return true;
+                        }
+                    )
+                );
+
+                // remove size (acres) from inciweb data
+                $cs = $features[$id]['properties']['inciweb']['current']['data']['Current Situation'];
+                if (!empty($cs)) {
+                    $situation = array_values(array_filter($cs, fn($item) => $item['desc'] !== 'Size'));
+                    $features[$id]['properties']['inciweb']['current']['data']['Current Situation'] = $situation;
+                }
+            }
+        }
+
+        $features[$id]['properties']['children'][] = [
+            'incidentID' => $row['child_fire'],
+            'name'       => $row['child_name']
+        ];
+    }
+
+    return $returnJson = ['type' => 'FeatureCollection', 'features' => array_values($features)];
 }
 
 $moreThanJustAll = ['smk', 'rx', 'all,new', 'all,new,smk', 'all,new,rx', 'all,new,smk,rx', 'smk,rx', 'canada'];
@@ -19,7 +139,7 @@ if ($_REQUEST['archive']) {
         $wheres[] = "date >= {$_REQUEST['start']} AND date <= {$_REQUEST['end']} AND ";
     } else {
         // new fires, within the last 12 hours
-        if ($category == 'new') {
+        /*if ($category == 'new') {
             $wheres[] = "date >= " . strtotime('-12 hours') . " AND ";
             // all, new, rx or smoke checks
         } else if (in_array($category, $moreThanJustAll)) {
@@ -27,7 +147,7 @@ if ($_REQUEST['archive']) {
             // all fires, older than 12 hours ago
         } else {
             $wheres[] = "date < " . strtotime('-12 hours') . " AND ";
-        }
+        }*/
     }
     $wheres[] = "year = $year AND ";
 

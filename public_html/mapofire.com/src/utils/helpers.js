@@ -85,7 +85,8 @@ export async function api(uri, fields = null, v2 = false, forAuth = false) {
         return null;
     }
 
-    let result,
+    let resp,
+        result,
         url = v2 ? uri.replace('v1', 'v2') : uri;
 
     const isExternal = url.includes('weather.gov') || url.includes('unl.edu') || url.includes('rainviewer.com'),
@@ -107,20 +108,34 @@ export async function api(uri, fields = null, v2 = false, forAuth = false) {
     if (!isExternal) ops['body'] = fd;
 
     try {
-        const resp = await fetch(url, ops);
+        resp = await fetch(url, ops);
+    } catch (e) {
+        console.warn(`Fetch failed for ${url}; retrying...`, e);
 
-        if (!resp.ok) {
-            const errorText = await resp.text();
-            console.error(`HTTP error! Status: ${resp.status}, URL: ${url}, Response: ${errorText}`);
+        await new Promise(resolve => setTimeout(resolve, 250));
 
+        try {
+            resp = await fetch(url, ops);
+        } catch (retryError) {
+            console.error(`Fetch failed after retry for URL: ${url}`, retryError);
             return null;
         }
+    }
 
-        // Attempt to parse JSON
+    // if there was an error with the network request, log the error
+    if (!resp.ok) {
+        const errorText = await resp.text();
+        console.error(`HTTP error! Status: ${resp.status}, URL: ${url}, Response: ${errorText}`);
+
+        return null;
+    }
+
+    // parse JSON separately so a JSON error isn't retried
+    try {
         result = await resp.json();
     } catch (e) {
-        console.error(`Fetch or JSON parsing error for URL: ${url}`, e.message);
-        result = null
+        console.error(`JSON parsing error for URL: ${url}`, e.message);
+        result = null;
     }
 
     return result;

@@ -1,6 +1,6 @@
 <?
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+////ini_set('display_errors', 1);
+////error_reporting(E_ALL);
 include_once '../config.inc.php';
 include_once '../apis/functions.inc.php';
 
@@ -24,7 +24,7 @@ $irwins = [];
 echo '=========  Getting list of complexes =========' . PHP_EOL;
 
 $baseURL = 'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations/FeatureServer/0/query';
-$url = "$baseURL?where=FireDiscoveryDateTime+%3E%3D+DATE+%2701%2F01%2F{$year}+00%3A00%3A00%27+AND+IncidentTypeCategory+%3D+%27CX%27&returnGeometry=false&outFields=IrwinID,IncidentName,UniqueFireIdentifier&f=json";
+$url = "$baseURL?where=FireDiscoveryDateTime+%3E%3D+DATE+%2701%2F01%2F{$year}+00%3A00%3A00%27+AND+IncidentTypeCategory+%3D+%27CX%27&returnGeometry=false&outFields=IrwinID,IncidentName,UniqueFireIdentifier,POOProtectingUnit&f=json";
 $json = json_decode(file_get_contents($url));
 
 if (!$json->features) return;
@@ -33,6 +33,7 @@ foreach ($json->features as $fire) {
     $attr = $fire->attributes;
     $incidentID = $attr->UniqueFireIdentifier;
     $orginalName = $attr->IncidentName;
+    $unit = $attr->POOProtectingUnit;
     $name = incidentName($attr->IncidentName, $incidentID, 'Wildfire');
     $irwinID = $attr->IrwinID;
 
@@ -42,6 +43,7 @@ foreach ($json->features as $fire) {
             $year,
             $incidentID,
             $name,
+            $unit,
             $time
         ]
     ];
@@ -68,16 +70,18 @@ foreach ($irwins as $irwin) {
         $year = $irwin[1][0];
         $incID = $irwin[1][1];
         $name = mysqli_real_escape_string($con, $irwin[1][2]);
-        $time = $irwin[1][3];
+        $unit = $irwin[1][3];
+        $time = $irwin[1][4];
 
         $sqlQueries[] = "INSERT INTO complexes (
-                year,incidentID,irwinID,name,lat,lon,child_fire,child_name,updated
+                year,incidentID,irwinID,name,unit,lat,lon,child_fire,child_name,updated
             ) VALUES(
-                $year,'$incID','$irwin[0]','$name',$lat,$lon,'$incNum','$childName',$time
+                $year,'$incID','$irwin[0]','$name','$unit',$lat,$lon,'$incNum','$childName',$time
             )
             ON DUPLICATE KEY UPDATE
                 irwinID = VALUES(irwinID),
                 name = VALUES(name),
+                unit = VALUES(unit),
                 lat = VALUES(lat),
                 lon = VALUES(lon),
                 child_name = VALUES(child_name),

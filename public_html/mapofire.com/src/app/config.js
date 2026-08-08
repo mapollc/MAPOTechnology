@@ -2,27 +2,12 @@ import { storage, api } from '../utils/helpers.js'
 
 import { global } from './state.js'
 
-const incidentWorker = new Worker(
-    new URL('../workers/incident.js', import.meta.url),
-    { type: 'module' }
-);
-
-const fwfWorker = new Worker(
-    new URL('../workers/fwf.js', import.meta.url),
-    { type: 'module' }
-);
-
-const wwasWorker = new Worker(
-    new URL('../workers/wwas.js', import.meta.url),
-    { type: 'module' }
-);
-
 export const ENV = {
     origin: window.location.origin,
-    host: `//${window.location.host.replace('www.', '')}/`,
+    host: `https://${__DEBUG__ ? 'mapofire.com' : `${window.location.host.replace('www.', '')}`}/`,
     baseURL: `${window.location.origin}/`,
-    domain: '//mapotechnology.com/',
-    apiURL: '//api.mapotechnology.com/v1/',
+    domain: 'https://mapotechnology.com/',
+    apiURL: 'https://api.mapotechnology.com/v1/',
     debug: window.location.search.includes('version'),
     PLATFORM_MAP: {
         'wildfiremap.org': 'wildfiremap',
@@ -39,16 +24,19 @@ export const ENV = {
         'mapofire': '50e2c43f8f63ff0ed20127ee2487f15e'
     };
 
+export const getPlatform = () => ENV.PLATFORM_MAP[ENV.host] || 'mapofire';
+
 export const config = {
     settings: null,
     productName: 'Map of Fire',
     company: 'MAPO LLC',
-    apiKey: () => API_KEYS[getPlatform()],
+    apiKey: () => ['localhost', '127.0.0.1'].includes(window.location.hostname) ? 'bG9jYWxob3N0' : API_KEYS[getPlatform()],
     disableClicks: false,
     clusterFires: true,
     RADAR_OPACITY: 0.7,
     ANIMATION_DELAY_MS: 500,
     wildfire: null,
+    perimeters: null,
     layersHandler: null,
     layersMenu: null,
     listOfLayers: [],
@@ -80,11 +68,11 @@ export const config = {
     modisZoomLevel: 7,
     firemedZoomLevel: 9,
     toolsInstance: null,
-    workers: {
+    /*workers: {
         incident: incidentWorker,
         fwf: fwfWorker,
         wwas: wwasWorker
-    },
+    },*/
     fog: {
         'sky-color': '#33bbff',
         'sky-horizon-blend': +0.5,
@@ -101,7 +89,6 @@ export const config = {
     }
 };
 
-export const getPlatform = () => ENV.PLATFORM_MAP[ENV.host] || 'mapofire';
 export const getFont = (type) => {
     const mapType = config.settings.getBasemap();
     const fontMap = {
@@ -180,7 +167,6 @@ export const tileConfig = [
     }
 ];
 
-export const fireIcons = ['', 'out', 'big', 'controlled', 'contained', 'large', 'large-inactive', 'complex', 'new', 'new-big', 'rx', 'smoke'];
 export const risk = {
     'whp': [
         ['N/A', '#fff'],
@@ -195,6 +181,9 @@ export const risk = {
 export async function loadDispatchCenters() {
     if (storage('mapofire.dispatch') == null || Date.now() - storage('mapofire.dispatch_time') > 60 * 60 * 24 * 1000) {
         const dc = await api(`${ENV.apiURL}dispatch/all`);
+
+        if (!dc?.dispatch) return;
+
         storage('mapofire.dispatch', JSON.stringify(dc.dispatch));
         storage('mapofire.dispatch_time', Date.now());
         global.dispatchCenters = dc.dispatch;

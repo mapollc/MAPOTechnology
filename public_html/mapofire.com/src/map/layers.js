@@ -103,7 +103,7 @@ export const osm = {
 export const layerActions = Object.freeze({
     // wildfire related
     'newFires': { layers: ['new_fires', 'new_fires_title'] },
-    'allFires': { layers: ['all_fires', 'all_fires_title', 'ca_fires', 'ca_fire_title'] },
+    'allFires': { layers: ['all_fires', 'all_fires_title', 'ca_fires', 'ca_fire_title', 'complexes', 'complexes_title'] },
     'smokeChecks': { layers: ['smk_fires', 'smk_fires_title'] },
     'rxBurns': { layers: ['rx_fires', 'rx_fires_title'] },
     'perimeters': {
@@ -117,14 +117,15 @@ export const layerActions = Object.freeze({
     'modis72': { layers: ['modis72'], exe: () => { config.layersHandler.modis(3); } },
 
     // evacuations & firemed
-    'evac': { layers: ['evac', 'evac_outline', 'evac_title'] },
+    'evac': { layers: ['evac', 'evac_bg', 'evac_outline', 'evac_title'] },
     'firemed': { layers: ['firemed'], exe: () => { config.layersHandler.firemed(); } },
     'tfrs': { layers: ['tfrs', 'tfrs_outline', 'tfrs_title'], exe: () => { config.layersHandler.tfrs(); } },
 
     // weather
     'lightning1': { layers: ['lightning1'] },
     'lightning24': { layers: ['lightning24'] },
-    'wwas': { layers: ['wwas_fill', 'wwas_outline', 'wwas_title'], exe: async () => { new NWS().get(); } },
+    //'wwas': { layers: ['wwas_fill', 'wwas_outline', 'wwas_title'], exe: async () => { new NWS().get(); } },
+    'wwas': { layers: ['wwas'], exe: async () => { new NWS().get(); } },
     'stns': { layers: ['stns', 'stns_text'], exe: () => { new Weather().raws(); } },
     'visSatellite': { layers: ['satellite1'], exe: async () => { new NWS().satellite(1); } },
     'irSatellite': { layers: ['satellite2'], exe: async () => { new NWS().satellite(2); } },
@@ -277,10 +278,43 @@ export const layerActions = Object.freeze({
 });
 
 export async function getContourLibrary() {
+    if (window.__DEBUG__ || __DEBUG__) return;
+
     if (!mlcontour) {
         const module = await import('maplibre-contour');
         mlcontour = module.default;
     }
 
     return mlcontour;
+}
+
+// Added: Enforce desired layer order regardless of load order
+export function reorderLayers() {
+    [
+        'evac',
+        'evac_bg',
+        'evac_outline',
+
+        'perimeters_fill',
+        'perimeters_outline',
+
+        'evac_title',
+        'perimeters_title',
+
+        'rx_fires',
+        'rx_fires_title',
+        'smk_fires',
+        'smk_fires_title',
+        'new_fires',
+        'new_fires_title',
+        'all_fires',
+        'all_fires_title',
+
+        'complexes',
+        'complexes_title'
+    ].forEach(id => {
+        if (global.map.getLayer(id)) {
+            global.map.moveLayer(id);
+        }
+    });
 }

@@ -32,7 +32,7 @@ export class ChangeListener {
             config.layersHandler.addTerrain();
             config.layersHandler.init();
             config.wildfire.getWildfires();
-            config.wildfire.perimeters();
+            config.perimeters.get();
 
             const cbox = config.settings.checkboxes();
 
@@ -52,7 +52,7 @@ export class ChangeListener {
         ['perimeters_outline', 'perimeters_fill', 'perimeters_title'].forEach(lay => global.map.removeLayer(lay));
         global.map.removeSource('perimeters');
 
-        config.wildfire.perimeters();
+        config.perimeters.get();
     }
 
     toggle() {
@@ -382,6 +382,11 @@ export class ClickListener {
 
         this.closeDataForm();
 
+        if (dataset.wfid) {
+            config.wildfire.incident(dataset.wfid);
+            return;
+        }
+
         global.map.easeTo({
             center: [dataset.lon, dataset.lat],
             zoom: 12,
@@ -441,7 +446,7 @@ export class ClickListener {
         impact.querySelector('#a').innerHTML = 'Layers';
 
         config.listOfLayers.filter(lay => !lay.testing || (lay.testing && debugMode)).forEach(layer => {
-            const hasPermissions = config.settings.hasPermissions(layer.perms),
+            const hasPermissions = config.settings?.hasPermissions(layer.perms),
                 isChecked = (layer.default && !config.settings.checkboxes()) || (config.settings.checkboxes() && config.settings.isEnabled(layer.id)),
                 item = impact.querySelector(`li.layer[data-id="${layer.id}"]`),
                 filter = item.querySelector('.data-filter'),
@@ -596,7 +601,7 @@ export class ClickListener {
         basemapListUl.className = 'layers-list bm';
 
         tileConfig.forEach(tile => {
-            const hasPerms = config.settings.hasPermissions(tile.permissions),
+            const hasPerms = config.settings?.hasPermissions(tile.permissions),
                 isChecked = tile.id === config.settings.getBasemap(),
                 listItem = document.createElement('li'),
                 radioDiv = document.createElement('div'),
@@ -914,7 +919,7 @@ export class ClickListener {
     }
 
     archive() {
-        if (!config.settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) return;
+        if (!config.settings?.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) return;
 
         const yrs = Array.from({ length: config.curTime.getFullYear() - 2014 }, (_, idx) => {
             const year = config.curTime.getFullYear() - idx;
@@ -940,13 +945,22 @@ export class ClickListener {
         let legCont = legend.categories.map(cat => {
             const key = Object.keys(cat)[0];
 
-            const itemsHtml = (legend.items[key] || [])
-                .map(item => {
-                    const icon = item[0] === 'icon'
-                        ? item[1]
-                        : `<div class="color" style="background-color:${item[2]}">${item[1] ?? ''}</div>`;
-                    return `<div class="row"><div class="ic">${icon}</div><div class="desc">${item[3] ?? ''}</div></div>`;
-                }).join('');
+            const itemsHtml = (legend.items[key] || []).map(item => {
+                let icon = '';
+
+                if (item[0] == 'img') {
+                    icon = `<img loading="lazy" src="https://mapotechnology.com/assets/images/icons/fire/fire-icon${item[1] ? `-${item[1]}` : ''}.png" style="width:${item[4]}px" alt="${item[3]}" title="${item[3]}">`;
+                } else if (item[0] == 'icon') {
+                    icon = item[1];
+                } else {
+                    icon = `<div class="color" style="background-color:${item[2]}">${item[1] ?? ''}</div>`;
+                }
+
+                return `<div class="row">
+                    <div class="ic">${icon}</div>
+                    <div class="desc">${item[3] ?? ''}</div>
+                </div>`;
+            }).join('');
 
             return `<div class="group"><h3 class="group-title">${cat[key]}</h3>${itemsHtml}</div>`;
         }).join('');

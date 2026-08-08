@@ -12,7 +12,31 @@ import { layerActions } from '../map/layers.js';
 
 export class NWS {
     async get(update = false) {
-        const wwa = await api('https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/NWS_Watches_Warnings_v1/FeatureServer/6/query', [
+        if (!global.map.getSource('wwas')) {
+            global.map.addSource('wwas', {
+                type: 'raster',
+                tiles: [
+                    'https://mapservices.weather.noaa.gov/eventdriven/rest/services/WWA/watch_warn_adv/MapServer/export?F=image&FORMAT=PNG32&TRANSPARENT=true&LAYERS=show%3A0%2C1&SIZE=256%2C256&BBOXSR=3857&IMAGESR=3857&DPI=90&BBOX={bbox-epsg-3857}'
+                ],
+                tileSize: 256
+            });
+        }
+
+        if (!global.map.getLayer('wwas')) {
+            global.map.addLayer({
+                id: 'wwas',
+                type: 'raster',
+                source: 'wwas',
+                paint: {
+                    'raster-opacity': 0.75
+                },
+                layout: {
+                    visibility: 'visible'
+                }
+            });
+        }
+
+        /*const wwa = await api('https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/NWS_Watches_Warnings_v1/FeatureServer/6/query', [
             ['where', '1=1'],
             ['outFields', 'OBJECTID,Event,Affected,End_'],
             ['returnGeometry', true],
@@ -92,7 +116,7 @@ export class NWS {
                     }
                 });
             }
-        }
+        }*/
     }
 
     // get current weather alerts at the lat/lon of the users' click point
@@ -327,7 +351,7 @@ export class NWS {
     }
 
     async getOutlookText(otlkType, day/*, click = true*/) {
-        if (!config.settings.hasPermissions(config.PERMISSION_LEVELS.PRO)) {
+        if (!config.settings?.hasPermissions(config.PERMISSION_LEVELS.PRO)) {
             unsetHeaders();
             return;
         }
@@ -409,10 +433,15 @@ export class NWS {
         setHeaders(`${a.title} issued by the National Weather Service in ${a.office}`, `weather/alert/${id}`,
             `The National Weather Service in ${a.office} has issued a ${a.title} for ${a.area} until ${a.expires}.`);
 
-        config.workers.wwas.postMessage(a);
+        const worker = new Worker(
+            new URL('../workers/wwas.js', import.meta.url),
+            { type: 'module' }
+        );
+
+        worker.postMessage(a);
 
         // add content to modal after service worker finishes
-        config.workers.wwas.onmessage = (event) => {
+        worker.onmessage = (event) => {
             modal.querySelector('.content').innerHTML = event.data;
 
             if (a.title == 'Tornado Warning' || a.title == 'Severe Thunderstorm Warning') {
@@ -502,7 +531,7 @@ export class Weather {
         const weatherSettings = config.settings.weather(),
             tempPref = weatherSettings?.temp(),
             windPref = weatherSettings?.wind(),
-            hasPermissions = config.settings.hasPermissions('PRO');
+            hasPermissions = config.settings?.hasPermissions('PRO');
 
         setHeaders(
             `Current Weather at ${p.NAME}`,
@@ -577,9 +606,12 @@ export class Weather {
         setHeaders(`Daily Fire Weather Forecast for ${this.lat}, ${this.lon}`, `weather/forecast/${this.lat},${this.lon}`,
             `Daily fire weather forecast from the National Weather Service for ${this.lat}, ${this.lon}.`);
 
-        ////getWorker('fwf');
+        const worker = new Worker(
+            new URL('../workers/fwf.js', import.meta.url),
+            { type: 'module' }
+        );
 
-        config.workers.fwf.postMessage({
+        worker.postMessage({
             lat: this.lat,
             lon: this.lon,
             units: {
@@ -588,7 +620,7 @@ export class Weather {
             }
         });
 
-        config.workers.fwf.onmessage = (event) => {
+        worker.onmessage = (event) => {
             if (event.data != null) {
                 config.disableClicks = false;
                 modal.querySelector('.content').innerHTML = event.data;
@@ -647,7 +679,7 @@ export class Weather {
             }
 
             domWS.innerHTML = formatWind(o.wind_speed);
-            u.innerHTML = `Last report ${timeAgo(updated)}${config.settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? `&nbsp;@&nbsp;${name}` : ''}`;
+            u.innerHTML = `Last report ${timeAgo(updated)}${config.settings?.hasPermissions(config.PERMISSION_LEVELS.PREMIUM) ? `&nbsp;@&nbsp;${name}` : ''}`;
         } catch (err) {
             showError(err);
         }
@@ -703,7 +735,7 @@ export class Weather {
                 displayT = isMetric ? `${global.conversion.FtoC(maxT).toFixed(1)}&deg;C` : `${Math.round(maxT)}&deg;F`;
 
             let btnHtml;
-            const isPremium = config.settings.hasPermissions(config.PERMISSION_LEVELS.PREMIUM),
+            const isPremium = config.settings?.hasPermissions(config.PERMISSION_LEVELS.PREMIUM),
                 domTemp = holder.querySelector('#a h4'),
                 domRH = holder.querySelector('#b h4'),
                 domAvgW = holder.querySelector('#c h4'),
