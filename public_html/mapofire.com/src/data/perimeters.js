@@ -96,26 +96,6 @@ export class Perimeters {
                         outFields: '*'
                     });
                 }
-                /*const data = await api(url, [
-                    ['where', where],
-                    ['outFields', '*'],
-                    ['resultType', 'tile'],
-                    ['geometry', getbbox()],
-                    ['geometryPrecision', 6],
-                    ['geometryType', 'esriGeometryEnvelope'],
-                    ['spatialRel', 'esriSpatialRelIntersects'],
-                    ['returnGeometry', true],
-                    ['f', 'geojson']
-                ]);
-     
-                if (update && global.map.getSource(src)) {
-                    global.map.getSource(src).setData(data);
-                    return;
-                }
-     
-                if (!global.map.getSource(src)) {
-                    global.map.addSource(src, { type: 'geojson', data });
-                }*/
 
                 if (!global.map.getLayer(outline)) {
                     global.map.addLayer({

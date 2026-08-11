@@ -46,7 +46,7 @@ const dispatchCtr = () => {
         <div class="card dispatch">
             <dt class="label large" style="line-height:1.3;font-weight:500">${center.name} (${center.agency})</dt>
             <dd><p style="padding-bottom:0;font-weight:100">${center.location}</p>${website}</dd>
-        </div>c
+        </div>
     </div>`;
 };
 

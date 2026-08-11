@@ -193,7 +193,7 @@ export class ClickListener {
         modal.className = aClass || '';
         if (modal.hasAttribute('open')) return;
 
-        modal.querySelector('.content').innerHTML = '<div class="loading"><div class="s"></div></div>';
+        modal.querySelector('.content').innerHTML = '<div class="loading" style="margin:0"><div class="s"></div></div>';
 
         const onTransitionEnd = (e) => {
             if (e.propertyName === 'top') {

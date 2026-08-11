@@ -1,5 +1,5 @@
 <?
-define('API_CACHE_ENABLED', true);
+const API_CACHE_ENABLED = false;
 
 function generateCacheKey($category)
 {

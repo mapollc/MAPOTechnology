@@ -810,11 +810,11 @@ export async function onMapClick(e) {
 
     // if there are any TFRs clicked on, show that info
     if (tfrs.length) {
-        processTFRs();
+        processTFRs(tfrs);
     }
 }
 
-function processTFRs() {
+function processTFRs(tfrs) {
     const content = [];
 
     tfrs.sort((a, b) => b.properties.issued - a.properties.issued)

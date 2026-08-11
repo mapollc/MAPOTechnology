@@ -233,8 +233,6 @@ export class Wildfires {
     }
 
     fireStats(history, incID = null) {
-        if (history.length < 2) return null;
-
         let changes = [];
         let totalAcres = 0, totalTimeDiff = 0;
 
@@ -312,7 +310,7 @@ export class Wildfires {
 
         if (diff > 0) {
             const isCurrentYear = year === config.curTime.getFullYear();
-            statSentence.push(`Over ${duration}${!isCurrentYear ? ` in ${year}` : ''}, this fire grew ${isCurrentYear ? 'by' : 'to'} ${overall}, averaging ${global.conversion.sizeFormat(avgValue)} of growth per ${growthUnit} (when active).`);
+            statSentence.push(`Over ${duration}${!isCurrentYear ? ` in ${year}` : ''}, this fire grew ${isCurrentYear ? 'by' : 'to'} ${overall}.`);
         } else {
             statSentence.push(`Incident reporting has decreased this fire in size by ${Math.abs(diff).toFixed(2).replace(/\.?0+$/, '')} acres.`);
         }

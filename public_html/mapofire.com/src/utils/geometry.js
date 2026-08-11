@@ -37,7 +37,7 @@ export function getCounties(feature) {
         x = global.map.project(bounds.getNorthWest()),
         y = global.map.project(bounds.getSouthEast());
 
-    const counties = map.queryRenderedFeatures([x, y], {
+    const counties = global.map.queryRenderedFeatures([x, y], {
         layers: ['counties']
     });
 

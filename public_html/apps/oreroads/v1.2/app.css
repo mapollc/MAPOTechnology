@@ -102,7 +102,7 @@ hr {
 
 .zoom-controls button.query .ctrl-icon:after {
     content: '\f002';
-    font-family: "Font Awesome 6 Pro";
+    font-family: "Font Awesome 7 Pro";
     font-weight: 600;
     font-size: 14px;
     line-height: 1.75;
@@ -344,7 +344,7 @@ select {
 
 #close:after {
     content: '\f00d';
-    font-family: 'Font Awesome 6 Pro';
+    font-family: 'Font Awesome 7 Pro';
     font-size: 22px;
     font-weight: 300;
     line-height: 1;
