@@ -125,7 +125,7 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
 </head>
 
 <body>
-    <? if (!isset($_GET['ref']) && $_GET['ref'] != 'com.mapollc.mapofire') { ?>
+    <? if (!isset($_GET['ref']) || $_GET['ref'] != 'com.mapollc.mapofire') { ?>
         <header>
             <div class="container">
                 <div class="row align-center space-between">
@@ -196,7 +196,7 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
         </div>
     </section>
 
-    <? if (!isset($_GET['ref']) && $_GET['ref'] != 'com.mapollc.mapofire') { ?>
+    <? if (!isset($_GET['ref']) || $_GET['ref'] != 'com.mapollc.mapofire') { ?>
         <footer>
             <div class="container">
                 <div class="row space-between">
@@ -224,7 +224,7 @@ if (!file_exists($pageFile)) $pageTitle = 'Page Not Found';
             token = '<?= $_COOKIE['token'] ?>';
         let userLocation<?= $user['location'] ? '=' . json_encode($user['location']) : '' ?>;
     </script>
-    <? if ($method . $function == 'trailscreate' || $method . $function == 'trailsedit') { ?>
+    <? if ("$method$function" == 'trailscreate' || "$method$function" == 'trailsedit') { ?>
         <script src="https://cdn.jsdelivr.net/npm/leaflet@<?= $versions['leaflet'] ?>/dist/leaflet-src.min.js"></script>
     <? }
     if ($page == 'mapofire') { ?>

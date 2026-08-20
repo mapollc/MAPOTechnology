@@ -432,7 +432,7 @@ class SSO
         }
     }
 
-    private function getSubscriptions($email)
+    private function getSubscriptions($uid, $email)
     {
         global $plan;
         $sub = executeQuery(
@@ -448,9 +448,9 @@ class SSO
                 return [];
             } else {
                 if (isset($sub['cid'])) {
-                    $plan->setPlan(null, $sub['plan']);
+                    $plan->setPlan(null, $sub['plan'], $uid == 1 ? true : false);
                     $sub['name'] = $plan->getName();
-                    $sub['id'] = $plan->getPriceName() ? $plan->getPriceName() : null;
+                    $sub['id'] = $plan->getPriceName() ?: null;
 
                     $sub['start'] = intval($sub['start']);
                     $sub['ends'] = intval($sub['ends']);
@@ -460,9 +460,9 @@ class SSO
                     return [$sub];
                 } else {
                     foreach ($sub as $s) {
-                        $plan->setPlan(null, $s['plan']);
+                        $plan->setPlan(null, $s['plan'], $uid == 1 ? true : false);
                         $s['name'] = $plan->getName();
-                        $s['id'] = $plan->getPriceName() ? $plan->getPriceName() : null;
+                        $s['id'] = $plan->getPriceName() ?: null;
 
                         $s['start'] = intval($s['start']);
                         $s['ends'] = intval($s['ends']);
@@ -534,31 +534,36 @@ class SSO
             executeQuery('is', [$this->fields['sid'], $this->fields['token']], "UPDATE sessions SET expires = 0 WHERE sid = ? AND token = ?");
 
             return ['success' => true];
-        } else {
-            $dev = [];
-            $user_agent = Parser::create();
-            $now = time();
-            $devices = executeQuery('si', [$this->fields['token'], $now], "SELECT sid, token, ip, host, source, location, created, expires FROM sessions WHERE uid = (SELECT uid FROM sessions WHERE token = ? LIMIT 1) AND expires > 0 AND expires > ? ORDER BY created DESC");
+        }
 
-            if ($devices && !isset($devices[0])) {
-                $devices = [$devices];
-            }
+        $dev = [];
+        $user_agent = Parser::create();
+        $now = time();
+        $devices = executeQuery(
+            'si',
+            [$this->fields['token'], $now],
+            "SELECT sid, token, ip, host, source, location, created, expires FROM sessions WHERE uid = (SELECT uid FROM sessions WHERE token = ? LIMIT 1) AND expires > 0 AND expires > ? ORDER BY created DESC"
+        );
 
-            foreach ($devices as $device) {
-                if (is_array($device)) {
-                    $agent = $user_agent->parse($device['host'] ? $device['host'] : '');
-                    $ua = agent($agent);
+        if ($devices && !isset($devices[0])) {
+            $devices = [$devices];
+        }
 
-                    if ($this->isJson($device['host'])) {
-                        $js = json_decode($device['host']);
-                        $ua = "$js->make $js->model";
-                    } else {
-                        if (str_contains($device['host'], 'okhttp')) {
-                            $ua = 'Android App';
-                        }
+        foreach ($devices as $device) {
+            if (is_array($device)) {
+                $agent = $user_agent->parse($device['host'] ? $device['host'] : '');
+                $ua = agent($agent);
+
+                if ($this->isJson($device['host'])) {
+                    $js = json_decode($device['host']);
+                    $ua = "$js->make $js->model";
+                } else {
+                    if (str_contains($device['host'], 'okhttp')) {
+                        $ua = 'Android App';
                     }
+                }
 
-                    /*if ($device['location'] == '') {
+                /*if ($device['location'] == '') {
                         $json = json_decode(file_get_contents('https://ipwho.is/' . $device['ip']));
                         $devLoc = ['location' => $json->city . ', ' . $json->region_code . ', ' . $json->country, 'isp' => $json->connection->isp];
                         $location = mysqli_real_escape_string($this->con, json_encode($devLoc));
@@ -567,18 +572,17 @@ class SSO
                     } else {
                         $devLoc = json_decode($device['location']);
                     }*/
-                    $devLoc = $device['location'] != '' ? json_decode($device['location']) : [];
+                $devLoc = $device['location'] != '' ? json_decode($device['location']) : [];
 
-                    $device['created'] = intval($device['created']);
-                    $device['expires'] = intval($device['expires']);
-                    $device['location'] = $devLoc;
-                    $device['device'] = $ua;
-                    $dev[] = $device;
-                }
+                $device['created'] = intval($device['created']);
+                $device['expires'] = intval($device['expires']);
+                $device['location'] = $devLoc;
+                $device['device'] = $ua;
+                $dev[] = $device;
             }
-
-            return ['devices' => is_array($devices) && count($devices) > 0 ? $dev : null];
         }
+
+        return ['devices' => is_array($devices) && count($devices) > 0 ? $dev : null];
     }
 
     public function user()
@@ -614,7 +618,7 @@ class SSO
                     return ['response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.'];
                 } else {
                     // get any user subscriptions
-                    $subscribe = $this->getSubscriptions($row['email']);
+                    $subscribe = $this->getSubscriptions($row['uid'], $row['email']);
 
                     return ['user' => $this->getUser($row, null, $subscribe)];
                 }
@@ -643,7 +647,7 @@ class SSO
         }
 
         // get any user subscriptions
-        $subscribe = $this->getSubscriptions($row['email']);
+        $subscribe = $this->getSubscriptions($row['uid'], $row['email']);
 
         // update user activity in database
         $update = executeQuery('ii', [$time, $row['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");

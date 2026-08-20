@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 
 session_start();
 
-if ($_REQUEST['price_id'] == 'price_1PgsdhIpCdpJm6cTHdP3veWh' || $_REQUEST['price_id'] == 'price_1MgyLjIpCdpJm6cT9D5pnE9C') {
+if ($_GET['devel'] == 1 || $_REQUEST['price_id'] == 'price_1PgsdhIpCdpJm6cTHdP3veWh' || $_REQUEST['price_id'] == 'price_1MgyLjIpCdpJm6cT9D5pnE9C') {
     $stripeLive = true;
 }
 

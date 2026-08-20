@@ -1134,10 +1134,15 @@ function billing() {
 
 async function getInvoices() {
     const invoiceDiv = document.querySelector('#invoices');
-
+    let fields;
+    
     if (!invoiceDiv) return;
 
-    const inv = await api(`${host}${usersAPI}invoices`);
+    if (window.location.search.match(/devel=1/) != null) {
+        fields = [['devel', 1]];
+    }
+
+    const inv = await api(`${host}${usersAPI}invoices`, fields);
 
     if (inv.response == null || inv.response.data.length == 0) {
         invoiceDiv.innerHTML = '<p>There are no invoices or receipts for your account.</p>';

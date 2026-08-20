@@ -23,19 +23,13 @@ function getIncident($url, $timeout = 30)
     $ch = curl_init($url);
 
     curl_setopt_array($ch, [
-        // Return the response instead of outputting it
         CURLOPT_RETURNTRANSFER => true,
-        // Follow redirects
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_MAXREDIRS => 5,
-        // Timeouts
         CURLOPT_CONNECTTIMEOUT => 10,
         CURLOPT_TIMEOUT => $timeout,
-        // Compression
         CURLOPT_ENCODING => '',
-        // Browser-like User-Agent
         CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0 Safari/537.36',
-        // SSL
         CURLOPT_SSL_VERIFYPEER => true,
         CURLOPT_SSL_VERIFYHOST => 2,
     ]);
@@ -53,6 +47,11 @@ function getIncident($url, $timeout = 30)
     return $html;
 }
 
+function formatTime($date)
+{
+    return strtotime(substr($date, 0, 19) . '+00:00');
+}
+
 class InciwebParser
 {
     private DOMDocument $dom;
@@ -60,6 +59,7 @@ class InciwebParser
     private array $coords;
     private ?int $year;
     private array $allKeys;
+    private ?int $updated;
 
     public function __construct($html)
     {
@@ -75,6 +75,7 @@ class InciwebParser
         $this->coords = [];
         $this->year = null;
         $this->allKeys = [];
+        $this->updated = null;
     }
 
     private function clean($node)
@@ -109,7 +110,7 @@ class InciwebParser
             }
 
             $link->setAttribute('target', '_blank');
-            $link->setAttribute('rel', 'noopener noreferrer');
+            //$link->setAttribute('rel', 'noopener noreferrer');
         }
 
         return $node;
@@ -223,7 +224,13 @@ class InciwebParser
 
             $parse = $this->parseItems($key, $this->innerHTML($td));
 
-            if ($key !== '' && !in_array($parse['desc'], $this->allKeys)) $data[] = $parse;
+            if ($key !== '' && !in_array($parse['desc'], $this->allKeys)) {
+                $data[] = $parse;
+            }
+
+            if ($parse['desc'] === 'Last Updated') {
+                $this->updated = strtotime($parse['info']);
+            }
 
             $this->allKeys[] = $parse['desc'];
         }
@@ -259,6 +266,34 @@ class InciwebParser
         }
 
         return $output;
+    }
+
+    public function articles()
+    {
+        $wrapper = $this->xpath->query(
+            "(//div[contains(@class,'recent-articles')])[1]"
+        )->item(0);
+
+        if (!$wrapper) return [];
+
+        $lis = $this->xpath->query(".//div[contains(@class,'article-item-row')]", $wrapper);
+
+        if (!$lis) return [];
+
+        $articles = [];
+        foreach ($lis as $li) {
+            $link = $this->xpath->query(".//a", $li)->item(0);
+
+            if (!$link) continue;
+
+            $articles[] = [
+                'title' => trim(preg_replace('/\s{2,}/', ' ', $link->textContent)),
+                'url' => str_replace('/incident-publication/', '', $link->getAttribute('href')),
+                'published' => formatTime($this->xpath->query(".//time", $li)->item(0)?->getAttribute('datetime'))
+            ];
+        }
+
+        return $articles;
     }
 
     private function cleanContacts($text)
@@ -378,22 +413,47 @@ class InciwebParser
     {
         return $this->year ?? date('Y');
     }
+
+    public function lastUpdated()
+    {
+        return $this->updated ?? 0;
+    }
 }
 
+$sqlQueries = [];
+$inciwebFires = [];
 $start = strtotime('1/1/' . date('Y') . ' 00:00:00 PDT');
 $end = strtotime('12/31/' . date('Y') . ' 23:59:59 PDT');
-$sqlQueries = [];
 
-$xml = simplexml_load_file('https://inciweb.wildfire.gov/incidents/rss.xml');
+$json = json_decode(file_get_contents('https://inciweb.wildfire.gov/api/util/all_select_data'), true);
+
+foreach ($json as $fire) {
+    $parts = explode(' - ', $fire['text']);
+    $link = strtolower("$parts[1]-" . str_replace(' ', '-', $parts[0]));
+    $updated = formatTime($fire['updated_date']);
+
+    if ($fire['type'] == 'state' || time() - $updated > 86400) continue;
+
+    $inciwebFires[] = [
+        'id' => $fire['id'],
+        'link' => $link,
+        'updated' => $updated
+    ];
+}
+
 $count = 0;
 
-////for ($i = 16; $i < 17; $i++) {
-for ($i = 0; $i < count($xml->channel->item); $i++) {
+////for ($i = 2; $i < 3; $i++) {
+for ($i = 0; $i < count($inciwebFires ?? []); $i++) {
     $time = time();
     $stat = [];
 
-    $link = $xml->channel->item[$i]->link;
-    $iid = $xml->channel->item[$i]->guid[0];
+    $iid = $inciwebFires[$i]['id'];
+    $link = "https://inciweb.wildfire.gov/incident-information/{$inciwebFires[$i]['link']}";
+    $updated = $inciwebFires[$i]['updated'];
+
+    ////if ($iid != '328877') continue;
+
     $file = getIncident($link);
     $parser = new InciwebParser($file);
 
@@ -404,6 +464,7 @@ for ($i = 0; $i < count($xml->channel->item); $i++) {
     $geo = $parser->getGeo();
     $state = $geo['state'];
 
+    $articles = mysqli_real_escape_string($con, json_encode($parser->articles()));
     $contact = mysqli_real_escape_string($con, json_encode($parser->contacts()));
     $pic = $parser->getPhoto();
     $photo = $pic[0] == null || $pic[1] == null ? '' : mysqli_real_escape_string($con, json_encode($pic));
@@ -431,33 +492,31 @@ for ($i = 0; $i < count($xml->channel->item); $i++) {
     $status = $stat ? (count($stat) == 0 ? '' : json_encode($stat)) : '';
 
     // add or update to inciweb database
-    $sqlQueries[] = "INSERT INTO inciweb (incident_id,state,year,name,incident_info,data,contact,photo,captured,updated)
-                VALUES('$iid','$state',$year,'$name','$incidentInfo','$content','$contact','$photo','$time','$time')
-                ON DUPLICATE KEY UPDATE
-                incident_id = VALUES(incident_id),
-                state = '$state',
-                year = '$year',
-                name = VALUES(name),
-                incident_info = '$incidentInfo',
-                data = '$content',
-                photo = '$photo',
-                contact = '$contact',
-                captured = VALUES(captured),
-                updated = '$time'
-                ";
+    $sqlQueries[] = "INSERT INTO inciweb (incident_id,state,year,name,incident_info,data,articles,contact,photo,captured,updated)
+        VALUES('$iid','$state',$year,'$name','$incidentInfo','$content','$articles','$contact','$photo','$time','$time')
+    ON DUPLICATE KEY UPDATE
+        incident_id = VALUES(incident_id),
+        state = '$state',
+        year = '$year',
+        name = VALUES(name),
+        incident_info = '$incidentInfo',
+        data = '$content',
+        articles = '$articles',
+        photo = '$photo',
+        contact = '$contact',
+        updated = '$updated'";
 
     // update wildfires database
     $sqlQueries[] = "UPDATE wildfires SET acres = CASE WHEN '$acres' > acres THEN '$acres' ELSE acres END WHERE incidentID = '$incidentNum'";
 
     $count++;
 
-    echo 'Processed ' . ($i + 1) . ' of ' . count($xml->channel->item) . ' incidents from Inciweb...' . PHP_EOL;
+    echo 'Processed ' . ($i + 1) . ' of ' . count($inciwebFires ?? []) . ' incidents from Inciweb...' . PHP_EOL;
 }
 
 if (!empty($sqlQueries)) {
     $runQueries = implode(';', $sqlQueries);
 
-    ////echo $runQueries;
     $runSQL = mysqli_multi_query($con, $runQueries);
     if ($runSQL) {
         do {

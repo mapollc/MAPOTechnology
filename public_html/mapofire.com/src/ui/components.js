@@ -147,114 +147,145 @@ export function notify(t, m, time = 0) {
     setTimeout(() => { el.remove(); }, timing);
 }
 
-export function marketing(override = false, utm = null) {
-    const now = Date.now(),
-        lastShown = parseInt(helper.storage('mapofire.marketing.last_shown') || '0', 10),
-        variants = {
-            A: {
-                title: 'Stay Safe. Stay Ahead.',
-                text: 'Wildfires don\'t wait and neither should you. Upgrade to gain access to satellite hotspots, smoke models, and wildfire risk overlays.',
-                primary: 'Start 7-Day Free Trial',
-                secondary: config.settings.user != null ? 'Continue for Free' : 'Continue with Free Plan'
-            },
-            B: {
-                title: 'Unlock Pro Insights.',
-                text: 'Make faster, smarter wildfire decisions with advanced fire mapping, premium layers, extra basemaps, and offline access on Android.',
-                primary: 'Upgrade Now',
-                secondary: 'Keep Free Plan'
-            },
-            C: {
-                title: 'Access Premium Wildfire Tools',
-                text: 'Gain access to historical wildfires, fire weather forecasts, premium layers, and additional basemaps. Upgrade now or start a free 7-day trial.',
-                primary: 'Start 7-Day Free Trial',
-                secondary: config.settings.user != null ? 'Continue for Free' : 'Continue with Free Plan'
-            }
+export function marketing(override = false, utm = null, pick = null) {
+    // Centralized marketing timing configuration.
+    const DEFAULT_COOLDOWN_DAYS = 3;
+    const MAX_COOLDOWN_DAYS = 14;
+    const MAX_DISMISSALS = 4;
+    const DAY = 24 * 60 * 60 * 1000;
+
+    const now = Date.now();
+    const user = config.settings.getUser();
+    const userRole = user.role();
+
+    // Read persisted marketing state in one place.
+    let lastShown = parseInt(helper.storage('mapofire.marketing.last_shown') || '0', 10);
+    let dismissedCount = parseInt(helper.storage('mapofire.marketing.dismiss_count') || '0', 10);
+    let cooldownDays = parseInt(helper.storage('mapofire.marketing.cooldown_days') || DEFAULT_COOLDOWN_DAYS, 10);
+
+    // -------------------------------------------------------------------------
+    // Determine whether the popup should be shown
+    // -------------------------------------------------------------------------
+
+    if (!override && cooldownDays >= MAX_COOLDOWN_DAYS && lastShown > 0 && now - lastShown >= MAX_COOLDOWN_DAYS * DAY) {
+        cooldownDays = DEFAULT_COOLDOWN_DAYS;
+        dismissedCount = 0;
+
+        helper.storage('mapofire.marketing.cooldown_days', cooldownDays);
+        helper.storage('mapofire.marketing.dismiss_count', dismissedCount);
+    }
+
+    if (!override) {
+        // Never show normal marketing popups to admin/licensee users.
+        if (userRole === config.PERMISSION_LEVELS.ADMIN || userRole === config.PERMISSION_LEVELS.LICENSEE) {
+            return;
+        }
+
+        // Only show once per browser session.
+        if (sessionStorage.getItem('mapofire.modal_shown_this_session')) {
+            return;
+        }
+
+        // Enforce the current cooldown period.
+        if (lastShown > 0 && now - lastShown < cooldownDays * DAY) {
+            return;
+        }
+    } else {
+        // Explicit overrides are allowed to show again this session.
+        sessionStorage.removeItem('mapofire.modal_shown_this_session');
+    }
+
+    const variants = {
+        A: {
+            title: 'Stay Safe. Stay Ahead.',
+            text: 'Wildfires don\'t wait and neither should you. Upgrade to gain access to satellite hotspots, smoke models, and wildfire risk overlays.',
+            primary: 'Start 7-Day Free Trial',
+            secondary: config.settings.user != null ? 'Continue for Free' : 'Continue with Free Plan'
         },
-        pick = override ? 'C' : (Math.random() < 0.5 ? 'A' : 'B'),
-        option = variants[pick],
-        maxDismissals = 4;
+        B: {
+            title: 'Unlock Pro Insights.',
+            text: 'Make faster, smarter wildfire decisions with advanced fire mapping, premium layers, extra basemaps, and offline access on Android.',
+            primary: 'Upgrade Now',
+            secondary: 'Keep Free Plan'
+        },
+        C: {
+            title: 'Access Premium Wildfire Tools',
+            text: 'Gain access to historical wildfires, fire weather forecasts, premium layers, and additional basemaps. Upgrade now or start a free 7-day trial.',
+            primary: 'Start 7-Day Free Trial',
+            secondary: config.settings.user != null ? 'Continue for Free' : 'Continue with Free Plan'
+        },
+        D: {
+            title: 'Help Us Keep Map of Fire Available.',
+            text: "We're a couple local guys in the western U.S. mountains building Map of Fire to help people stay informed when wildfires threaten their communities. Your donation helps pay for the data, servers, and technology behind the service and keeps it available to everyone!",
+            primary: 'Support Our Mission',
+            secondary: 'No, thank you'
+        }
+    };
+    pick = pick ?? ['A', 'B', 'C'][Math.floor(Math.random() * 3)];
+    const option = variants[pick];
 
-    let shouldShow = true,
-        dismissedCount = parseInt(helper.storage('mapofire.marketing.dismiss_count') || '0', 10),
-        cooldownDays = parseInt(helper.storage('mapofire.marketing.cooldown_days')) || 3;
+    const content = `<p style="text-align:center;margin:1.5em 0;font-size:18px;color:#252525;font-weight:400">${option.text}</p>
+        <div class="btn-group no-margin" style="width:100%;justify-content:space-between">
+            <input type="button" id="donate_cta" class="btn btn-red dn" value="${option.primary}" data-variant="${pick}" data-action="start-modal-checkout">
+            <input type="button" id="donate_dismiss" class="btn btn-gray dn" value="${option.secondary}" data-dismissedCount="${dismissedCount}" data-variant="${pick}" data-action="close-modal-checkout">
+        </div>`;
 
-    // if already shown this session, don't show again
-    if (sessionStorage.getItem('modal_shown_this_session')) shouldShow = false;
+    const el = document.createElement('div');
+    el.classList.add('shadow');
+    document.body.appendChild(el);
 
-    // don't show if dismissed too many times
-    if (dismissedCount >= maxDismissals) shouldShow = false;
+    helper.createDataForm(option.title, content);
 
-    // don't show if dismissed too many times
-    /*if (!helper.storage('mapofire.refresh')) {
-        shouldShow = false;
-    }*/
+    const df = document.querySelector('#data-form');
+    const h1 = df.querySelector('h1');
 
-    // don't show if cooldown not expired
-    if (now - lastShown < cooldownDays * 24 * 60 * 60 * 1000) shouldShow = false;
+    df.classList.add('bg');
+    h1.style.textAlign = 'center';
+    h1.insertAdjacentHTML('beforebegin', `<i class="fad fa-${pick == 'D' ? 'hands-holding-dollar' : 'user-unlock'}" style="display:block;width:100%;text-align:center;font-size:50px;color:#ffcd82;margin-bottom:0.5em"></i>`);
 
-    if (override) {
-        shouldShow = true;
-        sessionStorage.removeItem('modal_shown_this_session');
-    }
+    // mark as shown
+    sessionStorage.setItem('mapofire.modal_shown_this_session', '1');
+    helper.storage('mapofire.marketing.last_shown', now.toString());
 
-    // don't show to admin users
-    if (!override && config.settings.getUser().role() == config.PERMISSION_LEVELS.ADMIN && config.settings.getUser().role() == config.PERMISSION_LEVELS.LICENSEE) shouldShow = false;
-
-    if (shouldShow) {
-        const content = `<p style="text-align:center;margin:1.5em 0;font-size:18px;font-weight:400">${option.text}</p>
-            <div class="btn-group no-margin" style="width:100%;justify-content:space-between">
-                <input type="button" id="donate_cta" class="btn btn-red dn" value="${option.primary}" data-variant="${pick}" data-action="start-modal-checkout">
-                <input type="button" id="donate_dismiss" class="btn btn-gray dn" value="${option.secondary}" data-dismissedCount="${dismissedCount}" data-variant="${pick}" data-action="close-modal-checkout">
-            </div>`;
-
-        const el = document.createElement('div');
-        el.classList.add('shadow');
-        document.body.appendChild(el);
-
-        helper.createDataForm(option.title, content);
-        document.querySelector('#data-form').classList.add('bg');
-        document.querySelector('#data-form h1').style.textAlign = 'center';
-        document.querySelector('#data-form h1').insertAdjacentHTML('beforebegin', '<i class="fad fa-user-unlock" style="display:block;text-align:center;font-size:50px;color:#ffcd82;margin-bottom:0.5em"></i>');
-
-        // mark as shown
-        sessionStorage.setItem('modal_shown_this_session', '1');
-        helper.storage('mapofire.marketing.last_shown', now.toString());
-
-        // postive CTA
-        document.querySelector('#donate_cta').addEventListener('click', () => {
-            gtag('event', 'subscription_cta_click', {
-                'event_category': 'Subscription',
-                'event_label': `Variant_${pick}`,
-                'source': override ? 'embed' : 'modal',
-                'variant': pick
-            });
-
-            window.location.href = purchaseLink(utm ? utm : 'popup');
-            global.inits.clickListener.closeDataForm();
+    // postive CTA
+    document.querySelector('#donate_cta').addEventListener('click', () => {
+        gtag('event', 'subscription_cta_click', {
+            'event_category': 'Subscription',
+            'event_label': `Variant_${pick}`,
+            'source': override ? 'embed' : 'modal',
+            'variant': pick
         });
 
-        // dismiss CTA
-        document.querySelector('#donate_dismiss').addEventListener('click', () => {
-            dismissedCount++;
-            helper.storage('mapofire.marketing.dismiss_count', dismissedCount);
+        window.location.href = pick == 'D'
+            ? `https://donate.stripe.com/3csg1F7PF8gpfni003${config.settings.getUser().email() ? `?prefilled_email=${encodeURIComponent(config.settings.getUser().email())}` : ''}`
+            : purchaseLink(utm ? utm : 'popup');
 
-            if (dismissedCount >= maxDismissals) {
-                cooldownDays = cooldownDays * 2; // double cooldown
-                dismissedCount = 0; // reset dismissals
-                helper.storage('mapofire.marketing.cooldown_days', cooldownDays);
-                helper.storage('mapofire.marketing.dismiss_count', dismissedCount);
-            }
+        global.inits.clickListener.closeDataForm();
+    });
 
-            gtag('event', 'subscription_dismiss_click', {
-                'event_category': 'Subscription',
-                'event_label': `Variant_${pick}`,
-                'source': override ? 'embed' : 'modal',
-                'variant': pick
-            });
+    // dismiss CTA
+    document.querySelector('#donate_dismiss').addEventListener('click', () => {
+        dismissedCount++;
 
-            global.inits.clickListener.closeDataForm();
+        if (dismissedCount >= MAX_DISMISSALS) {
+            cooldownDays = Math.min(cooldownDays * 2, MAX_COOLDOWN_DAYS);
+
+            dismissedCount = 0;
+
+            helper.storage('mapofire.marketing.cooldown_days', cooldownDays);
+        }
+
+        helper.storage('mapofire.marketing.dismiss_count', dismissedCount);
+
+        gtag('event', 'subscription_dismiss_click', {
+            'event_category': 'Subscription',
+            'event_label': `Variant_${pick}`,
+            'source': override ? 'embed' : 'modal',
+            'variant': pick
         });
-    }
+
+        global.inits.clickListener.closeDataForm();
+    });
 }
 
 export async function startReportProcess(e) {

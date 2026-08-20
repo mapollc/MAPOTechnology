@@ -34,6 +34,11 @@ class GetData
         return $this->incidentType;
     }
 
+    public function getIncidentName()
+    {
+        return $this->fire->name;
+    }
+
     private function ident()
     {
         return json_decode($this->fire->fiscal_data);
@@ -58,12 +63,12 @@ class GetData
         return $ident->wfdssunit;
     }
 
-    private function getLat()
+    public function getLat()
     {
         return $this->fire->latitude;
     }
 
-    private function getLon()
+    public function getLon()
     {
         return str_replace('--', '-', "-" . $this->fire->longitude);
     }
@@ -113,22 +118,6 @@ class GetData
     }
 }
 
-/*function cleanup()
-{
-    $count = 0;
-
-    foreach (['run1', 'run2'] as $path) {
-        foreach (scandir("/home/mapo/public_html/cron/cache/$path") as $file) {
-            if ($file != '.' && $file != '..') {
-                unlink("/home/mapo/public_html/cron/cache/$path/$file");
-                $count++;
-            }
-        }
-    }
-
-    return $count > 0 ? true : false;
-}*/
-
 function isValidIncident($incidentType, $coords)
 {
     return ($incidentType == 'Prescribed Fire' || $incidentType == 'Wildfire' || $incidentType == 'Smoke Check' || $incidentType == 'Smoke check') && ($coords[0] != '' && $coords[1] != '' && $coords[0] != '0' && $coords[1] != '0' && $coords[0] != '-' && $coords[1] != '-') ? true : false;
@@ -138,14 +127,16 @@ function getAllIncidents($center)
 {
     global $con;
 
-    $minTime = strtotime('-12 months');
+    $minTime = strtotime('-6 months');
     $incs = [];
-    $sql = mysqli_query($con, "SELECT incidentID, lat, lon, state, geo, near, timezone FROM `wildfires` WHERE date >= $minTime AND agency = '$center'");
+    $sql = mysqli_query($con, "SELECT incidentID, type, name, lat, lon, state, geo, near, timezone FROM `wildfires` WHERE date >= $minTime AND agency = '$center'");
 
     while ($row = mysqli_fetch_assoc($sql)) {
         $incs[$row['incidentID']] = [
             'lat' => (float) $row['lat'],
             'lon' => (float) $row['lon'],
+            'type' => $row['type'],
+            'name' => $row['name'],
             'state' => $row['state'],
             'geo' => $row['geo'],
             'near' => $row['near'],
@@ -156,10 +147,15 @@ function getAllIncidents($center)
     return $incs;
 }
 
+function isGenericIncidentName($name)
+{
+    return preg_match('/^(INC\s*\d+|UTL\s*\d*|Incident\s*\d+)$/i', trim($name)) === 1;
+}
+
 require '/home/mapo/public_html/config.inc.php';
 include_once '/home/mapo/public_html/apis/functions.inc.php';
 include_once '/home/mapo/public_html/cron/dispatch.inc.php';
-#$newDispatchCenters = ['ORCOC'];
+#$newDispatchCenters = ['ORBMC'];
 
 const CHECK_OLD_DATA = true;
 $runQuery = true;
@@ -215,18 +211,19 @@ foreach ($newDispatchCenters as $center) {
                 $incidentNum = $data->getIncidentNum();
                 $incNumOnly = $data->getIncNumOnly();
                 $incidentUnit = $data->getUnit();
+                $incidentName = incidentName($data->getIncidentName(), $incidentNum);
 
-                $prevfire = $previous[$incidentNum] ?? null;
+                $previousRun = $existingIncs[$incidentNum];
 
-                // checks if there has been any new information added or modified for this incident
-                if (CHECK_OLD_DATA && json_encode($fire) === $prevfire) {
+                // if the previous run of data is equivilent to the current run of data, we don't need to update it since its the same
+                if (CHECK_OLD_DATA && json_encode($fire) === $previous[$incidentNum]) {
                     continue;
                 }
 
                 $coords = $data->getCoords();
 
                 // Only proccess data if it is the following types of incidents, there are coordinates, and if the fire is >=50 acres OR the fire is <50 acres and is < 1 month old
-                if (isValidIncident($incidentType, $coords)) {
+                if (isValidIncident($incidentType, $coords) && !isset($usfsIDs[$incidentNum])) {
                     $time = time();
                     $nearArr = [];
                     $state = null;
@@ -235,11 +232,11 @@ foreach ($newDispatchCenters as $center) {
                     $near = null;
 
                     // Only process data if we haven't already done this incident ID and the incident ID isn't missing the unit identifier
-                    if (!isset($usfsIDs[$incidentNum]) && $year <= date('Y') && !str_contains($incidentNum, '--')) {
+                    if ($year <= date('Y') && !str_contains($incidentNum, '--')) {
                         // if latitude/longitude changed from previous dataset, then we need to geocode the incident
-                        $needsGeocoded = !isset($existingIncs[$incidentNum]) ||
-                            $existingIncs[$incidentNum]['lat'] !== (float) $coords[0] ||
-                            $existingIncs[$incidentNum]['lon'] !== (float) $coords[1];
+                        $needsGeocoded = !isset($previousRun) ||
+                            $previousRun['lat'] !== (float) $coords[0] ||
+                            $previousRun['lon'] !== (float) $coords[1];
 
                         if ($needsGeocoded) {
                             $state = getState($coords);
@@ -257,13 +254,13 @@ foreach ($newDispatchCenters as $center) {
 
                             $near = json_encode($nearArr);
                         } else {
-                            $state = $existingIncs[$incidentNum]['state'];
-                            $timezone = $existingIncs[$incidentNum]['tz'];
-                            $getLocation = $existingIncs[$incidentNum]['geo'];
-                            $near = $existingIncs[$incidentNum]['near'];
+                            $state = $previousRun['state'];
+                            $timezone = $previousRun['tz'];
+                            $getLocation = $previousRun['geo'];
+                            $near = $previousRun['near'];
                         }
 
-                        $name = mysqli_real_escape_string($con, incidentName($fire->name, $incidentNum));
+                        $name = mysqli_real_escape_string($con, $incidentName);
                         $incidentType = str_contains($name, ' RX') || substr($name, 0, 5) == ' Burn' ? 'Prescribed Fire' : $incidentType;
                         $acres = $fire->acres;
                         $notes = $data->notes();
@@ -271,50 +268,53 @@ foreach ($newDispatchCenters as $center) {
                         $resources = $data->resources();
                         $status = $data->getStatus();
 
-                        // if the incident is a smoke check but is reporting an acreage, change the incident type to "wildfire"
-                        if ($incidentType == 'Smoke Check' && ($acres != '' && $acres != 'Unknown' && $acres > 0)) {
+                        // If a Smoke Check has reported acreage or a non-generic incident name, change it to Wildfire.
+                        if ($incidentType == 'Smoke Check' && (
+                            ($acres != '' && $acres != 'Unknown' && $acres > 0) ||
+                            ($incidentName != '' && !isGenericIncidentName($incidentName))
+                        )) {
                             $incidentType = 'Wildfire';
                         }
 
                         // Convert to SQL values
                         $sqlState = $state !== null ? "'" . mysqli_real_escape_string($con, $state) . "'" : "NULL";
-                        $sqlTimezone = $timezone !== null ? "'" . mysqli_real_escape_string($con, $timezone) . "'" : "NULL";
+                        $sqlTimezone = $timezone !== null ? "'" . mysqli_real_escape_string($con, $timezone) . "'" : "''";
                         $sqlGeo = "'" . mysqli_real_escape_string($con, $getLocation ?? '') . "'";
                         $sqlNear = $near !== null ? "'" . mysqli_real_escape_string($con, $near) . "'" : "NULL";
 
                         // prepare mysql statements
                         $sqlQueries .= "INSERT INTO wildfires (
-                                    incidentID,incidentNumOnly,state,agency,unit,`year`,`date`,name,type,
-                                    lat,lon,geo,near,acres,`status`,notes,resources,fuels,captured,updated,
-                                    timezone,display,owner
-                                )
-                                VALUES(
-                                    '$incidentNum','$incNumOnly',$sqlState,'$center','$incidentUnit','$year','$date',
-                                    '$name','$incidentType','$coords[0]','$coords[1]',$sqlGeo,$sqlNear,'$acres',
-                                    '$status','$notes','$resources','$fuels','$time','$time',$sqlTimezone,'1','system'
-                                )
-                                ON DUPLICATE KEY UPDATE
-                                    state = COALESCE($sqlState, state),
-                                    agency = VALUES(agency),
-                                    unit = VALUES(unit),
-                                    `year` = VALUES(`year`),
-                                    `date` = VALUES(`date`),
-                                    name = VALUES(name),
-                                    type = VALUES(type),
-                                    lat = VALUES(lat),
-                                    lon = VALUES(lon),
-                                    geo = COALESCE($sqlGeo, geo),
-                                    near = COALESCE($sqlNear, near),
-                                    acres = VALUES(acres),
-                                    `status` = VALUES(`status`),
-                                    notes = CASE WHEN (notes IS NULL OR notes = '') AND VALUES(notes) <> '' THEN VALUES(notes) ELSE notes END,
-                                    resources = CASE WHEN (resources IS NULL OR resources = '') AND VALUES(resources) <> '' THEN VALUES(resources) ELSE resources END,
-                                    fuels = CASE WHEN (fuels IS NULL OR fuels = '') AND VALUES(fuels) <> '' THEN VALUES(fuels) ELSE fuels END,
-                                    updated = '$time',
-                                    timezone = COALESCE($sqlTimezone, timezone),
-                                    display = CASE WHEN display = 0 THEN 0 ELSE VALUES(display) END,
-                                    owner = VALUES(owner);
-                                ";
+                            incidentID,incidentNumOnly,state,agency,unit,`year`,`date`,name,type,
+                            lat,lon,geo,near,acres,`status`,notes,resources,fuels,captured,updated,
+                            timezone,display,owner
+                        )
+                        VALUES(
+                            '$incidentNum','$incNumOnly',$sqlState,'$center','$incidentUnit','$year','$date',
+                            '$name','$incidentType','$coords[0]','$coords[1]',$sqlGeo,$sqlNear,'$acres',
+                            '$status','$notes','$resources','$fuels','$time','$time',$sqlTimezone,'1','system'
+                        )
+                        ON DUPLICATE KEY UPDATE
+                            state = COALESCE($sqlState, state),
+                            agency = VALUES(agency),
+                            unit = VALUES(unit),
+                            `year` = VALUES(`year`),
+                            `date` = VALUES(`date`),
+                            name = VALUES(name),
+                            type = VALUES(type),
+                            lat = VALUES(lat),
+                            lon = VALUES(lon),
+                            geo = COALESCE($sqlGeo, geo),
+                            near = COALESCE($sqlNear, near),
+                            acres = VALUES(acres),
+                            `status` = VALUES(`status`),
+                            notes = CASE WHEN (notes IS NULL OR notes = '') AND VALUES(notes) <> '' THEN VALUES(notes) ELSE notes END,
+                            resources = CASE WHEN (resources IS NULL OR resources = '') AND VALUES(resources) <> '' THEN VALUES(resources) ELSE resources END,
+                            fuels = CASE WHEN (fuels IS NULL OR fuels = '') AND VALUES(fuels) <> '' THEN VALUES(fuels) ELSE fuels END,
+                            updated = '$time',
+                            timezone = COALESCE($sqlTimezone, timezone),
+                            display = CASE WHEN display = 0 THEN 0 ELSE VALUES(display) END,
+                            owner = VALUES(owner);
+                        ";
 
                         if ($acres != '') {
                             $sqlQueries .= "INSERT INTO acres_history (incidentID,acres,updated)

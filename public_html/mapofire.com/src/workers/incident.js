@@ -17,7 +17,16 @@ const tf = {
 };
 
 const numberFormat = n => nf2.format(n);
-const dt = (time) => new Date(time * 1000).toLocaleString('en-US', tf).replace(/(.*),\s(.*)/gm, `$1 at $2`);
+const dt = (time, tz = false) => {
+    const d = new Date(time * 1000);
+    let o = d.toLocaleString('en-US', tf).replace(/(.*),\s(.*)/gm, `$1 at $2`);
+
+    if (tz) {
+        o += ` ${d.toString().match(/\(([^)]+)\)/)?.[1].match(/\b[A-Z]/g)?.join('')}`;
+    }
+
+    return o;
+}
 const ucfirst = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const social = (fireName) => {
@@ -89,6 +98,7 @@ const getInciweb = () => {
     content.push(`<div class="inciweb">
         ${inciweb.incident_info != '' ? `<div class="block" id="overview">
             <h2>Incident Overview</h2>
+            <p style="font-size:12px;color:#d1d1d1;padding:0 2px 0 2px;margin-bottom:var(--half-spacing)">Last updated ${dt(inciweb.updated, true)} via <a href="https://inciweb.wildfire.gov/node/${inciweb.id}" target="_blank">Inciweb</a></p>
 
             <div class="card row">
                 <div class="col text" data-width="${inciweb.photo ? 75 : 100}">

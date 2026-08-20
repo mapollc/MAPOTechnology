@@ -204,6 +204,9 @@ export class Settings {
                     }
                 };
             },
+            email : () => {
+                return this.user?.email ?? null;
+            },
             role: () => {
                 return this.user ? this.role : null;
             },

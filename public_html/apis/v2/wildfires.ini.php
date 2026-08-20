@@ -1,5 +1,5 @@
 <?
-define('API_CACHE_ENABLED', false);
+const API_CACHE_ENABLED = false;
 
 function generateCacheKey($category)
 {
@@ -165,11 +165,11 @@ try {
     $mem->set($cacheKey, $json, $ttl);
     $mem->set("$cacheKey-time", $now, $ttl);
 
-    executeQuery(
+    /*executeQuery(
         'ssi',
         [$cacheKey, $json, $now + $ttl],
         "REPLACE INTO wildfire_api_cache (cache_key, cache_data, expires) VALUES (?,?,?)"
-    );
+    );*/
 } finally {
     // CHANGED: always release lock
     $mem->delete($lockKey);

@@ -2061,7 +2061,8 @@ span.status.out {
 }
 
 #data-form h1 {
-    font-size: 2.2rem;
+    font-size: 2.1rem;
+    line-height: 1.2;
     margin-bottom: 0.75em;
 }
 

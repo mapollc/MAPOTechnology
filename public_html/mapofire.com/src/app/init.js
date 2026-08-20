@@ -1,7 +1,3 @@
-import '../styles/main.css';
-import "../styles/app.css";
-import "../styles/supp.css";
-
 import { ENV, config, getPlatform, tileConfig, loadDispatchCenters } from './config.js';
 import { global, searchResults, impact } from './state.js';
 
@@ -216,10 +212,12 @@ async function addDynamicControls() {
     }
 
     // add the evacuations list btn to the map on they've been retrieved
-    if (global.inits.evacuations) {
-        await global.inits.evacuations.ready;
-        global.inits.evacuations.evacHelper();
+    while (global.inits.evacuations === null) {
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
+
+    await global.inits.evacuations.ready;
+    global.inits.evacuations.evacHelper();
 }
 
 async function loadMapIcons() {
@@ -366,6 +364,8 @@ async function initializeMap() {
 
     // handle on map style loaded event
     global.map.on('style.load', async () => {
+        setTimeout(() => components.marketing(false, null, 'D'), 1000);
+
         // add banner for archived maps to let the user know
         if (config.settings.archive) {
             const b = document.createElement('div');
@@ -744,7 +744,7 @@ async function preload() {
         document.getElementById(insert).insertAdjacentElement('afterend', el);
     };
 
-    makeItem({ id: 'fwf', icon: 'lightning', span: 'Fire WX', insert: 'my-fire', ttip: 'Fire Weather Forecast' });
+    makeItem({ id: 'fwf', icon: 'cloud-bolt', span: 'Fire WX', insert: 'my-fire', ttip: 'Fire Weather Forecast' });
     makeItem({ id: 'archive', icon: 'calendars', span: 'Historical', insert: 'layers', ttip: 'Historical Fires' });
 
     // 1) start a wildfire class 2) get user's currently tracked wildfires 3) get austrailian bush fires

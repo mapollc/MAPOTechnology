@@ -43,7 +43,7 @@ if ($row) {
     $getInciweb = executeQuery(
         'iss',
         [$row['year'], "%{$row['name']}%", $row['state']],
-        "SELECT incident_info, data, contact, photo, updated AS inciweb_updated, captured AS inciweb_captured
+        "SELECT incident_id AS inciweb_id, incident_info, data, contact, photo, updated AS inciweb_updated, captured AS inciweb_captured
         FROM inciweb FORCE INDEX(idx_year_state_name)
         WHERE year = ? AND name LIKE ? AND state = ?
         LIMIT 1"
@@ -144,7 +144,9 @@ if ($row) {
     if (!empty($row['incident_info']) || !empty($row['data'])) {
         $bkacres = '';
         $contact = json_decode($row['contact'], true);
-        $inciweb = ['incident_info' => $row['incident_info'], 'current' => json_decode($row['data'], true)];
+        $inciweb = ['id' => (int)$row['inciweb_id'], 'incident_info' => $row['incident_info'], 'current' => json_decode($row['data'], true)];
+
+        //$inciweb['articles'] = $row['articles'] != '' ? json_decode($row['articles']) : null;
 
         if ($row['photo']) {
             $ph = json_decode($row['photo'], true);

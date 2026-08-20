@@ -447,15 +447,13 @@ function incidentName($name, $inc, $type = null)
         $name = substr($name, 4);
     }
 
+    // remove "detection" naming conventions
+    $name = preg_replace('/\sdet\s[0-9]+$/i', '', $name);
+
     $name = str_replace(['/ ', '  ', ' Fire'], ['/', ' ', ''], ucwords(strtolower($name)));
     $name = ltrim($name, '.');
     $name = preg_replace('/^([\/])*/', '', $name);
     $name = preg_replace('/#[0-9+]/', ' $0', $name);
-
-    // normalize "Inc"
-    if (str_starts_with($name, 'Inc ') || str_starts_with($name, 'INC ')) {
-        $name = preg_replace('/^Inc /i', 'Incident ', $name);
-    }
 
     // --- Remove agency prefixes/suffixes ---
     $things = ['Rn', 'Pr', 'Nw', 'Rs', 'Rv', 'Pv', 'Od', 'Ne', 'Cs', 'Fa', 'Cr', 'Cf', 'Gp', 'Sc'];
@@ -551,11 +549,20 @@ function incidentName($name, $inc, $type = null)
     }
 
     // --- Remove duplicate numbers ---
-    if (preg_match('/(.*)\s([0-9]+)/', $name, $output1)) {
-        if (isset($output1[2]) && str_contains($inc, $output1[2])) {
-            $name = str_replace($output1[2], '', $name);
-        }
+    if (preg_match('/\s([0-9]+)$/', $name, $output1)) {
+    $number = $output1[1];
+
+    // Normalize numeric incident-ID components by removing leading zeros.
+    $incParts = array_map(
+        fn($part) => ltrim($part, '0') ?: '0',
+        explode('-', $inc)
+    );
+
+    if (in_array($number, $incParts, true)) {
+        // Remove only the trailing duplicate number, not occurrences elsewhere.
+        $name = preg_replace('/\s' . preg_quote($number, '/') . '$/', '', $name);
     }
+}
 
     // --- Weird numeric edge case ---
     if (preg_match('/([A-Z][a-z])([0-9]+)/', $name, $output)) {
@@ -564,7 +571,12 @@ function incidentName($name, $inc, $type = null)
         }
     }
 
-    if ($name === 'Utl') $name = 'UTL';
+    if (strtolower($name) === 'utl' || substr(strtolower($name), 0, 3) == 'utl') $name = 'UTL';
+
+    // normalize "Inc"
+    if (str_starts_with($name, 'Inc ') || str_starts_with($name, 'INC ')) {
+        $name = preg_replace('/^Inc /i', 'Incident ', $name);
+    }
 
     // --- Final cleanup ---
     $name = preg_replace('/Lac-(.*)/', 'LAC-$1', $name);

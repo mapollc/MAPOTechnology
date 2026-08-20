@@ -213,15 +213,15 @@ if (!$permission->fire()->edit()) {
                             </div>
                             <div class="item">
                                 <div class="label">Last Updated</div>
-                                <span><?= formatTime($row['updated']) ?></span>
+                                <span title="<?= date('l, F j, Y H:i T', $row['updated']) ?>"><?= formatTime($row['updated']) ?></span>
                             </div>
                             <div class="item">
                                 <div class="label">Discovered</div>
-                                <span><?= formatTime($row['date']) ?></span>
+                                <span title="<?= date('l, F j, Y H:i T', $row['date']) ?>"><?= formatTime($row['date']) ?></span>
                             </div>
                             <div class="item">
                                 <div class="label">Captured</div>
-                                <span><?= formatTime($row['captured']) ?></span>
+                                <span title="<?= date('l, F j, Y H:i T', $row['captured']) ?>"><?= formatTime($row['captured']) ?></span>
                             </div>
                         </div>
                     </details>

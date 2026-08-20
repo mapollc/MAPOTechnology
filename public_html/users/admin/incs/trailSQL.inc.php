@@ -7,6 +7,7 @@ $season = mysqli_real_escape_string($con2, $_POST['season']);
 $contrib = mysqli_real_escape_string($con2, $_POST['contributors']);
 $keywords = mysqli_real_escape_string($con2, serialize(explode(', ', $_POST['keywords'])));
 $trailID = null;
+$wf = null;
 
 // add a new trail guide
 if ($function == 'add') {
@@ -14,7 +15,7 @@ if ($function == 'add') {
 
     #mysqli_query($con2, "INSERT INTO trails (`type`,author,title,`route`,keywords,season,contributors,created,updated,public,premium) VALUES('$_POST[type]','$author','$title','$route','$keywords','$season','$contrib','$time','$time','$_POST[public]','$_POST[premium]')");
     $trailID = mysqli_insert_id($con2);
-    logEvent('Created a new trail guide (<a href="https://www.mapotechnology.com/account/admin/trails/edit?id=' . $trailID . '">' . $title . '</a>)');
+    logEvent("Created a new trail guide (<a href=\https://www.mapotechnology.com/account/admin/trails/edit?id=$trailID\">$title</a>)");
 }
 // edit an existing trail guide
 else if ($function == 'edit') {
@@ -29,8 +30,9 @@ else if ($function == 'edit') {
         }
     }
 
-    $sqlQueries .= "UPDATE trails SET type = '$_POST[type]', title = '$title', route = '$route', season = '$season', contributors = '$contrib', keywords = '$keywords', updated = '$time', public = '$_POST[public]', premium = '$_POST[premium]' WHERE id = '$trailID';";
-    logEvent('Edited trail guide #' . $trailID . ' (<a href="https://www.mapotechnology.com/account/admin/trails/edit?id=' . $trailID . '">' . $title . '</a>)');
+    $sqlQueries .= "UPDATE trails SET type = '$_POST[type]', title = '$title', route = '$route', season = '$season', contributors = '$contrib', 
+        keywords = '$keywords', updated = '$time', public = '$_POST[public]', premium = '$_POST[premium]' WHERE id = '$trailID';";
+    logEvent("Edited trail guide #$trailID (<a href=\"https://www.mapotechnology.com/account/admin/trails/edit?id=$trailID\">$title</a>)");
 }
 
 // add or update categories
@@ -52,7 +54,7 @@ if (count($_FILES['multimedia']['name']) > 0) {
                     $e = explode('.', $basename);
                     $basename = str_replace('.' . $e[count($e) - 1], '', $basename) . '_' . rand(1, 10000) . '.' . $e[count($e) - 1];
                 }
-                $target_file = $target_dir . $basename;
+                $target_file = "$target_dir$basename";
 
                 move_uploaded_file($_FILES['multimedia']['tmp_name'][$i], $target_file);
                 $delta = $existing + $i;
@@ -100,8 +102,8 @@ if (count($_FILES['multimedia']['name']) > 0) {
                     imagepng($thumb, $target_dir . 'large/' . $basename);
                     imagepng($thumb2, $target_dir . 'thumbnail/' . $basename);
                 }
-                imagedestroy($thumb);
-                imagedestroy($thumb2);
+                ////imagedestroy($thumb);
+                ////imagedestroy($thumb2);
             } else {
                 $wf = true;
             }
@@ -125,9 +127,11 @@ if ($_POST['waypoint']['id'] && count($_POST['waypoint']['id']) > 0) {
 
         if (!$id && !$delta) {
             $delta = count($_POST['waypoint']['delta']) == 1 && !$delta ? 0 : $i;
-            $sqlQueries .= "INSERT INTO waypoints (trail_id,name,lat,lon,elev,note,icon,delta) VALUES('$trailID','$name','$lat','$lon','$elev','$note','$icon','$delta');";
+            $sqlQueries .= "INSERT INTO waypoints (trail_id,name,lat,lon,elev,note,icon,delta)
+                VALUES('$trailID','$name','$lat','$lon','$elev','$note','$icon','$delta');";
         } else {
-            $sqlQueries .= "UPDATE waypoints SET name = '$name', lat = '$lat', lon = '$lon', elev = '$elev', note = '$note', icon = '$icon' WHERE id = $id AND trail_id = '$trailID' AND delta = $delta;";
+            $sqlQueries .= "UPDATE waypoints SET name = '$name', lat = '$lat', lon = '$lon', elev = '$elev',
+                note = '$note', icon = '$icon' WHERE id = $id AND trail_id = '$trailID' AND delta = $delta;";
         }
     }
 }
@@ -144,7 +148,7 @@ if ($_POST['oldgpx']['mode']) {
         if ($_POST['oldgpx']['id'][$i]) {
             ////print_r(parseGPX($id, $trailID, $mode, $caption, $delt, $display, '/home/mapo/public_html/mapotrails.com/data/gpx/' . $_POST['oldgpx']['filename'][$i], false));
             $sqlQueries .= parseGPX($id, $trailID, $mode, $caption, $delt, $display, '/home/mapo/public_html/mapotrails.com/data/gpx/' . $_POST['oldgpx']['filename'][$i], false);
-            
+
             $sqlQueries .= "UPDATE gpx SET mode = '$mode', caption = '$caption', delta = '$delt', display = '$display' WHERE id = '$id';";
             $delt++;
         }
@@ -171,8 +175,8 @@ if ($_POST['gpx']) {
     }
 }
 
-echo $sqlQueries;
-/*if (!$wf) {
+////echo $sqlQueries;
+if (!$wf) {
     ////echo $sqlQueries;
     $runSQL = mysqli_multi_query($con2, $sqlQueries) or die(mysqli_error($con2));
     if ($runSQL) {
@@ -186,9 +190,9 @@ echo $sqlQueries;
             }
         } while (mysqli_next_result($con2));
     }
-}*/
+}
 
-//updateTileset();
+updateTileset();
 
 if ($function == 'edit') {
     if ($wf) {

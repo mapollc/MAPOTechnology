@@ -946,7 +946,7 @@ export class Wildfires {
     // get wildfires from API
     async getWildfires(update = false) {
         const qInput = document.querySelector('#q');
-        const types = ['all', /*'new', */'smk', 'rx'];
+        const types = ['all', 'new', 'smk', 'rx'];
 
         if (config.settings.archive) {
             const fires = await api(`${ENV.apiURL}wildfires/all`, [['archive', config.settings.archive], ['bbox', getbbox()]]);

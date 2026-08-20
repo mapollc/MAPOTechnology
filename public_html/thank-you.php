@@ -142,7 +142,7 @@ if (isset($_GET['checkout_id'])) {
 
     <main>
         <div class="wrapper">
-            <a href="https://mapotechnology.com"><img src="https://www.mapotechnology.com/assets/images/mapo_logo.png" style="margin:0 auto"></a>
+            <a href="https://mapotechnology.com"><img src="https://mapotechnology.com/assets/images/mapo_logo_small.png" style="margin:0 auto"></a>
 
             <img src="https://www.mapotechnology.com/assets/images/thank_you_donate.jpeg" style="margin:3em auto 0 auto">
 

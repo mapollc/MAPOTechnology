@@ -3,6 +3,8 @@
 ////error_reporting(E_ALL);
 ini_set('session.cookie_domain', '.mapotechnology.com');
 
+if ($_REQUEST['devel'] == 1) $stripeLive = false;
+
 $allowed_origins = [
     "https://mapotechnology.com",
     "https://www.mapotechnology.com"

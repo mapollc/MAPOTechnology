@@ -78,6 +78,8 @@ export class Evacuations {
         });
 
         this.displayEvacs(data);
+
+        return true;
     }
 
     async createEvacPatterns() {

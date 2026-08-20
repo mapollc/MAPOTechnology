@@ -1,7 +1,5 @@
 <?
-if ($_REQUEST['devel'] == 1) {
-    $stripeLive = false;
-}
+if ($_REQUEST['devel'] == 1) $stripeLive = false;
 
 require_once '/home/mapo/stripe/init.php';
 require_once '/home/mapo/public_html/subs.inc.php';
@@ -94,7 +92,7 @@ if (isset($_GET['checkout_id'])) {
                 <? } else {
                 while ($row = mysqli_fetch_assoc($sql)) {
                     $upgrade = $downgrade = false;
-                    $product = $plan->setPlan(null, $row['plan']);
+                    $product = $plan->setPlan(null, $row['plan'], $_GET['devel'] == 1 ? true : false);
 
                     if (str_contains($plan->getPriceName(), 'ignite')) {
                         $upgrade = true;

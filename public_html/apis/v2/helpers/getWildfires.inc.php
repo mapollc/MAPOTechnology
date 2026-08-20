@@ -1,6 +1,4 @@
 <?
-$category = $category == 'new' ? 'all' : $category;
-
 if ($category == 'complexes') {
     $features = [];
     $year = date('Y');
@@ -139,7 +137,7 @@ if ($_REQUEST['archive']) {
         $wheres[] = "date >= {$_REQUEST['start']} AND date <= {$_REQUEST['end']} AND ";
     } else {
         // new fires, within the last 12 hours
-        /*if ($category == 'new') {
+        if ($category == 'new') {
             $wheres[] = "date >= " . strtotime('-12 hours') . " AND ";
             // all, new, rx or smoke checks
         } else if (in_array($category, $moreThanJustAll)) {
@@ -147,7 +145,7 @@ if ($_REQUEST['archive']) {
             // all fires, older than 12 hours ago
         } else {
             $wheres[] = "date < " . strtotime('-12 hours') . " AND ";
-        }*/
+        }
     }
     $wheres[] = "year = $year AND ";
 

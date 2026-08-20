@@ -1,10 +1,11 @@
 <?
-function sendToMapbox($id, $json) {
+function sendToMapbox($id, $json)
+{
     global $token;
     $datasetID = 'clnnlg3w728a02nmv0ffz57jf';
     $ch = curl_init();
 
-    curl_setopt($ch, CURLOPT_URL, 'https://api.mapbox.com/datasets/v1/mapollc/'.$datasetID.'/features/'.$id.'?access_token='.$token);
+    curl_setopt($ch, CURLOPT_URL, 'https://api.mapbox.com/datasets/v1/mapollc/' . $datasetID . '/features/' . $id . '?access_token=' . $token);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($json));
@@ -19,11 +20,12 @@ function sendToMapbox($id, $json) {
         $output = $result;
     }
     curl_close($ch);
-    
+
     return $output;
 }
 
-function convert($lat) {
+function convert($lat)
+{
     $a = explode('/', $lat[0])[0];
     $b = explode('/', $lat[1])[0];
     $c = explode('/', $lat[2])[0];
@@ -31,18 +33,21 @@ function convert($lat) {
     return [$a, $b, $c];
 }
 
-function DMStoDD($deg, $min, $sec) {
-    return $deg + ((($min * 60) + (substr($sec, 0, -2).'.'.substr($sec, -2))) / 3600);
+function DMStoDD($deg, $min, $sec)
+{
+    return $deg + ((($min * 60) + (substr($sec, 0, -2) . '.' . substr($sec, -2))) / 3600);
 }
 
-function gps($lat, $lon) {
+function gps($lat, $lon)
+{
     $a = convert($lat);
     $b = convert($lon);
 
     return [DMStoDD($a[0], $a[1], $a[2]), DMStoDD($b[0], $b[1], $b[2]) * -1];
 }
 
-function keywords() {
+function keywords()
+{
     global $con2;
 
     $sq = mysqli_query($con2, "SELECT keywords FROM trails");
@@ -57,8 +62,9 @@ function keywords() {
     return json_encode(array_values(array_unique($keyw)));
 }
 
-function trailColor($m) {
-    $randcolor = array('cb2626', '40d740', 'ff973a', 'ebeb2e', 'f977dd', '6daee3', '9873f0', 'ff8298', '698d65', '009688', '3949ab', '880e4f');
+function trailColor($m)
+{
+    $randcolor = ['cb2626', '40d740', 'ff973a', 'ebeb2e', 'f977dd', '6daee3', '9873f0', 'ff8298', '698d65', '009688', '3949ab', '880e4f'];
     $z = rand(0, count($randcolor) - 1);
 
     if ($m == 'Snowmobile' && $m != 'Single Track') {
@@ -85,17 +91,21 @@ function trailColor($m) {
     } else {
         $color = '000';
     }
-    return '#' . $color;
+
+    return "#$color";
 }
 
 if (isset($_POST['action'])) {
-    require_once $documentRoot . 'admin/trailGPX.inc.php';
+    require_once "{$documentRoot}admin/trailGPX.inc.php";
     require_once 'trailSQL.inc.php';
 }
 
-if (($function == 'create' && !$permission->trails()->add()) ||
-    ($function == 'edit' && (!$permission->trails()->edit()->all() && !$permission->trails()->edit()->own()) ||
-        (!$permission->trails()->edit()->all() && $permission->trails()->edit()->own()) && $row['author'] != $user['fullName'])
+$kw = '';
+$pp = $permission->trails();
+
+if (($function == 'create' && !$pp->add()) ||
+    ($function == 'edit' && (!$pp->edit()->all() && !$pp->edit()->own()) ||
+        (!$pp->edit()->all() && $pp->edit()->own()) && $row['author'] != $user['fullName'])
 ) {
     echo invalidPermissions();
 } else {
@@ -107,11 +117,11 @@ if (($function == 'create' && !$permission->trails()->add()) ||
         $terms = unserialize($row['term']);
 
         foreach (unserialize($row['keywords']) as $k) {
-            $kw .= $k . ', ';
+            $kw .= "$k, ";
         }
 
         if ($_GET['justadded'] == 1) {
-            echo message(true, '<b>' . $row['title'] . '</b> was successfully created.');
+            echo message(true, "<b>{$row['title']}</b> was successfully created.");
         }
     }
 ?>
@@ -285,7 +295,7 @@ if (($function == 'create' && !$permission->trails()->add()) ||
                     <a class="btn btn-sm btn-blue" style="display:block;margin:10px 0 25px 0" href="#" id="addwaypoint" onclick="return false">Add Waypoint</a>
                     <?/*if($_SESSION['uid'] == 1) {
                     echo '<div id="waypoint-map" style="width:100%;height:400px"></div>';
-                    } */?>
+                    } */ ?>
 
                     <ul id="waypoints">
                         <? if ($sql) {

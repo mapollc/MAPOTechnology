@@ -1,5 +1,5 @@
 <?
-const API_CACHE_ENABLED = false;
+const API_CACHE_ENABLED = true;
 
 function generateCacheKey($category)
 {
@@ -61,7 +61,17 @@ if ($category == 'canada') {
     return include 'helpers/canadaFires.inc.php';
 }
 
-// CHANGED: only initialize Memcached when caching is enabled
+// -------------------------
+// Development mode
+// -------------------------
+
+// CHANGED: completely bypass cache logic when disabled
+if (!API_CACHE_ENABLED) {
+    require_once 'helpers/getWildfires.inc.php';
+    return $returnJson;
+}
+
+// initialize Memcached
 $mem = new Memcached();
 if (!count($mem->getServerList())) $mem->addServer('127.0.0.1', 11211);
 
@@ -88,20 +98,10 @@ if (isset($_REQUEST['bbox'])) {
 }
 
 // -------------------------
-// Development mode
-// -------------------------
-
-// CHANGED: completely bypass cache logic when disabled
-if (!API_CACHE_ENABLED) {
-    require_once 'helpers/getWildfires.inc.php';
-    return $returnJson;
-}
-
-// -------------------------
 // Cache settings
 // -------------------------
 
-$ttl = !empty($_REQUEST['archive']) ? 31557600 : 300;
+$ttl = !empty($_REQUEST['archive']) ? 31557600 : (str_contains($category, 'new') ? 150 : 300);
 $now = time();
 
 $cache = $mem->get($cacheKey);
@@ -160,16 +160,17 @@ try {
     require_once 'helpers/getWildfires.inc.php';
 
     // CHANGED: cache writes only occur when build succeeds
-    $json = json_encode($returnJson);
+    $isCached = true;
+    $saveJson = json_encode($returnJson);
 
-    $mem->set($cacheKey, $json, $ttl);
+    $mem->set($cacheKey, $saveJson, $ttl);
     $mem->set("$cacheKey-time", $now, $ttl);
 
-    executeQuery(
+    /*executeQuery(
         'ssi',
         [$cacheKey, $json, $now + $ttl],
         "REPLACE INTO wildfire_api_cache (cache_key, cache_data, expires) VALUES (?,?,?)"
-    );
+    );*/
 } finally {
     // CHANGED: always release lock
     $mem->delete($lockKey);

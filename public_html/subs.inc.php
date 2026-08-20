@@ -80,23 +80,25 @@ class ManageSubs
         return in_array($id, $ids);
     }
 
-    public function setPlan($name, $id = null)
+    public function setPlan($name, $id = null, $testing = false)
     {
         if ($id == null) {
             $this->name = $name;
             $this->selected = $this->getPlan();
         } else {
-            $this->selected = $this->getPlanByID($id);
+            $this->selected = $this->getPlanByID($id, $testing);
         }
 
         return $this;
     }
 
-    private function getPlanByID($id)
+    private function getPlanByID($id, $testing)
     {
+        $liveOrTest = $testing ? 'id2' : 'id';
+
         foreach ($this->plan as $item) {
             foreach ($item['price_id'] as $prices) {
-                if ($prices['id'] == $id) {
+                if ($prices[$liveOrTest] == $id) {
                     $piece = $item;
                     unset($piece['price_id']);
 
@@ -171,7 +173,7 @@ class ManageSubs
 
 $plan = new ManageSubs();
 
-$mapoSubscriptions = array(
+$mapoSubscriptions = [
     'donate' => [
         'type' => 'donate',
         'name' => 'Donate',
@@ -224,4 +226,4 @@ $mapoSubscriptions = array(
         'price' => 6.99,
         'term' => 'mo'
     ]
-);
+];
