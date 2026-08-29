@@ -26,7 +26,7 @@ ErrorDocument 401 /error.php?error=401
 RewriteRule ^error/([^/]*)$ /error.php?error_code=$1 [L,QSA]
 
 # favicon
-RewriteRule ^favicon.ico https://www.mapotechnology.com/assets/images/mf-favicon.ico [L]
+RewriteRule ^favicon.ico https://mapotechnology.com/assets/images/mf-favicon.ico [L]
 
 # WILDFIRE MAP RULES
 RewriteRule ^list-of-wildfires$ /list.php [L,QSA]

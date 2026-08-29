@@ -1,3 +1,32 @@
+# PBF tiles should use Apache's normal 404 response.
+ErrorDocument 404 default
+
+<FilesMatch "\.pbf$">
+    # Identify .pbf files as Mapbox Vector Tiles.
+    ForceType application/vnd.mapbox-vector-tile
+
+    # Tell Apache that the PBF contents are gzip-compressed.
+    <IfModule mod_mime.c>
+        AddEncoding gzip .pbf
+    </IfModule>
+
+    # Allow Map of Fire production and local development origins.
+    <IfModule mod_setenvif.c>
+        SetEnvIf Origin "^https://mapofire\.com$" MAPOFIRE_ORIGIN=$0
+        SetEnvIf Origin "^https://www\.mapofire\.com$" MAPOFIRE_ORIGIN=$0
+        SetEnvIf Origin "^http://127\.0\.0\.1:5500$" MAPOFIRE_ORIGIN=$0
+        SetEnvIf Origin "^http://localhost:5500$" MAPOFIRE_ORIGIN=$0
+    </IfModule>
+
+    <IfModule mod_headers.c>
+        Header always set Access-Control-Allow-Origin "%{MAPOFIRE_ORIGIN}e" env=MAPOFIRE_ORIGIN
+        Header always set Vary "Origin"
+    </IfModule>
+</FilesMatch>
+
+# Everything except PBF files gets unrestricted CORS.
 <IfModule mod_headers.c>
-    Header set Access-Control-Allow-Origin *
+    <FilesMatch "^(?!.*\.pbf$)">
+        Header always set Access-Control-Allow-Origin "*"
+    </FilesMatch>
 </IfModule>

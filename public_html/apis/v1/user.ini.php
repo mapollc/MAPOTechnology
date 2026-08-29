@@ -448,7 +448,7 @@ class SSO
                 return [];
             } else {
                 if (isset($sub['cid'])) {
-                    $plan->setPlan(null, $sub['plan'], $uid == 1 ? true : false);
+                    $plan->setPlan(null, $sub['plan']);
                     $sub['name'] = $plan->getName();
                     $sub['id'] = $plan->getPriceName() ?: null;
 
@@ -457,10 +457,14 @@ class SSO
                     $sub['created'] = intval($sub['created']);
                     $sub['cancel_end_period'] = $sub['cancel_end_period'] == 1 ? true : false;
 
+                    if ($plan->isDevel()) $sub['isDevel'] = true;
+
                     return [$sub];
                 } else {
+                    $allSubs = [];
+                    
                     foreach ($sub as $s) {
-                        $plan->setPlan(null, $s['plan'], $uid == 1 ? true : false);
+                        $plan->setPlan(null, $s['plan']);
                         $s['name'] = $plan->getName();
                         $s['id'] = $plan->getPriceName() ?: null;
 
@@ -468,6 +472,8 @@ class SSO
                         $s['ends'] = intval($s['ends']);
                         $s['created'] = intval($s['created']);
                         $s['cancel_end_period'] = $s['cancel_end_period'] == 1 ? true : false;
+
+                        if ($plan->isDevel()) $sub['isDevel'] = true;
 
                         $allSubs[] = $s;
                     }
@@ -489,7 +495,7 @@ class SSO
 
         $token = $method == 'get' ? $row['token'] : $this->token;
 
-        $out = array(
+        $out = [
             'uid' => intval($row['uid']),
             'guid' => $row['guid'],
             'first_name' => $row['first_name'],
@@ -505,7 +511,7 @@ class SSO
             'expires' => intval($expires),
             'token' => $token,
             'subscriptions' => $subscribe
-        );
+        ];
 
         if ($method == 'login') {
             $out['confirmed'] = ($row['confirmed'] == 1 ? true : false);
@@ -518,11 +524,21 @@ class SSO
                 $set['weather'] = null;
             }
 
-            $out['settings'] = ['allsettings' => $row['settings'] ? $set : null, 'method' => $row['method'], 'synced' => intval($row['synced'])];
+            $out['settings'] = [
+                'allsettings' => $row['settings'] ? $set : null,
+                'method' => $row['method'],
+                'synced' => intval($row['synced'])
+            ];
         } else if ($function == 'mapotrails') {
-            $out['settings'] = ['mapotrails' => json_decode($row['settings']), 'synced' => intval($row['updatedTime'])];
+            $out['settings'] = [
+                'mapotrails' => json_decode($row['settings']),
+                'synced' => intval($row['updatedTime'])
+            ];
         } else if ($function == 'oreroads') {
-            $out['settings'] = ['oreroads' => json_decode($row['settings']), 'synced' => intval($row['updatedTime'])];
+            $out['settings'] = [
+                'oreroads' => json_decode($row['settings']),
+                'synced' => intval($row['updatedTime'])
+            ];
         }
 
         return $out;

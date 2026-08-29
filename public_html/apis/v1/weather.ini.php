@@ -581,7 +581,7 @@ $end = date('YmdHi', ($time - date('Z')));
 if ($method == 'nearby' && !isset($_REQUEST['radius'])) {
     $returnJson = array('response' => 'error', 'code' => 1, 'msg' => 'No station or radius provided');
 } else if ($method == 'snotels') {
-    $json = get_data('https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?activeOnly=true&elements=SNWD%2CTOBS&returnForecastPointMetadata=false&returnReservoirMetadata=false&returnStationElements=false&stationTriplets=' . urlencode('*:OR:SNTL,*:OR:SNTLT,*:ID:SNTL,*:ID:SNTLT,*:UT:SNTL,*:UT:SNTLT,*:CA:SNTL,*:CA:SNTLT'));
+    $json = get_data('https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?activeOnly=true&elements=SNWD%2/ BS&returnForecastPointMetadata=false&returnReservoirMetadata=false&returnStationElements=false&stationTriplets=' . urlencode('*:OR:SNTL,*:OR:SNTLT,*:ID:SNTL,*:ID:SNTLT,*:UT:SNTL,*:UT:SNTLT,*:CA:SNTL,*:CA:SNTLT'));
 
     foreach ($json as $s) {
         $feat[] = array(

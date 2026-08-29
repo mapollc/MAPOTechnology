@@ -355,7 +355,9 @@ export async function onMapClick(e) {
         if ((!sources.includes(src) && global.map.getSource(src)) || global.selected[selKey] != null) {
             global.map.removeFeatureState({
                 source: src,
-                id: global.selected[selKey]
+                id: global.selected[selKey],
+                ...(selKey === 'perim' && { sourceLayer: 'perimeters' }),
+                ...(selKey === 'evac' && { sourceLayer: 'evacuations' })
             });
             global.selected[selKey] = null;
         }
@@ -506,6 +508,7 @@ export async function onMapClick(e) {
 
             global.map.setFeatureState({
                 source: 'perimeters',
+                sourceLayer: 'perimeters',
                 id: global.selected.perim
             }, {
                 click: true
@@ -799,6 +802,7 @@ export async function onMapClick(e) {
 
             global.map.setFeatureState({
                 source: 'evac',
+                sourceLayer: 'evacuations',
                 id: global.selected.evac
             }, {
                 click: true

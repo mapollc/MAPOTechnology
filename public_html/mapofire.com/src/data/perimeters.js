@@ -1,4 +1,4 @@
-import { config } from '../app/config.js';
+import { ENV, config } from '../app/config.js';
 import { global } from '../app/state.js';
 
 import { mapMouseOver } from '../utils/helpers.js';
@@ -147,12 +147,125 @@ export class Perimeters {
         return this;
     }
 
-    async get(update = false) {
+    async get(update = false) {       
+        // get Canada wildfire perimeters if not in archive mode
+        if (!this.settings.archive) this.intlPerimeters(update);
+
+        const vis = !this.settings.user || !this.settings.checkboxes() || this.settings.isEnabled('perimeters') ? 'visible' : 'none';
+        const pc = this.perimeterColor(this.settings.perimeters().color());
+        const perimName = 'attr_IncidentName';
+
+        const minSize = this.settings.perimeters().minSize();
+        const perimeterFilter = [
+            'any',
+            ['>', ['to-number', ['get', 'poly_GISAcres']], minSize],
+            ['>', ['to-number', ['get', 'poly_Acres_AutoCalc']], minSize]
+        ];
+
+        if (!global.map.getSource('perimeters')) {
+            if (this.settings.archive !== null) {
+                const y = this.settings.archive ? this.settings.archive : config.curTime.getFullYear();
+
+                new ArcGISFeature('perimeters', global.map, {
+                    url: 'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0',
+                    precision: 6,
+                    where: `attr_FireDiscoveryDateTime >= TIMESTAMP '${y}-01-01 00:00:00' AND attr_FireDiscoveryDateTime <= TIMESTAMP '${y}-12-31 23:59:59'`,
+                    outFields: 'attr_UniqueFireIdentifier,poly_IncidentName,attr_IncidentName,poly_DateCurrent,poly_GISAcres,poly_Acres_AutoCalc,poly_MapMethod,attr_POOState,attr_ContainmentDateTime,attr_PercentContained,attr_FireOutDateTime'
+                });
+            } else {
+                global.map.addSource('perimeters', {
+                    type: 'vector',
+                    tiles: [
+                        `${ENV.host}data/maps/tiles/perimeters/{z}/{x}/{y}.pbf`
+                    ],
+                    minzoom: 5,
+                    maxzoom: 14
+                });
+            }
+        }
+
+        if (!global.map.getLayer('perimeters_fill')) {
+            global.map.addLayer({
+                id: 'perimeters_fill',
+                type: 'fill',
+                source: 'perimeters',
+                paint: {
+                    'fill-opacity': 0.45,
+                    'fill-color': pc
+                },
+                layout: {
+                    visibility: vis
+                },
+                ...(this.settings.archive === null && { 'source-layer': 'perimeters' }),
+                ...(this.settings.archive === null && { filter: perimeterFilter })
+            });
+        }
+
+        if (!global.map.getLayer('perimeters_outline')) {
+            global.map.addLayer({
+                id: 'perimeters_outline',
+                type: 'line',
+                source: 'perimeters',
+                paint: {
+                    'line-width': [
+                        'case',
+                        ['boolean', ['feature-state', 'click'], false],
+                        3,
+                        1
+                    ],
+                    'line-color': pc
+                },
+                layout: {
+                    visibility: vis
+                },
+                ...(this.settings.archive === null && { 'source-layer': 'perimeters' }),
+                ...(this.settings.archive === null && { filter: perimeterFilter })
+            });
+        }
+
+        if (!global.map.getLayer('perimeters_title')) {
+            global.map.addLayer({
+                id: 'perimeters_title',
+                type: 'symbol',
+                source: 'perimeters',
+                minzoom: 5.8,
+                paint: {
+                    'text-color': this.settings.archive ? '#fff' : ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#333', '#fff'],
+                    'text-halo-color': this.settings.archive ? '#333' : ['case', ['!=', ['to-string', ['to-number', ['get', 'attr_ContainmentDateTime']]], '0'], '#fff', '#ff0000'],
+                    'text-halo-blur': 1,
+                    'text-halo-width': 1
+                },
+                layout: {
+                    'symbol-placement': 'line',
+                    'symbol-spacing': 200,
+                    'text-font': config.fonts.din(),
+                    'text-field': ['upcase', ['concat', ['get', perimName], ' Fire']],
+                    'text-size': 13,
+                    'text-max-angle': 30,
+                    'text-padding': 5,
+                    'text-pitch-alignment': 'viewport',
+                    'text-rotation-alignment': 'map',
+                    'text-offset': [0, 1],
+                    visibility: vis
+                },
+                ...(this.settings.archive === null && { 'source-layer': 'perimeters' }),
+                ...(this.settings.archive === null && { filter: perimeterFilter })
+            });
+
+            mapMouseOver('perimeters_fill');
+        }
+
+        reorderLayers();
+
+        return this;
+    }
+
+    /*async get(update = false) {
         let vis = !this.settings.user || !this.settings.checkboxes() || this.settings.isEnabled('perimeters') ? 'visible' : 'none',
             y = (this.settings.archive ? this.settings.archive : config.curTime.getFullYear()),
             min = this.settings.perimeters().minSize(),
             pc = this.perimeterColor(this.settings.perimeters().color()),
-            o = 'OBJECTID,attr_UniqueFireIdentifier,poly_IncidentName,attr_IncidentName,poly_DateCurrent,poly_GISAcres,poly_Acres_AutoCalc,poly_MapMethod,attr_POOState,attr_ContainmentDateTime,attr_PercentContained,attr_FireOutDateTime',
+            o = 'attr_UniqueFireIdentifier,poly_IncidentName,attr_IncidentName,poly_DateCurrent,poly_GISAcres,poly_Acres_AutoCalc,poly_MapMethod,attr_POOState,attr_ContainmentDateTime,attr_PercentContained,attr_FireOutDateTime',
             perimName = 'attr_IncidentName',
             w = `attr_FireDiscoveryDateTime>=TIMESTAMP '${y}-01-01 00:00:00'`;
 
@@ -238,5 +351,5 @@ export class Perimeters {
         reorderLayers();
 
         return this;
-    }
+    }*/
 }

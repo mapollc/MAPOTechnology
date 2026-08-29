@@ -1,83 +1,33 @@
 import { ENV, config } from '../app/config.js';
 import { global } from '../app/state.js';
 
-import { api, timeAgo, mapMouseOver, geojsonExtent, createDataForm } from '../utils/helpers.js';
+import { api, timeAgo, mapMouseOver, createDataForm } from '../utils/helpers.js';
 import { stateLabels } from '../utils/constants.js';
-import { getRings } from '../utils/geometry.js';
 
-import { reorderLayers } from '../map/layers.js';
+import { reorderLayers } from '../map/layers.js'
 
 export class Evacuations {
     constructor() {
         this.activeEvacuations = null;
         this.evacCount = 0;
-        this.centroids = [];
-
-        this.ready = this.load();
 
         this.zoneZoomLevel = {
             min: 10,
             change: 12
         };
-    }
 
-    static polygonCentroid(coords) {
-        if (!coords) return null;
-
-        let area = 0;
-        let cx = 0;
-        let cy = 0;
-
-        for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
-            const [x0, y0] = coords[j];
-            const [x1, y1] = coords[i];
-
-            const f = x0 * y1 - x1 * y0;
-
-            area += f;
-            cx += (x0 + x1) * f;
-            cy += (y0 + y1) * f;
-        }
-
-        area *= 0.5;
-
-        if (area === 0) return coords[0];
-
-        return [
-            cx / (6 * area),
-            cy / (6 * area)
-        ];
+        this.ready = this.load();
     }
 
     async load() {
-        const data = await api(`${ENV.apiURL}evacuations`);
+        this.displayEvacs();
 
-        if (!data?.features) return;
+        const data = await api(`${ENV.apiURL}evacuations/list`, null, true);
 
-        this.activeEvacuations = data.features;
+        if (data?.evacuations === null) return;
+
+        this.activeEvacuations = data.evacuations;
         this.evacCount = this.activeEvacuations.length;
-
-        // calculate the centers of each evacuation zone
-        this.centroids = data.features.map(feature => {
-            const { geometry } = feature;
-
-            const ring = geometry?.type === 'Polygon'
-                ? geometry?.coordinates[0]
-                : geometry?.coordinates[0][0];
-
-            const ctr = Evacuations.polygonCentroid(ring);
-
-            return {
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: ctr
-                },
-                properties: feature.properties
-            };
-        });
-
-        this.displayEvacs(data);
 
         return true;
     }
@@ -101,49 +51,19 @@ export class Evacuations {
         }
     }
 
-    displayEvacs(data) {
+    displayEvacs() {
+        const vis = config.settings.isEnabled('evac') ? 'visible' : 'none';
+
         this.createEvacPatterns();
 
         if (!global.map.getSource('evac')) {
             global.map.addSource('evac', {
-                type: 'geojson',
-                data: data
-            });
-        }
-
-        if (!global.map.getSource('evac_centriods')) {
-            global.map.addSource('evac_centriods', {
-                type: 'geojson',
-                data: {
-                    type: 'FeatureCollection',
-                    features: this.centroids
-                }
-            });
-        }
-
-        if (!global.map.getLayer('evac_bg')) {
-            global.map.addLayer({
-                id: 'evac_bg',
-                type: 'fill',
-                source: 'evac',
-                minzoom: 4,
-                maxzoom: 14,
-                paint: {
-                    'fill-pattern': [
-                        'concat',
-                        'evac_level',
-                        ['to-string', ['to-number', ['get', 'level']]]
-                    ],
-                    'fill-opacity': [
-                        'case',
-                        ['==', ['to-number', ['get', 'level']], 2],
-                        1.0,
-                        0.55
-                    ]
-                },
-                layout: {
-                    visibility: config.settings.isEnabled('evac') ? 'visible' : 'none'
-                }
+                type: 'vector',
+                tiles: [
+                    `${ENV.host}data/maps/tiles/evacuations/{z}/{x}/{y}.pbf`
+                ],
+                minzoom: 5,
+                maxzoom: 14
             });
         }
 
@@ -152,6 +72,8 @@ export class Evacuations {
                 id: 'evac',
                 type: 'fill',
                 source: 'evac',
+                'source-layer': 'evacuations',
+                filter: ['!=', ['get', 'feature_type'], 'center'],
                 minzoom: 4,
                 paint: {
                     'fill-color': [
@@ -173,11 +95,39 @@ export class Evacuations {
                     ]
                 },
                 layout: {
-                    visibility: config.settings.isEnabled('evac') ? 'visible' : 'none'
+                    visibility: vis
                 }
             });
 
             mapMouseOver('evac');
+        }
+
+        if (!global.map.getLayer('evac_bg')) {
+            global.map.addLayer({
+                id: 'evac_bg',
+                type: 'fill',
+                source: 'evac',
+                'source-layer': 'evacuations',
+                filter: ['!=', ['get', 'feature_type'], 'center'],
+                minzoom: 4,
+                maxzoom: 14,
+                paint: {
+                    'fill-pattern': [
+                        'concat',
+                        'evac_level',
+                        ['to-string', ['to-number', ['get', 'level']]]
+                    ],
+                    'fill-opacity': [
+                        'case',
+                        ['==', ['to-number', ['get', 'level']], 2],
+                        1.0,
+                        0.55
+                    ]
+                },
+                layout: {
+                    visibility: vis
+                }
+            });
         }
 
         if (!global.map.getLayer('evac_outline')) {
@@ -185,6 +135,8 @@ export class Evacuations {
                 id: 'evac_outline',
                 type: 'line',
                 source: 'evac',
+                'source-layer': 'evacuations',
+                filter: ['!=', ['get', 'feature_type'], 'center'],
                 minzoom: 4,
                 paint: {
                     'line-color': '#333',
@@ -205,7 +157,7 @@ export class Evacuations {
                     ]
                 },
                 layout: {
-                    visibility: config.settings.isEnabled('evac') ? 'visible' : 'none'
+                    visibility: vis
                 }
             });
         }
@@ -214,8 +166,10 @@ export class Evacuations {
             global.map.addLayer({
                 id: 'evac_title',
                 type: 'symbol',
-                source: 'evac_centriods',
+                source: 'evac',
+                'source-layer': 'evacuations',
                 minzoom: this.zoneZoomLevel.min,
+                filter: ['==', ['get', 'feature_type'], 'center'],
                 paint: {
                     'text-color': '#333',
                     'text-halo-color': '#fff',
@@ -267,12 +221,11 @@ export class Evacuations {
                     'text-anchor': 'center',
                     'text-offset': [0, 1],
                     'text-letter-spacing': 0.05,
-                    visibility: config.settings.isEnabled('evac') ? 'visible' : 'none'
+                    visibility: vis
                 }
             });
         }
 
-        //global.map.moveLayer('evac', 'perimeters_fill');
         reorderLayers();
     }
 
@@ -282,43 +235,48 @@ export class Evacuations {
         const counties = [];
 
         this.activeEvacuations
-            ?.sort((a, b) => Number(b.properties.updated) - Number(a.properties.updated))
-            .forEach(e => {
-                const z = e.properties;
-                const nomen = z.level == 1 ? 'Be Ready' : (z.level == 2 ? 'Be Set' : 'Leave Immediately');
+            ?.sort((a, b) => Number(b.updated) - Number(a.updated))
+            .forEach(evac => {
+                const nomen = evac.level == 1 ? 'Be Ready' : (evac.level == 2 ? 'Be Set' : 'Leave Immediately');
 
-                if (!z.county || !z.state) return;
+                if (!evac.county || !evac.state) return;
 
                 // Added: store unique states
-                if (!states.includes(z.state)) {
-                    states.push(z.state);
+                if (!states.includes(evac.state)) {
+                    states.push(evac.state);
                 }
 
                 // Added: store counties as objects instead of strings
-                if (!counties.some(c => c.name === z.county && c.state === z.state)) {
+                if (!counties.some(c => c.name === evac.county && c.state === evac.state)) {
                     counties.push({
-                        name: z.county,
-                        state: z.state
+                        name: evac.county,
+                        state: evac.state
                     });
                 }
 
-                content.push(`<div class="evac level${z.level}" data-state="${z.state}" data-county="${z.county}">
+                content.push(`<div class="evac level${evac.level}" data-state="${evac.state}" data-county="${evac.county}">
                     <div class="evacTitle">
-                        <h3><span class="evac-circ l${z.level}"></span>Level ${z.level}: ${nomen}</h3>
-                        <a href="#" class="btn btn-xs btn-black" style="margin:0;min-width:88px" data-action="goToEvacPoly" data-id="${z.id}" onclick="return false">View on Map</a>
+                        <h3><span class="evac-circ l${evac.level}"></span>Level ${evac.level}: ${nomen}</h3>
+                        <a href="#" class="btn btn-xs btn-black"
+                            style="margin:0;min-width:88px"
+                            data-action="goToEvacPoly"
+                            data-id="${evac.id}"
+                            data-lat="${evac.lat}"
+                            data-lon="${evac.lon}"
+                            onclick="return false">View on Map</a>
                     </div>
 
                     <details>
                         <summary style="font-weight:400">
-                            ${stateLabels[z.state]?.name} &ndash; ${z.county} County
+                            ${stateLabels[evac.state]?.name} &ndash; ${evac.county} County
                         </summary>
 
-                        <span style="font-size:15px">${z.notes}</span>
+                        <span style="font-size:15px">${evac.notes}</span>
                     </details>
 
                     <p class="updated" style="text-align:left;color:#4a4a4a">
-                        Last updated ${z.updated ? timeAgo(z.updated) : 'N/A'}
-                        by ${stateLabels[z.state]?.name} OEM
+                        Last updated ${evac.updated ? timeAgo(evac.updated) : 'N/A'}
+                        by ${stateLabels[evac.state]?.name} OEM
                     </p>
                 </div>`);
             });
@@ -417,78 +375,29 @@ export class Evacuations {
     }
 
     zoomTo(e) {
-        const id = e.dataset.id;
-        const layer = global.map.getLayer('evac');
+        const lat = e.dataset.lat,
+            lon = e.dataset.lon;
 
-        if (!layer) return;
-        if (layer.visibility != 'visible') {
+        if (global.map.getLayer('evac')?.visibility != 'visible') {
             ['evac', 'evac_outline', 'evac_bg', 'evac_title'].forEach(n => global.map.setLayoutProperty(n, 'visibility', 'visible'));
         }
 
-        const feature = this.activeEvacuations.find(i => i.id == id),
-            bounds = geojsonExtent(feature?.geometry);
-
-        if (bounds) {
-            global.map.fitBounds(bounds, {
-                padding: 100
-            });
-
-            global.inits.clickListener.closeDataForm();
-        }
+        global.map.flyTo({
+            center: [lon, lat],
+            zoom: 12
+        });
     }
 }
 
 export class NearbyEvacuations {
-    constructor(y, x) {
+    constructor(fire) {
+        this.fire = fire;
+
+        this.x = fire.geometry.lon;
+        this.y = fire.geometry.lat;
+        this.point = [this.x, this.y];
+
         this.bufferMiles = 17.5;
-        this.x = x;
-        this.y = y;
-        this.point = [x, y];
-    }
-
-    distanceToSegmentMiles(v, w) {
-        const distToV = global.conversion.distance(this.y, this.x, v[1], v[0]); // distance from p to v
-        const distToW = global.conversion.distance(this.y, this.x, w[1], w[0]); // distance from p to w
-        const lineLength = global.conversion.distance(v[1], v[0], w[1], w[0]);
-
-        if (lineLength === 0) return distToV;
-
-        // Treat points as cartesian (approximate) for projection
-        const px = this.x, py = this.y,
-            vx = v[0], vy = v[1],
-            wx = w[0], wy = w[1],
-            t = ((px - vx) * (wx - vx) + (py - vy) * (wy - vy)) /
-                ((wx - vx) ** 2 + (wy - vy) ** 2);
-
-        if (t < 0) return distToV;
-        if (t > 1) return distToW;
-
-        const projX = vx + t * (wx - vx),
-            projY = vy + t * (wy - vy);
-
-        return global.conversion.distance(this.y, this.x, projY, projX);
-    }
-
-    isPointInPolygon(polygon) {
-        let inside = false;
-        const [x, y] = this.point;
-        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-            const [xi, yi] = polygon[i],
-                [xj, yj] = polygon[j],
-                intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-            if (intersect) inside = !inside;
-        }
-        return inside;
-    }
-
-    isPointNearPolygon(polygon) {
-        if (this.isPointInPolygon(polygon)) return true;
-        for (let i = 0; i < polygon.length; i++) {
-            const v = polygon[i],
-                w = polygon[(i + 1) % polygon.length];
-            if (this.distanceToSegmentMiles(v, w) <= this.bufferMiles) return true;
-        }
-        return false;
     }
 
     async get() {
@@ -501,32 +410,29 @@ export class NearbyEvacuations {
         let grouped = {};
 
         global.inits.evacuations.activeEvacuations.forEach(feature => {
-            let fnotes = '';
+            const distance = global.conversion.distance(this.y, this.x, feature.lat, feature.lon);
 
-            const geom = feature.geometry;
-            const polygons = getRings(geom);
-            //const polygons = !geom ? [] : (geom?.type === 'Polygon' ? [geom.coordinates[0]] : geom.coordinates.flat());
+            if (distance <= this.bufferMiles) {
+                let fnotes = '';
+                const level = feature.level,
+                    notes = feature.notes || '',
+                    county = feature.county || '',
+                    state = feature.state || '',
+                    time = feature.updated || 0;
 
-            const isNear = polygons.some(ring =>
-                this.isPointNearPolygon(ring)
-            );
+                if (!grouped[level]) {
+                    grouped[level] = {
+                        level: level,
+                        notes: new Set(),
+                        counties: new Set(),
+                        states: new Set(),
+                        updated: new Set()
+                    };
+                }
 
-            if (isNear) {
-                const level = feature.properties.level,
-                    notes = feature.properties.notes || '',
-                    county = feature.properties.county || '',
-                    state = feature.properties.state || '',
-                    time = feature.properties.updated || 0;
-
-                if (!grouped[level]) grouped[level] = {
-                    level: level,
-                    notes: new Set(),
-                    counties: new Set(),
-                    states: new Set(),
-                    updated: new Set()
-                };
-
-                if (notes.search('Evac Zone Name') >= 0) fnotes = RegExp(/Evac Zone Name: (.*?)\s\//gm).exec(notes)[1];
+                if (notes.search('Evac Zone Name') >= 0) {
+                    fnotes = RegExp(/Evac Zone Name: (.*?)\s\//gm).exec(notes)?.[1];
+                }
 
                 grouped[level].notes.add(fnotes);
                 grouped[level].counties.add(county);

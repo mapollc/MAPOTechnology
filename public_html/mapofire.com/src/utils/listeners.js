@@ -356,7 +356,12 @@ export class ClickListener {
             const source = sourceMap[key] || key;
 
             if (global.selected[key] && global.map.getSource(source)) {
-                global.map.removeFeatureState({ source, id: global.selected[key] });
+                global.map.removeFeatureState({
+                    source,
+                    id: global.selected[key],
+                    ...(key === 'perim' && { sourceLayer: 'perimeters' }),
+                    ...(key === 'evac' && { sourceLayer: 'evacuations' })
+                });
                 global.selected[key] = null;
             }
         });
@@ -862,36 +867,61 @@ export class ClickListener {
     }
 
     async follow() {
-        const id = parseInt(this.target.dataset.id);
-        const fire = config.wildfire.findFire(id);
+        const tf = this.target.closest('#trackFire');
 
-        if (!fire) return;
-
-        const name = fire.properties.name.replace(' Fire', '') + (fire.properties.type != 'Smoke Check' ? ' Fire' : '');
-        const isRemove = this.target.dataset.mode == 'unfollow' && global.dataView.trackedFires.includes(id);
-        const tf = document.querySelector('#trackFire');
-
-        if (isRemove) {
-            global.dataView.trackedFires.splice(global.dataView.trackedFires.indexOf(id), 1);
-        } else {
-            global.dataView.trackedFires.push(id);
+        if (!tf) {
+            notify('error', 'An unknown error has occurred.');
+            return;
         }
 
-        if (tf) {
-            tf.dataset.mode = isRemove ? 'follow' : 'unfollow';
-            tf.title = isRemove ? 'Start following this incident' : 'You\'re following this incident';
-            tf.classList.toggle('btn-black', !isRemove);
-            tf.classList.toggle('btn-yellow', isRemove);
-            tf.innerHTML = isRemove ? '<i class="far fa-plus"></i>Follow this incident' : '<i class="far fa-check"></i>Following this incident';
+        const id = Number(tf.dataset.id);
+        const isFollowing = global.dataView.trackedFires.includes(id);
 
-            // if user is logged in, save to account, otherwise store in local storage
-            if (config.settings.user) {
-                await helper.api(`${ENV.host}api/v1/trackFires/${isRemove ? 'remove' : 'add'}`, [['wfid', id]], false, true);
-            } else {
-                helper.storage('mapofire.tracked', JSON.stringify(global.dataView.trackedFires));
+        if (isFollowing) {
+            global.dataView.trackedFires = global.dataView.trackedFires.filter(wfid => wfid !== id);
+
+            tf.dataset.mode = 'follow';
+            tf.title = 'Start following this incident';
+            tf.classList.remove('btn-black');
+            tf.classList.add('btn-yellow');
+            tf.innerHTML = '<i class="far fa-plus"></i>Follow this incident';
+
+            notify('success', `You're no longer following this fire.`);
+        } else {
+            const fire = config.wildfire.findFire(id);
+
+            if (!fire) {
+                notify('error', 'This fire is considered out and can no longer be followed.');
+                return;
             }
 
-            notify('success', `You're ${isRemove ? 'no longer following' : 'now following'} the ${name}.`);
+            const { name, type } = fire.properties;
+            const fireName = config.wildfire.fireName(name, type, fire.properties.incidentId);
+
+            global.dataView.trackedFires.push(id);
+
+            tf.dataset.mode = 'unfollow';
+            tf.title = "You're following this incident";
+            tf.classList.add('btn-black');
+            tf.classList.remove('btn-yellow');
+            tf.innerHTML = '<i class="far fa-check"></i>Following this incident';
+
+            notify('success', `You're now following the ${fireName}.`);
+        }
+
+        // if user is logged in, save to account, otherwise store in local storage
+        if (config.settings?.user) {
+            await helper.api(
+                `${ENV.host}api/v1/trackFires/${isFollowing ? 'remove' : 'add'}`,
+                [['wfid', id]],
+                false,
+                true
+            );
+        } else {
+            helper.storage(
+                'mapofire.tracked',
+                JSON.stringify(global.dataView.trackedFires)
+            );
         }
     }
 

@@ -788,6 +788,13 @@ span.evac-circ.l3 {
     background-color: transparent;
 }
 
+#acres_history > canvas {
+    width: 100%;
+    height: 100%;
+    outline: none;
+    user-select: none;
+}
+
 .incident #curwx,
 .incident #fcstwx {
     justify-content: flex-start !important;

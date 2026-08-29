@@ -1,7 +1,7 @@
 import { ENV, config, debugMode } from '../app/config.js';
 import { global, modal } from '../app/state.js';
 
-import { storage, api, timeAgo, loadScript, setHeaders, createDataForm, mapMouseOver, formatArray, dateTime, getbbox } from '../utils/helpers.js';
+import { storage, api, timeAgo, setHeaders, createDataForm, mapMouseOver, formatArray, dateTime, getbbox } from '../utils/helpers.js';
 import { stateLabels, DateFormatter } from '../utils/constants.js';
 
 import { reorderLayers } from '../map/layers.js';
@@ -234,7 +234,6 @@ export class Wildfires {
 
     fireStats(history, incID = null) {
         let changes = [];
-        let totalAcres = 0, totalTimeDiff = 0;
 
         const year = Number(incID?.split('-')[0] ?? config.curTime.getFullYear()),
             last = history[0],
@@ -248,37 +247,19 @@ export class Wildfires {
         for (let i = 0; i < history.length - 1; i++) {
             const change = parseFloat(history[i + 1].acres) - parseFloat(history[i].acres);
             changes.push(change);
-            totalAcres += change;
-            totalTimeDiff += history[i + 1].updated - history[i].updated;
         }
 
         const diff = curAcres - firstAcres,
             overall = global.conversion.sizeFormat(diff);
 
         // Average growth per day/hour
-        let avgValue, growthUnit, growthSum = 0, growthTime = 0;
+        let growthSum = 0, growthTime = 0;
 
         for (let i = 0; i < history.length - 1; i++) {
             const change = parseFloat(history[i + 1].acres) - parseFloat(history[i].acres);
             if (change > 0) {
                 growthSum += change;
                 growthTime += (history[i + 1].updated - history[i].updated); // in seconds
-            }
-        }
-
-        if (growthTime === 0) {
-            avgValue = 0;
-            growthUnit = "day"; // default
-        } else {
-            const growthHours = growthTime / 3600;
-            const growthDays = growthHours / 24;
-
-            if (growthDays > 2) {
-                avgValue = growthSum / growthDays;
-                growthUnit = "day";
-            } else {
-                avgValue = growthSum / growthHours;
-                growthUnit = "hour";
             }
         }
 
@@ -320,163 +301,144 @@ export class Wildfires {
         return `${statSentence.join(' ')}`;
     }
 
-    createChart(fireName, incID, hist) {
+    async createChart(fireName, incID, hist) {
         if (hist.length <= 1) {
             document.querySelector('#acres_history').parentElement.parentElement.remove();
             return;
         }
 
-        let lastTs = null;
+        const { default: Chart } = await import(
+            /* webpackIgnore: true */
+            `https://cdn.jsdelivr.net/npm/chart.js@${ENV.versions.chartJS}/auto/+esm`
+        );
 
         // reverse data to show oldest to newest
         hist.sort((a, b) => a.updated - b.updated);
 
-        const data = hist.map((h) => {
-            let ts = h.updated * 1000;
+        const fireStats = this.fireStats(hist, incID);
+        const fireHistory = hist.map(item => ({
+            x: item.updated,
+            y: item.acres
+        }));
 
-            if (ts === lastTs) ts += 1;
+        const chartArea = document.querySelector('#acres_history');
+        chartArea.innerHTML = '<canvas style="width:100%;height:100%"></canvas>';
+        const ctx = chartArea.querySelector('canvas').getContext('2d');
 
-            lastTs = ts;
-            return [ts, h.acres];
-        });
+        const firstDate = hist[0].updated * 1000;
+        const lastDate = hist[hist.length - 1].updated * 1000;
+        const df = { year: 'numeric', month: 'short', day: 'numeric' };
 
-        const fireStats = this.fireStats(hist, incID),
-            gridColor = '#212d42',
-            fmt = { year: 'numeric', month: 'long', day: 'numeric' },
-            date1 = Intl.DateTimeFormat('en-US', fmt).format(data[0][0]),
-            date2 = Intl.DateTimeFormat('en-US', fmt).format(data[data.length - 1][0]),
-            dates = date1 == date2 ? ` on ${date1}` : ` from ${date1} to ${date2}`;
-
-        Highcharts.setOptions({
-            time: {
-                timezone: 'America/Los_Angeles'
-            }
-        });
-
-        global.chart = Highcharts.chart('acres_history', {
-            chart: {
-                type: 'line',
-                style: {
-                    fontFamily: 'Roboto'
-                },
-                marginTop: 50,
-                backgroundColor: 'transparent'
-            },
-            accessibility: {
-                enabled: false
-            },
-            title: {
-                text: null
-            },
-            legend: {
-                itemStyle: {
-                    color: '#f1f1f1'
-                }
-            },
-            subtitle: {
-                text: `<b>${fireName} (${incID}) growth history ${dates}.</b>`,
-                useHTML: true,
-                verticalAlign: 'bottom',
-                align: 'left',
-                style: {
-                    color: 'rgb(255 255 255 / 80%)'
-                }
-            },
-            navigation: {
-                buttonOptions: {
-                    enabled: true
-                }
-            },
-            tooltip: {
-                xDateFormat: '%a, %b %e, %Y %l:%M %p',
-                shared: true
-            },
-            xAxis: {
-                type: 'datetime',
-                lineColor: gridColor,
-                tickColor: gridColor,
-                gridLineColor: gridColor,
-                gridLineWidth: 1,
-                labels: {
-                    style: {
-                        color: '#f1f1f1'
-                    },
-                    format: '{value:%b %e}'
-                }
-            },
-            yAxis: [{
-                lineWidth: 1,
-                lineColor: gridColor,
-                gridLineColor: gridColor,
-                gridLineWidth: 1,
-                title: {
-                    text: 'Total Acres',
-                    style: {
-                        color: '#f1f1f1'
-                    }
-                },
-                labels: {
-                    style: {
-                        color: '#fff'
-                    }
-                },
-                min: 0
-            }],
-            series: [{
-                name: 'Total Acres',
-                type: 'line',
-                data: data
-            }],
-            panning: true,
-            panKey: 'ctrl',
-            zooming: {
-                type: 'xy'
-            },
-            exporting: {
-                buttons: {
-                    contextButton: {
-                        symbolStroke: '#eee',
-                        theme: {
-                            fill: 'transparent',
-                            states: {
-                                hover: {
-                                    fill: '#223260'
-                                },
-                                select: {
-                                    fill: '#223260'
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            plotOptions: {
-                series: {
-                    marker: {
-                        symbol: 'circle',
-                        fillColor: '#fff',
-                        enabled: true,
-                        radius: 3,
-                        lineWidth: 1,
-                        lineColor: null
-                    }
-                }
-            },
-            responsive: {
-                rules: [{
-                    condition: {
-                        maxWidth: 600
-                    },
-                    chartOptions: {
-                        yAxis: {
-                            title: {
-                                text: ''
-                            }
-                        }
-                    }
+        global.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Acres',
+                    data: fireHistory,
+                    tension: 0.2,
+                    borderColor: '#e41616',
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#e41616',
+                    pointBorderWidth: 1,
+                    fill: false,
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
                 }]
             },
-            colors: ['#e41616', '#ffd54f']
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: 16
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        align: 'center',
+                        labels: {
+                            color: '#eee'
+                        }
+                    },
+                    title: {
+                        display: false
+                    },
+                    subtitle: {
+                        display: true,
+                        text: `${fireName} (${incID}) growth history from ${Intl.DateTimeFormat('en-US', df).format(firstDate)} to ${Intl.DateTimeFormat('en-US', df).format(lastDate)}.`,
+                        position: 'bottom',
+                        align: 'start',
+                        color: '#fff',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: items => {
+                                const item = hist[items[0].dataIndex];
+                                const match = RegExp(/([A-Za-z]+\s[0-9]+,\s[0-9]{4}),\s(.*)/).exec(
+                                    Intl.DateTimeFormat('en-US', {
+                                        ...df,
+                                        hour: 'numeric',
+                                        minute: 'numeric'
+                                    }).format(item.updated * 1000));
+
+                                return `${match[1]} - ${match[2]}`;
+                            },
+                            label: context => {
+                                const item = hist[context.dataIndex],
+                                    prev = hist[context.dataIndex - 1] ?? item,
+                                    pct = `${Math.round(((item.acres - prev.acres) / prev.acres) * 100)}%`;
+
+                                const out = [`${item.acres.toLocaleString()} acres`];
+
+                                if (item.change > 0) out.push(`${item.change >= 0 ? '+' : ''}${item.change.toLocaleString()} acres (${pct})`);
+
+                                return out;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        min: hist[0].updated,
+                        grid: {
+                            color: '#212d42'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Timeline',
+                            color: '#eee'
+                        },
+                        ticks: {
+                            maxTicksLimit: 7,
+                            includeBounds: true,
+                            callback: value => {
+                                return Intl.DateTimeFormat('en-US', df).format(value * 1000);
+                            },
+                            color: '#aaa'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#212d42'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Total Acres',
+                            color: '#eee'
+                        },
+                        ticks: {
+                            color: '#aaa',
+                            callback: val => val.toLocaleString()
+                        }
+                    }
+                }
+            }
         });
 
         if (fireStats != null) {
@@ -1098,22 +1060,64 @@ export class Wildfires {
         /*wx.nearbyAQ();*/
     }
 
-    fireName(n, t, i) {
-        let o = '';
+    fireName(name, type, incidentId) {
+        switch (type) {
+            case 'Prescribed Fire':
+                if (name && /RX/i.test(name)) {
+                    return name;
+                }
 
-        if (t == 'Prescribed Fire') {
-            o = (n.toLowerCase().includes('rx') ? n : `${n} RX`);
-        } else if (t == 'Smoke Check') {
-            o = 'Smoke Check' + (i !== undefined ? ` #${i.split('-')[1]}-${parseInt(i.split('-')[2])}` : '');
-        } else {
-            if (n === undefined || n == '') {
-                o = 'Incident #' + parseInt(i.split('-')[2]);
-            } else {
-                const cleanedName = n.replace(/^\d+(?=\D)\s?/, '');
-                o = `${cleanedName.toLowerCase().ucwords()} Fire`;
+                return (name || '') + ' RX';
+
+            case 'Smoke Check': {
+                let incidentNum = '';
+
+                if (incidentId) {
+                    const parts = incidentId.split('-');
+
+                    if (parts.length > 2) {
+                        const part1 = parts[1];
+                        const part2 = Number.parseInt(parts[2], 10);
+
+                        if (!Number.isNaN(part2)) {
+                            incidentNum = ` #${part1}${part2}`;
+                        }
+                    }
+                }
+
+                return `Smoke Check${incidentNum}`;
+            }
+
+            default: {
+                if (name == null || name.trim() === "") {
+                    const parts = incidentId?.split("-") ?? [];
+                    const parsedNum = Number.parseInt(parts[2], 10);
+
+                    const incidentNum = !Number.isNaN(parsedNum)
+                        ? String(parsedNum)
+                        : incidentId || "Unknown";
+
+                    return `Incident #${incidentNum}`;
+                }
+
+                let cleanedName = name.replace(/^\d+(?=\D)\s?/, "");
+                cleanedName = cleanedName.toLowerCase().ucwords() + " Fire";
+
+                for (const prefix of ["Mc", "Mac"]) {
+                    if (cleanedName.startsWith(prefix)) {
+                        cleanedName =
+                            prefix +
+                            cleanedName
+                                .slice(prefix.length)
+                                .replace(/^./, char => char.toUpperCase());
+
+                        break;
+                    }
+                }
+
+                return cleanedName;
             }
         }
-        return o;
     }
 
     async cacheIncident(wfid) {
@@ -1175,10 +1179,7 @@ export class Wildfires {
             return;
         }
 
-        const fireLat = fire.geometry.lat;
-        const fireLon = fire.geometry.lon;
-
-        const nearbyEvacs = await new NearbyEvacuations(fireLat, fireLon).get();
+        const nearbyEvacs = await new NearbyEvacuations(fire).get();
 
         const prop = fire.properties;
         const fireIncName = this.fireName(prop.fireName, prop.type, prop.incidentId);
@@ -1261,7 +1262,7 @@ export class Wildfires {
             }
 
             // get incident weather
-            this.doWeather([fireLon, fireLat]);
+            this.doWeather([fire.geometry.lon, fire.geometry.lat]);
 
             // remove any features that require a user to be subscribed
             if (!config.settings?.hasPermissions(config.PERMISSION_LEVELS.PREMIUM)) {
@@ -1277,24 +1278,16 @@ export class Wildfires {
                 scrd.style.cursor = 'pointer';
 
                 // load the script for the chart, then create the acreage chart
-                if (acresHistory != null) {
-                    const c = this;
-
-                    if (!global.inits.highchartsLoad) {
-                        loadScript('https://code.highcharts.com/highcharts.js')
-                            .then(() => {
-                                global.inits.highchartsLoad = true;
-
-                                loadScript('https://code.highcharts.com/modules/exporting.js').then(() => {
-                                    c.createChart(fireIncName, prop.incidentId, acresHistory);
-                                });
-                            });
-                    } else {
-                        c.createChart(fireIncName, prop.incidentId, acresHistory);
-                    }
-                } else {
+                if (acresHistory == null) {
                     modal.querySelector('#acres_history_wrapper').remove();
+                    return;
                 }
+
+                this.createChart(
+                    fireIncName,
+                    prop.incidentId,
+                    acresHistory
+                );
             }
         };
 

@@ -7,9 +7,11 @@ class ManageSubs
     public $plan;
     public $name;
     public $selected;
+    public $isInDevel;
 
     public function __construct()
     {
+        $this->isInDevel = false;
         $this->name = null;
         $this->selected = null;
         $this->plan = [
@@ -64,6 +66,11 @@ class ManageSubs
         ];
     }
 
+    public function isDevel()
+    {
+        return $this->isInDevel; 
+    }
+
     public function allPlans()
     {
         return $this->plan;
@@ -110,6 +117,11 @@ class ManageSubs
                     ];
                 }
             }
+        }
+
+        if (!$testing) {
+            $this->isInDevel = true;
+            return $this->getPlanByID($id, true);
         }
 
         return null;

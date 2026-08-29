@@ -212,6 +212,8 @@ export function timeAgo(t, w, c) {
 }
 
 export function setHeaders(title, urlPath, description) {
+    if (window.location.hostname === '127.0.0.1') return;
+
     const fullUrl = `${ENV.baseURL}${urlPath.replace(/incident\/|wildfire\//g, 'fires/')}${window.location.search}${window.location.hash}`,
         pageTitle = `${title} | ${config.productName}`;
 

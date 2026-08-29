@@ -2,7 +2,6 @@ import { ENV, config } from '../app/config.js';
 import { global, modal } from '../app/state.js';
 
 import { Popup, api, timeAgo, setHeaders, unsetHeaders, mapMouseOver, dateTime, getbbox } from '../utils/helpers.js';
-import { wwaColors } from '../utils/constants.js';
 
 import { ndfdTime } from './index.js';
 

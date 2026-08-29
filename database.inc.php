@@ -27,7 +27,10 @@ function executeQuery($types = '', $params = [], $sql, $useCon2 = false)
         return false;
     }
 
-    $stmt->bind_param($types, ...$params);
+    if ($types != '' && !empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    
     $stmt->execute();
     $result = $stmt->get_result();
 

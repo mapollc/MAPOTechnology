@@ -9,16 +9,17 @@ $portal = null;
 
 // get customer ID and any subscriptions from the DB
 $now = time();
-if ($_GET['cid']) $customerID = $_GET['cid'];
-else {
-    $customerID = mysqli_fetch_assoc(mysqli_query($con, "SELECT cid FROM billing WHERE email = '$user[email]' ORDER BY status ASC, created DESC LIMIT 1"))['cid'];
-}
+$customerID = $_GET['cid'] ?: mysqli_fetch_assoc(mysqli_query($con, "SELECT cid FROM billing WHERE email = '$user[email]' ORDER BY status ASC, created DESC LIMIT 1"))['cid'];
 
 if ($customerID) {
+    $params = null;
+    if (isset($_GET['ref'])) $params[] = 'ref=' . $_GET['ref'];
+    if (isset($_GET['devel'])) $params[] = 'devel=1';
+
     try {
         $portal = $stripe->billingPortal->sessions->create([
             'customer' => $customerID,
-            'return_url' => $_GET['next'] ?: 'https://www.mapotechnology.com/account/billing' . (isset($_GET['ref']) ? '?ref=' . $_GET['ref'] : '') . (isset($_GET['devel']) ? '?devel=' . $_GET['devel'] : ''),
+            'return_url' => $_GET['next'] ?: 'https://www.mapotechnology.com/account/billing' . ($params ? '?' . implode('&', $params) : ''),
         ]);
     } catch (Exception $e) {
         if (!str_contains($e->getMessage(), 'No such')) echo message(false, $e->getMessage());
@@ -181,7 +182,7 @@ if (isset($_GET['checkout_id'])) {
                             <? } ?>
 
                             <div style="clear:both"></div>
-                            <a href="billing/portal?cid=<?= $customerID . (isset($_GET['ref']) ? '&ref=' . $_GET['ref'] : '') ?>" style="font-size:14px">Manage Payment Methods</a>
+                            <a href="billing/portal?cid=<?= $customerID . (isset($_GET['ref']) ? '&ref=' . $_GET['ref'] : '') . (isset($_GET['devel']) ? '&devel=1' : '') ?>" style="font-size:14px">Manage Payment Methods</a>
                         </div>
             <? } catch (Exception $e) {
                         //echo message(false, $e->getMessage());

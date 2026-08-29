@@ -9,6 +9,9 @@ export const ENV = {
     domain: 'https://mapotechnology.com/',
     apiURL: 'https://api.mapotechnology.com/v1/',
     debug: window.location.search.includes('version'),
+    versions: {
+        chartJS: '4.5.1'
+    },
     PLATFORM_MAP: {
         'wildfiremap.org': 'wildfiremap',
         'fireweatheravalanche.org': 'fireweatheravalanche'
