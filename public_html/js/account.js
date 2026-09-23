@@ -57,13 +57,30 @@ const stateLabels = {
     'WV': 'West Virginia',
     'WI': 'Wisconsin',
     'WY': 'Wyoming'
-},
-    iconsA = ['4x4', 'big_air', 'bigfoot', 'bridge', 'cabin', 'camp',
-        'caution', 'fishing', 'hike', 'info', 'lake', 'media',
-        'mtn_bike', 'parking', 'redneck', 'restroom', 'river', 'sledding', 'summit', 'swim'],
-    iconsB = ['4x4', 'Big Air', 'Bigfoot', 'Bridge', 'Cabin', 'Campground',
-        'Caution', 'Fishing', 'Hike', 'Info', 'Lake', 'Media',
-        'Mountain Bike', 'Parking', 'Redneck', 'Restroom', 'River', 'Sledding', 'Summit', 'Swimming'];
+};
+
+const icons = {
+    '4x4': '4x4',
+    'big_air': 'Big Air',
+    'bigfoot': 'Bigfoot',
+    'bridge': 'Bridge',
+    'cabin': 'Cabin',
+    'camp': 'Campground',
+    'caution': 'Caution',
+    'fishing': 'Fishing',
+    'hike': 'Hike',
+    'info': 'Info',
+    'lake': 'Lake',
+    'media': 'Media',
+    'mtn_bike': 'Mountain Bike',
+    'parking': 'Parking',
+    'redneck': 'Redneck',
+    'restroom': 'Restroom',
+    'river': 'River',
+    'sledding': 'Sledding',
+    'summit': 'Summit',
+    'swim': 'Swimming'
+};
 
 let calc,
     map,
@@ -80,11 +97,12 @@ async function api(uri, fields = null, v2 = false, forAuth = false) {
         return null;
     }
 
-    let result,
+    let resp,
+        result,
         url = v2 ? uri.replace('v1', 'v2') : uri;
 
-    const isExternal = url.includes('weather.gov') || url.includes('unl.edu'),
-        isInternal = url.includes(apiURL) || url.includes(apiURL.replace('v1', 'v2')) || url.includes(host) || url.includes(mapofireAPI),
+    const isExternal = url.includes('weather.gov') || url.includes('unl.edu') || url.includes('rainviewer.com'),
+        isInternal = url.includes(apiURL) || url.includes(apiURL.replace('v1', 'v2')) || url.includes(host),
         ops = {
             method: isExternal ? 'GET' : 'POST'
         },
@@ -102,34 +120,44 @@ async function api(uri, fields = null, v2 = false, forAuth = false) {
     if (!isExternal) ops['body'] = fd;
 
     try {
-        const resp = await fetch(url, ops);
+        resp = await fetch(url, ops);
+    } catch (e) {
+        console.warn(`Fetch failed for ${url}; retrying...`, e);
 
-        if (!resp.ok) {
-            const errorText = await resp.text();
-            console.error(`HTTP error! Status: ${resp.status}, URL: ${url}, Response: ${errorText}`);
+        await new Promise(resolve => setTimeout(resolve, 250));
 
+        try {
+            resp = await fetch(url, ops);
+        } catch (retryError) {
+            console.error(`Fetch failed after retry for URL: ${url}`, retryError);
             return null;
         }
+    }
 
-        // Attempt to parse JSON
+    // if there was an error with the network request, log the error
+    if (!resp.ok) {
+        const errorText = await resp.text();
+        console.error(`HTTP error! Status: ${resp.status}, URL: ${url}, Response: ${errorText}`);
+
+        return null;
+    }
+
+    // parse JSON separately so a JSON error isn't retried
+    try {
         result = await resp.json();
     } catch (e) {
-        if (e.name !== 'AbortError') console.error(`Fetch or JSON parsing error for URL: ${url}`, e.message);
-        result = null
+        console.error(`JSON parsing error for URL: ${url}`, e.message);
+        result = null;
     }
 
     return result;
 }
 
-function debounce(func, wait) {
+function debounce(fn, wait) {
     let timeout;
-    return function () {
-        const context = this;
-        const args = arguments;
+    return (...args) => {
         clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            func.apply(context, args);
-        }, wait);
+        timeout = setTimeout(() => fn.apply(this, args), wait);
     };
 }
 
@@ -156,14 +184,26 @@ function goBack(fallbackUrl) {
     return false;
 }
 
-function ucfirst(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-}
+String.prototype.ucfirst = function () {
+    return `${this.charAt(0).toUpperCase()}${this.slice(1)}`;
+};
 
-function ucwords(s) {
+String.prototype.ucwords = function () {
     const smallWords = new Set(['a', 'an', 'the', 'is', 'of', 'and', 'or', 'for', 'to', 'in', 'on', 'at', 'by', 'with']);
-    return s.split(' ').map((word, i) => i === 0 || !smallWords.has(word.toLowerCase()) ? word.charAt(0).toUpperCase() + word.slice(1) : word.toLowerCase()).join(' ');
-}
+    return this.split(' ').map((word, i) => i === 0 || !smallWords.has(word.toLowerCase()) ? word.charAt(0).toUpperCase() + word.slice(1) : word.toLowerCase()).join(' ');
+};
+
+String.prototype.sentenceCase = function () {
+    const lowercase = ['a', 'an', 'the', 'and', 'or', 'but', 'of', 'in', 'on', 'at', 'to', 'for'];
+
+    return this
+        .toLowerCase()
+        .replace(/\b\w+/g, (word, index, _) => {
+            if (index === 0) return word.charAt(0).toUpperCase() + word.slice(1);
+
+            return lowercase.includes(word) ? word : word.charAt(0).toUpperCase() + word.slice(1);
+        });
+};
 
 function timeAgo(t, w, c) {
     const plural = (v) => { return v > 1 ? 's' : ''; },
@@ -200,30 +240,12 @@ function timeAgo(t, w, c) {
     return val + ' ago';
 }
 
-function formatPhoneNumber(phoneNumber) {
-    const cleaned = phoneNumber.replace(/\D/g, '');
-
-    if (cleaned.length < 4) return cleaned;
-
-    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) return `${match[1]}-${match[2]}-${match[3]}`;
-
-    return cleaned;
-}
-
-function validateEmail(email) {
-    return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
-}
-
-function numberFormat(n, d = 2) {
-    return Intl.NumberFormat('en-US', {
-        maximumFractionDigits: d
-    }).format(n);
-}
-
-function getUserToken() {
-    return document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null;
-}
+const findFire = (wfid) => wildfires.find(f => f.properties.wfid == wfid) ?? null;
+const numberFormat = (n, d = 2) => Intl.NumberFormat('en-US', {
+    maximumFractionDigits: d
+}).format(n);
+/*const validateEmail = (email) => /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+const getUserToken = () => document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null;*/
 
 class QueryWildfires {
     constructor() {
@@ -566,7 +588,7 @@ async function getFires(refresh = false) {
 
             content.push(`<tr>
                 <td><a target="blank" href="https://mapofire.com/${url}?utm_campaign=mapofire&utm_medium=wildfires_near_you&utm_source=account">${name}${(type != 'Smoke Check' ? ' Fire' : '')}</td>
-                <td>${ucwords(type)}</td>
+                <td>${type.ucwords()}</td>
                 <td>
                     <i class="fas fa-location-arrow" style="width:18px;margin-right:.5em;color:var(--orange);transform:rotate(${Number(bear - 45)}deg)"></i>
                     <span>${Math.round(dist)} miles ${calc.getCompassDirection(bear)} of you</span>
@@ -615,10 +637,6 @@ function getMyLoc(target) {
     });
 }
 
-function findFire(wfid) {
-    return wildfires.find(f => f.properties.wfid == wfid) ?? null;
-}
-
 async function downloadUserData() {
     try {
         const userData = await api(`${host}${usersAPI}download`);
@@ -657,10 +675,6 @@ function downloadFile(name, url) {
     document.body.removeChild(link);
 
     return true;
-}
-
-async function getFavoriteFires() {
-    return await api(`${host}${usersAPI}favFires`, null, false, true);
 }
 
 function displayFavFires(resp) {
@@ -863,17 +877,10 @@ async function unfavorite(tid) {
 function addWaypoint() {
     let selects = ['<option>- Icon -</option>'];
 
-    for (const i = 0; i < iconsA.length; i++) {
-        selects.push(`<option value="${iconsA[i]}">${iconsB[i]}</option>`);
-    }
+    Object.keys(icons).forEach(k => {
+        selects.push(`<option value="${k}">${icons[k]}</option>`);
+    });
 
-    /*const line = '<li><input type="hidden" name="waypoint[id][]" value="">' +
-        '<input type="hidden" name="waypoint[delta][]" value="">' +
-        '<input type="text" name="waypoint[name][]" class="input" style="display:inline-block;max-width:240px" placeholder="Waypoint Name" value="">' +
-        '<input type="text" name="waypoint[note][]" class="input" style="display:inline-block;max-width:400px" placeholder="Waypoint Notes" value="">' +
-        '<select name="waypoint[icon][]" class="input" style="display:inline-block;max-width:170px">' + selects + '</select>' +
-        '<input type="text" name="waypoint[lat][]" class="input" style="display:inline-block;max-width:140px" placeholder="Latitude" value="">' +
-        '<input type="text" name="waypoint[lon][]" class="input" style="display:inline-block;max-width:140px" placeholder="Longitude" value=""></li>';*/
     const line = `<li>
         <input type="hidden" name="waypoint[id][]" value="">
         <input type="hidden" name="waypoint[delta][]" value="">
@@ -899,7 +906,7 @@ function addWaypoint() {
                 <input type="text" name="waypoint[lon][]" class="input" style="max-width:150px" placeholder="-118.123456" value="">
             </div>
             <div class="column">
-                <a class="btn btn-sm btn-red" style="display:block;margin-top:15px;min-width:unset" href="#" id="deletewaypoint" data-id="" onclick="return false">Delete</a>
+                <a class="btn btn-sm btn-black" style="display:block;margin-top:15px;min-width:unset" href="#" id="deletewaypoint" data-id="" onclick="return false">Delete</a>
             </div>
         </div>
     </li>`;
@@ -945,7 +952,7 @@ function addGPX() {
                 </div>
             </div>
             <div class="column">
-                <a class="btn btn-sm btn-red" style="display:block;margin-top:15px;min-width:unset" href="#" id="deletegpx" data-tid="" data-delta="${n}" data-filename="" data-id="" onclick="return false">Delete</a>
+                <a class="btn btn-sm btn-black" style="display:block;margin-top:15px;min-width:unset" href="#" id="deletegpx" data-tid="" data-delta="${n}" data-filename="" data-id="" onclick="return false">Delete</a>
             </div>
         </div>
     </li>`;
@@ -1020,7 +1027,7 @@ function billing() {
 
             popup.classList.add('popup');
             popup.innerHTML = `<i id="close-popup" class="far fa-xmark"></i>
-                <h2>${ucfirst(method)} subscription</h2>
+                <h2>${method.ucfirst()} subscription</h2>
                 <p>Are you sure you want to ${method} your subscription to <b>${newName}</b>? ${extra}</p>
                 <div class="options">
                 <a href="#" id="modify-now" class="btn btn-${method == 'downgrade' ? 'red' : 'green'}" onclick="return false">Yes, ${method}</a>
@@ -1135,7 +1142,7 @@ function billing() {
 async function getInvoices() {
     const invoiceDiv = document.querySelector('#invoices');
     let fields;
-    
+
     if (!invoiceDiv) return;
 
     if (window.location.search.match(/devel=1/) != null) {
@@ -1174,19 +1181,18 @@ async function getInvoices() {
 }
 
 async function doSearch(q) {
-    let results = [];
     const sr = document.querySelector('.search-results');
 
     if (q.length > 0) {
         const resp = await api(`${apiURL}search`, [['citiesonly', 1], ['q', q]], true);
 
         if (resp.results != null) {
-            resp.results
-                .forEach(s => {
+            const results = resp.results
+                .map(s => {
                     const data = s.data;
                     const name = `${data.city}, ${data.state} ${data.zip}`;
 
-                    results.push(`<div class="result" data-name="${name}" data-lat="${s.lat}" data-lon="${s.lon}">${name}</div>`);
+                    return `<div class="result" data-name="${name}" data-lat="${s.lat}" data-lon="${s.lon}">${name}</div>`;
                 });
 
             if (results.length) sr.innerHTML = results.join('');
@@ -1194,28 +1200,439 @@ async function doSearch(q) {
     }
 }
 
-async function complete() {
-    // sort any tables by column name and order
-    if (document.querySelector('table thead.sortable') != null) {
-        document.querySelectorAll('thead.sortable th').forEach((e) => {
-            if (e.innerHTML == '') return;
+async function adminTrailMgmt() {
+    // load wysiwyg editor
+    /*loadScript('https://cdn.jsdelivr.net/gh/mdbassit/Wysi@latest/dist/wysi.min.js').then(() => {
+        const link = document.createElement('link');
+        link.href = 'https://cdn.jsdelivr.net/gh/mdbassit/Wysi@latest/dist/wysi.min.css';
+        link.rel = 'stylesheet';
+        document.head.prepend(link);
 
-            if (e.getAttribute('onclick') != null) {
-                const sort = window.location.href.match(/sort=([A-Za-z]+)/);
-                const order = window.location.href.match(/order=([A-Za-z]+)/);
-                const matches = e.getAttribute('onclick').match(/sort=([A-Za-z]+)&order=([A-Z]+)/);
+        Wysi({
+            el: '#route',
+            darkMode: true,
+            height: 300,
+            tools: [
+               'bold', 'italic', 'underline', '|',
+               'ul', 'ol'
+            ]
+        });
+    });*/
 
-                if (matches && sort != null && sort[1] == matches[1]) {
-                    const c = document.createElement('i');
+    // initialize variables
+    const trailTitle = document.querySelector('input[name="title"]');
+    keywordResults = document.getElementById('kw-results');
+    kw = document.querySelector('input[name=keywords]');
 
-                    if (order[1] == 'DESC') {
-                        c.classList.add('fas', 'fa-sort-down');
-                    } else {
-                        c.classList.add('fas', 'fa-sort-up');
+    // add listeners
+    document.querySelector('#addwaypoint')?.addEventListener('click', () => addWaypoint());
+    document.querySelector('#addgpx')?.addEventListener('click', () => addGPX());
+    trailTitle?.addEventListener('keyup', (e) => {
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+        e.target.value = e.target.value.sentenceCase();
+    });
+
+    // get a list of all keywords so we can pre-select and not have to guess
+    const getKeywords = await api(`${host}${usersAPI}mapotrails/keywords`);
+    const allKeywords = getKeywords?.response ?? [];
+
+    allKeywords.sort((a, b) => a.localeCompare(b));
+
+    // trim trailing comma/space
+    kw?.addEventListener('blur', (e) => {
+        e.target.value = e.target.value
+            .trim()
+            .replace(/,+$/, '');
+    });
+
+    // search existing keywords to add into the input
+    kw?.addEventListener('keyup', (e) => {
+        const value = e.target.value;
+        const parts = value.split(',');
+        const searchRaw = parts.at(-1).trim();
+        const search = searchRaw.toLowerCase();
+
+        if (!search) {
+            keywordResults.style.display = 'none';
+            return;
+        }
+
+        const results = allKeywords
+            .filter(keyword => keyword.toLowerCase().includes(search))
+            .sort((a, b) => {
+                const score = keyword => {
+                    const lower = keyword.toLowerCase();
+
+                    return (keyword.startsWith(searchRaw) ? 4 : 0) +
+                        (lower.startsWith(search) ? 2 : 0) +
+                        (keyword.includes(searchRaw) ? 1 : 0);
+                };
+
+                return score(b) - score(a) || a.localeCompare(b);
+            })
+            .slice(0, 10);
+
+        if (!results.length) {
+            keywordResults.style.display = 'none';
+            return;
+        }
+
+        keywordResults.innerHTML = results
+            .map(kw => `<div id="kw-item">${kw}</div>`)
+            .join('');
+
+        keywordResults.style.display = 'block';
+    });
+
+    // add keyword to input from search results list
+    keywordResults?.addEventListener('click', (e) => {
+        const item = e.target.closest('#kw-item');
+        if (!item) return;
+
+        const parts = kw.value.split(',');
+        parts[parts.length - 1] = ` ${item.textContent.trim()}`;
+
+        kw.value = parts.join(',').trimStart() + ', ';
+
+        keywordResults.style.display = 'none';
+
+        kw.focus();
+    });
+
+    /*let markerCounter = 0,
+        terrain = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+            id: 'Terrain',
+            minZoom: 3,
+            maxZoom: 18
+        }),
+        pc = function (id, lat, lon, name = null, notes = null) {
+            return '<input type="hidden" name="thisid" value="' + id + '"><label>Coordinates</label><input type="text" name="coords1" value="' + lat + '" placeholder="45.32">, ' +
+                '<input type="text" name="coords2" value="' + lon + '" placeholder="-118.1">' +
+                '<label>Name</label><input type="text" name="waypoint_name" value="' + (name != null ? name : '') + '" placeholder="Waypoint name">' +
+                '<label>Notes</label><input type="text" name="waypoint_notes" value="' + (notes != null ? notes : '') + '" placeholder="Waypoint notes">' +
+                '<label>Icon</label><select name="waypoint_icon" style="margin:0">' +
+                '<option>- Icon -</option>' +
+                '<option value="4x4">4x4</option>' +
+                '<option value="big_air">Big Air</option>' +
+                '<option value="bigfoot">Bigfoot</option>' +
+                '<option value="bridge">Bridge</option>' +
+                '<option value="cabin">Cabin</option>' +
+                '<option value="camp">Campground</option>' +
+                '<option value="caution">Caution</option>' +
+                '<option value="fishing">Fishing</option>' +
+                '<option value="hike">Hike</option>' +
+                '<option value="info">Info</option>' +
+                '<option value="lake">Lake</option>' +
+                '<option value="media">Media</option>' +
+                '<option value="mtn_bike">Mountain Bike</option>' +
+                '<option value="parking">Parking</option>' +
+                '<option value="redneck">Redneck</option>' +
+                '<option value="restroom">Restroom</option>' +
+                '<option value="river">River</option>' +
+                '<option value="sledding">Sledding</option>' +
+                '<option value="summit">Summit</option>' +
+                '<option value="swim">Swimming</option>' +
+                '</select><input type="button" id="saveWaypoint" class="btn btn-sm btn-green" value="Save">' +
+                '<input type="button" id="deleteWaypoint" class="btn btn-sm btn-red" value="Delete">';
+        };
+
+    map = L.map('waypoint-map', {
+        preferCanvas: true,
+        attributionControl: false
+    }).setView([45.32, -118.1], 5)
+        .addLayer(terrain)
+        .on('click', (e) => {
+            const latlng = e.latlng,
+                createInput = function (name, value = null) {
+                    var i = document.createElement('input');
+                    i.setAttribute('type', 'hidden');
+                    i.setAttribute('name', 'waypoint[' + name + '][]');
+
+                    if (value != null) {
+                        i.value = value;
                     }
 
-                    e.appendChild(c);
+                    return i;
+                };
+            markerCounter++;
+
+            const newMarker = L.marker(latlng, {
+                title: markerCounter,
+                draggable: true
+            }).on('dragend', (e) => {
+                const c = e.target._latlng;
+
+                document.querySelector('form #waypoint-' + markerCounter).querySelector('input[name="waypoint[lat][]"]').value = c.lat;
+                document.querySelector('form #waypoint-' + markerCounter).querySelector('input[name="waypoint[lon][]"]').value = c.lng;
+            }).on('popupopen', (e) => {
+                if (!e.popup.options.openedBefore) {
+                    e.popup.options.openedBefore = true;
+                } else {
+                    const wrap = document.querySelector('form #waypoint-' + e.target.options.title),
+                        lat = wrap.querySelector('input[name="waypoint[lat][]"]').value,
+                        lon = wrap.querySelector('input[name="waypoint[lon][]"]').value,
+                        name = wrap.querySelector('input[name="waypoint[name][]"]').value,
+                        notes = wrap.querySelector('input[name="waypoint[note][]"]').value,
+                        ic = wrap.querySelector('input[name="waypoint[icon][]"]').value;
+
+                    e.popup.setContent(pc(e.target.options.title, lat, lon, name, notes));
+
+                    document.querySelectorAll('.leaflet-popup-content select[name=waypoint_icon] option').forEach((k, n) => {
+                        if (k.value == ic) {
+                            document.querySelector('.leaflet-popup-content select[name=waypoint_icon]').selectedIndex = n;
+                        }
+                    });
                 }
+
+                const pu = document.querySelector('.leaflet-popup-content');
+
+                if (pu != null) {
+                    // on lat/lon manual changes to value
+                    pu.querySelector('input[name=coords1').addEventListener('keyup', (p) => {
+                        const lat = p.target.value,
+                            lon = pu.querySelector('input[name=coords2').value,
+                            wrap = document.querySelector('form #waypoint-' + pu.querySelector('input[name=thisid]'));
+
+                        if (lat != '') {
+                            wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
+                            wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
+                            newMarker.setLatLng(L.latLng(lat, lon));
+                        }
+                    });
+
+                    pu.querySelector('input[name=coords2').addEventListener('keyup', (p) => {
+                        const lat = pu.querySelector('input[name=coords1').value,
+                            lon = p.target.value,
+                            wrap = document.querySelector('form #waypoint-' + pu.querySelector('input[name=thisid]'));
+
+                        if (lon != '') {
+                            wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
+                            wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
+                            newMarker.setLatLng(L.latLng(lat, lon));
+                        }
+                    });
+
+                    // on popup save button                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      // get values from popup and store them in hidden input fields/*
+const markerDataContainer = document.createElement('div');
+markerDataContainer.id = 'waypoint-' + markerCounter;
+
+markerDataContainer.appendChild(createInput('lat', e.latlng.lat));
+markerDataContainer.appendChild(createInput('lon', e.latlng.lng));
+markerDataContainer.appendChild(createInput('id'));
+markerDataContainer.appendChild(createInput('delta'));
+markerDataContainer.appendChild(createInput('name'));
+markerDataContainer.appendChild(createInput('note'));
+markerDataContainer.appendChild(createInput('icon'));
+
+document.querySelector('#waypoints').appendChild(markerDataContainer);
+}
+});
+});*/
+}
+
+function adminWildfireMgmt() {
+    // Display historical acreage change on wildfires
+    if (pageName == 'admin/wildfires/edit' && window.location.search.includes('history=1')) {
+        loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js').then(() => {
+            const k = acresHistory.map(e => Number(e.updated) * 1000).reverse();
+            const v = acresHistory.map(e => Number(e.acres)).reverse();
+
+            new Chart(document.querySelector('#history-chart'), {
+                type: 'line',
+                data: {
+                    labels: k,
+                    datasets: [{
+                        label: 'Acres',
+                        data: v,
+                        borderColor: '#ff5722',
+                        backgroundColor: 'rgba(255,87,34,.15)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title(items) {
+                                    return new Date(Number(items[0].label)).toLocaleString([], {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: '2-digit'
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'nearest'
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                callback(value) {
+                                    return new Date(this.getLabelForValue(value)).toLocaleString([], {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: '2-digit'
+                                    });
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    // ADMIN: wildfire management (specifically these pages)
+    if (pageName == 'admin/wildfires' || pageName == 'admin/wildfires/duplicates') {
+        const query = new QueryWildfires();
+        query.search(window.location.search.replace('?', '') ?? null);
+
+        document.querySelector('form#searchFires').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const params = new URLSearchParams();
+
+            for (const [key, value] of formData.entries()) {
+                if (value !== '') params.append(key, value);
+            }
+
+            const queryString = params.toString();
+            const updatedQueryParams = queryString.replace(/(sort|order)=[A-Za-z]+&?/g, '');
+
+            document.querySelectorAll('.sortTable').forEach(th => {
+                let url = th.dataset.url;
+                th.dataset.url = `${url.match(/sort=[A-Za-z]+&order=[A-Za-z]+/)}&${updatedQueryParams}`;
+            });
+
+            query.search(queryString);
+        });
+
+        // searh wildfires
+        const q = document.querySelector('#q');
+        if (!q) return;
+
+        q.addEventListener('focus', () => {
+            const sr = document.querySelector('.search-results');
+
+            sr.style.display = 'block';
+            sr.innerHTML = '<p style="padding:.5em">Searching...</p>';
+        });
+
+        q.addEventListener('keyup', async (e) => {
+            let results = [];
+            const resp = await api(`${host}${usersAPI}jurisdictions`, [['q', e.target.value]]);
+
+            resp.response.results.forEach(s => {
+                const dis = `${s.unit}: ${s.agency + (s.area ? ` / ${s.area}` : '')}`;
+                results.push(`<div class="result" data-name="${dis}" data-unit="${s.unit}">${dis}</div>`);
+            });
+
+            if (results.length) document.querySelector('.search-results').innerHTML = results.join('');
+        });
+    }
+
+    // ADMIN: wildfire management (any page)
+    if (pageName.includes('admin/wildfires')) {
+        const ac = document.querySelector('input[name=acres]');
+
+        if (ac) {
+            ac.addEventListener('keyup', (e) => {
+                e.target.value = e.target.value.replace(',', '');
+            });
+        }
+    }
+
+    // ADMIN: create a wildfire
+    if (pageName == 'admin/wildfires/create') {
+        const cs = document.querySelector('input[name=crowdsource]');
+
+        // if this is a crowdsource report being turned into an incident, get geocode info
+        if (cs) {
+            const a = cs.dataset.lat,
+                b = cs.dataset.lon;
+
+            geocode(a, b);
+        }
+
+        document.querySelector('#f2').addEventListener('click', () => {
+            document.querySelector('input[name=juris]').value = 'MAPO';
+            document.querySelector('input[name=juris]').readOnly = true;
+            document.querySelector('input[name=num]').value = document.querySelector('input[name=inhouse_num]').value;
+            document.querySelector('input[name=num]').readOnly = true;
+            document.querySelector('#notirwin').style.display = 'block';
+        });
+
+        document.querySelector('#f1').addEventListener('click', () => {
+            document.querySelector('input[name=juris]').value = '';
+            document.querySelector('input[name=juris]').readOnly = false;
+            document.querySelector('input[name=num]').value = '';
+            document.querySelector('input[name=num]').readOnly = false;
+            document.querySelector('#notirwin').style.display = 'none';
+        });
+
+        document.querySelector('input[name=lat]').addEventListener('blur', (e) => {
+            if (e.target.value != '' && document.querySelector('input[name=lon]').value != '') {
+                geocode(e.target.value, document.querySelector('input[name=lon]').value);
+            }
+        });
+
+        document.querySelector('input[name=lon]').addEventListener('blur', (e) => {
+            if (e.target.value != '' && document.querySelector('input[name=lat]').value != '') {
+                geocode(document.querySelector('input[name=lat]').value, e.target.value);
+            }
+        });
+
+        document.querySelector('input[name=acres]').addEventListener('keyup', (e) => {
+            e.target.value = e.target.value.replace(',', '');
+        });
+    }
+}
+
+async function startup() {
+    calc = new Calculate();
+
+    // sort any tables by column name and order
+    const sortableTable = document.querySelector('table thead.sortable');
+
+    if (sortableTable) {
+        sortableTable.querySelectorAll('th').forEach(e => {
+            if (e.innerHTML == '') return;
+
+            if (!e.getAttribute('onclick')) return;
+
+            const sort = window.location.href.match(/sort=([A-Za-z]+)/);
+            const order = window.location.href.match(/order=([A-Za-z]+)/);
+            const matches = e.getAttribute('onclick').match(/sort=([A-Za-z]+)&order=([A-Z]+)/);
+
+            if (matches && sort != null && sort[1] == matches[1]) {
+                const c = document.createElement('i');
+
+                if (order[1] == 'DESC') {
+                    c.classList.add('fas', 'fa-sort-down');
+                } else {
+                    c.classList.add('fas', 'fa-sort-up');
+                }
+
+                e.appendChild(c);
             }
         });
     }
@@ -1242,7 +1659,8 @@ async function complete() {
         await getFires();
 
         // get favorite fires once the entire list is retrieved
-        getFavoriteFires().then(response => displayFavFires(response));
+        await api(`${host}${usersAPI}favFires`, null, false, true)
+            .then(response => displayFavFires(response));
 
         // get everything else
         getCrowdsource();
@@ -1428,339 +1846,9 @@ async function complete() {
         });
     }
 
-    if (pageName == 'admin/wildfires/edit' && window.location.search.includes('history=1')) {
-        loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js').then(() => {
-            const k = acresHistory.map(e => Number(e.updated) * 1000).reverse();
-            const v = acresHistory.map(e => Number(e.acres)).reverse();
-
-            new Chart(document.querySelector('#history-chart'), {
-                type: 'line',
-                data: {
-                    labels: k,
-                    datasets: [{
-                        label: 'Acres',
-                        data: v,
-                        borderColor: '#ff5722',
-                        backgroundColor: 'rgba(255,87,34,.15)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                title(items) {
-                                    return new Date(Number(items[0].label)).toLocaleString([], {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: '2-digit'
-                                    });
-                                }
-                            }
-                        }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'nearest'
-                    },
-                    scales: {
-                        x: {
-                            ticks: {
-                                callback(value) {
-                                    return new Date(this.getLabelForValue(value)).toLocaleString([], {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: '2-digit'
-                                    });
-                                }
-                            }
-                        },
-                        y: {
-                            beginAtZero: false
-                        }
-                    }
-                }
-            });
-        });
-    }
-
-    // ADMIN: wildfire management (specifically these pages)
-    if (pageName == 'admin/wildfires' || pageName == 'admin/wildfires/duplicates') {
-        const query = new QueryWildfires();
-        query.search(window.location.search.replace('?', '') ?? null);
-
-        document.querySelector('form#searchFires').addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const formData = new FormData(e.target);
-            const params = new URLSearchParams();
-
-            for (const [key, value] of formData.entries()) {
-                if (value !== '') params.append(key, value);
-            }
-
-            const queryString = params.toString();
-            const updatedQueryParams = queryString.replace(/(sort|order)=[A-Za-z]+&?/g, '');
-
-            document.querySelectorAll('.sortTable').forEach(th => {
-                let url = th.dataset.url;
-                th.dataset.url = `${url.match(/sort=[A-Za-z]+&order=[A-Za-z]+/)}&${updatedQueryParams}`;
-            });
-
-            query.search(queryString);
-        });
-
-        // searh wildfires
-        const q = document.querySelector('#q');
-        if (!q) return;
-
-        q.addEventListener('focus', () => {
-            const sr = document.querySelector('.search-results');
-
-            sr.style.display = 'block';
-            sr.innerHTML = '<p style="padding:.5em">Searching...</p>';
-        });
-
-        q.addEventListener('keyup', async (e) => {
-            let results = [];
-            const resp = await api(`${host}${usersAPI}jurisdictions`, [['q', e.target.value]]);
-
-            resp.response.results.forEach(s => {
-                const dis = `${s.unit}: ${s.agency + (s.area ? ` / ${s.area}` : '')}`;
-                results.push(`<div class="result" data-name="${dis}" data-unit="${s.unit}">${dis}</div>`);
-            });
-
-            if (results.length) document.querySelector('.search-results').innerHTML = results.join('');
-        });
-    }
-
-    // ADMIN: wildfire management (any page)
-    if (pageName.includes('admin/wildfires')) {
-        const ac = document.querySelector('input[name=acres]');
-
-        if (ac) {
-            ac.addEventListener('keyup', (e) => {
-                e.target.value = e.target.value.replace(',', '');
-            });
-        }
-    }
-
-    // ADMIN: create a wildfire
-    if (pageName == 'admin/wildfires/create') {
-        const cs = document.querySelector('input[name=crowdsource]');
-
-        // if this is a crowdsource report being turned into an incident, get geocode info
-        if (cs) {
-            const a = cs.dataset.lat,
-                b = cs.dataset.lon;
-
-            geocode(a, b);
-        }
-
-        document.querySelector('#f2').addEventListener('click', () => {
-            document.querySelector('input[name=juris]').value = 'MAPO';
-            document.querySelector('input[name=juris]').readOnly = true;
-            document.querySelector('input[name=num]').value = document.querySelector('input[name=inhouse_num]').value;
-            document.querySelector('input[name=num]').readOnly = true;
-            document.querySelector('#notirwin').style.display = 'block';
-        });
-
-        document.querySelector('#f1').addEventListener('click', () => {
-            document.querySelector('input[name=juris]').value = '';
-            document.querySelector('input[name=juris]').readOnly = false;
-            document.querySelector('input[name=num]').value = '';
-            document.querySelector('input[name=num]').readOnly = false;
-            document.querySelector('#notirwin').style.display = 'none';
-        });
-
-        document.querySelector('input[name=lat]').addEventListener('blur', (e) => {
-            if (e.target.value != '' && document.querySelector('input[name=lon]').value != '') {
-                geocode(e.target.value, document.querySelector('input[name=lon]').value);
-            }
-        });
-
-        document.querySelector('input[name=lon]').addEventListener('blur', (e) => {
-            if (e.target.value != '' && document.querySelector('input[name=lat]').value != '') {
-                geocode(document.querySelector('input[name=lat]').value, e.target.value);
-            }
-        });
-
-        document.querySelector('input[name=acres]').addEventListener('keyup', (e) => {
-            e.target.value = e.target.value.replace(',', '');
-        });
-    }
-
     // ADMIN: trail management
     if (pageName.includes('admin/trails')) {
-        keywordResults = document.getElementById('kw-results');
-        kw = document.querySelector('input[name=keywords]');
-
-        document.querySelector('#addwaypoint').addEventListener('click', () => addWaypoint());
-        document.querySelector('#addgpx').addEventListener('click', () => addGPX());
-
-        kw.addEventListener('keyup', (e) => {
-            let res = '',
-                i = 0;
-
-            let search = e.target.value.toLowerCase().replaceAll(', ', ',').split(',');
-
-            keywords.forEach(kw => {
-                if (kw.toLowerCase().search(search[search.length - 1]) >= 0 && i < 25) {
-                    res += '<div id="kw-item">' + kw + '</div>';
-                    i++;
-                }
-            });
-
-            if (search[search.length - 1] != '' && search[search.length - 1] != ' ') {
-                keywordResults.style.display = 'block';
-                keywordResults.innerHTML = res;
-            }
-
-            if (e.target.value == '' || i == 0) {
-                keywordResults.style.display = 'none';
-            }
-        });
-
-        /*let markerCounter = 0,
-            terrain = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-                id: 'Terrain',
-                minZoom: 3,
-                maxZoom: 18
-            }),
-            pc = function (id, lat, lon, name = null, notes = null) {
-                return '<input type="hidden" name="thisid" value="' + id + '"><label>Coordinates</label><input type="text" name="coords1" value="' + lat + '" placeholder="45.32">, ' +
-                    '<input type="text" name="coords2" value="' + lon + '" placeholder="-118.1">' +
-                    '<label>Name</label><input type="text" name="waypoint_name" value="' + (name != null ? name : '') + '" placeholder="Waypoint name">' +
-                    '<label>Notes</label><input type="text" name="waypoint_notes" value="' + (notes != null ? notes : '') + '" placeholder="Waypoint notes">' +
-                    '<label>Icon</label><select name="waypoint_icon" style="margin:0">' +
-                    '<option>- Icon -</option>' +
-                    '<option value="4x4">4x4</option>' +
-                    '<option value="big_air">Big Air</option>' +
-                    '<option value="bigfoot">Bigfoot</option>' +
-                    '<option value="bridge">Bridge</option>' +
-                    '<option value="cabin">Cabin</option>' +
-                    '<option value="camp">Campground</option>' +
-                    '<option value="caution">Caution</option>' +
-                    '<option value="fishing">Fishing</option>' +
-                    '<option value="hike">Hike</option>' +
-                    '<option value="info">Info</option>' +
-                    '<option value="lake">Lake</option>' +
-                    '<option value="media">Media</option>' +
-                    '<option value="mtn_bike">Mountain Bike</option>' +
-                    '<option value="parking">Parking</option>' +
-                    '<option value="redneck">Redneck</option>' +
-                    '<option value="restroom">Restroom</option>' +
-                    '<option value="river">River</option>' +
-                    '<option value="sledding">Sledding</option>' +
-                    '<option value="summit">Summit</option>' +
-                    '<option value="swim">Swimming</option>' +
-                    '</select><input type="button" id="saveWaypoint" class="btn btn-sm btn-green" value="Save">' +
-                    '<input type="button" id="deleteWaypoint" class="btn btn-sm btn-red" value="Delete">';
-            };
-
-        map = L.map('waypoint-map', {
-            preferCanvas: true,
-            attributionControl: false
-        }).setView([45.32, -118.1], 5)
-            .addLayer(terrain)
-            .on('click', (e) => {
-                const latlng = e.latlng,
-                    createInput = function (name, value = null) {
-                        var i = document.createElement('input');
-                        i.setAttribute('type', 'hidden');
-                        i.setAttribute('name', 'waypoint[' + name + '][]');
-
-                        if (value != null) {
-                            i.value = value;
-                        }
-
-                        return i;
-                    };
-                markerCounter++;
-
-                const newMarker = L.marker(latlng, {
-                    title: markerCounter,
-                    draggable: true
-                }).on('dragend', (e) => {
-                    const c = e.target._latlng;
-
-                    document.querySelector('form #waypoint-' + markerCounter).querySelector('input[name="waypoint[lat][]"]').value = c.lat;
-                    document.querySelector('form #waypoint-' + markerCounter).querySelector('input[name="waypoint[lon][]"]').value = c.lng;
-                }).on('popupopen', (e) => {
-                    if (!e.popup.options.openedBefore) {
-                        e.popup.options.openedBefore = true;
-                    } else {
-                        const wrap = document.querySelector('form #waypoint-' + e.target.options.title),
-                            lat = wrap.querySelector('input[name="waypoint[lat][]"]').value,
-                            lon = wrap.querySelector('input[name="waypoint[lon][]"]').value,
-                            name = wrap.querySelector('input[name="waypoint[name][]"]').value,
-                            notes = wrap.querySelector('input[name="waypoint[note][]"]').value,
-                            ic = wrap.querySelector('input[name="waypoint[icon][]"]').value;
-
-                        e.popup.setContent(pc(e.target.options.title, lat, lon, name, notes));
-
-                        document.querySelectorAll('.leaflet-popup-content select[name=waypoint_icon] option').forEach((k, n) => {
-                            if (k.value == ic) {
-                                document.querySelector('.leaflet-popup-content select[name=waypoint_icon]').selectedIndex = n;
-                            }
-                        });
-                    }
-
-                    const pu = document.querySelector('.leaflet-popup-content');
-
-                    if (pu != null) {
-                        // on lat/lon manual changes to value
-                        pu.querySelector('input[name=coords1').addEventListener('keyup', (p) => {
-                            const lat = p.target.value,
-                                lon = pu.querySelector('input[name=coords2').value,
-                                wrap = document.querySelector('form #waypoint-' + pu.querySelector('input[name=thisid]'));
-
-                            if (lat != '') {
-                                wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
-                                wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
-                                newMarker.setLatLng(L.latLng(lat, lon));
-                            }
-                        });
-
-                        pu.querySelector('input[name=coords2').addEventListener('keyup', (p) => {
-                            const lat = pu.querySelector('input[name=coords1').value,
-                                lon = p.target.value,
-                                wrap = document.querySelector('form #waypoint-' + pu.querySelector('input[name=thisid]'));
-
-                            if (lon != '') {
-                                wrap.querySelector('input[name="waypoint[lat][]"]').value = lat;
-                                wrap.querySelector('input[name="waypoint[lon][]"]').value = lon;
-                                newMarker.setLatLng(L.latLng(lat, lon));
-                            }
-                        });
-
-                        // on popup save button                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      // get values from popup and store them in hidden input fields/*
-const markerDataContainer = document.createElement('div');
-markerDataContainer.id = 'waypoint-' + markerCounter;
-
-markerDataContainer.appendChild(createInput('lat', e.latlng.lat));
-markerDataContainer.appendChild(createInput('lon', e.latlng.lng));
-markerDataContainer.appendChild(createInput('id'));
-markerDataContainer.appendChild(createInput('delta'));
-markerDataContainer.appendChild(createInput('name'));
-markerDataContainer.appendChild(createInput('note'));
-markerDataContainer.appendChild(createInput('icon'));
-
-document.querySelector('#waypoints').appendChild(markerDataContainer);
-}
-});
-});*/
+        adminTrailMgmt();
     }
 
     if (pageName.includes('admin/organizations')) {
@@ -1790,17 +1878,17 @@ document.querySelector('#waypoints').appendChild(markerDataContainer);
     }
 }
 
-document.onreadystatechange = async () => {
-    if (document.readyState != 'complete') {
-        calc = new Calculate();
-        //token = getUserToken();
-    } else {
-        complete();
-    }
-};
+startup();
 
-document.querySelector('input[type=tel]')?.addEventListener('keyup', (e) => {
-    e.target.value = formatPhoneNumber(e.target.value);
+window.addEventListener('keyup', (e) => {
+    if (e.target.type != 'tel') return;
+
+    const cleaned = e.target.value.replace(/\D/g, '');
+
+    if (cleaned.length < 4) e.target.value = cleaned;
+
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+    if (match) e.target.value = `${match[1]}-${match[2]}-${match[3]}`;
 });
 
 window.addEventListener('click', async (e) => {
@@ -1888,20 +1976,6 @@ window.addEventListener('click', async (e) => {
         document.querySelector('.search-results').innerHTML = '';
     }
 
-    // insert keyword into textbox
-    if (target.id == 'kw-item') {
-        if (kw.value.search(',') < 0) {
-            kw.value = target.innerHTML;
-        } else {
-            const rm = kw.value.split(',').pop();
-            kw.value = kw.value.replace(rm, '') + ' ' + target.innerHTML;
-        }
-
-        keywordResults.style.display = 'none';
-        keywordResults.innerHTML = '';
-        kw.focus();
-    }
-
     // delete waypoints
     if (target.id.startsWith('deletewaypoint')) {
         const id = target.dataset.id;
@@ -1965,6 +2039,12 @@ window.addEventListener('click', async (e) => {
     // hide search results when clicked outside
     if (searchResults && !searchResults.contains(target) && !target.classList.contains('result') && target !== document.querySelector('#q')) {
         searchResults.style.display = 'none';
+    }
+
+    // hide keywords search results when clicked outside
+    if (keywordResults && !keywordResults.contains(target) && target !== document.querySelector('input[name=keywords]')) {
+        keywordResults.style.display = 'none';
+        keywordResults.innerHTML = '';
     }
 
     // close sidebar nav menu when clicked outside of it

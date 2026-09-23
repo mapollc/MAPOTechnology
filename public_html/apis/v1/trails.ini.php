@@ -97,8 +97,8 @@ if ($method == 'list') {
     while ($row = mysqli_fetch_assoc($result)) {
         $sim = similar_text($row['title'], $search, $pct);
         $sim2 = similar_text($row['keywords'], $search, $pct2);
-        $category = unserialize($row['term']);
-        $stats = ($row['stats'] ? unserialize($row['stats']) : null);
+        $category = json_decode($row['term']);
+        $stats = ($row['stats'] ? json_decode($row['stats']) : null);
         
         //if(!$_REQUEST[category] || ($_REQUEST[category]&&in_array($_REQUEST[category], $category))){
         $simtext[] = ($pct2 > $pct ? $pct2 : $pct);
@@ -109,7 +109,7 @@ if ($method == 'list') {
                                         'url' => ($row['file'] ? $row['file'] : 'not_found2.png'),
                                         'caption' => $row['caption']),
                         'season' => $row['season'],
-                        'keywords' => unserialize($row['keywords']),
+                        'keywords' => json_decode($row['keywords']),
                         'category' => (count($category) && $category[0] == "" ? array('Other') : $category),
                         'stats' => $stats,
                         'public' => intval($row['premium']),
@@ -136,11 +136,11 @@ if ($method == 'list') {
 
     $return_json = array('trails' => $trails);
 } else if ($method == 'nearby') {
-    $coords = unserialize(mysqli_fetch_assoc(mysqli_query($con2, "SELECT stats FROM `stats` WHERE trail_id = $_REQUEST[id]"))['stats'])['geo']['start'];
+    $coords = json_decode(mysqli_fetch_assoc(mysqli_query($con2, "SELECT stats FROM `stats` WHERE trail_id = $_REQUEST[id]"))['stats'])['geo']['start'];
     $sql = mysqli_query($con2, "SELECT t.id, t.type, t.title, season, term, keywords, file, stats FROM trails AS t LEFT JOIN categories AS c ON c.trail_id = t.id LEFT JOIN media AS m ON m.trail_id = t.id LEFT JOIN stats AS s ON s.trail_id = t.id WHERE delta = 0");
 
     while ($row = mysqli_fetch_assoc($sql)) {
-        $stats = unserialize($row['stats']);
+        $stats = json_decode($row['stats']);
         $dist = distance($stats['geo']['start'][0], $stats['geo']['start'][1], $coords[0], $coords[1]);
 
         if ($dist < ($_REQUEST['distance'] ? $_REQUEST['distance'] : 10)) {
@@ -162,7 +162,7 @@ if ($method == 'list') {
     $result = mysqli_query($con2, $sql);
 
     while ($row = mysqli_fetch_assoc($result)) {
-        foreach (unserialize($row['keywords']) as $i) {
+        foreach (json_decode($row['keywords']) as $i) {
             $kw[] = $i;
         }
     }
@@ -173,7 +173,7 @@ if ($method == 'list') {
     $return_json = array('keywords' => $kw);
 } else if ($method == 'system') {
     $row = mysqli_fetch_assoc(mysqli_query($con2, "SELECT id, name, trails, type FROM systems WHERE id = '$_GET[id]'"));
-    $h = implode(' OR t.id = ', unserialize($row['trails']));
+    $h = implode(' OR t.id = ', json_decode($row['trails']));
     $res = mysqli_query($con2, "SELECT t.*, c.term AS category, m.file, m.title AS caption FROM trails AS t LEFT JOIN categories AS c ON c.trail_id = t.id LEFT JOIN media AS m ON m.trail_id = t.id AND m.delta = 0 WHERE t.id = $h ORDER BY t.title ASC");
 
     while ($data = mysqli_fetch_assoc($res)) {
@@ -184,8 +184,8 @@ if ($method == 'list') {
         $data['premium'] = intval($data['premium']);
         $data['created'] = floatval($data['created']);
         $data['updated'] = floatval($data['updated']);
-        $data['category'] = unserialize($data['category']);
-        $data['keywords'] = unserialize($data['keywords']);
+        $data['category'] = json_decode($data['category']);
+        $data['keywords'] = json_decode($data['keywords']);
 
         unset($data['file']);
         unset($data['caption']);
@@ -233,10 +233,12 @@ if ($method == 'list') {
             if (!$meta) {
                 foreach ($row as $k => $v) {
                     if ($k == 'stats') {
-                        $data['geo'] = unserialize($v)['geo']['start'];
-                        $data['stats'] = unserialize($v);
+                        $geo = json_decode($v);
+
+                        $data['stats'] = $geo;
+                        $data['geo'] = $geo->geo->start;
                     } else if ($k != 'file' && $k != 'caption' && $k != 'mid' && $k != 'wpid' && $k != 'name' && $k != 'lat' && $k != 'lon' && $k != 'icon' && $k != 'note') {
-                        $data[$k] = $k == 'keywords' || $k == 'term' ? unserialize($v) : $v;
+                        $data[$k] = $k == 'keywords' || $k == 'term' ? json_decode($v) : $v;
                     }
                 }
             }
@@ -301,7 +303,7 @@ if ($method == 'list') {
         }
 
         if (count($coords) > 0) {
-            $row['stats'] = unserialize($row['stats']);
+            $row['stats'] = json_decode($row['stats']);
             $row['color'] = trailColor($row['mode']);
             $row['seq'] = $i;
             $row['chart'] = $chart;
@@ -328,7 +330,7 @@ if ($method == 'list') {
             $dist = 0;
 
             if ($x == 0) {
-                $gis = array('trail_id' => $row['id'], 'title' => $row['title'], 'url' => guideUrl($row['title'], $row['type'], $row['id']), 'stats' => unserialize($row['stats']));
+                $gis = array('trail_id' => $row['id'], 'title' => $row['title'], 'url' => guideUrl($row['title'], $row['type'], $row['id']), 'stats' => json_decode($row['stats']));
             }
 
             #if (file_exists('https://www.lagranderide.com/sites/lagranderide.com/files/map_data/' . $row['filename'])) {
@@ -402,7 +404,8 @@ if ($method == 'list') {
         $sql2 = mysqli_query($con2, "SELECT trail_id, file, title, data, delta FROM `media` WHERE data LIKE '%\"coordinates\";a:2%' ORDER BY trail_id ASC, CAST(delta as INT) ASC");
 
         while ($row = mysqli_fetch_assoc($sql2)) {
-            $media[] = array('tid' => $row['trail_id'], 'thumbnail' => 'photos/thumbnail/'.$row['file'], 'original' => 'photos/'.$row['file'], 'caption' => $row['title'], 'geo' => unserialize($row['data'])['coordinates']);
+            $media[] = array('tid' => $row['trail_id'], 'thumbnail' => 'photos/thumbnail/'.$row['file'], 'original' => 'photos/'.$row['file'], 'caption' => $row['title'],
+            'geo' => json_decode($row['data'])['coordinates']);
         }
 
         $return_json['media'] = $media;

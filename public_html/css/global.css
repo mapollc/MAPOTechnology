@@ -559,7 +559,7 @@ input[type=button]:disabled:hover {
 
 .checkbox input[type=checkbox]:checked:after {
     content: '\f00c';
-    font-family: 'Font Awesome 6 Pro';
+    font-family: 'Font Awesome 7 Pro', 'Font Awesome 6 Pro';
     top: 2px;
     left: 2.5px;
     width: 0;

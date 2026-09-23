@@ -10,17 +10,17 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.+)$ /$1.php [L,QSA]
 
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
 ErrorDocument 500 /error.php?error=500
 ErrorDocument 404 /error.php?error=404
 ErrorDocument 403 /error.php?error=403
 ErrorDocument 401 /error.php?error=401
 RewriteRule ^error/([^/]*)$ /error.php?error_code=$1 [L,QSA]
 
-# Redirect to WWW unless a subdomain
-RewriteCond %{HTTPS} off [OR]
-RewriteCond %{HTTP_HOST} !^www\. [NC]
-RewriteCond %{HTTP_HOST} !^(cdn)\.mapotrails\.com$ [NC]
-RewriteRule (.*) https://www.mapotrails.com%{REQUEST_URI} [R=301,L]
+# favicon
+RewriteRule ^favicon.ico https://mapotechnology.com/assets/images/mt-favicon.ico [L]
 
 # APIs REWRITE
 RewriteRule ^api/v([^/]*)/([^/]*)$ /apis/index.php?version=$1&api=$2 [L,QSA]
@@ -35,6 +35,7 @@ RewriteRule ^src/([^/]*)/([^/]*)$ /assets.php?type=$1&file=$2 [L,QSA]
 
 # GUIDES
 RewriteRule ^guide/([^/]*)/([^/]*)/([^/]*)$ /trailGuide.php?category=$1&tid=$2&url=$3 [L,QSA]
+RewriteRule ^guide2/([^/]*)/([^/]*)/([^/]*)$ /trailGuide2.php?category=$1&tid=$2&url=$3 [L,QSA]
 RewriteRule ^trail-system/([^/]*)/([^/]*)$ /trailSystem.php?sid=$1&url=$2 [L,QSA]
 
 RewriteRule ^guides/([^/]*)/([^/]*)/([^/]*)$ /allguides.php?category=$1&activity=$2&area=$3 [L,QSA]
@@ -59,6 +60,24 @@ RewriteRule ^blue-mountains-forest-plan-revision/([^/]*)$ /bmfpr/index.php?type=
 
 # SITEMAP
 RewriteRule ^sitemap.xml$ /sitemap.xml.php [L,QSA]
+
+RedirectMatch 403 \.map$
+
+# BEGIN Expire headers  
+<IfModule mod_expires.c>  
+  # Turn on the module.
+  ExpiresActive on
+
+  #Header set Access-Control-Allow-Origin *
+  
+  # Set the default expiry times.
+  ExpiresByType image/jpg "access plus 1 month"
+  ExpiresByType image/svg+xml "access 1 month"
+  ExpiresByType image/gif "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/ico "access plus 1 month"
+</IfModule>
 
 # php -- BEGIN cPanel-generated handler, do not edit
 # Set the “ea-php84” package as the default “PHP” programming language.

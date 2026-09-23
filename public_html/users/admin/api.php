@@ -1,5 +1,5 @@
 <?
-////ini_set('display_errors', 0);
+////ini_set('display_errors', 1);
 ////error_reporting(E_ALL);
 ini_set('session.cookie_domain', '.mapotechnology.com');
 
@@ -84,7 +84,24 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
 
     //  START APIS  //
     if ($callback == 'mapotrails') {
-        if ($mode == 'meta') $out = getMapbox('clnnlg3w728a02nmv0ffz57jf');
+        if ($mode == 'meta') {
+            $out = getMapbox('clnnlg3w728a02nmv0ffz57jf');
+        }
+
+        if ($mode == 'keywords') {
+            $con2 = mapoTrailsDB();
+            $terms = [];
+
+            $result = mysqli_query($con2, "SELECT keywords FROM trails");
+
+            while ($row = mysqli_fetch_assoc($result)) {
+                foreach (json_decode($row['keywords']) as $k) {
+                    if ($k !='') $terms[] = $k;
+                }
+            }
+
+            $out = array_values(array_unique($terms));
+        }
     } else if ($callback == 'invoices') {
         $query = executeQuery('s', [$_SESSION['email']], "SELECT cid FROM billing WHERE email = ? ORDER BY status ASC, created DESC LIMIT 1");
 

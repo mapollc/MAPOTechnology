@@ -65,7 +65,7 @@ class SSO
         $this->googleCerts = $this->memcache->get('google_certs');
     }
 
-    function isJson($string)
+    private function isJson($string)
     {
         json_decode($string);
         return json_last_error() === JSON_ERROR_NONE;
@@ -73,25 +73,13 @@ class SSO
 
     private function getGUID()
     {
-        if (function_exists('com_create_guid')) {
-            return com_create_guid();
-        } else {
-            mt_srand((float)microtime() * 10000);
-            $charid = strtoupper(md5(uniqid(rand(), true)));
-            $hyphen = chr(45);
-            $uuid = chr(123)
-                . substr($charid, 0, 8) . $hyphen
-                . substr($charid, 8, 4) . $hyphen
-                . substr($charid, 12, 4) . $hyphen
-                . substr($charid, 16, 4) . $hyphen
-                . substr($charid, 20, 12)
-                . chr(125);
-
-            return str_replace(['{', '}'], ['', ''], $uuid);
-        }
+        $data = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // version 4
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // variant
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 
-    function createToken($payload, $expires = null)
+    private function createToken($payload, $expires = null)
     {
         $payload['iss'] = $this->domain;
         $payload['aud'] = $this->issuer;
@@ -103,13 +91,13 @@ class SSO
         return JWT::encode($payload, $this->secretKey, 'HS256');
     }
 
-    function decodeToken($token)
+    private function decodeToken($token)
     {
         JWT::$leeway = 60;
         return (array) JWT::decode($token, new Key($this->secretKey, 'HS256'));
     }
 
-    function tokenStatus($token)
+    private function tokenStatus($token)
     {
         try {
             $decoded = $this->decodeToken($token);
@@ -132,7 +120,7 @@ class SSO
         }
     }
 
-    function validateToken($token)
+    public function validateToken($token)
     {
         //$validToken['status'] = 'expired';
         $validToken = $this->tokenStatus($token);
@@ -146,7 +134,7 @@ class SSO
         };
     }
 
-    function validatePassword($pass)
+    private function validatePassword($pass)
     {
         $error = false;
         $msgs = [];
@@ -179,7 +167,7 @@ class SSO
         return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode(hash_hmac('sha256', $e[0] . '.' . $e[1], 'MapoLLC.Q1.w.2.e.34', true)));
     }*/
 
-    function productConfig()
+    private function productConfig()
     {
         global $function;
 
@@ -203,7 +191,7 @@ class SSO
         };
     }
 
-    function in($e)
+    /*private function in($e)
     {
         $total = $e + 900 - time();
 
@@ -212,9 +200,9 @@ class SSO
         } else {
             return round($total / 60, 0) . ' minutes';
         }
-    }
+    }*/
 
-    function sql($cols = '', $s)
+    private function sql($cols = '', $s)
     {
         $q = 'SELECT u.uid, first_name, last_name, u.email, u.phone, password, u.location, u.created, role, provider, last_active{cols} FROM users AS u';
         return str_replace('{cols}', $cols, $q) . ' ' . $s;
@@ -223,7 +211,7 @@ class SSO
     private function bruteForce($email, $record = false)
     {
         $emailKey = "login:email:" . strtolower($email);
-        $ipKey = "login:ip:" . $this->ip;
+        $ipKey = "login:ip:{$this->ip}";
 
         if ($record) {
             $emailAttempts = $this->memcache->increment($emailKey, 1);
@@ -240,9 +228,9 @@ class SSO
             $emailAttempts = $this->memcache->get($emailKey) ?: 0;
             $ipAttempts    = $this->memcache->get($ipKey) ?: 0;
 
-            if ($emailAttempts >= 3) {
+            /*if ($emailAttempts >= 3) {
                 sleep(min($emailAttempts - 2, 3));
-            }
+            }*/
 
             if ($emailAttempts >= $this->maxEmailAttempts || $ipAttempts >= $this->maxIPAttempts) {
                 return true;
@@ -252,7 +240,7 @@ class SSO
         }
     }
 
-    function authenticate()
+    public function authenticate()
     {
         global $_SESSION;
 
@@ -276,18 +264,18 @@ class SSO
                 $respMsg = '';
                 $row = executeQuery('s', [$email], $this->sql(", confirmed{$config['extra']}", "{$config['join']} LEFT JOIN confirmation AS c ON c.email = u.email AND c.valid = 1 WHERE u.email = ? ORDER BY c.cid DESC LIMIT 1"));
 
-                if (isset($row['error'])) {
+                if (isset($row['error']) || !$row) {
                     $error = true;
                     $code = 2;
                     $respMsg = 'The email and/or password you entered is incorrect.';
                 } else {
                     // if user account has not been confirmed yet
-                    if ($row['confirmed'] == 0) {
+                    if ((int) $row['confirmed'] === 0) {
                         $error = true;
                         $code = 3;
                         $respMsg = 'This account has not been confirmed yet. Please check your email.';
                     } else {
-                        if (!empty($row['password']) && password_verify($pass, $row['password'])) {
+                        if (password_verify($pass, $row['password'])) {
                             unset($_SESSION['gtoken']);
 
                             $this->memcache->delete("login:email:" . strtolower($email));
@@ -319,7 +307,7 @@ class SSO
         }
     }
 
-    function loginWithGoogle()
+    public function loginWithGoogle()
     {
         $error = false;
         $code = null;
@@ -397,16 +385,18 @@ class SSO
                     return $this->login($row);
                 }
             } catch (Exception $e) {
+                error_log("Google login failure: {$e->getMessage()}");
+
                 $error = true;
                 $code = 5;
-                $msg = $e->getMessage();
+                $msg = 'We were unable to verify your Google sign-in. Please try again.';
             }
         }
 
         if ($error) return ['response' => 'error', 'isGoogle' => true, 'code' => $code, 'msg' => $msg];
     }
 
-    function returnURL($next)
+    public function returnURL($next)
     {
         global $method;
 
@@ -432,10 +422,14 @@ class SSO
         }
     }
 
-    function getSubscriptions($email)
+    private function getSubscriptions($uid, $email)
     {
         global $plan;
-        $sub = executeQuery('s', [$email], "SELECT cid, subscription, trial, plan, created, start, end AS ends, status, cancel_end_period FROM billing WHERE email = ? AND status != 'expired' ORDER BY created DESC");
+        $sub = executeQuery(
+            'si',
+            [$email, time()],
+            "SELECT cid, subscription, trial, plan, created, start, end AS ends, status, cancel_end_period FROM billing WHERE email = ?  AND (status != 'expired' OR status = 'expired' AND cancel_end_period = 1 AND end > ?) ORDER BY created DESC"
+        );
 
         if (isset($sub['error'])) {
             return ['error' => true, 'message' => $sub['message']];
@@ -446,24 +440,30 @@ class SSO
                 if (isset($sub['cid'])) {
                     $plan->setPlan(null, $sub['plan']);
                     $sub['name'] = $plan->getName();
-                    $sub['id'] = $plan->getPriceName() ? $plan->getPriceName() : null;
+                    $sub['id'] = $plan->getPriceName() ?: null;
 
                     $sub['start'] = intval($sub['start']);
                     $sub['ends'] = intval($sub['ends']);
                     $sub['created'] = intval($sub['created']);
                     $sub['cancel_end_period'] = $sub['cancel_end_period'] == 1 ? true : false;
 
+                    if ($plan->isDevel()) $sub['isDevel'] = true;
+
                     return [$sub];
                 } else {
+                    $allSubs = [];
+
                     foreach ($sub as $s) {
                         $plan->setPlan(null, $s['plan']);
                         $s['name'] = $plan->getName();
-                        $s['id'] = $plan->getPriceName() ? $plan->getPriceName() : null;
+                        $s['id'] = $plan->getPriceName() ?: null;
 
                         $s['start'] = intval($s['start']);
                         $s['ends'] = intval($s['ends']);
                         $s['created'] = intval($s['created']);
                         $s['cancel_end_period'] = $s['cancel_end_period'] == 1 ? true : false;
+
+                        if ($plan->isDevel()) $sub['isDevel'] = true;
 
                         $allSubs[] = $s;
                     }
@@ -474,7 +474,7 @@ class SSO
         }
     }
 
-    function getUser($row, $expires, $subscribe)
+    private function getUser($row, $expires, $subscribe)
     {
         global $method;
         global $function;
@@ -485,7 +485,7 @@ class SSO
 
         $token = $method == 'get' ? $row['token'] : $this->token;
 
-        $out = array(
+        $out = [
             'uid' => intval($row['uid']),
             'guid' => $row['guid'],
             'first_name' => $row['first_name'],
@@ -501,7 +501,7 @@ class SSO
             'expires' => intval($expires),
             'token' => $token,
             'subscriptions' => $subscribe
-        );
+        ];
 
         if ($method == 'login') {
             $out['confirmed'] = ($row['confirmed'] == 1 ? true : false);
@@ -514,47 +514,62 @@ class SSO
                 $set['weather'] = null;
             }
 
-            $out['settings'] = ['allsettings' => $row['settings'] ? $set : null, 'method' => $row['method'], 'synced' => intval($row['synced'])];
+            $out['settings'] = [
+                'allsettings' => $row['settings'] ? $set : null,
+                'method' => $row['method'],
+                'synced' => intval($row['synced'])
+            ];
         } else if ($function == 'mapotrails') {
-            $out['settings'] = ['mapotrails' => json_decode($row['settings']), 'synced' => intval($row['updatedTime'])];
+            $out['settings'] = [
+                'mapotrails' => json_decode($row['settings']),
+                'synced' => intval($row['updatedTime'])
+            ];
         } else if ($function == 'oreroads') {
-            $out['settings'] = ['oreroads' => json_decode($row['settings']), 'synced' => intval($row['updatedTime'])];
+            $out['settings'] = [
+                'oreroads' => json_decode($row['settings']),
+                'synced' => intval($row['updatedTime'])
+            ];
         }
 
         return $out;
     }
 
-    function devices()
+    public function devices()
     {
         if ($this->fields['mode'] == 'terminate') {
             executeQuery('is', [$this->fields['sid'], $this->fields['token']], "UPDATE sessions SET expires = 0 WHERE sid = ? AND token = ?");
 
             return ['success' => true];
-        } else {
-            $dev = [];
-            $user_agent = Parser::create();
-            $now = time();
-            $devices = executeQuery('si', [$this->fields['token'], $now], "SELECT sid, token, ip, host, source, location, created, expires FROM sessions WHERE uid = (SELECT uid FROM sessions WHERE token = ? LIMIT 1) AND expires > 0 AND expires > ? ORDER BY created DESC");
+        }
 
-            if ($devices && !isset($devices[0])) {
-                $devices = [$devices];
-            }
+        $dev = [];
+        $user_agent = Parser::create();
+        $now = time();
+        $devices = executeQuery(
+            'si',
+            [$this->fields['token'], $now],
+            "SELECT sid, token, ip, host, source, location, created, expires FROM sessions WHERE uid = (SELECT uid FROM sessions WHERE token = ? LIMIT 1) AND expires > 0 AND expires > ? ORDER BY created DESC"
+        );
 
-            foreach ($devices as $device) {
-                if (is_array($device)) {
-                    $agent = $user_agent->parse($device['host'] ? $device['host'] : '');
-                    $ua = agent($agent);
+        if ($devices && !isset($devices[0])) {
+            $devices = [$devices];
+        }
 
-                    if ($this->isJson($device['host'])) {
-                        $js = json_decode($device['host']);
-                        $ua = "$js->make $js->model";
-                    } else {
-                        if (str_contains($device['host'], 'okhttp')) {
-                            $ua = 'Android App';
-                        }
+        foreach ($devices as $device) {
+            if (is_array($device)) {
+                $agent = $user_agent->parse($device['host'] ? $device['host'] : '');
+                $ua = agent($agent);
+
+                if ($this->isJson($device['host'])) {
+                    $js = json_decode($device['host']);
+                    $ua = "$js->make $js->model";
+                } else {
+                    if (str_contains($device['host'], 'okhttp')) {
+                        $ua = 'Android App';
                     }
+                }
 
-                    /*if ($device['location'] == '') {
+                /*if ($device['location'] == '') {
                         $json = json_decode(file_get_contents('https://ipwho.is/' . $device['ip']));
                         $devLoc = ['location' => $json->city . ', ' . $json->region_code . ', ' . $json->country, 'isp' => $json->connection->isp];
                         $location = mysqli_real_escape_string($this->con, json_encode($devLoc));
@@ -563,21 +578,20 @@ class SSO
                     } else {
                         $devLoc = json_decode($device['location']);
                     }*/
-                    $devLoc = $device['location'] != '' ? json_decode($device['location']) : [];
+                $devLoc = $device['location'] != '' ? json_decode($device['location']) : [];
 
-                    $device['created'] = intval($device['created']);
-                    $device['expires'] = intval($device['expires']);
-                    $device['location'] = $devLoc;
-                    $device['device'] = $ua;
-                    $dev[] = $device;
-                }
+                $device['created'] = intval($device['created']);
+                $device['expires'] = intval($device['expires']);
+                $device['location'] = $devLoc;
+                $device['device'] = $ua;
+                $dev[] = $device;
             }
-
-            return ['devices' => is_array($devices) && count($devices) > 0 ? $dev : null];
         }
+
+        return ['devices' => is_array($devices) && count($devices) > 0 ? $dev : null];
     }
 
-    function user()
+    public function user()
     {
         global $function;
         $fields = 'u.uid, s.guid, first_name, last_name, u.email, u.phone, password, u.location, u.created, role, provider, last_active, token, expires';
@@ -610,7 +624,7 @@ class SSO
                     return ['response' => 'error', 'code' => 1, 'msg' => 'The token provided has expired.'];
                 } else {
                     // get any user subscriptions
-                    $subscribe = $this->getSubscriptions($row['email']);
+                    $subscribe = $this->getSubscriptions($row['uid'], $row['email']);
 
                     return ['user' => $this->getUser($row, null, $subscribe)];
                 }
@@ -620,7 +634,7 @@ class SSO
         }
     }
 
-    function login($row)
+    private function login($row)
     {
         $time = time();
         $expires = $time + 60 * 60 * 24 * 7;
@@ -639,7 +653,7 @@ class SSO
         }
 
         // get any user subscriptions
-        $subscribe = $this->getSubscriptions($row['email']);
+        $subscribe = $this->getSubscriptions($row['uid'], $row['email']);
 
         // update user activity in database
         $update = executeQuery('ii', [$time, $row['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
@@ -704,7 +718,7 @@ class SSO
         ];
     }
 
-    function logout()
+    public function logout()
     {
         global $_SESSION;
         $invalid = ['response' => 'error', 'code' => 1, 'msg' => 'An invalid token was provided.'];
@@ -745,7 +759,7 @@ class SSO
         }
     }
 
-    function forgot()
+    public function forgot()
     {
         $email = $this->fields['email'];
 
@@ -757,9 +771,10 @@ class SSO
             if (isset($row['error'])) {
                 return ['response' => 'error', 'code' => 500, 'msg' => "Database error: $row[message]"];
             } else {
-                if (!$row) {
-                    return ['response' => 'error', 'code' => 2, 'msg' => 'You must provide an email address.'];
-                } else {
+                /*if (!$row) {
+                    /*return ['response' => 'error', 'code' => 2, 'msg' => 'You must provide an email address.'];
+                } else {*/
+                if ($row) {
                     $expires = time() + 600;
                     $token = $this->createToken(['uid' => $row['uid'], 'unique' => 'resetPassword-' . time()], $expires);
 
@@ -768,7 +783,7 @@ class SSO
 
                     logEvent('Request sent to reset password', false, $row['uid']);
 
-                    sendEmail($row['email'], 'Your account password was reset', 'reset', ['{header}' => 'Reset your password', '{fname}' => $row['first_name'], '{token}' => $token, '{email}' => $row['email']]);
+                    sendEmail($row['email'], 'Your account password was reset', 'reset', ['{fname}' => $row['first_name'], '{token}' => $token, '{email}' => $row['email']]);
 
                     return ['response' => 'success'];
                 }
@@ -776,7 +791,7 @@ class SSO
         }
     }
 
-    function reset()
+    public function reset()
     {
         $pass = $this->fields['pass'];
         $oauth = $this->fields['oauth_token'];
@@ -844,7 +859,7 @@ class SSO
         }
     }
 
-    function invitation()
+    public function invitation()
     {
         $error = false;
         $code = 0;
@@ -868,6 +883,7 @@ class SSO
                 $msg = 'No invitation code was provided.';
             } else {
                 $match = executeQuery('iiss', [time(), $org['group_id'], $invite_code, $email], "SELECT guid FROM group_users WHERE expires > ? AND group_id = ? AND invite_code = ? AND email = ? LIMIT 1");
+                $guid = $match['guid'] ?? null;
 
                 if (!$match) {
                     $error = true;
@@ -900,22 +916,26 @@ class SSO
                 if ($amsg && count($amsg) > 0) {
                     return ['response' => 'error', 'code' => 5, 'msg' => implode('<br>', $amsg)];
                 } else {
-                    $create = $this->createAccount($this->fields['first_name'], $this->fields['last_name'], $email, $this->fields['pass'], 1, '', '', 0, false);
+                    try {
+                        $create = $this->createAccount($this->fields['first_name'], $this->fields['last_name'], $email, $this->fields['pass'], 5, '', '', 0, false);
+                    } catch (Exception $e) {
+                        return ['response' => 'error', 'code' => 500, 'msg' => $e->getMessage()];
+                    }
 
                     if ($create['response'] == 'error') {
                         return $create;
                     } else {
-                        mysqli_query($this->con, "UPDATE group_users SET uid = $create[uid] WHERE guid = $match[guid]");
+                        executeQuery('is', [$create['uid'], $guid],  "UPDATE group_users SET uid = ? WHERE guid = ?");
                     }
                 }
             }
 
-            mysqli_query($this->con, "UPDATE group_users SET expires = 0, status = 1 WHERE guid = $match[guid]");
-            return ['response' => 'success', 'existingUser' => $existingUser];
+            executeQuery('s', [$guid],  "UPDATE group_users SET expires = 0, status = 1 WHERE guid = ?");
+            return ['response' => 'success', 'email' => $email, 'existingUser' => $existingUser];
         }
     }
 
-    function confirmation()
+    public function confirmation()
     {
         $error = false;
         $msg = '';
@@ -974,7 +994,7 @@ class SSO
         }
     }
 
-    function generatePassword($length = 22)
+    private function generatePassword($length = 22)
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+<>?';
         $password = '';
@@ -1015,7 +1035,7 @@ class SSO
         return implode(' ', $parts);
     }
 
-    function createAccount($fname, $lname, $email, $pass, $role, $phone, $location, $thirdParty = 0, $needToConfirm = true)
+    private function createAccount($fname, $lname, $email, $pass, $role, $phone, $location, $thirdParty = 0, $needToConfirm = true)
     {
         $out = [];
         $tok = $this->createToken(['email' => $email]);
@@ -1078,7 +1098,7 @@ class SSO
         return $out;
     }
 
-    function register($google = false)
+    public function register($google = false)
     {
         $error = false;
         $msgs = [];
@@ -1112,7 +1132,7 @@ class SSO
                     $msgs[] = 'You must enter your last name.';
                 }
 
-                if (!$email) {
+                if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $error = true;
                     $msgs[] = 'You must provide your email address.';
                 }
@@ -1158,7 +1178,7 @@ class SSO
         }
     }
 
-    function update()
+    public function update()
     {
         global $function;
 
@@ -1207,7 +1227,7 @@ class SSO
         }
     }
 
-    function globalRateCheck()
+    public function globalRateCheck()
     {
         global $method;
 

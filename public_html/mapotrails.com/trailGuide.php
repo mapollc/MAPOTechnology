@@ -2,6 +2,7 @@
 ini_set('session.cookie_domain', '.mapotrails.com');
 ////ini_set('display_errors', 1);
 ////error_reporting(E_ALL);
+
 session_start();
 
 $trail_id = $_GET['tid'];
@@ -268,6 +269,8 @@ function ing($t) {
 }
 
 function comb($a) {
+    if (!$a) return '';
+
     if (count($a) == 1) {
         return ing($a[0]);
     } else if (count($a) == 2) {
@@ -609,7 +612,7 @@ if ($trail->guide->metadata->public == 0 && $settings['user']['role'] == 'ADMIN'
     </div>
 </div>
 
-<script>let settings=<?=json_encode($settings)?>,center=[<?=floatval($trail->guide->metadata->geo[1])?>,<?=floatval($trail->guide->metadata->geo[0])?>],stats=<?=json_encode($trail->guide->metadata->stats)?>;</script>
+<script>let settings=<?=json_encode($settings)?>,center=[<?=floatval($trail->guide->metadata->geo[0])?>,<?=floatval($trail->guide->metadata->geo[1])?>],stats=<?=json_encode($trail->guide->metadata->stats)?>;</script>
 <?=generateFooter($js)?>
 
 </body>

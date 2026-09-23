@@ -108,10 +108,10 @@ if ($method == 'list') {
             "ORDER BY state ASC, county ASC, level DESC"
     );
 
-    $out = ['evacuations' => null];
+    $out = ['evacuations' => null, 'total' => 0];
 
     if (!empty($results)) {
-        $out = ['evacuations' => $results];
+        $out = ['evacuations' => $results, 'total' => count($results ?? [])];
     }
 
     if (USE_CACHE) $memcache->set($cacheKey, json_encode($out), 450);

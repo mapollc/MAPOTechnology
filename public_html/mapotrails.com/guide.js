@@ -231,8 +231,8 @@ function createChart() {
                 gpx = data.trail.gis[0].gpx;
 
             /* calculate trailhead altitude */
-            const thlat = parseFloat(data.trail.stats.geo.start[0]),
-                thlon = parseFloat(data.trail.stats.geo.start[1]);
+            const thlat = parseFloat(data.trail.stats.geo.start[1]),
+                thlon = parseFloat(data.trail.stats.geo.start[0]);
 
             document.querySelector('#b').innerHTML = numberFormat(map.queryTerrainElevation([thlon, thlat]) * 3.28084, 1) + ' ft.';
 

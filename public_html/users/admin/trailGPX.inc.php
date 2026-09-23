@@ -1,129 +1,226 @@
 <?
-/*function getDist($lat1, $lon1, $lat2, $lon2, $round = true)
+function calculateDistance($pointA, $pointB)
 {
-    $theta = floatval($lon1) - floatval($lon2);
-    $dist  = sin(deg2rad(floatval($lat1))) * sin(deg2rad(floatval($lat2))) + cos(deg2rad(floatval($lat1))) * cos(deg2rad(floatval($lat2))) * cos(deg2rad($theta));
-    $dist  = acos($dist);
-    $dist  = rad2deg($dist);
-    $miles = $dist * 60 * 1.1515;
-    return ($round ? round($miles, 2) : $miles);
-}*/
-
-function getDist($lat1, $lon1, $lat2, $lon2)
-{
+    $lat1 = (float) $pointA['lat'];
+    $lon1 = (float) $pointA['lon'];
+    $lat2 = (float) $pointB['lat'];
+    $lon2 = (float) $pointB['lon'];
 
     $theta = $lon1 - $lon2;
-    $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
-    $dist = acos($dist);
-    $dist = rad2deg($dist);
-    $miles = $dist * 60 * 1.1515 * 5280;
-    return $miles;
+    $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+    $dist = max(-1, min(1, $dist));
+    $dist = rad2deg(acos($dist));
+
+    return $dist * 60 * 1.1515 * 5280;
 }
 
-function alreadyExists($target_dir, $basename) {
-    if (file_exists($target_dir . $basename)) {
-        return alreadyExists($target_dir, substr($basename, 0, -4) . '_' . rand(0, 10000) . substr($basename, -4));
-    } else {
+function alreadyExists($target_dir, $basename)
+{
+    if (!file_exists("{$target_dir}{$basename}")) {
         return $basename;
     }
+
+    $extension = pathinfo($basename, PATHINFO_EXTENSION);
+    $filename = pathinfo($basename, PATHINFO_FILENAME);
+
+    do {
+        $basename = "{$filename}_" . bin2hex(random_bytes(4)) . ".$extension";
+    } while (file_exists("{$target_dir}{$basename}"));
+
+    return $basename;
 }
 
-function doUpload($con2, $i, $trailID, $mode, $caption, $delta, $display)
+function doUpload($i, $trailID, $mode, $caption, $delta, $display)
 {
     global $_FILES;
+    global $con2;
 
     $gg = $i;
     $target_dir = '/home/mapo/public_html/mapotrails.com/data/gpx/';
     $basename = str_replace(' ', '_', basename($_FILES['gpxFile']['name'][$gg]));
 
     $basename = alreadyExists($target_dir, $basename);
-    $target_file = $target_dir . $basename;
+    $target_file = "{$target_dir}{$basename}";
 
     // successfully uploaded
-    if (move_uploaded_file($_FILES['gpxFile']['tmp_name'][$gg], $target_file)) {
-        mysqli_query($con2, "INSERT INTO gpx (trail_id,filename,mode,caption,delta,display) VALUES('$trailID','$basename','$mode','$caption','$delta','$display')");
-        $gisID = mysqli_insert_id($con2);
+    if (!move_uploaded_file($_FILES['gpxFile']['tmp_name'][$gg], $target_file)) {
+        return '';
     }
 
-    return parseGPX($gisID, $trailID, $mode, $caption, $delta, $display, $target_file, false);
+    $basename_sql = mysqli_real_escape_string($con2, $basename);
+    $mode_sql = mysqli_real_escape_string($con2, $mode);
+    $caption_sql = mysqli_real_escape_string($con2, $caption);
+
+    mysqli_query($con2, "INSERT INTO gpx (trail_id,filename,mode,caption,delta,display) VALUES($trailID, '$basename_sql', '$mode_sql', '$caption_sql', $delta, $display)");
+    $gisID = mysqli_insert_id($con2);
+
+    return parseGPX(
+        $gisID,
+        $trailID,
+        $mode,
+        $caption,
+        $delta,
+        $display,
+        $target_file,
+        false
+    );
 }
 
 function parseGPX($gisID, $trailID, $mode, $caption, $delta, $display, $file, $update)
 {
     global $_POST;
     global $title;
+    global $con2;
+    global $rawKeywords;
 
     $sqlQueries = '';
-    $prevElev = $prevDist = 0;
-    $json = json_decode(json_encode(simplexml_load_file($file)));
+    $prevElev = 0;
 
-    $point = $json->trk->trkseg->trkpt;
-    $count = $point == null ? 0 : count($point);
+    // Load the GPX file
+    $xml = simplexml_load_file($file, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+    if ($xml === false) {
+        return '';
+    }
+
+    // Collect all track points
+    $point = $xml->xpath('//*[local-name()="trkpt"]');
+
+    if (!$point) {
+        return '';
+    }
+
+    $count = count($point); 
+
+    if ($count === 0) {
+        return '';
+    }
+
     $coords = [];
     $lat = [];
     $lon = [];
     $elevations = [];
-    $start = [$point[0]->{'@attributes'}->lat, $point[0]->{'@attributes'}->lon];
-    $end = [$point[$count - 1]->{'@attributes'}->lat, $point[$count - 1]->{'@attributes'}->lon];
+    $slopes = [];
+
+    $start = [
+        (float) $point[0]['lat'],
+        (float) $point[0]['lon']
+    ];
+    $end = [
+        (float) $point[$count - 1]['lat'],
+        (float) $point[$count - 1]['lon']
+    ];
+
     $dist = $gain = $loss = 0;
 
     for ($x = 0; $x < $count; $x++) {
-        $j = $x - 1;
+        $elev = (float) $point[$x]->ele * 3.281;
 
-        $elev = $point[$x]->ele * 3.281;
         $elevations[] = $elev;
-        $lat[] = floatval($point[$x]->{'@attributes'}->lat);
-        $lon[] = floatval($point[$x]->{'@attributes'}->lon);
-        $coords[] = [floatval($point[$x]->{'@attributes'}->lon), floatval($point[$x]->{'@attributes'}->lat)];
+        $lat[] = (float) $point[$x]['lat'];
+        $lon[] = (float) $point[$x]['lon'];
+        $coords[] = [
+            (float) $point[$x]['lon'],
+            (float) $point[$x]['lat']
+        ];
 
         if ($x > 0) {
-            $distance = getDist($point[$x]->{'@attributes'}->lat, $point[$x]->{'@attributes'}->lon, $point[$j]->{'@attributes'}->lat, $point[$j]->{'@attributes'}->lon);
-            $dist += is_nan($distance) ? 0 : $distance;
-            $gain += $elev > $prevElev ? $elev - $prevElev : 0;
-            $loss += $elev < $prevElev ? $elev - $prevElev : 0;
+            $j = $x - 1;
+            $distance = calculateDistance($point[$x], $point[$j]);
 
-            try {
-                $slope = round(($elev - $prevElev) / ($dist * 5280 - $prevDist * 5280) * 100, 1);
-            } catch (DivisionByZeroError $e) { }
+            if (!is_nan($distance)) {
+                $dist += $distance;
+            }
 
-            if (!is_nan($slope)) {
-                $slopes[] = $slope;
+            // Calculate the elevation gain/loss
+            if ($elev >= $prevElev) {
+                $gain += $elev - $prevElev;
+            } else if ($elev < $prevElev) {
+                $loss += $elev - $prevElev;
+            }
+
+            // Calculate slope only when the segment has a measurable horizontal distance
+            if ($distance > 0) {
+                $slope = round((($elev - $prevElev) / $distance) * 100, 1);
+
+                if (is_finite($slope)) {
+                    $slopes[] = $slope;
+                }
             }
         }
 
         $prevElev = $elev;
-        $prevDist = $dist;
     }
 
-    $stats = array(
-        'geo' => array('start' => floatval($start), 'end' => floatval($end)),
-        'bounds' => ['sw' => [$lon != null ? min($lon) : 0, $lat != null ? min($lat) : 0], 'ne' => [$lon != null ? max($lon) : 0, $lat != null ? max($lat) : 0]],
-        'elevation' => array('min' => $elevations != null ? min($elevations) : 0, 'max' => $elevations != null ? max($elevations) : 0),
-        'altitude' => array('gain' => $gain, 'loss' => $loss),
+    $stats = [
+        'geo' => [
+            'start' => $start,
+            'end' => $end
+        ],
+        'bounds' => [
+            'sw' => [
+                $lon ? min($lon) : 0,
+                $lat ? min($lat) : 0
+            ],
+            'ne' => [
+                $lon ? max($lon) : 0,
+                $lat ? max($lat) : 0
+            ]
+        ],
+        'elevation' => [
+            'min' => $elevations ? min($elevations) : 0,
+            'max' => $elevations ? max($elevations) : 0
+        ],
+        'altitude' => [
+            'gain' => $gain ?? 0,
+            'loss' => $loss ?? 0
+        ],
+        'slope' => [
+            'min' => $slopes ? min($slopes) : null,
+            'avg' => $slopes ? round(array_sum(array_map('abs', $slopes)) / count($slopes), 1) : null,
+            'max' => $slopes ? max($slopes) : null
+        ],
         'distance' => round($dist / 5280, 3)
-    );
-
-    if ($delta == 0 && !$update) {
-        $sstats = serialize($stats);
-        $sqlQueries .= "INSERT INTO stats (trail_id,stats) VALUES('$trailID','$sstats') ON DUPLICATE KEY UPDATE stats = '$sstats';";
-    }
-
-    $mbprop = [
-        'mode' => $mode,
-        'color' => trailColor($mode),
-        'caption' => $caption,
-        'delta' => $delta,
-        'display' => $display,
-        'gis_id' => $gisID,
-        'trail_id' => $trailID,
-        'type' => $_POST['type'],
-        'title' => $title,
-        'url' => guideUrl($title, $_POST['type'], $trailID),
-        'stats' => $stats,
-        'public' => $_POST['public'],
-        'premium' => $_POST['premium']
     ];
 
-    sendToMapbox($gisID, array('type' => 'Feature', 'geometry' => array('type' => 'LineString', 'coordinates' => $coords), 'properties' => $mbprop));
+    // save the initial trail stats
+    if ($delta == 0) {
+        $sstats = mysqli_real_escape_string($con2, json_encode($stats));
+
+        $sqlQueries .= "INSERT INTO stats (trail_id,stats) VALUES($trailID,'$sstats') ON DUPLICATE KEY UPDATE stats = '$sstats';";
+    }
+
+    $trailType = $_POST['type'] ?? 'trail';
+    $mbprop = [
+        'gis_id' => (int) $gisID,
+        'trail_id' => (int) $trailID,
+        'delta' => (int) $delta,
+        'title' => $title,
+        'type' => $trailType,
+        'mode' => $mode,
+        'term' => $_POST['term'] ?? '',
+        'keywords' => !$rawKeywords ? [] : $rawKeywords,
+        'color' => trailColor($mode),
+        'caption' => $caption,
+        'url' => guideUrl($title, $trailType, $trailID),
+        'stats' => $stats,
+        'display' => (int) $display,
+        'public' => $_POST['public'] ?? 0,
+        'premium' => $_POST['premium'] ?? 0
+    ];
+
+    // send geojson feature to mapbox
+    sendToMapbox(
+        $gisID,
+        [
+            'type' => 'Feature',
+            'geometry' => [
+                'type' => 'LineString',
+                'coordinates' => $coords
+            ],
+            'properties' => $mbprop
+        ]
+    );
+
     return $sqlQueries;
 }

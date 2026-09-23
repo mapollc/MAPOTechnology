@@ -1,169 +1,67 @@
 <?
 ini_set('display_errors', 1);
-ini_set('session.cookie_domain', '.mapotrails.com');
+error_reporting(E_ERROR && E_PARSE);
+
+function ing($t)
+{
+    return (substr($t, -1) == 'e' ? substr($t, 0, -1) . 'ing' : (substr($t, -1) == 'i' || substr($t, -1) == 'b' ? $t . 'ing' : $t));
+}
+
+// set the base URL for this app
+$host = preg_replace('/(www\.)?([a-z]+)\.([a-z]+)/', '$2.$3', $_SERVER['HTTP_HOST']);
+$rootURL = "https://www.$host/";
+$baseURL = '//mapotrails.com/';
+$root = '/home/mapo/public_html/mapotrails.com/';
+
+// get the current map version to load all relevant files
+$version = trim($_GET['version'] ?? '') ?: file_get_contents("$root/version.txt");
+$appPath = "{$root}dist/app-$version.php";
+
+// get build date
+$buildDate = date('Y-m-d\TH:i:sP', filemtime("$root/dist/$version/js/app.js"));
+
+//ga4 ID
+$ga_id = 'G-4KN1GPWFWM';
+
+ini_set('session.cookie_domain', ".$host");
+
+header('Cache-Control: must-revalidate, public, max-age=3600');
+header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + 3600));
+header('Pragma: cache');
+header('Last-Modified: ' . gmdate('D, d M Y H:i:s \G\M\T', filemtime("{$root}index.php")));
+header('Content-type: text/html');
+
+include_once '/home/mapo/guid.inc.php';
+
 session_start();
 
-if (!isset($_SESSION['uid']) || $_SESSION['role'] != 'ADMIN') {
-    require_once 'coming-soon.html';
-    exit();
-}
+setupGUID('mapotrails.com');
 
-$version = $_GET['version'] ? $_GET['version'] : '2.2';
-
-/*if ($version == '2.0') {
-    include_once '../subs.inc.php';
-    $buildDate = date('Y-m-d\TH:i:sO', max(filemtime('./v' . $version . '/index.php'), filemtime('./v' . $version . '/main.js'), filemtime('./v' . $version . '/main.css')));
-    $domain = '//mapotrails.com/';
-    ini_set('session.cookie_domain', '.mapotrails.com');
-
-    header('Cache-Control: public, max-age=604800');
-    header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + 604800));
-    header('Content-Encoding: gzip, compress, br');
-
-    session_start();
-
-    /*if (!isset($_SESSION['uid'])) {
-    header('Location: https://www.mapotechnology.com/secure/login?src=mapotrails&next='.urlencode($_SERVER['REQUEST_URI']));
-    exit();
-}
-
-if ($_SESSION['role'] != 'ADMIN') {
-    header('Location: https://www.mapotechnology.com');
-    exit();
-}*//*
-
-    function ing($t)
-    {
-        if ($t == 'Atv') {
-            return 'ATV';
-        } else {
-            if (substr($t, -1) == 'e') {
-                return substr($t, 0, strlen($t) - 1) . 'ing';
-            } else {
-                return $t;
-            }
-        }
-    }
-
-    if ($_GET['logout'] == 1) {
-        $_SESSION = array();
-        session_regenerate_id();
-        setcookie('token', '', time() - (60 * 60 * 24 * 7), '/', '.mapotrails.com');
-    }
-
-    $user = array('uid' => null);
-
-    if (isset($_SESSION['uid'])) {
-        $user = array(
-            'uid' => $_SESSION['uid'],
-            'first_name' => $_SESSION['first_name'],
-            'last_name' => $_SESSION['last_name'],
-            'name' => $_SESSION['name'],
-            'role' => $_SESSION['role'],
-            'token' => $_COOKIE['token']
-        );
-    }
-
-    $layers = array('trailheads' => true, 'trails' => true, 'snotel' => false, 'waypoints' => true, 'avy' => ($_GET['category'] == 'snow' ? true : false), 'fsadmin' => false, 'contours' => false, 'radar' => false);
-    $settings = array('center' => array(44.75603319, -117.43075129), 'zoom' => 6.4, 'tile' => 'outdoors');
-
-    if ($_SESSION['uid']) {
-        $con = mysqli_connect('localhost', 'mapo_main', 'smQeP]-xjj+Uw$s_', 'mapo_main');
-        $row = mysqli_fetch_assoc(mysqli_query($con, "SELECT settings FROM trail_settings WHERE uid = '$_SESSION[uid]'"));
-
-        if ($row['settings'] != '' && $row['settings'] != 'null') {
-            $settings = json_decode($row['settings'], true);
-        }
-
-        mysqli_close($con);
-    }
-
-    /*if (!$_SESSION['mtsettings'] && $_SESSION['uid']) {
-    include('../config.inc.php');
-    $user_settings = unserialize(mysqli_fetch_assoc(mysqli_query($con, "SELECT settings FROM trail_settings WHERE uid = '$_SESSION[uid]'"))['settings']);
+// use the script to update user's last active time
+if (isset($_SESSION['visited']) && time() - $_SESSION['visited'] > 600) {
+    require_once '/home/mapo/database.inc.php';
+    executeQuery('ii', [time(), $_SESSION['uid']], "UPDATE users SET last_active = ? WHERE uid = ?");
     mysqli_close($con);
-    
-    if ($user_settings) {
-        $_SESSION['mtsettings'] = $user_settings;
-    } else {
-        $_SESSION['mtsettings'] = $settings;
-    }
-} else if ($_SESSION['mtsettings']) {
-    $settings = ($_SESSION['mtsettings'] ? json_decode($_SESSION['mtsettings'], true) : $settings);
-}*//*
+}
+$_SESSION['visited'] = time();
 
-    $settings['category'] = ($_GET['category'] ? $_GET['category'] : 'trail');
+// load the current index.php file for the version
+if (file_exists($appPath)) {
+    $javascript = !isset($_GET['version']) ? "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','$ga_id',{'user_id':'$_COOKIE[guid]'});" : "function gtag(){}";
 
-    if (!$settings['layers']) {
-        $settings['layers'] = $layers;
-    }
+    $isLoggedIn = $_SESSION['token'] ? 'true' : 'false';
+    $javascript .= "window.isAuthUser=$isLoggedIn;";
+    $javascript .= "const VERSION='$version',";
+    $javascript .= "BUILD_DATE='$buildDate',";
+    $javascript .= "defaultTitle='{{title}}',defaultDesc='{{desc}}'";
 
-    if ($_GET['activity']) {
-        $settings['activity'] = $_GET['activity'];
-    }
+    if (isset($_GET['tid'])) $javascript .= ",FIND_TRAIL=true,QUERY_TRAIL_ID={$_GET['tid']}";
 
-    if ($_GET['area']) {
-        $settings['area'] = $_GET['area'];
-    }
+    $javascript = preg_replace('/(\n|\r|\s{2,})/', '', "$javascript;");
 
-    if ($_GET['tid']) {
-        $settings['tid'] = $_GET['tid'];
-    }
+    require_once $appPath;
+    return;
+}
 
-    $settings['version'] = array($version, (substr($version, -2) == '.0' ? substr($version, 0, -2) : $version));
-
-    require './v' . $version . '/index.php';
-} else {*/
-
-    include_once '/home/mapo/public_html/subs.inc.php';
-
-    $domain = '//mapotrails.com/';
-    $cdn = '//cdn.mapotrails.com/';
-
-    // get last modified time for the app's build date/time
-    $files = ['index.php','mt.app.css','mt.app.js'];
-    foreach ($files as $file) {
-        if (file_exists($file)) {
-            $times[] = filemtime('./v'.$version.'/'.$file);
-        }
-    }
-    $buildDate = date('Y-m-d\TH:i:sO', max($times));
-
-    function ing($t){
-        if ($t == 'Atv') {
-            return 'ATV';
-        } else {
-            if (substr($t, -1) == 'e') {
-                return substr($t, 0, strlen($t) - 1) . 'ing';
-            } else {
-                return $t;
-            }
-        }
-    }
-    /*$settings['category'] = $_GET['category'] ? $_GET['category'] : 'trail';
-
-    if (!$settings['layers']) {
-        $settings['layers'] = $layers;
-    }
-
-    if ($_GET['activity']) {
-        $settings['activity'] = $_GET['activity'];
-    }
-
-    if ($_GET['area']) {
-        $settings['area'] = $_GET['area'];
-    }
-
-    if ($_GET['tid']) {
-        $settings['tid'] = $_GET['tid'];
-    }
-
-    $settings['version'] = array($version, (substr($version, -2) == '.0' ? substr($version, 0, -2) : $version));*/
-
-    // load the current index.php file for the version
-    if (file_exists('./v' . $version . '/index.php')) {
-        require_once './v' . $version . '/index.php';
-    } else {
-        http_response_code(404);
-    }
-//}
+http_response_code(404);
+include_once '../error.php';

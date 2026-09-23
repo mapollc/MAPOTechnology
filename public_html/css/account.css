@@ -1318,6 +1318,20 @@ form label+.input {
     background-color: #444;
 }
 
+.mt-act {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.5em;
+
+    .checkbox {
+        display: flex;
+        align-items: center;
+        flex: 0 1 180px;
+        min-width: 180px;
+        margin-bottom: 1em;
+    }
+}
+
 #files,
 #waypoints {
     display: block;
@@ -1385,7 +1399,7 @@ form label+.input {
     max-width: 600px;
     max-height: 185px;
     padding: 0 10px;
-    margin-top: -10px;
+    margin-top: -1px;
     background-color: #fff;
     border: 1px solid #bbbbbb;
     /*box-shadow: 0 3px 10px rgb(0 56 92 / 30%);*/
@@ -1394,17 +1408,65 @@ form label+.input {
     overflow-y: auto;
     overflow-x: hidden;
     z-index: 1;
+
+    #kw-item {
+        padding: 0.33em 0;
+        transition: all .1s ease-in, all .2s ease-out;
+        cursor: pointer;
+
+        &:hover {
+            font-weight: 500;
+            color: var(--blue);
+        }
+    }
 }
 
-#kw-item {
-    padding: 10px 0;
-    transition: all .15s ease-in-out;
-    cursor: pointer;
+.wysi-editor>:first-child {
+    padding-top: 0 !important;
 }
 
-#kw-item:hover {
+.month-selector {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.month-selector label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid #777;
+    border-radius: 18px;
+    background: #fff;
+    color: #333;
+    font-size: 14px;
     font-weight: 500;
-    color: var(--blue);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color .15s, border-color .15s;
+}
+
+.month-selector input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.month-selector label:hover {
+    background: #f5f5f5;
+}
+
+.month-selector input:checked + label {
+    border-color: var(--light-blue);
+    background: color-mix(in srgb, var(--light-blue) 15%, white);
+    color: #111;
+}
+
+.month-selector input:focus-visible + label {
+    outline: 2px solid var(--light-blue);
+    outline-offset: 2px;
 }
 
 .session {

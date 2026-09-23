@@ -151,6 +151,7 @@ header nav ul,
 header nav ul li a.btn {
     min-width: unset;
     font-weight: 400;
+    font-size: 16px!important;
 }
 
 .footer-menu ul {
@@ -185,10 +186,9 @@ header nav ul a,
 header nav ul a:visited {
     font-weight: 400;
     font-family: Roboto;
-    font-size: 15px;
-    letter-spacing: 1px;
+    font-size: 16px;
+    letter-spacing: 0.2px;
     color: var(--blue);
-    text-transform: uppercase;
     text-decoration: none;
     transition: all .2s ease-in-out;
 }

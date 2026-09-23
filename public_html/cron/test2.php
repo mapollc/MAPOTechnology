@@ -1,6 +1,160 @@
 <?
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
 error_reporting(E_ALL);
+
+    $token = 'sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ';
+
+    $ch = curl_init();
+
+    $params = [
+        'tileset' => 'mapollc.clnnlg3w728a02nmv0ffz57jf-6mcgs',
+        'url' => 'mapbox://datasets/mapollc/clnnlg3w728a02nmv0ffz57jf',
+        'name' => 'mapotrails'
+    ];
+
+    curl_setopt($ch, CURLOPT_URL, "https://api.mapbox.com/uploads/v1/mapollc?access_token=$token");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'Cache-Control: no-cache']);
+
+    $result = curl_exec($ch);
+    $output = curl_errno($ch) ? curl_error($ch) : $result;
+
+    return json_decode($output);
+
+    /*
+include_once '/home/mapo/public_html/apis/functions.inc.php';
+
+function calculateDistance($pointA, $pointB)
+{
+    $lat1 = (float) $pointA['lat'];
+    $lon1 = (float) $pointA['lon'];
+    $lat2 = (float) $pointB['lat'];
+    $lon2 = (float) $pointB['lon'];
+
+    $theta = $lon1 - $lon2;
+    $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+    $dist = max(-1, min(1, $dist));
+    $dist = rad2deg(acos($dist));
+
+    return $dist * 60 * 1.1515 * 5280;
+}
+
+function trailColor($m)
+{
+    $colors = ['cb2626', '40d740', 'ff973a', 'ebeb2e', 'f977dd', '6daee3', '9873f0', 'ff8298', '698d65', '009688', '3949ab', '880e4f'];
+
+    return '#' . match ($m) {
+        'Snowmobile' => 'ff0000',
+        'Tour' => '0058aa',
+        'Ski Line' => '13ff2f',
+        'Gravel' => '747474',
+        'ATV Track' => '00ffff',
+        'Road' => '000',
+        'Single Track' => $colors[array_rand($colors)],
+        default => '000'
+    };
+}
+
+function sendToMapbox($id, $json = null, $send = true)
+{
+    $token = 'sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ';
+    $datasetID = 'clnnlg3w728a02nmv0ffz57jf';
+
+    $ch = curl_init();
+
+    curl_setopt($ch, CURLOPT_URL, "https://api.mapbox.com/datasets/v1/mapollc/$datasetID/features/$id?access_token=$token");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $send ? 'PUT' : 'DELETE');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+
+    if ($send) {
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($json));
+    }
+
+    $result = curl_exec($ch);
+    $output = curl_errno($ch) ? curl_error($ch) : $result;
+
+    return $output;
+}
+
+$con2 = mysqli_connect('localhost', 'mapo_main', 'smQeP]-xjj+Uw$s_', 'mapo_trails');
+
+$result = mysqli_query($con2, "SELECT t.id AS trail_id, g.id, t.title, t.type, g.delta, term, keywords, filename, mode, caption, stats, premium, public, display
+FROM gpx g LEFT JOIN categories c ON c.trail_id = g.trail_id LEFT JOIN trails t ON t.id = g.trail_id LEFT JOIN stats s ON s.trail_id = g.trail_id WHERE g.trail_id > 159 AND g.delta = 0 ORDER BY g.trail_id ASC");
+
+while ($row = mysqli_fetch_assoc($result)) {
+    $file = "/home/mapo/public_html/mapotrails.com/data/gpx/{$row['filename']}";
+
+    if ($row['filename'] != '' && file_exists($file)) {
+        $xml = simplexml_load_file($file, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+        if ($xml === false) {
+            return '';
+        }
+
+        // Collect all track points
+        $point = $xml->xpath('//*[local-name()="trkpt"]');
+
+        if (!$point) {
+            return '';
+        }
+
+        $count = count($point);
+
+        if ($count === 0) {
+            return '';
+        }
+
+        $coords = [];
+
+        for ($x = 0; $x < $count; $x++) {
+            $coords[] = [
+                (float) $point[$x]['lon'],
+                (float) $point[$x]['lat']
+            ];
+        }
+
+        $mbprop = [
+            'gis_id' => (int) $row['id'],
+            'trail_id' => (int) $row['trail_id'],
+            'delta' => (int) $row['delta'],
+            'title' => $row['title'],
+            'type' => $row['type'],
+            'mode' => $row['mode'],
+            'term' => json_decode($row['term'], true),
+            'keywords' => !$row['keywords'] ? [] : json_decode($row['keywords'], true),
+            'color' => trailColor($row['mode']),
+            'caption' => $row['caption'],
+            'url' => guideUrl($row['title'], $row['type'], $row['trail_id']),
+            'stats' => json_decode($row['stats'], true),
+            'display' => (int) $row['display'],
+            'public' => $row['public'] ?? 0,
+            'premium' => $row['premium'] ?? 0
+        ];
+
+        sendToMapbox(
+            $row['id'],
+            [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'LineString',
+                    'coordinates' => $coords
+                ],
+                'properties' => $mbprop
+            ]
+        );
+
+        echo '----- Done with trail ' . $row['trail_id'] . ' -----' . PHP_EOL;
+    } else {
+        echo '----- Unable to process ' . $row['trail_id'] . ' / missing ' . $file . ' -----' . PHP_EOL;
+    }
+}
+
+
+
+
 /*include_once '../config.inc.php';
 
 /*$sqlQueries = '';

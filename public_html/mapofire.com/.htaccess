@@ -10,12 +10,6 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.+)$ /$1.php [L,QSA]
 
-# Redirect to WWW unless a subdomain
-#RewriteCond %{HTTPS} off [OR]
-#RewriteCond %{HTTP_HOST} !^www\. [NC]
-#RewriteCond %{HTTPS} off
-#RewriteRule (.*) https://mapofire.com%{REQUEST_URI} [R=301,L]
-
 RewriteCond %{HTTPS} !=on
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
