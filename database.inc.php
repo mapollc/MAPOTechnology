@@ -17,11 +17,7 @@ function executeQuery($types = '', $params = [], $sql, $useCon2 = false)
     global $con;
     global $con2;
 
-    if ($useCon2) {
-        $stmt = $con2->prepare($sql);
-    } else {
-        $stmt = $con->prepare($sql);
-    }
+    $stmt = $useCon2 ? $con2->prepare($sql) : $con->prepare($sql);
     
     if ($stmt === false) {
         return false;

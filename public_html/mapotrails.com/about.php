@@ -1,6 +1,6 @@
 <?
 $title = 'About the Trail Project';
-include_once('header.inc.php');
+include_once './header.inc.php';
 /*$con2 = mysqli_connect('localhost', 'mapo_main', 'smQeP]-xjj+Uw$s_', 'mapo_trails');
 $result = mysqli_query($con2, "SELECT stats FROM stats") or die(mysqli_error($con2));
 while($row = mysqli_fetch_assoc($result)){
@@ -9,6 +9,8 @@ while($row = mysqli_fetch_assoc($result)){
 }
 echo $total;*/
 $stats = json_decode('{"totals":{"trails":"475","media":"3681"},"distance":4412.35000000000945874489843845367431640625,"avg":9.26964285714287683504153392277657985687255859375,"max":230.640000000002515889718779362738132476806640625,"alt":11463.057832031250654836185276508331298828125,"loss":-1401.571634684288028438459150493144989013671875,"gain":1845.72837381857198124635033309459686279296875,"words":{"total":110182,"avg":231.474789915966397302327095530927181243896484375}}');
+
+echo $headerContent;
 ?>
 
 <section class="page">
@@ -169,6 +171,4 @@ $stats = json_decode('{"totals":{"trails":"475","media":"3681"},"distance":4412.
     </div>
 </section>
 
-<?
-echo generateFooter($js);
-?>
+<? include_once './footer.inc.php' ?>

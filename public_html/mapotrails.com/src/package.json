@@ -1,6 +1,6 @@
 {
   "name": "Map of Trails",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "",
   "main": "webpack-entry.js",
   "scripts": {
@@ -16,26 +16,26 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
+    "@eslint/js": "^10.0.1",
     "copy-webpack-plugin": "^14.0.0",
     "cross-env": "^10.1.0",
-    "css-loader": "^7.1.4",
+    "css-loader": "^7.1.5",
     "css-minimizer-webpack-plugin": "^8.0.0",
-    "eslint": "^9.39.5",
+    "eslint": "^10.11.0",
     "eslint-import-resolver-node": "^0.4.0",
     "eslint-plugin-import": "^2.32.0",
     "html-webpack-plugin": "^5.6.8",
     "mini-css-extract-plugin": "^2.10.2",
     "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.6.1",
-    "webpack": "^5.109.2",
-    "webpack-bundle-analyzer": "^5.3.1",
-    "webpack-cli": "^7.2.2",
+    "webpack": "^5.111.1",
+    "webpack-bundle-analyzer": "^5.4.0",
+    "webpack-cli": "^7.2.3",
     "webpack-dev-server": "^6.0.0",
     "workbox-webpack-plugin": "^7.4.1"
   },
   "dependencies": {
-    "maplibre-contour": "^0.1.0",
-    "maplibre-gl": "^6.1.0"
+    "maplibre-contour": "^0.1.1",
+    "maplibre-gl": "^6.11.2"
   }
 }

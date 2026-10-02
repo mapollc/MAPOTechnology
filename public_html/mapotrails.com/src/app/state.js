@@ -1,3 +1,5 @@
+import { config } from './config.js';
+
 export const searchResults = document.querySelector('#search-results');
 
 export const global = {
@@ -15,30 +17,46 @@ export const global = {
     loadingImages: new Set(),
     clickListener: null,
     changeListener: null,
-    layers: [
-        {
-            id: 'trailheads',
-            name: 'Trailheads',
-            desc: 'Display trailheads and trail starting points on the map',
-            default: true,
-            mapLayers: ['cluster-ths', 'cluster-count', 'trailheads']
-        },
-        {
-            id: 'trails',
-            name: 'Trails',
-            desc: 'Display trails on the map',
-            default: true,
-            mapLayers: ['trails', 'trails_title']
-        },
-        {
-            id: 'waypoints',
-            name: 'Waypoints',
-            desc: 'Display informational points for trails on the map',
-            default: true,
-            mapLayers: ['waypoints']
-        }
-    ]
 };
+
+export const appLayers = [
+    {
+        id: 'trailheads',
+        name: 'Trailheads',
+        desc: 'Display trailheads and trail starting points on the map',
+        default: true,
+        source: 'trailheads',
+        mapLayers: ['cluster-ths', 'cluster-count', 'trailheads'],
+        init: () => global.trails.getTrailheads()
+    },
+    {
+        id: 'trails',
+        name: 'Trails',
+        desc: 'Display trails on the map',
+        default: true,
+        source: 'trailData',
+        mapLayers: ['trails', 'trails_title'],
+        init: () => config.layersHandler.displayTracks()
+    },
+    {
+        id: 'waypoints',
+        name: 'Waypoints',
+        desc: 'Display informational points for trails on the map',
+        default: true,
+        source: 'waypoints',
+        mapLayers: ['waypoints'],
+        init: () => global.trails.getWaypoints()
+    },
+    {
+        id: 'avy',
+        name: 'Avalanche Shading',
+        desc: 'Overlay avalanche slope shading',
+        source: 'avy',
+        default: false,
+        mapLayers: ['avalanche'],
+        init: () => config.layersHandler.avy()
+    }
+];
 
 export const impactHeader = `<header>
     <h3 id="a" class="title">

@@ -1,5 +1,5 @@
 import { ENV, config, tileConfig, getPlatform } from '../app/config.js';
-import { global, impactHeader } from '../app/state.js';
+import { global, appLayers, impactHeader } from '../app/state.js';
 import { storage } from '../utils/helpers.js';
 import maplibregl from '../map/maplibre.js';
 import { createPopup, fitBounds } from '../map/mapping.js';
@@ -109,7 +109,7 @@ export class ClickListener {
     }
 
     createLayers() {
-        const content = global.layers.map(layer => `<li class="layer" data-id="${layer.id}" title="${layer.name}">
+        const content = appLayers.map(layer => `<li class="layer" data-id="${layer.id}" title="${layer.name}">
             <div class="checkbox">
                 <input type="checkbox" id="${layer.id}" class="layChkBx" data-action="toggle-layer">
             </div>
@@ -136,7 +136,7 @@ export class ClickListener {
         impact.innerHTML = impactHeader + config.layersMenu;
         impact.querySelector('#a').innerHTML = 'Layers';
 
-        global.layers.forEach(layer => {
+        appLayers.forEach(layer => {
             const li = impact.querySelector(`li.layer[data-id="${layer.id}"]`);
             const isChecked = (layer.default && !config.settings.checkboxes()) || (config.settings.checkboxes() && config.settings.isEnabled(layer.id));
 
@@ -299,7 +299,7 @@ export class ChangeListener {
 
     toggleLayer() {
         const { id, checked } = this.target;
-        const layer = global.layers.find(layer => layer.id === id);
+        const layer = appLayers.find(layer => layer.id === id);
 
         if (!layer) return;
 
@@ -307,8 +307,10 @@ export class ChangeListener {
 
         const visibility = checked ? 'visible' : 'none';
 
-        layer.mapLayers.forEach(mapLayer => {
-            global.map.setLayoutProperty(mapLayer, 'visibility', visibility);
-        });
+        if (!global.map.getSource(layer.source)) {
+            layer.init();
+        } else {
+            layer.mapLayers.forEach(mapLayer => global.map.setLayoutProperty(mapLayer, 'visibility', visibility));
+        }
     }
 }

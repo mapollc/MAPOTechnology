@@ -1,5 +1,5 @@
 import { config } from './config.js';
-import { global } from './state.js';
+import { appLayers } from './state.js';
 
 export class Settings {
     constructor(u) {
@@ -23,7 +23,7 @@ export class Settings {
             ...this.defaultSettings,
             ...saved,
             layers: Object.fromEntries(
-                global.layers.map(layer => [
+                appLayers.map(layer => [
                     layer.id,
                     saved?.layers?.[layer.id] ?? layer.default
                 ])

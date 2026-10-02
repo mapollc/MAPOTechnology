@@ -66,8 +66,11 @@ export class Layers {
     }
 
     displayTracks() {
-        // generate filter for trails
         const filter = ['all'];
+        const SRC = 'trails';
+        const SRC_LYR = !config.useMapbox ? 'trails' : 'mapotrails';
+
+        // generate filter for trails
         filter.push(['==', ['get', 'type'], config.taxonomy.category]);
         filter.push(['==', ['to-number', ['get', 'display']], 1]);
 
@@ -76,32 +79,28 @@ export class Layers {
             filter.push(['!=', ['to-number', ['get', 'premium']], 1]);
         }
 
-        if (config.taxonomy.activity != null) {
-            //filter.push(['==', ['get']]);
-        }
-
         if (!global.map.getSource('trailData')) {
             global.map.addSource('trailData', {
                 type: 'vector',
-                tiles: [
-                    'https://api.mapbox.com/v4/mapollc.clnnlg3w728a02nmv0ffz57jf-6mcgs/{z}/{x}/{y}.vector.pbf?access_token=sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ'
-                ]
+                tiles: !config.useMapbox
+                    ? [`${ENV.host}data/maps/tiles/trails/{z}/{x}/{y}.pbf`]
+                    : ['https://api.mapbox.com/v4/mapollc.clnnlg3w728a02nmv0ffz57jf-6mcgs/{z}/{x}/{y}.vector.pbf?access_token=sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ']
             });
         }
 
         // add trail lines
-        if (!global.map.getLayer('trails')) {
+        if (!global.map.getLayer(SRC)) {
             global.map.addLayer({
-                id: 'trails',
+                id: SRC,
                 type: 'line',
                 source: 'trailData',
                 minzoom: 9,
-                'source-layer': 'mapotrails',
+                'source-layer': SRC_LYR,
                 filter: filter,
                 layout: {
                     'line-join': 'round',
                     'line-cap': 'round',
-                    'visibility': config.settings.isEnabled('trails') ? 'visible' : 'none'
+                    'visibility': config.settings.isEnabled(SRC) ? 'visible' : 'none'
                 },
                 paint: {
                     'line-color': ['get', 'color'],
@@ -117,7 +116,7 @@ export class Layers {
                 }
             });
 
-            layerMouseOver('trails');
+            layerMouseOver(SRC);
         }
 
         if (!global.map.getLayer('trails_title')) {
@@ -126,7 +125,7 @@ export class Layers {
                 type: 'symbol',
                 source: 'trailData',
                 minzoom: 9,
-                'source-layer': 'mapotrails',
+                'source-layer': SRC_LYR,
                 filter: filter,
                 layout: {
                     'symbol-placement': 'line',
@@ -160,7 +159,7 @@ export class Layers {
                     ],
                     'text-allow-overlap': false,
                     'text-letter-spacing': 0.05,
-                    'visibility': config.settings.isEnabled('trails') ? 'visible' : 'none'
+                    'visibility': config.settings.isEnabled(SRC) ? 'visible' : 'none'
                 },
                 paint: {
                     'text-color': [

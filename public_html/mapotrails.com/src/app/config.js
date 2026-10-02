@@ -22,6 +22,7 @@ export const config = {
     settings: null,
     productName: 'Map of Trails',
     company: 'MAPO LLC',
+    useMapbox: false,
     apiKey: () => ENV.debug ? 'bG9jYWxob3N0' : API_KEYS[getPlatform()],
     months: ['Jan', 'Feb', 'March', 'April', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'],
     longMonths: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],

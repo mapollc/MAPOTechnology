@@ -13,9 +13,9 @@
     </div>
 </footer>
 
-<!--<script async src="//googletagmanager.com/gtag/js?id=G-4KN1GPWFWM"></script>-->
-<script>/*window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-4KN1GPWFWM',{'user_id':'<?= $_COOKIE['guid'] ?>'});*/</script>
-<script type="module" src="//mapotrails.com/guide2.js"></script>
+<script async src="//googletagmanager.com/gtag/js?id=G-4KN1GPWFWM"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-4KN1GPWFWM',{'user_id':'<?= $_COOKIE['guid'] ?>'});</script>
+<script type="module" src="//mapotrails.com/src/js/mapotrails.js"></script>
 
 </body>
 </html>

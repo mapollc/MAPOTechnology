@@ -95,7 +95,42 @@ if ($method == 'list') {
 }
 
 if ($method == 'guide') {
-    $returnJson = [];
+    $data = executeQuery(
+        'i',
+        [$_REQUEST['id']],
+        "SELECT stats FROM stats WHERE trail_id = ?",
+        true
+    );
+
+    $photos = executeQuery(
+        'i',
+        [$_REQUEST['id']],
+        "SELECT id, file, title FROM media WHERE trail_id = ? ORDER BY delta ASC",
+        true
+    );
+
+    $waypoints = executeQuery(
+        'i',
+        [$_REQUEST['id']],
+        "SELECT id, name, lat, lon, elev, note, icon FROM waypoints WHERE (lat != 0 AND lon != 0) AND trail_id = ? ORDER BY delta ASC",
+        true
+    );
+
+    $ph = null;
+
+    foreach ($photos as $p) {
+        $ph[] = $p;
+    }
+
+    if (!is_array($waypoints[0])) $waypoints = [$waypoints];
+
+    $returnJson = [
+        'guide' => [
+            'stats' => $data['stats'] ? json_decode($data['stats']) : null,
+            'waypoints' => $waypoints ?? null,
+            'photos' => $ph
+        ]
+    ];
 }
 
 if ($method == 'waypoints') {
@@ -188,6 +223,13 @@ if ($method == 'chart') {
     $chart = [];
     $dist = 0;
 
+    if (isset($points[0]->ele)) {
+        $chart[] = [
+            0,
+            (float) $points[0]->ele
+        ];
+    }
+
     for ($i = 1, $count = count($points); $i < $count; $i++) {
         $dist += distance(
             (float) $points[$i]['lat'],
@@ -197,6 +239,10 @@ if ($method == 'chart') {
         );
 
         if (!isset($points[$i]->ele) || !$dist) {
+            continue;
+        }
+
+        if ($dist <= ($chart[array_key_last($chart)][0] ?? -1)) {
             continue;
         }
 
@@ -224,42 +270,41 @@ if ($method == 'geojson') {
         ORDER BY delta ASC",
         true
     );
-    /*"display": "1",
-    "mode": "Road",
-    "color": "#000",
-    "caption": "Catherine Summit, Pyles Loop",
-    "gis_id": "3",
-    "public": "1",
-    "url": "guide/trail/29/catherine-summit-pyles-canyon-bicycle-loop",
-    "trail_id": "29",
-    "premium": "0",
-    "title": "Catherine Summit and Pyles Canyon Bicycle Loop",
-    "delta": "0",
-    "type": "trail",
-    "stats": */
 
     if (empty($gpx)) return $returnJson = ['response' => 'error', 'code' => 1, 'msg' => 'The trail you\'re looking for does not exist'];
 
     $file = null;
 
-    foreach ($gpx as $k => $v) {
-        if ($k === 'filename') {
-            $file = $v;
-            continue;
+    if (!is_array($gpx[0])) $gpx = [$gpx];
+    $feats = [];
+
+    foreach ($gpx as $track) {
+        $prop = [];
+
+        foreach ($track as $k => $v) {
+            if ($k === 'filename') {
+                $file = $v;
+                continue;
+            }
+
+            if ($k === 'id') $gid = $v;
+
+            $prop[$k] = in_array($k, ['stats', 'keywords', 'term']) ? json_decode($v, true) : $v;
         }
 
-        if ($k === 'id') $gid = $v;
+        $prop['color'] = trailColor($track['mode']);
+        $prop['url'] = guideUrl($track['title'], $track['type'], $track['trail_id']);
 
-        $prop[$k] = in_array($k, ['stats', 'keywords', 'term']) ? json_decode($v, true) : $v;
+        $feats[] = [
+            'id' => $gid,
+            'type' => 'Feature',
+            'geometry' => gpxToGeoJson($file),
+            'properties' => $prop
+        ];
     }
 
-    $prop['color'] = trailColor($gpx['mode']);
-    $prop['url'] = guideUrl($gpx['title'], $gpx['type'], $gpx['trail_id']);
-
     $returnJson = [
-        'id' => $gid,
-        'type' => 'Feature',
-        'geometry' => gpxToGeoJson($file),
-        'properties' => $prop
+        'type' => 'FeatureCollection',
+        'features' => $feats
     ];
 }
