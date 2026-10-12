@@ -424,6 +424,11 @@ ul.inline-menu li:last-child:after {
     line-height: 1.2;
 }
 
+fieldset.card {
+    padding: 1rem;
+    border: 1px solid #dfe4e9;
+}
+
 .card {
     position: relative;
     display: block;
@@ -805,14 +810,16 @@ label {
     margin-bottom: 0;
 }
 
+.search-result-wrapper {
+    position: relative;
+    max-width: 500px;
+}
+
 .search-results {
     position: absolute;
     display: none;
-    /*margin-top: calc(-1em - 1px);*/
     width: 100%;
-    max-width: unset
-        /*450px*/
-    ;
+    max-width: unset;
     max-height: 200px;
     border-radius: 5px;
     border: 1px solid #e7e7e7;
@@ -820,19 +827,19 @@ label {
     background-color: #fff;
     overflow-y: auto;
     z-index: 99;
-}
 
-.search-results .result {
-    display: inline-flex;
-    width: 100%;
-    padding: .75em;
-    user-select: none;
-    cursor: pointer;
-    transition: all .15s ease-in-out;
-}
+    .result {
+        display: inline-flex;
+        width: 100%;
+        padding: .75em;
+        user-select: none;
+        cursor: pointer;
+        transition: all .15s ease-in-out;
 
-.search-results .result:hover {
-    background-color: #ededed;
+        &:hover {
+            background-color: #ededed;
+        }
+    }
 }
 
 .coordinates {
@@ -960,6 +967,24 @@ form label:first-child {
 
 form label+.input {
     margin: 0.5em 0 0;
+}
+
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid {
+    border: 1px solid #e53e3e;
+    outline: none;
+}
+
+input:user-invalid:focus,
+select:user-invalid:focus,
+textarea:user-invalid:focus {
+    border-bottom: 1px solid #e53e3e;
+}
+
+.radio input[type=radio]:user-invalid:before,
+.checkbox input[type=checkbox]:user-invalid:before {
+    border-color: #e53e3e;
 }
 
 .input {
@@ -1324,58 +1349,89 @@ form label+.input {
     gap: 0 0.5em;
 
     .checkbox {
-        display: flex;
+        flex: 0 1 180px;
+        /*display: flex;
         align-items: center;
         flex: 0 1 180px;
         min-width: 180px;
-        margin-bottom: 1em;
+        margin-bottom: 1em;*/
     }
+}
+
+.trails-btn {
+    display: block;
+    margin: 0;
+    padding: 6px 8px;
+    width: fit-content;
+    min-width: unset;
+    font-size: 13px;
+    font-family: 'Roboto';
+    line-height: 1;
+    border: 0;
+    border-radius: 4px;
+    transition: all .2s ease-in-out;
+    user-select: none;
+    cursor: pointer;
+}
+
+.trails-btn.delete {
+    color: #fff;
+    background-color: rgb(237 37 78 / 80%);
+}
+
+.trails-btn.delete:hover {
+    background-color: rgb(237 37 78 / 100%);
 }
 
 #files,
 #waypoints {
     display: block;
-    margin-top: 15px;
-    margin-left: 40px;
+    margin-top: 1rem;
+    margin-left: 0;
     list-style: none;
     margin-inline-start: 0;
-}
 
-#files .input,
-#waypoints .input {
-    margin-top: 0 !important;
-}
+    .input {
+        margin-top: 0 !important;
+    }
 
-#files li,
-#waypoints li {
-    padding-bottom: 0.5em;
-}
+    li {
+        padding-bottom: 0.5em;
 
-#files .wrap,
-#waypoints .wrap {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 25px;
-    background-color: #f6f6f6;
-    border: 1px solid #eee;
-    border-radius: 5px;
-    padding: 8px;
-}
+        &.dragging {
+            opacity: 0.4;
+        }
 
-#files .wrap .file {
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 300px;
-    max-width: 300px;
-    word-wrap: break-word;
-}
+        .wrap {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            background-color: #f6f6f6;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 0.75rem 1rem;
 
-#files .wrap .column,
-#waypoints .column {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
+            .reorder {
+                cursor: grab;
+                user-select: none;
+            }
+
+            .file {
+                display: flex;
+                flex-direction: column;
+                flex: 0 0 300px;
+                max-width: 300px;
+                word-wrap: break-word;
+            }
+        }
+
+        .column {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+        }
+    }
 }
 
 .multimedia {
@@ -1385,38 +1441,17 @@ form label+.input {
     margin-top: 1em;
     background-color: #f3f3f3;
     padding: 1em;
-}
 
-.multimedia .wrapper {
-    flex: 1 1 auto;
-    max-width: 327px;
-}
+    .wrapper {
+        flex: 1 1 auto;
+        max-width: 327px;
 
-#kw-results {
-    position: absolute;
-    display: none;
-    width: 100%;
-    max-width: 600px;
-    max-height: 185px;
-    padding: 0 10px;
-    margin-top: -1px;
-    background-color: #fff;
-    border: 1px solid #bbbbbb;
-    /*box-shadow: 0 3px 10px rgb(0 56 92 / 30%);*/
-    border-radius: 5px;
-    border-top-color: var(--blue);
-    overflow-y: auto;
-    overflow-x: hidden;
-    z-index: 1;
-
-    #kw-item {
-        padding: 0.33em 0;
-        transition: all .1s ease-in, all .2s ease-out;
-        cursor: pointer;
-
-        &:hover {
-            font-weight: 500;
-            color: var(--blue);
+        .meta {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            margin-top: 3px;
+            line-height: 1.2;
         }
     }
 }
@@ -1436,13 +1471,14 @@ form label+.input {
     align-items: center;
     justify-content: center;
     height: 36px;
+    margin: 0 0 0.5rem 0;
     padding: 0 14px;
     border: 1px solid #777;
     border-radius: 18px;
     background: #fff;
     color: #333;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
     cursor: pointer;
     user-select: none;
     transition: background-color .15s, border-color .15s;
@@ -1451,6 +1487,7 @@ form label+.input {
 .month-selector input {
     position: absolute;
     opacity: 0;
+    height: 0;
     pointer-events: none;
 }
 
@@ -1458,14 +1495,14 @@ form label+.input {
     background: #f5f5f5;
 }
 
-.month-selector input:checked + label {
-    border-color: var(--light-blue);
-    background: color-mix(in srgb, var(--light-blue) 15%, white);
+.month-selector input:checked+label {
+    border-color: var(--orange);
+    background: color-mix(in srgb, var(--orange) 15%, white);
     color: #111;
 }
 
-.month-selector input:focus-visible + label {
-    outline: 2px solid var(--light-blue);
+.month-selector input:focus-visible+label {
+    outline: 2px solid var(--orange);
     outline-offset: 2px;
 }
 

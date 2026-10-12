@@ -1114,14 +1114,22 @@ function wildfireURL($wfid, $name, $state)
 
 function guideUrl($s, $ty, $id)
 {
-    $words = array('and', 'at');
-    $s = str_replace(' ', '-', str_replace('  ', ' ', preg_replace('/([^A-Za-z0-9\s]+)/', '', strtolower($s))));
+    $words = ['and', 'at'];
+    $s = str_replace(
+        ' ',
+        '-',
+        str_replace(
+            '  ',
+            ' ',
+            preg_replace('/([^A-Za-z0-9\s]+)/', '', strtolower($s))
+        )
+    );
 
     foreach ($words as $r) {
         $s = str_replace($r . '-', '', $s);
     }
 
-    return rtrim(rtrim('guide/' . $ty . '/' . $id . '/' . $s, '-'), ' ');
+    return rtrim(rtrim('guide/' . ($ty ? "$ty/" : '') . "$id/$s", '-'), ' ');
 }
 
 function bbox($bbox, $lat, $lon)

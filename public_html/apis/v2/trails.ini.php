@@ -91,10 +91,15 @@ if ($method == 'list') {
         }
     }
 
-    return $returnJson = ['type' => 'FeatureCollection', 'features' => $listOfTrails];
+    $returnJson = [
+        'type' => 'FeatureCollection',
+        'features' => $listOfTrails
+    ];
 }
 
 if ($method == 'guide') {
+    $ph = [];
+
     $data = executeQuery(
         'i',
         [$_REQUEST['id']],
@@ -116,18 +121,17 @@ if ($method == 'guide') {
         true
     );
 
-    $ph = null;
+    if (!is_array($waypoints[0]) && !empty($waypoints)) $waypoints = [$waypoints];
+    if (!is_array($photos[0])) $photos = [$photos];
 
     foreach ($photos as $p) {
         $ph[] = $p;
     }
 
-    if (!is_array($waypoints[0])) $waypoints = [$waypoints];
-
     $returnJson = [
         'guide' => [
             'stats' => $data['stats'] ? json_decode($data['stats']) : null,
-            'waypoints' => $waypoints ?? null,
+            'waypoints' => empty($waypoints) ? null : $waypoints,
             'photos' => $ph
         ]
     ];
@@ -186,11 +190,12 @@ if ($method == 'waypoints') {
         }
     }
 
-    return $returnJson = ['type' => 'FeatureCollection', 'features' => $features];
+    $returnJson = ['type' => 'FeatureCollection', 'features' => $features];
 }
 
 if ($method == 'chart') {
     $chart = null;
+
     $query = executeQuery(
         'i',
         [$_REQUEST['id']],
@@ -220,39 +225,60 @@ if ($method == 'chart') {
     }
 
     $points = $xml->xpath('//*[local-name()="trkpt"]');
+
+    if (!$points || count($points) === 0) {
+        return $returnJson = [
+            'response' => 'error',
+            'code' => 2,
+            'msg' => 'The GPX data is invalid'
+        ];
+    }
+
     $chart = [];
-    $dist = 0;
+    $dist = 0.0;
+    $lastLat = (float) $points[0]['lat'];
+    $lastLon = (float) $points[0]['lon'];
 
     if (isset($points[0]->ele)) {
-        $chart[] = [
-            0,
-            (float) $points[0]->ele
-        ];
+        $ele = (float) $points[0]->ele;
+        if (is_finite($ele)) {
+            $chart[] = [0.0, round($ele, 1)];
+        }
     }
 
     for ($i = 1, $count = count($points); $i < $count; $i++) {
-        $dist += distance(
-            (float) $points[$i]['lat'],
-            (float) $points[$i]['lon'],
-            (float) $points[$i - 1]['lat'],
-            (float) $points[$i - 1]['lon']
-        );
+        $lat = (float) $points[$i]['lat'];
+        $lon = (float) $points[$i]['lon'];
 
-        if (!isset($points[$i]->ele) || !$dist) {
+        // If coordinates didn't change, skip math to avoid precision overflow in distance()
+        if ($lat === $lastLat && $lon === $lastLon) {
             continue;
         }
 
-        if ($dist <= ($chart[array_key_last($chart)][0] ?? -1)) {
+        $stepDist = distance($lat, $lon, $lastLat, $lastLon);
+
+        // Guard against distance() returning NAN or INF
+        if (is_finite($stepDist) && $stepDist > 0) {
+            $dist += $stepDist;
+        }
+
+        $lastLat = $lat;
+        $lastLon = $lon;
+
+        if (!isset($points[$i]->ele)) {
             continue;
         }
 
-        $chart[] = [
-            $dist,
-            (float) $points[$i]->ele
-        ];
+        $ele = (float) $points[$i]->ele;
+        $roundedDist = round($dist, 2);
+        $lastDist = $chart[array_key_last($chart)][0] ?? -1;
+
+        if (is_finite($roundedDist) && is_finite($ele) && $roundedDist > $lastDist) {
+            $chart[] = [$roundedDist, round($ele, 1)];
+        }
     }
 
-    return $returnJson = [
+    $returnJson = [
         'chart' => $chart
     ];
 }

@@ -6,7 +6,7 @@ $route = mysqli_real_escape_string($con2, $_POST['route']);
 $season = mysqli_real_escape_string($con2, $_POST['season']);
 $contrib = mysqli_real_escape_string($con2, $_POST['contributors']);
 $rawKeywords = explode(', ', $_POST['keywords']);
-$keywords = mysqli_real_escape_string($con2, json_encode($rawKeywords));
+$keywords = mysqli_real_escape_string($con2, json_encode($_POST['keywords'] == '' ? [] : $rawKeywords));
 
 $sqlQueries = '';
 $trailID = null;
@@ -16,6 +16,10 @@ $gpxDelta = 0;
 $public = $_POST['public'] ?? 0;
 $premium = $_POST['premium'] ?? 0;
 $type = mysqli_real_escape_string($con2, $_POST['type']);
+
+/*
+ * * * * * GENERAL META DATA ABOUT THE TRAIL * * * * * 
+ */
 
 // add a new trail guide
 if ($function == 'create') {
@@ -49,6 +53,10 @@ if ($function == 'create') {
 
 // add or update categories
 $sqlQueries .= "INSERT INTO categories (trail_id,term) VALUES('$trailID','$term') ON DUPLICATE KEY UPDATE term = '$term';";
+
+/*
+ * * * * * TRAIL MULTIMEDIA * * * * * 
+ */
 
 // add new multimedia
 $multimedia = $_FILES['multimedia'];
@@ -256,31 +264,46 @@ if (count($multimedia['name']) > 0) {
     }
 }
 
+/*
+ * * * * * TRAIL WAYPOINTS * * * * * 
+ */
+
 // update or add waypoints
 $waypoint = $_POST['waypoint'];
 
 if (!empty($waypoint['id'])) {
-    for ($i = 0; $i < count($waypoint['id']); $i++) {
+    $count = count($waypoint['id']);
+
+    for ($i = 0; $i < $count; $i++) {
         $id = $waypoint['id'][$i];
-        $delta = $waypoint['delta'][$i];
+
+        $deltaInput = $waypoint['delta'][$i] ?? null;
+        $delta = is_numeric($deltaInput) ? (int)$deltaInput : $i;
+
         $lat = $waypoint['lat'][$i];
         $lon = $waypoint['lon'][$i];
 
-        $icon = mysqli_real_escape_string($con2, $waypoint['icon'][$i]);
-        $name = mysqli_real_escape_string($con2, $waypoint['name'][$i]);
+        $icon = mysqli_real_escape_string($con2, $waypoint['icon'][$i] ?? 'info');
+        $name = mysqli_real_escape_string($con2, $waypoint['name'][$i] ?? '');
         $note = mysqli_real_escape_string($con2, $waypoint['note'][$i] ?: 'N/A');
 
         $elev = getWaypointElev($lat, $lon);
 
-        if (!$id && !$delta) {
-            $delta = count($waypoint['delta']) == 1 ? 0 : $i;
-
-            $sqlQueries .= "INSERT INTO waypoints (trail_id,name,lat,lon,elev,note,icon,delta) VALUES('$trailID','$name',$lat,$lon,$elev,'$note','$icon',$delta);";
+        // New waypoint insertion
+        if (!$id) {
+            $sqlQueries .= "INSERT INTO waypoints (trail_id, name, lat, lon, elev, note, icon, delta)
+            VALUES ($trailID, '$name', $lat, $lon, $elev, '$note', '$icon', $delta);";
         } else {
-            $sqlQueries .= "UPDATE waypoints SET name = '$name', lat = $lat, lon = $lon, elev = $elev, note = '$note', icon = '$icon' WHERE id = $id AND trail_id = $trailID AND delta = $delta;";
+            // Update existing waypoint, including the new delta order
+            $sqlQueries .= "UPDATE waypoints SET name = '$name', lat = $lat, lon = $lon, elev = $elev, note = '$note', icon = '$icon', delta = $delta
+            WHERE id = $id AND trail_id = $trailID;";
         }
     }
 }
+
+/*
+ * * * * * GPX UPLOADS AND PROCESSING * * * * * 
+ */
 
 // update existing gpx files
 $oldgpx = $_POST['oldgpx'] ?? [];
@@ -291,9 +314,10 @@ if (!empty($oldgpx)) {
 
         if (!$id) continue;
 
-        $caption = mysqli_real_escape_string($con2, $_POST['oldgpx']['caption'][$i]);
-        $display = $_POST['oldgpx']['display'][$i];
-        $filename = basename($_POST['oldgpx']['filename'][$i]);
+        $currentDelta = (int)($_POST['oldgpx']['delta'][$i] ?? 0);
+        $caption = mysqli_real_escape_string($con2, $_POST['oldgpx']['caption'][$i] ?? '');
+        $display = $_POST['oldgpx']['display'][$i] ?? 0;
+        $filename = basename($_POST['oldgpx']['filename'][$i] ?? '');
         $file = "/home/mapo/public_html/mapotrails.com/data/gpx/$filename";
 
         $sqlQueries .= parseGPX(
@@ -301,15 +325,14 @@ if (!empty($oldgpx)) {
             $trailID,
             $mode,
             $caption,
-            $gpxDelta,
+            $currentDelta,
             $display,
             $file,
             false
         );
 
-        $sqlQueries .= "UPDATE gpx SET mode = '$mode', caption = '$caption', delta = $gpxDelta, display = '$display' WHERE id = $id AND trail_id = $trailID;";
-        $gpxDelta++;
-        //}
+        $sqlQueries .= "UPDATE gpx SET mode = '$mode', caption = '$caption', delta = $currentDelta, display = '$display' WHERE id = $id AND trail_id = $trailID;";
+        $gpxDelta = max($gpxDelta, $currentDelta + 1);
     }
 }
 
@@ -318,8 +341,8 @@ $newGPX = $_POST['gpx'] ?? [];
 
 if (!empty($newGPX['mode'])) {
     $newGPX['mode'] = array_values($newGPX['mode']);
-    $newGPX['caption'] = array_values($newGPX['caption']);
-    $newGPX['display'] = array_values($newGPX['display']);
+    $newGPX['caption'] = array_values($newGPX['caption'] ?? []);
+    $newGPX['display'] = array_values($newGPX['display'] ?? []);
 
     foreach ($newGPX['mode'] as $i => $mode) {
         $delta = $gpxDelta + $i;
@@ -338,7 +361,11 @@ if (!empty($newGPX['mode'])) {
     }
 }
 
-////echo $sqlQueries;
+/*
+ * * * * * MySQL QUERYING * * * * * 
+ */
+
+////echo $sqlQueries;exit();
 $runSQL = mysqli_multi_query($con2, $sqlQueries) or die(mysqli_error($con2));
 if ($runSQL) {
     do {
@@ -352,7 +379,7 @@ if ($runSQL) {
     } while (mysqli_next_result($con2));
 }
 
-updateTileset();
+generateTrailGeoJSON($trailID, $title, $type, $premium, $public, $_POST['term'], $rawKeywords);
 
 if ($function == 'edit') {
     if ($wf) {
@@ -360,6 +387,8 @@ if ($function == 'edit') {
     } else {
         echo message(true, '<b>' . $_POST['title'] . '</b> has successfully been updated.');
     }
-} else {
-    header("Location: edit?id=$trailID&justadded=1");
+
+    return;
 }
+
+header("Location: edit?id=$trailID&justadded=1");

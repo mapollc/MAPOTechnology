@@ -51,7 +51,8 @@ function doUpload($i, $trailID, $mode, $caption, $delta, $display)
     $mode_sql = mysqli_real_escape_string($con2, $mode);
     $caption_sql = mysqli_real_escape_string($con2, $caption);
 
-    mysqli_query($con2, "INSERT INTO gpx (trail_id,filename,mode,caption,delta,display) VALUES($trailID, '$basename_sql', '$mode_sql', '$caption_sql', $delta, $display)");
+    mysqli_query($con2, "INSERT INTO gpx (trail_id,filename,mode,caption,delta,display)
+    VALUES($trailID, '$basename_sql', '$mode_sql', '$caption_sql', $delta, $display)");
     $gisID = mysqli_insert_id($con2);
 
     return parseGPX(
@@ -68,35 +69,23 @@ function doUpload($i, $trailID, $mode, $caption, $delta, $display)
 
 function parseGPX($gisID, $trailID, $mode, $caption, $delta, $display, $file, $update)
 {
-    global $_POST;
-    global $title;
     global $con2;
-    global $rawKeywords;
 
     $sqlQueries = '';
-    $prevElev = 0;
 
     // Load the GPX file
     $xml = simplexml_load_file($file, 'SimpleXMLElement', LIBXML_NOCDATA);
 
-    if ($xml === false) {
-        return '';
-    }
+    if ($xml === false) return '';
 
     // Collect all track points
     $point = $xml->xpath('//*[local-name()="trkpt"]');
 
-    if (!$point) {
-        return '';
-    }
+    if (!$point) return '';
 
-    $count = count($point); 
+    $count = count($point);
+    if ($count === 0) return '';
 
-    if ($count === 0) {
-        return '';
-    }
-
-    $coords = [];
     $lat = [];
     $lon = [];
     $elevations = [];
@@ -112,6 +101,7 @@ function parseGPX($gisID, $trailID, $mode, $caption, $delta, $display, $file, $u
     ];
 
     $dist = $gain = $loss = 0;
+    $prevElev = (float)$point[0]->ele * 3.281;
 
     for ($x = 0; $x < $count; $x++) {
         $elev = (float) $point[$x]->ele * 3.281;
@@ -119,10 +109,6 @@ function parseGPX($gisID, $trailID, $mode, $caption, $delta, $display, $file, $u
         $elevations[] = $elev;
         $lat[] = (float) $point[$x]['lat'];
         $lon[] = (float) $point[$x]['lon'];
-        $coords[] = [
-            (float) $point[$x]['lon'],
-            (float) $point[$x]['lat']
-        ];
 
         if ($x > 0) {
             $j = $x - 1;
@@ -158,14 +144,8 @@ function parseGPX($gisID, $trailID, $mode, $caption, $delta, $display, $file, $u
             'end' => $end
         ],
         'bounds' => [
-            'sw' => [
-                $lon ? min($lon) : 0,
-                $lat ? min($lat) : 0
-            ],
-            'ne' => [
-                $lon ? max($lon) : 0,
-                $lat ? max($lat) : 0
-            ]
+            'sw' => [$lon ? min($lon) : 0, $lat ? min($lat) : 0],
+            'ne' => [$lon ? max($lon) : 0, $lat ? max($lat) : 0]
         ],
         'elevation' => [
             'min' => $elevations ? min($elevations) : 0,
@@ -185,42 +165,11 @@ function parseGPX($gisID, $trailID, $mode, $caption, $delta, $display, $file, $u
 
     // save the initial trail stats
     if ($delta == 0) {
+        $time = time();
         $sstats = mysqli_real_escape_string($con2, json_encode($stats));
 
-        $sqlQueries .= "INSERT INTO stats (trail_id,stats) VALUES($trailID,'$sstats') ON DUPLICATE KEY UPDATE stats = '$sstats';";
+        $sqlQueries .= "INSERT INTO stats (trail_id,stats,calculated) VALUES($trailID,'$sstats',$time) ON DUPLICATE KEY UPDATE stats = '$sstats', calculated = $time;";
     }
-
-    $trailType = $_POST['type'] ?? 'trail';
-    $mbprop = [
-        'gis_id' => (int) $gisID,
-        'trail_id' => (int) $trailID,
-        'delta' => (int) $delta,
-        'title' => $title,
-        'type' => $trailType,
-        'mode' => $mode,
-        'term' => $_POST['term'] ?? '',
-        'keywords' => !$rawKeywords ? [] : $rawKeywords,
-        'color' => trailColor($mode),
-        'caption' => $caption,
-        'url' => guideUrl($title, $trailType, $trailID),
-        'stats' => $stats,
-        'display' => (int) $display,
-        'public' => $_POST['public'] ?? 0,
-        'premium' => $_POST['premium'] ?? 0
-    ];
-
-    // send geojson feature to mapbox
-    sendToMapbox(
-        $gisID,
-        [
-            'type' => 'Feature',
-            'geometry' => [
-                'type' => 'LineString',
-                'coordinates' => $coords
-            ],
-            'properties' => $mbprop
-        ]
-    );
 
     return $sqlQueries;
 }

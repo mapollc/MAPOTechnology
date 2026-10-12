@@ -68,37 +68,39 @@ ob_start();
     </noscript>
     <link rel="stylesheet" href="//www.mapotrails.com/src/css/mapotrails.css" />
     <? if ($includeMaplibre) { ?>
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/maplibre-gl@6.1.0/dist/maplibre-gl.min.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/maplibre-gl@6.11.2/dist/maplibre-gl.min.css">
     <? } ?>
     <script src="//kit.fontawesome.com/a107124392.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
 
-    <header class="navbar">
-        <div class="logo">
-            <a href="<?= $domain ?>">
-                <img src="//mapotechnology.com/assets/images/mapotrails_logo.png" class="logo">
-            </a>
-        </div>
+    <header>
+        <div class="navbar">
+            <div class="logo">
+                <a href="<?= $domain ?>">
+                    <img src="//mapotechnology.com/assets/images/mapotrails_logo.png" class="logo">
+                </a>
+            </div>
 
-        <ul class="nav-links<?= isset($_SESSION['uid']) ? ' auth' : '' ?>">
-            <li><a href="<?= $domain ?>about">About</a></li>
-            <li><a href="<?= $domain ?>guides">Guides</a></li>
-            <li><a href="<?= $domain ?>">Trail Map</a></li>
-            <? if (!$_SESSION['uid']) { ?>
-                <li><a class="btn btn-orange sharp" href="//auth.mapotechnology.com/login?service=mapotrails&next=<?= urlencode('//' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']) ?>">Login</a></li>
-            <? } else { ?>
-                <li><a class="btn btn-orange sharp" href="//mapotechnology.com/account/home?ref=mapotrails">Account</a></li>
-            <? } ?>
-        </ul>
+            <ul class="nav-links<?= isset($_SESSION['uid']) ? ' auth' : '' ?>">
+                <li><a href="<?= $domain ?>about">About</a></li>
+                <li><a href="<?= $domain ?>guides">Guides</a></li>
+                <li><a href="<?= $domain ?>">Trail Map</a></li>
+                <? if (!$_SESSION['uid']) { ?>
+                    <li><a class="btn btn-orange sharp" href="//auth.mapotechnology.com/login?service=mapotrails&next=<?= urlencode('//' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']) ?>">Login</a></li>
+                <? } else { ?>
+                    <li><a class="btn btn-orange sharp" href="//mapotechnology.com/account/home?ref=mapotrails">Account</a></li>
+                <? } ?>
+            </ul>
 
-        <div class="header-controls">
-            <button class="mobile-nav-toggle" aria-label="Toggle navigation">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </button>
+            <div class="header-controls">
+                <button class="mobile-nav-toggle" aria-label="Toggle navigation">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
         </div>
     </header>
 <?

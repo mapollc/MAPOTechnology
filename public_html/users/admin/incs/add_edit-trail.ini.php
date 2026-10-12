@@ -71,24 +71,43 @@ if (isset($_POST['action'])) {
 $row = $waypointsSQL = $gpxSQL = $media = null;
 $kw = [];
 $pp = $permission->trails()->edit();
-//$months = [1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Aug', 9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec'];
+$months = [1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Aug', 9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec'];
+$longMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 if (
     $function == 'create' && !$permission->trails()->add() ||
-    $function == 'edit' && (!$pp->all() && !$pp->own() ||
-        !$pp->all() && $pp->own() && $row['author'] != $user['fullName'])
+    $function == 'edit' && (!$pp->all() && !$pp->own() || !$pp->all() && $pp->own() && $row['author'] != $user['fullName'])
 ) {
     echo invalidPermissions();
     return;
 }
 
+$noOfWay = 0;
+$noOfMedia = 0;
+
 if ($function == 'edit') {
     $trailID = $_GET['id'];
 
-    $row = mysqli_fetch_assoc(mysqli_query($con2, "SELECT type, created, updated, author, title, route, keywords, season, contributors, term, public, premium FROM trails LEFT JOIN categories ON trail_id = trails.id WHERE trails.id = $trailID"));
-    $waypointsSQL = mysqli_query($con2, "SELECT * FROM waypoints WHERE trail_id = $trailID ORDER BY delta ASC");
-    $media = mysqli_query($con2, "SELECT * FROM media WHERE trail_id = $trailID ORDER BY delta ASC");
-    $gpxSQL = mysqli_query($con2, "SELECT * FROM gpx WHERE trail_id = $trailID ORDER BY delta ASC");
+    $row = executeQuery(
+        'i',
+        [$trailID],
+        "SELECT t.id, type, created, updated, author, title, route, keywords, season, contributors, term, public, premium
+        FROM trails t
+        LEFT JOIN categories c ON c.trail_id = t.id
+        WHERE t.id = ?",
+        true
+    );
+
+    if (!$row) {
+        echo pageNotFound();
+        return;
+    }
+
+    $waypointsSQL = mysqli_query($con2, "SELECT * FROM waypoints WHERE trail_id = $row[id] ORDER BY delta ASC");
+    $media = mysqli_query($con2, "SELECT * FROM media WHERE trail_id = $row[id] ORDER BY delta ASC");
+    $gpxSQL = mysqli_query($con2, "SELECT * FROM gpx WHERE trail_id = $row[id] ORDER BY delta ASC");
+    $noOfWay = mysqli_num_rows($waypointsSQL);
+    $noOfMedia = mysqli_num_rows($media);
 
     // convert json to array of categories
     $terms = json_decode($row['term']);
@@ -113,14 +132,14 @@ if ($function == 'edit') {
 
     <div class="row">
         <div class="col">
-            <div class="card">
+            <fieldset class="card">
                 <h1><?= $function == 'create' ? 'Add New' : 'Edit' ?> Trail<?= $function == 'edit' ? ": {$row['title']}" : '' ?></h1>
                 <? if ($function == 'edit') { ?>
                     <span class="help" style="margin:-1em 0 1em 0"><?= $row['updated'] > $row['created'] ? 'Updated: ' . date('D, M j, Y g:i A', $row['updated']) . ' &middot; ' : '' ?>Created: <?= date('D, M j, Y g:i A', $row['created']) ?></span>
                 <? } ?>
 
                 <label>Title</label>
-                <input type="text" name="title" class="input" required style="display:inline-block;max-width:600px" placeholder="Trail or snow guide title..." value="<?= $row['title'] ?>">
+                <input type="text" name="title" class="input" style="display:inline-block;max-width:600px" placeholder="Trail or snow guide title..." value="<?= $row['title'] ?>" required>
 
                 <? if ($function == 'edit') { ?>
                     <div style="display:inline-block">
@@ -131,31 +150,31 @@ if ($function == 'edit') {
                 <label>Author</label>
                 <input type="text" name="author" class="input" value="<?= $function == 'create' ? $_SESSION['name'] : $row['author'] ?>" readonly<?= $function == 'edit' ? ' disabled' : '' ?>>
 
-                <div class="row" style="margin-top:1em!important">
-                    <div class="col w17">
+                <div style="display:inline-flex;margin-top:1em;width:100%;max-width:500px;column-gap:2rem;row-gap:1rem;align-items:flex-start;flex-wrap:wrap">
+                    <div style="flex: 1 1 150px">
                         <label>Trail Type</label>
-                        <select class="input" style="width:150px" name="type">
+                        <select class="input" style="max-width:150px" name="type">
                             <option<?= $row['type'] == 'trail' ? ' selected' : '' ?> value="trail">Trail</option>
                                 <option<?= $row['type'] == 'snow' ? ' selected' : '' ?> value="snow">Snow</option>
                         </select>
                     </div>
-                    <div class="col w17">
+                    <div style="flex: 1 1 100px">
                         <label>Published</label>
-                        <select class="input" style="width:100px" name="public">
+                        <select class="input" style="max-width:100px" name="public">
                             <option <?= $row['public'] == 1 ? 'selected ' : '' ?>value="1">Yes</option>
                             <option <?= $row['public'] != 1 ? 'selected ' : '' ?>value="0">No</option>
                         </select>
                     </div>
-                    <div class="col w17">
+                    <div style="flex: 1 1 100px">
                         <label>Premium Guide</label>
-                        <select class="input" style="width:100px" name="premium">
+                        <select class="input" style="max-width:100px" name="premium">
                             <option <?= $row['premium'] == 1 ? 'selected ' : '' ?>value="1">Yes</option>
                             <option <?= $row['premium'] != 1 ? 'selected ' : '' ?>value="0">No</option>
                         </select>
                     </div>
                 </div>
 
-                <label>Activity</label>
+                <label>Activities</label>
                 <div class="mt-act">
                     <? foreach ($activities as $a) { ?>
                         <div class="checkbox">
@@ -169,34 +188,40 @@ if ($function == 'edit') {
                 <textarea name="route" id="route" class="input" style="line-height:1.3;max-width:1200px;height:300px" placeholder="Description of the trail..." data-wysiwyg><?= $route ?></textarea>
 
                 <label>Season</label>
-                <input type="text" name="season" class="input" placeholder="Season" value="<?= $row['season'] ?>">
+                <!--<input type="text" name="season" class="input" placeholder="Season" value="<?= $row['season'] ?>">-->
 
-                <?/*<div class="month-selector">
+                <div class="month-selector">
+                    <input type="checkbox" id="allmos" <?= count(json_decode($row['season'])) === 12 ? ' checked' : '' ?>>
+                    <label for="allmos">All Year</label>
+
                     <? foreach ($months as $value => $month) { ?>
-                        <input type="checkbox" id="month-<?= $value ?>" name="months[]" value="<?= $value ?>">
-                        <label for="month-<?= $value ?>"><?= $month ?></label>
+                        <input type="checkbox" id="month-<?= $value ?>" name="months[]" title="<?= $longMonths[$value - 1] ?>" value="<?= $value ?>" <?= in_array($value, json_decode($row['season'])) ? ' checked' : '' ?>>
+                        <label for="month-<?= $value ?>" title="<?= $longMonths[$value - 1] ?>"><?= $month ?></label>
                     <? } ?>
-                </div>*/ ?>
+                </div>
 
                 <label>Contributors</label>
                 <input type="text" name="contributors" class="input" placeholder="Contributors" value="<?= $row['contributors'] ?>">
 
                 <label>Keywords</label>
-                <input type="text" name="keywords" class="input" autocomplete="off" placeholder="Keywords (separated by commas)" value="<?= implode(', ', $kw) ?>">
-                <div id="kw-results"></div>
-            </div>
+                <div class="search-result-wrapper">
+                    <input type="text" name="keywords" class="input" autocomplete="off" placeholder="Keywords (separated by commas)" value="<?= implode(', ', $kw) ?>">
+                    <div id="kw-results" class="search-results"></div>
+                </div>
+            </fieldset>
 
-            <div class="card">
+            <fieldset class="card">
                 <h2>GPX Files</h2>
                 <ul id="files">
                     <? if ($gpxSQL) {
                         while ($gpx = mysqli_fetch_assoc($gpxSQL)) { ?>
-                            <li>
+                            <li draggable="true">
                                 <input type="hidden" name="oldgpx[id][<?= $gpx['delta'] ?>]" value="<?= $gpx['id'] ?>">
                                 <input type="hidden" name="oldgpx[delta][<?= $gpx['delta'] ?>]" value="<?= $gpx['delta'] ?>">
                                 <input type="hidden" name="oldgpx[filename][<?= $gpx['delta'] ?>]" value="<?= $gpx['filename'] ?>">
 
-                                <div class="wrap">
+                                <div class="wrap" data-delta="<?= $gpx['delta'] ?>">
+                                    <i class="fas fa-grip-vertical reorder"></i>
                                     <div class="file">
                                         <label style="margin-bottom:5px">Map Data File</label>
                                         <a target="blank" style="font-size:15px" href="https://cdn.mapotrails.com/gpx/<?= $gpx['filename'] ?>"><?= $gpx['filename'] ?></a>
@@ -209,10 +234,10 @@ if ($function == 'edit') {
 
                                     <div class="column">
                                         <label style="margin-bottom:5px">Type</label>
-                                        <select name="oldgpx[mode][<?= $gpx['delta'] ?>]" class="input" style="margin-top:0;max-width:175px">
+                                        <select name="oldgpx[mode][<?= $gpx['delta'] ?>]" class="input" style="margin-top:0;max-width:175px" required>
                                             <option value="">- Choose Mode -</option>
                                             <? foreach ($gpxOptions as $o) {
-                                                echo '<option ' . ($o == $gpx['mode'] ? 'selected ' : '') . 'value="' . $o . '">' . $o . '</option>';
+                                                echo "<option " . ($o == $gpx['mode'] ? 'selected ' : '') . "value=\"$o\">$o</option>";
                                             } ?>
                                         </select>
                                     </div>
@@ -221,31 +246,37 @@ if ($function == 'edit') {
                                         <label style="margin-bottom:1em">Display</label>
                                         <div>
                                             <div class="radio">
-                                                <input type="radio" name="oldgpx[display][<?= $gpx['delta'] ?>]" value="1" <?= ($gpx['display'] == 1 ? ' checked' : '') ?>><label>Yes</label>
+                                                <input type="radio" name="oldgpx[display][<?= $gpx['delta'] ?>]" value="1" <?= $gpx['display'] == 1 ? ' checked' : '' ?> required><label>Yes</label>
                                             </div>
                                             <div class="radio">
-                                                <input type="radio" name="oldgpx[display][<?= $gpx['delta'] ?>]" value="0" <?= ($gpx['display'] == 0 ? ' checked' : '') ?>><label>No</label>
+                                                <input type="radio" name="oldgpx[display][<?= $gpx['delta'] ?>]" value="0" <?= $gpx['display'] == 0 ? ' checked' : '' ?> required><label>No</label>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="column">
-                                        <a class="btn btn-sm btn-black" style="display:block;margin-top:15px;min-width:unset" href="#" id="deletegpx" data-tid="<?= $_GET['id'] ?>" data-delta="<?= $gpx['delta'] ?>" data-filename="<?= $gpx['filename'] ?>" data-id="<?= $gpx['id'] ?>" onclick="return false">Delete</a>
+                                        <button class="trails-btn delete"
+                                            title="Delete this GPX file"
+                                            data-action="deletegpx"
+                                            data-tid="<?= $_GET['id'] ?>"
+                                            data-delta="<?= $gpx['delta'] ?>"
+                                            data-filename="<?= $gpx['filename'] ?>"
+                                            data-id="<?= $gpx['id'] ?>">Delete</button>
                                     </div>
                                 </div>
                             </li>
                     <? }
                     } ?>
                 </ul>
-                <a class="btn btn-sm btn-blue" style="display:block;margin:10px 0 25px 0" href="#" id="addgpx" onclick="return false">Add GPX File</a>
-            </div>
+                <a class="btn btn-sm btn-orange" style="display:block;margin:10px 0 25px 0" href="#" id="addgpx" onclick="return false">Add GPX File</a>
+            </fieldset>
 
-            <div class="card">
+            <fieldset class="card">
                 <h2>Multimedia</h2>
                 <label style="margin-top:10px">Upload new multimedia</label>
                 <input type="file" name="multimedia[]" class="input" multiple>
 
-                <? if ($function == 'edit') {
+                <? if ($function == 'edit' && $noOfMedia > 0) {
                     echo '<div class="sortable multimedia">';
 
                     while ($ph = mysqli_fetch_assoc($media)) {
@@ -262,78 +293,87 @@ if ($function == 'edit') {
                             <? }
 
                             if ($isPhoto) { ?>
-                                <span style="display:block;font-size:12px;color:#888;margin-top:3px">
+                                <span class="meta">
                                     File Size: <?= $data['filesize'] ? round($data['filesize'] * 0.000001, 1) . ' MB' : '~' ?><br>
-                                    Dimensions: <?= $data['width'] ? $data['width'] . '/' . $data['height'] . ' px' : 'Unknown' ?><br>
+                                    Dimensions: <?= $data['width'] ? number_format($data['width']) . '/' . number_format($data['height']) . ' px' : 'Unknown' ?><br>
                                     Geolocated: <?= $data['coordinates'] ? '<b style="font-weight:500;color:green">Yes</b>' : 'No' ?>
                                 </span>
                             <? } ?>
 
                             <input type="hidden" name="media[id][]" value="<?= $ph['id'] ?>">
-                            <input type="text" name="media[caption][]" class="input" style="max-width:350px" placeholder="<?= $isPhoto ? 'Photo' : 'Video' ?> caption..." value="<?= $ph['title'] ?>">
-                            <a class="btn btn-sm btn-red" style="display:block;margin:0.5em auto 0 auto!important;padding:4px 6px;min-width:unset;font-size:13px;font-weight:400" href="#" id="deletemedia" data-filename="<?= $ph['file'] ?>" data-id="<?= $ph['id'] ?>" onclick="return false">Delete</a>
+                            <input type="text" name="media[caption][]" class="input" style="margin-top:0.5rem;font-size:14px" placeholder="<?= $isPhoto ? 'Photo' : 'Video' ?> caption..." value="<?= $ph['title'] ?>">
+                            <button class="trails-btn delete"
+                                style="margin:0.5rem auto 0 auto"
+                                title="Delete this multimedia"
+                                data-action="deletemedia"
+                                data-filename="<?= $ph['file'] ?>"
+                                data-id="<?= $ph['id'] ?>">Delete</button>
                         </div>
                 <? }
                     echo '</div>';
                 }
                 ?>
-            </div>
+            </fieldset>
 
-            <div class="card">
+            <fieldset class="card">
                 <h2>Waypoints</h2>
 
                 <?/*if($_SESSION['uid'] == 1) {
                     echo '<div id="waypoint-map" style="width:100%;height:400px"></div>';
                     } */ ?>
 
-                <ul id="waypoints">
-                    <? if ($waypointsSQL) {
-                        while ($way = mysqli_fetch_assoc($waypointsSQL)) {
-                    ?>
-                            <li>
-                                <input type="hidden" name="waypoint[id][]" value="<?= $way['id'] ?>">
-                                <input type="hidden" name="waypoint[delta][]" value="<?= $way['delta'] ?>">
-                                <div class="wrap">
-                                    <div class="column">
-                                        <label style="margin-bottom:5px">Name</label>
-                                        <input type="text" name="waypoint[name][]" class="input" placeholder="Waypoint Name" value="<?= $way['name'] ?>">
-                                    </div>
-                                    <div class="column">
-                                        <label style="margin-bottom:5px">Notes</label>
-                                        <input type="text" name="waypoint[note][]" class="input" placeholder="Waypoint Notes" value="<?= $way['note'] ?>">
-                                    </div>
-                                    <div class="column">
-                                        <label style="margin-bottom:5px">Icon</label>
-                                        <select name="waypoint[icon][]" class="input" style="max-width:165px;margin:0">
-                                            <option>- Icon -</option>
-                                            <? foreach ($icons as $k => $v) { ?>
-                                                <option <?= ($k == $way['icon'] ? 'selected ' : '') ?>value="<?= $k ?>"><?= $v ?></option>
-                                            <? } ?>
-                                        </select>
-                                    </div>
-                                    <div class="column">
-                                        <label style="margin-bottom:5px">Latitude</label>
-                                        <input type="text" name="waypoint[lat][]" class="input" style="max-width:150px" placeholder="45.01234" value="<?= $way['lat'] ?>">
-                                    </div>
-                                    <div class="column">
-                                        <label style="margin-bottom:5px">Longitude</label>
-                                        <input type="text" name="waypoint[lon][]" class="input" style="max-width:150px" placeholder="-118.123456" value="<?= $way['lon'] ?>">
-                                    </div>
-                                    <div class="column">
-                                        <a class="btn btn-sm btn-red" style="display:block;margin-top:15px;min-width:unset" href="#" id="deletewaypoint" data-id="<?= $way['id'] ?>" onclick="return false">Delete</a>
-                                    </div>
+                <? if ($noOfWay === 0) {
+                    echo '<p class="message info" id="noWayMsg">No waypoints are listed for this guide.</p>';
+                } else {
+                    echo '<ul id="waypoints">';
+
+                    while ($way = mysqli_fetch_assoc($waypointsSQL)) { ?>
+                        <li draggable="true">
+                            <input type="hidden" name="waypoint[id][]" value="<?= $way['id'] ?>">
+                            <input type="hidden" name="waypoint[delta][]" value="<?= $way['delta'] ?>">
+
+                            <div class="wrap" data-delta="<?= $way['delta'] ?>">
+                                <i class="fas fa-grip-vertical reorder"></i>
+
+                                <div class="column">
+                                    <label style="margin-bottom:5px">Name</label>
+                                    <input type="text" name="waypoint[name][]" class="input" placeholder="Waypoint Name" value="<?= $way['name'] ?>" required>
                                 </div>
-                            </li>
-                    <? }
-                    } ?>
-                </ul>
+                                <div class="column">
+                                    <label style="margin-bottom:5px">Notes</label>
+                                    <input type="text" name="waypoint[note][]" class="input" placeholder="Waypoint Notes" value="<?= $way['note'] ?>">
+                                </div>
+                                <div class="column">
+                                    <label style="margin-bottom:5px">Icon</label>
+                                    <select name="waypoint[icon][]" class="input" style="max-width:165px;margin:0" required>
+                                        <option>- Icon -</option>
+                                        <? foreach ($icons as $k => $v) { ?>
+                                            <option <?= ($k == $way['icon'] ? 'selected ' : '') ?>value="<?= $k ?>"><?= $v ?></option>
+                                        <? } ?>
+                                    </select>
+                                </div>
+                                <div class="column">
+                                    <label style="margin-bottom:5px">Latitude</label>
+                                    <input type="text" name="waypoint[lat][]" class="input" style="max-width:150px" placeholder="45.01234" value="<?= $way['lat'] ?>" required>
+                                </div>
+                                <div class="column">
+                                    <label style="margin-bottom:5px">Longitude</label>
+                                    <input type="text" name="waypoint[lon][]" class="input" style="max-width:150px" placeholder="-118.123456" value="<?= $way['lon'] ?>" required>
+                                </div>
+                                <div class="column">
+                                    <button class="trails-btn delete"
+                                        title="Delete this waypoint"
+                                        data-action="deletewaypoint"
+                                        data-id="<?= $way['id'] ?>">Delete</button>
+                                </div>
+                            </div>
+                        </li>
+                    <? } ?>
+                    </ul>
+                <? } ?>
 
-                <a class="btn btn-sm btn-blue" style="display:block;margin:10px 0 25px 0" href="#" id="addwaypoint" onclick="return false">Add Waypoint</a>
-
-                <script>
-                    const keywords = <?= json_encode($kw) ?>;
-                </script>
-            </div>
+                <a class="btn btn-sm btn-orange" style="display:block;margin:10px 0 25px 0" href="#" id="addwaypoint" onclick="return false">Add Waypoint</a>
+            </fieldset>
 
             <div class="btn-group" style="margin-top:10px">
                 <input type="submit" name="action" class="btn btn-green" value="Save Changes">

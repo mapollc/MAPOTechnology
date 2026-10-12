@@ -6,6 +6,9 @@ if (isset($_POST['verify_delete']) && $_POST['verify_delete'] == 1) {
     $result2 = mysqli_query($con2, "SELECT id, filename FROM gpx WHERE trail_id = $tid");
     $base = "/home/mapo/public_html/mapotrails.com/data";
 
+    // delete the geojson file of all GPX files merged together into this 1 trail ID
+    if (file_exists("$base/geojson/$tid.geojson")) unlink("$base/geojson/$tid.geojson");
+
     while ($ph = mysqli_fetch_assoc($result)) {
         if (file_exists("$base/photos/{$ph['file']}")) unlink("$base/photos/{$ph['file']}");
         if (file_exists("$base/photos/large/{$ph['file']}")) unlink("$base/photos/large/{$ph['file']}");
@@ -13,7 +16,7 @@ if (isset($_POST['verify_delete']) && $_POST['verify_delete'] == 1) {
     }
 
     while ($g = mysqli_fetch_assoc($result2)) {
-        sendToMapbox($g['id'], null, false);
+        //sendToMapbox($g['id'], null, false);
         
         if (file_exists("$base/gpx/{$g['filename']}")) unlink("$base/gpx/{$g['filename']}");
     }

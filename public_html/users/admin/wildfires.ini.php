@@ -232,13 +232,25 @@ if ($_GET['cache'] == 'clear') {
             <?
             if ($function == 'stats') {
                 include_once 'incs/fire-stats.ini.php';
-            } else if ($function == 'create' || $function == 'modify') {
+                return;
+            }
+
+            if ($function == 'create' || $function == 'modify') {
                 include_once 'incs/custom_wildfire.ini.php';
-            } else if ($function == 'edit') {
+                return;
+            }
+
+            if ($function == 'edit') {
                 include_once 'incs/edit-wildfire.ini.php';
-            } else if ($function == 'log') {
+                return;
+            }
+
+            if ($function == 'log') {
                 include_once 'incs/log-wildfire.ini.php';
-            } else if ($function == 'controls') { ?>
+                return;
+            }
+
+            if ($function == 'controls') { ?>
                 <h1>Wildfire Management &mdash; Controls</h1>
 
                 <div class="btn-group">
@@ -249,9 +261,11 @@ if ($_GET['cache'] == 'clear') {
                     <a class="btn btn-black" href="<?= $linkURL ?>admin/wildfires/stats">Statistics</a>
                     <a class="btn btn-gray btn-sm" href="#" onclick="history.go(-1);return false">Go Back</a>
                 </div>
-            <? } else {
-                include_once 'incs/view-wildfire.ini.php';
-            } ?>
+            <? return;
+            }
+            
+            include_once 'incs/view-wildfire.ini.php';
+            ?>
         </div>
     </div>
 </div>

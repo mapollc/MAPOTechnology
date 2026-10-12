@@ -76,7 +76,7 @@ $mode = $_REQUEST['mode'];
 if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['android'] != 1 && isset($_REQUEST['key'])) {
     $id = $_REQUEST['id'];
     $out = null;
-    $mapotrails = ['userUploads', 'waypoint', 'gpx', 'media', 'favtrails'];
+    $mapotrails = ['userUploads', 'waypoint', 'gpx', 'media', 'getTrails', 'favtrails'];
 
     if (in_array($callback, $mapotrails)) {
         $con2 = mysqli_connect('localhost', 'mapo_main', 'smQeP]-xjj+Uw$s_', 'mapo_trails');
@@ -89,7 +89,7 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
         }
 
         if ($mode == 'keywords') {
-            $con2 = mapoTrailsDB();
+            //$con2 = mapoTrailsDB();
             $terms = [];
 
             $result = mysqli_query($con2, "SELECT keywords FROM trails");
@@ -102,7 +102,11 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
 
             $out = array_values(array_unique($terms));
         }
-    } else if ($callback == 'invoices') {
+
+        return;
+    }
+    
+    if ($callback == 'invoices') {
         $query = executeQuery('s', [$_SESSION['email']], "SELECT cid FROM billing WHERE email = ? ORDER BY status ASC, created DESC LIMIT 1");
 
         if (count($query) == 0) {
@@ -122,24 +126,38 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
                 $out = null;
             }
         }
-    } else if ($callback == 'receipt') {
+
+        return;
+    }
+    
+    if ($callback == 'receipt') {
         include_once '/home/mapo/stripe/init.php';
         \Stripe\Stripe::setApiKey($stripeSecretKey);
 
-        $out = \Stripe\Charge::retrieve($_REQUEST['charge'], []);
-    } else if ($callback == 'userUploads') {
+        return $out = \Stripe\Charge::retrieve($_REQUEST['charge'], []);
+    } 
+    
+    if ($callback == 'userUploads') {
         $uid = getUserID();
         $sql = mysqli_query($con2, "SELECT u.* FROM userMapUploads AS u WHERE uid = $uid ORDER BY u.modified DESC");
 
         while ($row = mysqli_fetch_assoc($sql)) {
             $out[] = $row;
         }
-    } else if ($callback == 'waypoint') {
+
+        return;
+    }
+    
+    if ($callback == 'waypoint') {
         if ($mode == 'delete') {
             mysqli_query($con2, "DELETE FROM waypoints WHERE id = '$id'");
             $out = 'success';
         }
-    } else if ($callback == 'gpx') {
+
+        return;
+    }
+    
+    if ($callback == 'gpx') {
         if ($mode == 'delete') {
             mysqli_query($con2, "DELETE FROM gpx WHERE id = '$id'");
 
@@ -155,7 +173,11 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
 
             $out = 'success';
         }
-    } else if ($callback == 'media') {
+
+        return;
+    } 
+    
+    if ($callback == 'media') {
         if ($mode == 'delete') {
             mysqli_query($con2, "DELETE FROM media WHERE id = '$id'");
             unlink('/home/mapo/public_html/mapotrails.com/data/photos/' . $_REQUEST['filename']);
@@ -163,7 +185,11 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
             unlink('/home/mapo/public_html/mapotrails.com/data/photos/thumbnail/' . $_REQUEST['filename']);
             $out = 'success';
         }
-    } else if ($callback == 'favFires') {
+
+        return;
+    } 
+    
+    if ($callback == 'favFires') {
         $uid = getUserID();
         $sql = "SELECT incidentId, state, name, date, geo, type, acres, t.wfid, time, status FROM track_fires AS t LEFT JOIN wildfires AS w ON w.wfid = t.wfid WHERE uid = $uid";
 
@@ -183,8 +209,10 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
             ];
         }
 
-        $out = ['fires' => $f];
-    } else if ($callback == 'favtrails') {
+        return $out = ['fires' => $f];
+    }
+    
+    if ($callback == 'favtrails') {
         $uid = getUserID();
 
         if ($_REQUEST['method'] == 'remove') {
@@ -205,7 +233,11 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
 
             $out = $trails;
         }
-    } else if ($callback == 'updateUser') {
+
+        return;
+    }
+    
+    if ($callback == 'updateUser') {
         $row = mysqli_fetch_assoc(mysqli_query($con, "SELECT password, phone FROM users WHERE uid = '$_REQUEST[uid]'"));
 
         if ($mode == 'location') {
@@ -247,14 +279,22 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
             mysqli_query($con, "UPDATE users SET $fields WHERE uid = '$_REQUEST[uid]'");
             $out = 'success';
         }
-    } else if ($callback == 'wildfires') {
+
+        return;
+    }
+    
+    if ($callback == 'wildfires') {
         if ($mode == 'hide') {
             mysqli_query($con, "UPDATE wildfires SET display = '0' WHERE wfid = '$_REQUEST[id]'");
             logEvent('A wildfire was hidden from displaying (wfid #' . $_REQUEST['wfid'] . ')');
 
             $out = 'success';
         }
-    } else if ($callback == 'getFires') {
+
+        return;
+    } 
+    
+    if ($callback == 'getFires') {
         if (isset($_REQUEST['start']) && isset($_REQUEST['end'])) {
             $start = strtotime($_REQUEST['start'] . ' 00:00:00');
             $end = strtotime($_REQUEST['end'] . ' 23:59:59');
@@ -304,7 +344,35 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
         }
 
         $out['count'] = intval($totalRows ?? 0);
-    } else if ($callback == 'jurisdictions') {
+        return;
+    }
+
+    if ($callback == 'getTrails') {
+        $where = '';
+
+        $where .= isset($_REQUEST['q']) && $_REQUEST['q'] != '' ? '(title LIKE \'%' . $_REQUEST['q'] . '%\' OR route LIKE \'%' . $_REQUEST['q'] . '%\')' : '';
+        
+        $rowsPerPage = 100;
+        $currentPage = $_REQUEST['results'] ?? 1;
+        $offset = ($currentPage - 1) * $rowsPerPage;
+
+        
+        $query = "SELECT t.id, type, caption, title, author, premium, public, created, updated FROM trails WHERE $where ORDER BY " . ($_REQUEST['sort'] ?: 'updated') . ' ' . ($_REQUEST['order'] ?: 'DESC');
+        echo $query;
+        $totalRows = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) AS totalRows FROM wildfires WHERE $where"))['totalRows'];
+        $query .= " LIMIT $offset, $rowsPerPage";
+
+        $sql = mysqli_query($con2, $query);
+
+        while ($row = mysqli_fetch_assoc($sql)) {
+            $out['trails'][] = $row;
+        }
+
+        $out['count'] = intval($totalRows ?? 0);
+        return;
+    }
+    
+    if ($callback == 'jurisdictions') {
         $query = $_REQUEST['q'];
         $sql = mysqli_query($con, "SELECT agency, unit, area FROM dispatch_zones WHERE unit LIKE '%$query%' OR agency LIKE '%$query%' OR area LIKE '%$query%' ORDER BY unit ASC LIMIT 25");
 
@@ -312,8 +380,10 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
             $results[] = $row;
         }
 
-        $out = ['results' => $results];
-    } else if ($callback == 'download') {
+        return $out = ['results' => $results];
+    }
+    
+    if ($callback == 'download') {
         $con2 = mysqli_connect('localhost', 'mapo_main', 'smQeP]-xjj+Uw$s_', 'mapo_trails');
         $user_agent = Parser::create();
 
@@ -388,10 +458,14 @@ if (str_contains($_SERVER['HTTP_ORIGIN'], 'mapotechnology.com') || $_REQUEST['an
                 'oregonroads' => $ore
             ];
         }
+
+        return;
     }
-} else {
-    $out = ['error' => 'You cannot access this from a browser'];
+
+    return;
 }
+
+$out = ['error' => 'You cannot access this from a browser'];
 
 mysqli_close($con);
 if ($con2) mysqli_close($con2);

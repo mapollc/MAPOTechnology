@@ -27,6 +27,7 @@ if (__DEBUG__) {
     });
 }
 
+
 config.tiles = {
     outdoors: `${ENV.apiURL}maps/style/terrain?key=${config.apiKey()}`,
     satellite: `${ENV.apiURL}maps/style/satellite?key=${config.apiKey()}`,

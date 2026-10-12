@@ -1,13 +1,12 @@
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.1.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.mjs';
 
 const host = `https://${window.location.host.replace('www.', '')}/`,
     cdn = `https://cdn.${window.location.host.replace('www.', '')}/`,
-    baseURL = `${window.location.origin}/`,
-    domain = 'https://mapotechnology.com/',
     apiURL = 'https://api.mapotechnology.com/v1/',
     page = window.location.pathname.substring(1);
 
-let map = null;
+let map = null,
+    mlcontour = null;
 
 const apiKey = () => 'cf707f0516e5c1226835bbf0eece4a0c';
 
@@ -248,9 +247,7 @@ function addStartsEnds(coords) {
     }
 }
 
-async function getContent(tid) {
-    const resp = await api(`${apiURL}trails/guide`, [['id', tid]], true);
-
+async function getContent(resp) {
     /*
      * display trail stats
      */
@@ -273,15 +270,20 @@ async function getContent(tid) {
 
     Object.keys(statArray).forEach(k => {
         let suffix = ' ft.';
+        let places = 1;
 
         const li = document.querySelector(`ul.stats li[data-stat="${k}"] .value`);
         li.classList.remove('placeholder');
         li.style.maxWidth = 'unset';
 
-        if (k == 'distance') suffix = ' mi.';
-        else if (k == 'slope') suffix = '%';
+        if (k == 'distance') {
+            if (statArray[k] < 1) places = 2;
+            suffix = ' mi.';
+        } else if (k == 'slope') {
+            suffix = '%';
+        }
 
-        li.textContent = `${numberFormat(statArray[k], 1)}${suffix}`;
+        li.textContent = `${numberFormat(statArray[k], places)}${suffix}`;
     });
 
     /*
@@ -299,6 +301,20 @@ async function getContent(tid) {
         return;
     }
 
+    const replaceImg = (img, url, title = null) => {
+        const newImg = document.createElement('img');
+        newImg = url.replace('/large', '').replace('/thumbnail', '');
+        newImg.loading = 'lazy';
+
+        if (title) {
+            newImg.title = title;
+            newImg.alt = title;
+        }
+
+        img.appendChild(newImg);
+        img.remove();
+    };
+
     const count = Math.min(resp.guide?.photos?.length, 3);
     grid.dataset.count = count;
 
@@ -308,9 +324,10 @@ async function getContent(tid) {
         ?.forEach((p, n) => {
             const holder = grid.querySelector(`div[data-layout="${n + 1}"]`);
             const img = document.createElement('img');
-            img.loading = 'lazy';
+            const url = `${cdn}photos/large/${p.file}`;
 
-            img.src = `${cdn}photos/large/${p.file}`;
+            img.loading = 'lazy';
+            img.src = url;
 
             if (p.title) {
                 img.alt = p.title;
@@ -318,6 +335,10 @@ async function getContent(tid) {
             }
 
             img.addEventListener('load', () => holder.classList.remove('placeholder'));
+            img.addEventListener('error', () => {
+                replaceImg(img, url, p.title);
+            });
+            img.addEventListener('click', () => window.open(url.replace('/large', '')));
 
             holder.appendChild(img);
         });
@@ -345,8 +366,9 @@ async function getContent(tid) {
     const list = document.querySelector('ul.waypoints');
     const wp = resp.guide?.waypoints;
 
-    if (wp.length === 0) {
+    if (!wp || wp?.length === 0) {
         list.innerHTML = '<p style="font-size:18px">This trail guide doesn\'t have any waypoints.</p>';
+        return;
     }
 
     list.innerHTML = wp.map(w => {
@@ -368,6 +390,54 @@ async function createChart(id, gis_id) {
         `https://cdn.jsdelivr.net/npm/chart.js@4.5.1/auto/+esm`
     );
 
+    const getGradeColor = (grade, alpha) => {
+        const colors = [
+            { grade: -15, rgb: [249, 115, 22] },  // #f97316 - Steep Descent
+            { grade: -8, rgb: [234, 179, 8] },  // #eab308 - Moderate Descent
+            { grade: -3, rgb: [114, 213, 41] },  // #72d529 - Base Flat Start
+            { grade: 3, rgb: [114, 213, 41] },  // #72d529 - Base Flat End
+            { grade: 8, rgb: [234, 179, 8] },  // #eab308 - Moderate Climb
+            { grade: 15, rgb: [249, 115, 22] },  // #f97316 - Steep Climb
+            { grade: 20, rgb: [220, 38, 38] }   // #dc2626 - Very Steep Climb
+        ];
+
+        if (grade <= colors[0].grade) {
+            return `rgba(${colors[0].rgb.join(',')}, ${alpha})`;
+        }
+        if (grade >= colors[colors.length - 1].grade) {
+            return `rgba(${colors[colors.length - 1].rgb.join(',')}, ${alpha})`;
+        }
+
+        for (let i = 0; i < colors.length - 1; i++) {
+            const c1 = colors[i];
+            const c2 = colors[i + 1];
+
+            if (grade >= c1.grade && grade <= c2.grade) {
+                const factor = (grade - c1.grade) / (c2.grade - c1.grade);
+                const r = Math.round(c1.rgb[0] + (c2.rgb[0] - c1.rgb[0]) * factor);
+                const g = Math.round(c1.rgb[1] + (c2.rgb[1] - c1.rgb[1]) * factor);
+                const b = Math.round(c1.rgb[2] + (c2.rgb[2] - c1.rgb[2]) * factor);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            }
+        }
+
+        return `rgba(114, 213, 41, ${alpha})`;
+    };
+
+    const getSegment = (ctx, useFeet, alpha = 1) => {
+        const p0 = ctx.p0.parsed,
+            p1 = ctx.p1.parsed,
+            run = p1.x - p0.x, // Delta Distance
+            rise = p1.y - p0.y; // Delta Elevation
+
+        if (run <= 0) return '#72d529'; // Fallback color if no distance change
+
+        // Ensure units match before calculating grade!
+        const grade = (rise / (run * (useFeet ? 1 : 5280))) * 100;
+
+        return getGradeColor(grade, alpha);
+    };
+
     api(`${apiURL}trails/chart`, [['id', gis_id], ['trail_id', id]], true)
         .then(resp => {
             if (!resp?.chart) {
@@ -375,8 +445,10 @@ async function createChart(id, gis_id) {
                 return;
             }
 
+            const useFeet = resp.chart[resp.chart.length - 1][0] < 1;
+
             const data = resp.chart.map(item => ({
-                x: item[0],
+                x: item[0] * (useFeet ? 5280 : 1),
                 y: item[1]
             }));
 
@@ -397,19 +469,28 @@ async function createChart(id, gis_id) {
                             data,
                             tension: 0.2,
                             borderColor: '#72d529',
-                            pointBackgroundColor: '#72d529',
-                            backgroundColor: 'rgb(114 213 41 / 7%)',
+                            segment: {
+                                borderColor: ctx => getSegment(ctx, useFeet),
+                                backgroundColor: ctx => getSegment(ctx, useFeet, 0.25),
+                            },
                             pointBorderWidth: 0,
-                            fill: true,
-                            borderWidth: 4,
-                            pointRadius: 0,
-                            pointHoverRadius: 0
+                            fill: 'start',
+                            borderWidth: 6,
+                            pointRadius: 0
                         }
                     ]
                 },
                 options: {
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
                     responsive: true,
                     maintainAspectRatio: false,
+                    onResize: (chart, size) => {
+                        chart.options.scales.x.title.display = size.width > 475;
+                        chart.options.scales.y.title.display = size.width > 600;
+                    },
                     layout: {
                         padding: 16
                     },
@@ -426,7 +507,25 @@ async function createChart(id, gis_id) {
                         tooltip: {
                             callbacks: {
                                 title: context => `Distance: ${context[0].parsed.x.toFixed(2)} mi`,
-                                label: context => `Elevation: ${Math.round(context.parsed.y).toLocaleString()} ft`
+                                label: context => {
+                                    const index = context.dataIndex;
+                                    const data = context.dataset.data;
+
+                                    // Use previous point for grade if at the end of the dataset
+                                    const p0 = data[index - 1] || data[index];
+                                    const p1 = data[index + 1] || data[index];
+
+                                    const run = (p1.x - p0.x) * (useFeet ? 1 : 5280); // Miles to feet
+                                    const rise = p1.y - p0.y;
+
+                                    const grade = run > 0 ? (rise / run) * 100 : 0;
+
+                                    // Returning an array creates separate lines in the tooltip
+                                    return [
+                                        `Elevation: ${Math.round(context.parsed.y).toLocaleString()} ft`,
+                                        `Grade: ${grade.toFixed(1)}%`
+                                    ];
+                                }
                             }
                         }
                     },
@@ -439,12 +538,12 @@ async function createChart(id, gis_id) {
                                 color: '#ddd'
                             },
                             title: {
-                                display: true,
-                                text: 'Distance (mi.)',
-                                color: '#999'
+                                display: window.innerWidth > 475,
+                                text: `Distance (${useFeet ? 'ft' : 'mi'}.)`,
+                                color: '#666'
                             },
                             ticks: {
-                                color: '#aaa'
+                                color: '#888'
                             }
                         },
                         y: {
@@ -455,12 +554,12 @@ async function createChart(id, gis_id) {
                                 color: '#ddd'
                             },
                             title: {
-                                display: true,
+                                display: window.innerWidth > 600,
                                 text: 'Elevation (ft.)',
-                                color: '#999'
+                                color: '#666'
                             },
                             ticks: {
-                                color: '#aaa',
+                                color: '#888',
                                 callback: val => val.toLocaleString()
                             }
                         }
@@ -470,12 +569,8 @@ async function createChart(id, gis_id) {
         });
 }
 
-async function trailGuide() {
-    const TRAIL_ID = document.querySelector('#map').dataset?.tid ?? null;
-
-    getContent(TRAIL_ID);
-
-    const trailPromise = api(`${apiURL}trails/geojson`, [['id', TRAIL_ID]], true);
+async function trailGuide(TRAIL_ID, guide) {
+    const coords = guide?.stats?.geo?.start;
 
     const tiles = {
         outdoors: `${apiURL}maps/style/terrain?key=${apiKey()}`,
@@ -485,8 +580,8 @@ async function trailGuide() {
 
     map = new maplibregl.Map({
         container: 'map',
-        zoom: 5.37,
-        center: [-119.92556, 44.28071],
+        zoom: 9,
+        center: [coords[1], coords[0]],
         style: tiles['outdoors'],
         projection: 'mercator',
         hash: false,
@@ -511,58 +606,257 @@ async function trailGuide() {
         })
     );
 
+    map.addControl(new TerrainControl());
+
     map.on('style.load', async () => {
-        const trail = await trailPromise;
+        await loadMapIcons();
 
-        if (!trail?.features?.length) return;
-
-        if (!map.getSource('track')) {
-            map.addSource('track', {
-                type: 'geojson',
-                data: trail
-            });
-        }
-
-        if (!map.getLayer('track')) {
-            map.addLayer({
-                id: 'track',
-                type: 'line',
-                source: 'track',
-                paint: {
-                    'line-color': ['get', 'color'],
-                    'line-width': [
-                        'interpolate',
-                        ['exponential', 2],
-                        ['zoom'],
-                        1, 1,
-                        10, 2,
-                        12, 3,
-                        13, 5
-                    ]
-                }
-            });
-
-            map.on('mouseenter', 'track', () => {
-                map.getCanvas().style.cursor = 'pointer';
-            });
-
-            map.on('mouseleave', 'track', () => {
-                map.getCanvas().style.cursor = 'auto';
-            });
-        }
-
-        const geo = trail.features.filter(p => p.properties.delta === 0)?.[0];
-
-        addStartsEnds(geo?.geometry.coordinates);
-
-        createChart(TRAIL_ID, geo.properties.id);
-
-        map.fitBounds(geojsonExtent(geo), {
-            padding: 50
-        });
+        addTrack(TRAIL_ID);
+        displayWaypoints(guide?.waypoints);
     });
 }
 
-window.onload = () => {
-    if (page.startsWith('guide')) trailGuide();
+function addTrack(TRAIL_ID) {
+    const filter = ['==', ['to-number', ['get', 'trail_id']], TRAIL_ID];
+
+    if (!map.getSource('track')) {
+        map.addSource('track', {
+            type: 'vector',
+            tiles: [`${host}data/maps/tiles/trails/{z}/{x}/{y}.pbf`]
+        });
+    }
+
+    if (!map.getLayer('track')) {
+        map.addLayer({
+            id: 'track',
+            type: 'line',
+            'source-layer': 'trails',
+            source: 'track',
+            filter,
+            paint: {
+                'line-color': ['get', 'color'],
+                'line-width': [
+                    'interpolate',
+                    ['exponential', 2],
+                    ['zoom'],
+                    1, 1,
+                    10, 2,
+                    12, 3,
+                    13, 5
+                ]
+            }
+        });
+
+        const onSourceData = (e) => {
+            if (e.sourceId !== 'track' || !e.isSourceLoaded) return;
+
+            const features = map.querySourceFeatures('track', {
+                sourceLayer: 'trails',
+                filter
+            });
+
+            if (!features.length) return;
+
+            const primaryFeature = features.find(f => f.properties?.delta === 0);
+            if (!primaryFeature) return;
+
+            // Stop listening immediately so panning/zooming doesn't re-trigger fitBounds
+            map.off('sourcedata', onSourceData);
+
+            createChart(TRAIL_ID, primaryFeature.properties.id);
+            addStartsEnds(primaryFeature.geometry.coordinates);
+
+            map.fitBounds(geojsonExtent(primaryFeature.geometry), {
+                padding: 50
+            });
+        };
+
+        map.on('sourcedata', onSourceData);
+
+        map.on('mouseenter', 'track', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.on('mouseleave', 'track', () => {
+            map.getCanvas().style.cursor = 'auto';
+        });
+    }
+}
+
+async function loadMapIcons() {
+    const icons = ['info', 'hike', 'mtb', 'road', 'gravel', 'dirtbike', 'climb', 'atski', 'nordic', 'alpine', 'snowmobile', 'camp', 'camp2', 'lake', 'media', 'parking', 'restroom', 'river', 'sledding', 'bridge', 'cabin', 'caution', 'fantasy', 'fishing', '4x4', 'big_ride', 'big_air', 'bigfoot', 'summit', 'ski', 'swim'];
+
+    await Promise.all(
+        icons.map(async (path) => {
+            try {
+                const id = `icon-${path}`;
+                const img = await map.loadImage(`${cdn}icons/${path}.png`);
+
+                if (!map.hasImage(id)) map.addImage(id, img.data);
+            } catch (e) {
+                console.error(`Failed to load image: ${path}`, e);
+            }
+        })
+    );
+}
+
+function displayWaypoints(wp) {
+    if (!wp) return;
+
+    const features = wp.filter(f => f.lat && f.lon).map(f => {
+        return {
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [Number(f.lon), Number(f.lat)]
+            },
+            properties: f
+        };
+    });
+
+    const SRC = 'waypoints';
+    const geojson = {
+        type: 'FeatureCollection',
+        features
+    };
+
+    if (!map.getSource(SRC)) {
+        map.addSource(SRC, {
+            type: 'geojson',
+            data: geojson
+        });
+    }
+
+    if (!map.getLayer(SRC)) {
+        map.addLayer({
+            id: SRC,
+            type: 'symbol',
+            source: SRC,
+            minzoom: 11,
+            layout: {
+                'icon-image': [
+                    'match',
+                    ['get', 'icon'],
+                    '- Icon -', 'icon-info',
+                    'mtn_bike', 'icon-mtb',
+                    ['concat', 'icon-', ['get', 'icon']]
+                ],
+                'icon-size': {
+                    type: 'exponential',
+                    base: 0.25,
+                    stops: [
+                        [11, 0.75],
+                        [13, 1]
+                    ]
+                },
+                'icon-allow-overlap': true,
+                'visibility': 'visible'
+            }
+        });
+    }
+}
+
+function avy() {
+    if (!map.getSource('avy')) {
+        map.addSource('avy', {
+            type: 'raster',
+            tiles: [`${host}assets/images/tiles/4/{z}/{x}/{y}.png?force=1`],
+            tileSize: 256,
+            scheme: 'xyz'
+        });
+    }
+
+    if (!map.getLayer('avalanche')) {
+        map.addLayer({
+            id: 'avalanche',
+            type: 'raster',
+            source: 'avy',
+            layout: {
+                visibility: 'visible'
+            },
+            paint: {
+                'raster-opacity': 0.4
+            }
+        });
+    }
+}
+
+async function getContourLibrary() {
+    if (!mlcontour) {
+        const module = await import('https://cdn.jsdelivr.net/npm/maplibre-contour@0.1.1/+esm');
+        mlcontour = module.default;
+    }
+
+    return mlcontour;
+}
+
+async function addTerrain() {
+    await getContourLibrary();
+
+    if (!map.getSource('terrain')) {
+        map.addSource('terrain', {
+            type: 'raster-dem',
+            encoding: 'terrarium',
+            maxzoom: 13,
+            tileSize: 512,
+            url: 'https://tiles.mapterhorn.com/tilejson.json'
+        });
+    }
+
+    // set 3d terrain
+    map.setTerrain({
+        source: 'terrain',
+        exaggeration: 1.2
+    });
+}
+
+export class TerrainControl {
+    onAdd(map) {
+        this.map = map;
+
+        this.container = document.createElement('div');
+        this.container.addEventListener('contextmenu', (e) => e.preventDefault());
+        this.container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+
+        const button = document.createElement('button');
+        button.dataset.mode = '2d';
+        button.type = 'button';
+        button.className = 'maplibregl-ctrl-terrain ttip';
+        button.title = 'Toggle 3D terrain';
+        button.innerHTML = '3D';
+
+        // button click listener
+        button.addEventListener('click', () => {
+            const is3d = button.dataset.mode === '2d';
+
+            button.dataset.mode = is3d ? '3d' : '2d';
+            button.innerHTML = is3d ? '2D' : '3D';
+            //config.settings.toggle3d(is3d);
+
+            is3d ? addTerrain() : map.setTerrain(null);
+        });
+
+        this.container.appendChild(button);
+
+        return this.container;
+    }
+
+    onRemove() {
+        this.container?.remove();
+        this.map = null;
+    }
+}
+
+window.onload = async () => {
+    if (page.startsWith('guide')) {
+        const map = document.querySelector('#map');
+        const TRAIL_ID = Number(map.dataset?.tid) ?? null;
+
+        const resp = await api(`${apiURL}trails/guide`, [['id', TRAIL_ID]], true);
+
+        setTimeout(() => map.classList.remove('loading'), 750);
+
+        getContent(resp);
+        trailGuide(TRAIL_ID, resp?.guide);
+    }
 };

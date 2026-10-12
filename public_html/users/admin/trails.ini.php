@@ -7,7 +7,102 @@ $activities = ['ATV', 'Alpine Ski', 'Backcountry Ski', 'Beginner', 'Big Ride', '
 $icons = ['4x4' => '4x4', 'big_air' => 'Big Air', 'bigfoot' => 'Bigfoot', 'bridge' => 'Bridge', 'cabin' => 'Cabin', 'camp' => 'Campground', 'caution' => 'Caution', 'fishing' => 'Fishing', 'hike' => 'Hike', 'info' => 'Info', 'lake' => 'Lake', 'media' => 'Media', 'mtn_bike' => 'Mountain Bike', 'parking' => 'Parking', 'redneck' => 'Redneck', 'restroom' => 'Restroom', 'river' => 'River', 'sledding' => 'Sledding', 'summit' => 'Summit', 'swim' => 'Swimming'];
 $gpxOptions = ['ATV Track', 'Gravel', 'Road', 'Single Track', 'Ski Line', 'Snowmobile', 'Tour'];
 
-function sendToMapbox($id, $json = null, $send = true)
+function gpxToGeoJson($file)
+{
+    $xml = simplexml_load_file("/home/mapo/public_html/mapotrails.com/data/gpx/$file", 'SimpleXMLElement', LIBXML_NOCDATA);
+
+    if ($xml === false) {
+        return null;
+    }
+
+    $point = $xml->xpath('//*[local-name()="trkpt"]');
+
+    if (!$point) {
+        return null;
+    }
+
+    $count = count($point);
+
+    $coords = [];
+
+    for ($x = 0; $x < $count; $x++) {
+        $coords[] = [
+            (float) $point[$x]['lon'],
+            (float) $point[$x]['lat']
+        ];
+    }
+
+    return $coords;
+}
+
+function generateTrailGeoJSON($tid, $title, $type, $premium, $public, $term, $keywords)
+{
+    global $con2;
+
+    $stats = mysqli_fetch_assoc(mysqli_query($con2, "SELECT stats FROM stats WHERE trail_id = $tid LIMIT 1"));
+    $data = mysqli_query($con2, "SELECT id, filename, mode, caption, delta, display FROM gpx WHERE trail_id = $tid ORDER BY delta ASC");
+
+    $feats = [];
+
+    while ($gpx = mysqli_fetch_assoc($data)) {
+        if (empty($gpx) || $gpx['filename'] == '' || !file_exists("/home/mapo/public_html/mapotrails.com/data/gpx/{$gpx['filename']}")) continue;
+
+        $coords = gpxToGeoJson($gpx['filename']);
+
+        if ($coords == null) continue;
+
+        /*if ($gpx['delta'] == 0) {
+            $new = json_encode($collect['stats']);
+            $time = time();
+            mysqli_query($con2, "UPDATE stats SET stats = '$new', calculated = $time WHERE trail_id = $row[id]");
+        }*/
+
+        $prop = [
+            'trail_id' => (int) $tid,
+            'id' => (int) $gpx['id'],
+            'title' => $title,
+            'type' => $type,
+            'color' => trailColor($gpx['mode']),
+            'url' => guideUrl($title, $type, $tid),
+            'delta' => (int) $gpx['delta'],
+            'term' => $term,
+            'keywords' => $keywords,
+            'mode' => $gpx['mode'],
+            'caption' => $gpx['caption'],
+            'stats' => $stats['stats'] ? json_decode($stats['stats']) : null,
+            'premium' => (int) $premium,
+            'public' => (int) $public,
+            'display' => (int) $gpx['display'],
+        ];
+
+        $feats[] = [
+            'id' => (int) $gpx['id'],
+            'type' => 'Feature',
+            'geometry' => [
+                'type' => 'LineString',
+                'coordinates' => $coords
+            ],
+            'properties' => $prop
+        ];
+    }
+
+    if ($feats && count($feats) > 0) {
+        $geojson = [
+            'type' => 'FeatureCollection',
+            'features' => $feats
+        ];
+
+        $output = json_encode($geojson);
+
+        $saveFile = "/home/mapo/public_html/mapotrails.com/data/geojson/$tid.geojson";
+
+        file_put_contents($saveFile, $output);
+        chown($saveFile, 'mapo');
+        chgrp($saveFile, 'mapo');
+    }
+}
+
+/*function sendToMapbox($id, $json = null, $send = true)
 {
     global $token;
     global $datasetID;
@@ -50,6 +145,22 @@ function updateTileset()
     $output = curl_errno($ch) ? curl_error($ch) : $result;
 
     return json_decode($output);
+}*/
+
+function updateTileset(/*$trailID = null*/)
+{
+    $scriptPath = '/home/mapo/public_html/cron/generateTrails.php';
+    $logPath    = '/home/mapo/logs/generate_trails.log';
+
+    ////if ($trailID) {
+    ////$cmd = sprintf('php %s %d > %s 2>&1 &', escapeshellarg($scriptPath), $trailID, escapeshellarg($logPath));
+    ////} else {
+    $cmd = sprintf('php %s > %s 2>&1 &', escapeshellarg($scriptPath), escapeshellarg($logPath));
+    ////}
+
+    exec($cmd);
+
+    return true;
 }
 
 function guideUrl($s, $ty, $id)
@@ -74,84 +185,93 @@ function guideUrl($s, $ty, $id)
 
 if ($function == 'create' || $function == 'edit') {
     include_once "{$documentRoot}admin/incs/add_edit-trail.ini.php";
-} else if ($function == 'delete') {
+    return;
+}
+
+if ($function == 'delete') {
     include_once "{$documentRoot}admin/incs/delete_trail.ini.php";
-} else {
-    // update mapbox vector tiles on user request
-    if ($function == 'mapbox') {
-        $update = updateTileset();
-        ////$uploadID = $update->id;
+    return;
+}
 
-        if ($update->error == null) {
-            echo message(true, 'A request for Mapbox to update trail data was submitted successfully.');
-        } else {
-            echo message(false, 'There was an error publishing trail data to Mapbox. Try again later.');
-        }
-    }
+// update mapbox vector tiles on user request
+if ($function == 'vector') {
+    $update = updateTileset();
 
-    $where = isset($_GET['q']) && $_GET['q'] != '' ? 'WHERE title LIKE \'%' . $_GET['q'] . '%\' OR caption LIKE \'%' . $_GET['q'] . '%\'' : '';
-    $order = isset($_GET['sort']) ? $_GET['sort'] . ' ' . $_GET['order'] : 'updated DESC';
+    header("Location: ../trails?tiles=1");
+    ////$uploadID = $update->id;
 
-    $sql = mysqli_query($con2, "SELECT t.id, type, caption, title, author, premium, public, created, updated FROM trails AS t LEFT JOIN gpx AS g ON g.trail_id = t.id $where ORDER BY $order");
+    ////if ($update->error == null) {
+    ////    echo message(true, 'A request for Mapbox to update trail data was submitted successfully.');
+    ////} else {
+    ////    echo message(false, 'There was an error publishing trail data to Mapbox. Try again later.');
+    ////}
+}
 
-    if ($_GET['deleted'] == 1) {
-        echo message(true, 'You have successfully deleted that trail/snow guide.');
-    }
+$edit = $permission->trails()->edit();
+
+if ($_GET['tiles'] == 1) {
+    echo message(true, 'Vector tiles for Map of Trails are being generated...');
+}
+
+if ($_GET['deleted'] == 1) {
+    echo message(true, 'You have successfully deleted that trail/snow guide.');
+}
 ?>
-    <div class="row">
-        <div class="col">
-            <div class="card">
-                <h1>Trails Management</h1>
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <h1>Trails Management</h1>
 
-                <div class="controls">
-                    <form action="" method="get">
-                        <input type="text" class="input" style="display:inline-block;max-width:300px" name="q" placeholder="Search trails..." value="<?= ($_GET['q'] ? $_GET['q'] : '') ?>">
-                        <input type="submit" class="btn btn-blue" value="Search">
-                        <a href="trails/create" class="btn btn-green">Create New Trail</a>
-                        <!--<a href="trails/systems" class="btn btn-yellow">Manage Trail Systems</a>-->
-                        <a href="trails/mapbox" class="btn btn-light-blue">Publish to Mapbox</a>
-                    </form>
-                </div>
+            <div class="controls">
+                <form action="" id="searchTrails" method="get" style="align-items:flex-end">
+                    <input type="text" class="input" style="display:inline-block;max-width:300px" name="q" placeholder="Search trails..." value="<?= ($_GET['q'] ? $_GET['q'] : '') ?>">
 
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead class="sortable">
-                            <tr>
-                                <th onclick="window.location.href='?<?= isset($_GET['q']) ? "q={$_GET['q']}&" : '' ?>sort=id&order=<?= $_GET['order'] == 'ASC' ? 'DESC' : 'ASC' ?>'" h>ID</th>
-                                <th onclick="window.location.href='?<?= isset($_GET['q']) ? "q={$_GET['q']}&" : '' ?>sort=type&order=<?= $_GET['order'] == 'ASC' ? 'DESC' : 'ASC' ?>'">Type</th>
-                                <th style="width:200px" onclick="window.location.href='?<?= isset($_GET['q']) ? "q={$_GET['q']}&" : '' ?>sort=title&order=<?= $_GET['order'] == 'ASC' ? 'DESC' : 'ASC' ?>'">Title</th>
-                                <th onclick="window.location.href='?<?= isset($_GET['q']) ? "q={$_GET['q']}&" : '' ?>sort=public&order=<?= $_GET['order'] == 'ASC' ? 'DESC' : 'ASC' ?>'">Public</th>
-                                <th onclick="window.location.href='?<?= isset($_GET['q']) ? "q={$_GET['q']}&" : '' ?>sort=premium&order=<?= $_GET['order'] == 'ASC' ? 'DESC' : 'ASC' ?>'">Premium</th>
-                                <th onclick="window.location.href='?<?= isset($_GET['q']) ? "q={$_GET['q']}&" : '' ?>sort=author&order=<?= $_GET['order'] == 'ASC' ? 'DESC' : 'ASC' ?>'">Author</th>
-                                <th onclick="window.location.href='?<?= isset($_GET['q']) ? "q={$_GET['q']}&" : '' ?>sort=updated&order=<?= $_GET['order'] == 'DESC' ? 'ASC' : 'DESC' ?>'">Last Update</th>
-                                <th onclick="window.location.href='?<?= isset($_GET['q']) ? "q={$_GET['q']}&" : '' ?>sort=created&order=<?= $_GET['order'] == 'DESC' ? 'ASC' : 'DESC' ?>'">Created</th>
-                                <th>&nbsp;</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?
-                            $ids = [];
-                            while ($row = mysqli_fetch_assoc($sql)) {
-                                if (!in_array($row['id'], $ids)) {
-                                    $ids[] = $row['id'];
-                            ?>
-                                    <tr>
-                                        <td><?= $row['id'] ?></td>
-                                        <td><?= ucfirst($row['type']) ?></td>
-                                        <td style="min-width:300px"><?= $row['title'] ?></td>
-                                        <td><?= $row['public'] ? 'Yes' : 'No' ?></td>
-                                        <td><?= $row['premium'] ? 'Yes' : 'No' ?></td>
-                                        <td><?= $row['author'] ?></td>
-                                        <td><?= ago($row['updated']) ?></td>
-                                        <td><?= date('M j, Y', $row['created']) ?></td>
-                                        <td><a target="blank" href="//mapotrails.com/<?= guideUrl($row['title'], $row['type'], $row['id']) ?>">view</a> &middot; <a href="trails/edit?id=<?= $row['id'] ?>">edit</a></td>
-                                    </tr>
-                            <? }
-                            } ?>
-                        </tbody>
-                    </table>
-                </div>
+                    <select name="type" class="input" style="max-width:100px">
+                        <option <?= !isset($_GET['type']) ? 'selected ' : '' ?>value="all">All Types</option>
+                        <option <?= $_GET['type'] == 'trail' ? 'selected ' : '' ?>value="trail">Trail</option>
+                        <option <?= $_GET['type'] == 'trail' ? 'selected ' : '' ?>value="snow">Snow</option>
+                    </select>
+
+                    <select name="category" class="input" style="max-width:175px">
+                        <option>All Activities</option>
+                        <? foreach ($activities as $a) {
+                            echo "<option " . ($a === $_GET['category'] ? 'selected ' : '') . "value=\"$a\">$a</option>";
+                        } ?>
+                    </select>
+
+                    <input type="submit" class="btn btn-blue" value="Search">
+
+                    <a href="trails/create" class="btn btn-green">Create new trail</a>
+                    <!--<a href="trails/systems" class="btn btn-yellow">Manage Trail Systems</a>-->
+                    <a href="trails/vector" class="btn btn-light-blue">Publish vector tiles</a>
+
+                </form>
+            </div>
+
+            <p id="resultsNum" style="min-height:21px;font-size:14px;padding:0"></p>
+
+            <div class="table-responsive">
+                <table class="table" id="listOfTrails" data-edit="<?= $edit->all() ?? $edit->own() ?? 0 ?>">
+                    <thead class="sortable">
+                        <tr>
+                            <th class="sortTable" data-url="sort=id&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">ID</th>
+                            <th class="sortTable" data-url="sort=type&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Type</th>
+                            <th style="width:300px" class="sortTable" data-url="sort=title&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Title</th>
+                            <th class="sortTable" data-url="sort=author&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Author</th>
+                            <th class="sortTable" data-url="sort=updated&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'DESC' ? 'DESC' : 'ASC') . ($queryParams ? "&$queryParams" : '') ?>">Last Update</th>
+                            <th class="sortTable" data-url="sort=created&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'DeSC' ? 'DESC' : 'ASC') . ($queryParams ? "&$queryParams" : '') ?>">Created</th>
+                            <th class="sortTable" data-url="sort=premium&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Premium</th>
+                            <th class="sortTable" data-url="sort=public&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Public</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <div></div>
             </div>
         </div>
     </div>
-<? } ?>
+</div>

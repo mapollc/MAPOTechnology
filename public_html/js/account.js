@@ -247,6 +247,165 @@ const numberFormat = (n, d = 2) => Intl.NumberFormat('en-US', {
 /*const validateEmail = (email) => /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
 const getUserToken = () => document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null;*/
 
+class QueryTrails {
+    constructor() {
+        this.totalRows = 0;
+        this.trails = null;
+        this.listOfTrails = document.querySelector('#listOfTrails');
+        this.now = Date.now() / 1000;
+        this.numberFormat = new Intl.NumberFormat('en-US');
+    }
+
+    async search(fields = null) {
+        const body = [];
+
+        window.history.pushState(
+            {},
+            '',
+            `${window.location.origin}${window.location.pathname}${fields ? `?${fields}` : ''}`
+        );
+
+        if (fields) {
+            for (const [key, value] of new URLSearchParams(fields).entries()) {
+                body.push([key, value]);
+            }
+        }
+
+        document.querySelector('#resultsNum').innerHTML = '';
+        this.listOfTrails.querySelector('tbody').innerHTML = '<tr><td colspan="10" style="text-align:center"><div class="spinner"></div></td></tr>';
+
+        const resp = await api(`${apiURL}account/getTrails`, body, true);
+        this.success(resp);
+    }
+
+    success(resp) {
+        if (resp && resp.response.trails) {
+            this.totalRows = resp.response.count;
+            this.trails = resp.response.trails;
+            this.listOfTrails.querySelector('tbody').innerHTML = '';
+            this.pagination();
+
+            for (let i = 0; i < this.trails.length; i++) {
+                this.createRow(this.trails[i], (i > 0 ? this.trails[i - 1] : null));
+            }
+        } else {
+            this.listOfTrails.querySelector('tbody').innerHTML = '<tr><td colspan="9" style="text-align:center">No trails were found for that search criteria</td></tr>';
+        }
+    }
+
+    pagination() {
+        const regex = window.location.search.match(/results=([0-9]+)/);
+        const resultsPage = regex ? parseInt(regex[1], 10) : 1;
+
+        const total = parseInt(this.totalRows, 10);
+        const perPage = 100;
+
+        const curResults = resultsPage <= 1 ? 1 : ((resultsPage - 1) * perPage) + 1;
+
+        let max = resultsPage * perPage;
+        max = Math.min(max, total);
+
+        document.querySelector('#resultsNum').innerHTML = `Showing results ${this.numberFormat.format(curResults)} to ${this.numberFormat.format(max)} of ${this.numberFormat.format(total)}`;
+
+        const links = Math.ceil(total / perPage);
+        const container = document.querySelector('.pagination > div');
+        container.innerHTML = '';
+
+        const createPage = (i) => {
+            let el;
+
+            if (i === resultsPage) {
+                el = document.createElement('b');
+            } else {
+                el = document.createElement('a');
+
+                const params = new URLSearchParams(window.location.search);
+                params.set('results', i);
+
+                el.href = '?' + params.toString();
+            }
+
+            el.textContent = i;
+            container.appendChild(el);
+        };
+
+        const createDots = () => {
+            const span = document.createElement('span');
+            span.textContent = '...';
+            container.appendChild(span);
+        };
+
+        if (links <= 20) {
+            for (let i = 1; i <= links; i++) {
+                createPage(i);
+            }
+        } else {
+            const range = 4;
+
+            createPage(1);
+            if (resultsPage > 1 + range + 1) createDots();
+
+            for (let i = Math.max(2, resultsPage - range); i <= Math.min(links - 1, resultsPage + range); i++) {
+                createPage(i);
+            }
+
+            if (resultsPage < links - range - 1) createDots();
+
+            createPage(links);
+        }
+    }
+
+    size(a) {
+        if (a === '' || a === null || a === undefined) return 'Unk';
+
+        const acres = parseFloat(a);
+        if (isNaN(acres)) return 'Unk';
+
+        // format to 2 decimals
+        let o = acres.toFixed(2);
+
+        if (o.slice(-2) === '00') {
+            o = Math.round(acres).toString();
+        } else if (o.slice(-1) === '0') {
+            o = acres.toFixed(1);
+        }
+
+        return this.numberFormat.format(o);
+    }
+
+    createRow(trail, lastTrail) {
+        const tr = document.createElement('tr');
+        tr.dataset.id = Number(trail.id);
+        tr.innerHTML = this.createCols(trail);
+
+        this.listOfTrails.querySelector('tbody').appendChild(tr);
+    }
+
+    createCols(trail) {
+        const url = `../admin/trails/edit?id=${trail.id}`;
+
+        const good = 'background-color:#f8d7da;color:#721c24';
+        const bad = 'background-color:#d4edda;color:#155724';
+
+        return `<td>${trail.id}</td>
+            <td>${trail.type.ucfirst()}</td>
+            <td>${trail.title}</td>
+            <td>${trail.author}</td>
+            <td>${timeAgo(trail.updated)}</td>
+            <td>${new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        }).format(trail.created * 1000)}</td>
+            <td><span class="sub-badge" style="${Number(trail.premium) == 1 ? good : bad}">${Number(trail.premium) == 1 ? 'Yes' : 'No'}</span></td>
+            <td><span class="sub-badge" style="${Number(trail.public) == 1 ? bad : good}">${Number(trail.public) == 1 ? 'Yes' : 'No'}</span></td>
+            <td>
+                <a target="blank" href="//mapotrails.com/${trail.url}">view</a>
+                ${this.listOfTrails.dataset.edit == '1' ? `&nbsp;&middot;&nbsp;<a href="${url}">edit</a>` : ''}
+            </td>`;
+    }
+}
+
 class QueryWildfires {
     constructor() {
         this.totalRows = 0;
@@ -875,6 +1034,7 @@ async function unfavorite(tid) {
 }
 
 function addWaypoint() {
+    const n = document.querySelectorAll('ul#waypoints li').length;
     let selects = ['<option>- Icon -</option>'];
 
     Object.keys(icons).forEach(k => {
@@ -884,10 +1044,12 @@ function addWaypoint() {
     const line = `<li>
         <input type="hidden" name="waypoint[id][]" value="">
         <input type="hidden" name="waypoint[delta][]" value="">
-        <div class="wrap">
+
+        <div class="wrap" data-delta="${n}">
+            <i class="fas fa-grip-vertical reorder" style="opacity:0.4;cursor:not-allowed"></i>
             <div class="column">
                 <label style="margin-bottom:5px">Name</label>
-                <input type="text" name="waypoint[name][]" class="input" placeholder="Waypoint Name" value="">
+                <input type="text" name="waypoint[name][]" class="input" placeholder="Waypoint Name" value="" required>
             </div>
             <div class="column">
                 <label style="margin-bottom:5px">Notes</label>
@@ -895,27 +1057,33 @@ function addWaypoint() {
             </div>
             <div class="column">
                 <label style="margin-bottom:5px">Icon</label>
-                <select name="waypoint[icon][]" class="input" style="max-width:165px;margin:0"><option>- Icon -</option>${selects.join('')}</select>
+                <select name="waypoint[icon][]" class="input" style="max-width:165px;margin:0" required><option>- Icon -</option>${selects.join('')}</select>
             </div>
             <div class="column">
                 <label style="margin-bottom:5px">Latitude</label>
-                <input type="text" name="waypoint[lat][]" class="input" style="max-width:150px" placeholder="45.01234" value="">
+                <input type="text" name="waypoint[lat][]" class="input" style="max-width:150px" placeholder="45.01234" value="" required>
             </div>
             <div class="column">
                 <label style="margin-bottom:5px">Longitude</label>
-                <input type="text" name="waypoint[lon][]" class="input" style="max-width:150px" placeholder="-118.123456" value="">
+                <input type="text" name="waypoint[lon][]" class="input" style="max-width:150px" placeholder="-118.123456" value="" required>
             </div>
             <div class="column">
-                <a class="btn btn-sm btn-black" style="display:block;margin-top:15px;min-width:unset" href="#" id="deletewaypoint" data-id="" onclick="return false">Delete</a>
+                <button class="trails-btn delete" title="Delete this waypoint" data-action="deletewaypoint" data-id="">Delete</button>
             </div>
         </div>
     </li>`;
+
+    const noneMsg = document.querySelector('#noWayMsg');
+    if (noneMsg) {
+        noneMsg.insertAdjacentHTML('afterend', '<ul id="waypoints">');
+        noneMsg.remove();
+    }
 
     document.querySelector('ul#waypoints').insertAdjacentHTML('beforeend', line);
 }
 
 function addGPX() {
-    let ops = [],
+    const ops = [],
         n = document.querySelectorAll('ul#files li').length,
         modes = ['ATV Track', 'Gravel', 'Road', 'Single Track', 'Ski Line', 'Snowmobile', 'Tour'];
 
@@ -923,9 +1091,12 @@ function addGPX() {
         ops.push(`<option value="${e}">${e}</option>`);
     });
 
-    var line = `<li>
-        <input type="hidden" name="gpx[id][${n}]" value=""><input type="hidden" name="gpx[delta][${n}]" value="">
-        <div class="wrap">
+    const line = `<li draggable="false">
+        <input type="hidden" name="gpx[id][${n}]" value="">
+        <input type="hidden" name="gpx[delta][${n}]" value="">
+        
+        <div class="wrap" data-delta="${n}">
+            <i class="fas fa-grip-vertical reorder" style="opacity:0.4;cursor:not-allowed"></i>
             <div class="file">
                 <label style="margin-bottom:5px">Map Data File</label>
                 <input type="file" class="input" name="gpxFile[]" accept=".gpx">
@@ -936,7 +1107,7 @@ function addGPX() {
             </div>
             <div class="column">
                 <label style="margin-bottom:5px">Type</label>
-                <select name="gpx[mode][${n}]" class="input" style="margin-top:0;max-width:175px">
+                <select name="gpx[mode][${n}]" class="input" style="margin-top:0;max-width:175px" required>
                     <option value="">- Choose Mode -</option>${ops}
                 </select>
             </div>
@@ -944,15 +1115,15 @@ function addGPX() {
                 <label style="margin-bottom:1em">Display</label>
                 <div>
                     <div class="radio">
-                        <input type="radio" name="gpx[display][${n}]" value="1"><label>Yes</label>
+                        <input type="radio" name="gpx[display][${n}]" value="1" required><label>Yes</label>
                     </div>
                     <div class="radio">
-                        <input type="radio" name="gpx[display][${n}]" value="0"><label>No</label>
+                        <input type="radio" name="gpx[display][${n}]" value="0" required><label>No</label>
                     </div>
                 </div>
             </div>
             <div class="column">
-                <a class="btn btn-sm btn-black" style="display:block;margin-top:15px;min-width:unset" href="#" id="deletegpx" data-tid="" data-delta="${n}" data-filename="" data-id="" onclick="return false">Delete</a>
+                <button class="trails-btn delete" title="Delete this GPX file" data-action="deletegpx" data-tid="" data-delta="${n}" data-filename="" data-id="">Delete</button>
             </div>
         </div>
     </li>`;
@@ -1200,9 +1371,56 @@ async function doSearch(q) {
     }
 }
 
+function initListOrdering(list) {
+    if (!list) return;
+
+    list.addEventListener('dragstart', e => {
+        if (e.target.tagName === 'LI') e.target.classList.add('dragging');
+    });
+
+    list.addEventListener('dragend', e => {
+        if (e.target.tagName === 'LI') {
+            e.target.classList.remove('dragging');
+            updateDeltas(list);
+        }
+    });
+
+    list.addEventListener('dragover', e => {
+        e.preventDefault();
+        const dragging = list?.querySelector('.dragging');
+        if (!dragging) return;
+
+        const siblings = [...list?.querySelectorAll('li:not(.dragging)')];
+        const nextSibling = siblings.find(sibling => {
+            const box = sibling.getBoundingClientRect();
+            return e.clientY < box.top + box.height / 2;
+        });
+
+        list.insertBefore(dragging, nextSibling);
+    });
+}
+
+function updateDeltas(list) {
+    list?.querySelectorAll('li').forEach((li, index) => {
+        // Update hidden input: name="oldgpx[delta][...]"
+        const deltaInput = li.querySelector('input[name*="[delta]"]');
+        if (deltaInput) deltaInput.value = index;
+
+        // Update wrapper & delete button data attributes
+        const wrap = li.querySelector('.wrap');
+        if (wrap) wrap.dataset.delta = index;
+
+        const deleteBtn = li.querySelector('a.btn');
+        if (deleteBtn) deleteBtn.dataset.delta = index;
+    });
+}
+
 async function adminTrailMgmt() {
+    let allKeywords = null;
+
+    /*
     // load wysiwyg editor
-    /*loadScript('https://cdn.jsdelivr.net/gh/mdbassit/Wysi@latest/dist/wysi.min.js').then(() => {
+    loadScript('https://cdn.jsdelivr.net/gh/mdbassit/Wysi@latest/dist/wysi.min.js').then(() => {
         const link = document.createElement('link');
         link.href = 'https://cdn.jsdelivr.net/gh/mdbassit/Wysi@latest/dist/wysi.min.css';
         link.rel = 'stylesheet';
@@ -1220,24 +1438,47 @@ async function adminTrailMgmt() {
     });*/
 
     // initialize variables
-    const trailTitle = document.querySelector('input[name="title"]');
     keywordResults = document.getElementById('kw-results');
     kw = document.querySelector('input[name=keywords]');
+
+    const trailTitle = document.querySelector('input[name="title"]');
+    const seasonAllYear = document.querySelector('#allmos');
+    const monthCheckboxes = document.querySelectorAll('input[name^=months]');
 
     // add listeners
     document.querySelector('#addwaypoint')?.addEventListener('click', () => addWaypoint());
     document.querySelector('#addgpx')?.addEventListener('click', () => addGPX());
+
     trailTitle?.addEventListener('keyup', (e) => {
         if (e.ctrlKey || e.altKey || e.metaKey) return;
 
         e.target.value = e.target.value.sentenceCase();
     });
 
-    // get a list of all keywords so we can pre-select and not have to guess
-    const getKeywords = await api(`${host}${usersAPI}mapotrails/keywords`);
-    const allKeywords = getKeywords?.response ?? [];
+    // Handle master "all year" checkbox toggle
+    seasonAllYear.addEventListener('change', e => {
+        const isChecked = e.target.checked;
+        monthCheckboxes.forEach(c => c.checked = isChecked);
+    });
 
-    allKeywords.sort((a, b) => a.localeCompare(b));
+    // Handle individual month checkbox toggles
+    monthCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', e => {
+            if (!e.target.checked && seasonAllYear.checked) seasonAllYear.checked = false;
+        });
+    });
+
+    // add list ordering to GPX files and waypoints
+    initListOrdering(document.querySelector('ul#files'));
+    initListOrdering(document.querySelector('ul#waypoints'));
+
+    // get a list of all keywords so we can pre-select and not have to guess
+    if (pageName.includes('create') || pageName.includes('edit')) {
+        const getKeywords = await api(`${apiURL}account/mapotrails/keywords`, [], true);
+        allKeywords = getKeywords?.response ?? [];
+
+        allKeywords.sort((a, b) => a.localeCompare(b));
+    }
 
     // trim trailing comma/space
     kw?.addEventListener('blur', (e) => {
@@ -1279,7 +1520,7 @@ async function adminTrailMgmt() {
         }
 
         keywordResults.innerHTML = results
-            .map(kw => `<div id="kw-item">${kw}</div>`)
+            .map(kw => `<div id="kw-item" class="result">${kw}</div>`)
             .join('');
 
         keywordResults.style.display = 'block';
@@ -1526,7 +1767,7 @@ function adminWildfireMgmt() {
             query.search(queryString);
         });
 
-        // searh wildfires
+        // search wildfires
         const q = document.querySelector('#q');
         if (!q) return;
 
@@ -1847,8 +2088,38 @@ async function startup() {
     }
 
     // ADMIN: trail management
+    if (pageName == 'admin/trails') {
+        const query = new QueryTrails();
+        query.search(window.location.search.replace('?', '') ?? null);
+
+        document.querySelector('form#searchTrails').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const params = new URLSearchParams();
+
+            for (const [key, value] of formData.entries()) {
+                if (value !== '') params.append(key, value);
+            }
+
+            const queryString = params.toString();
+            const updatedQueryParams = queryString.replace(/(sort|order)=[A-Za-z]+&?/g, '');
+
+            document.querySelectorAll('.sortTable').forEach(th => {
+                let url = th.dataset.url;
+                th.dataset.url = `${url.match(/sort=[A-Za-z]+&order=[A-Za-z]+/)}&${updatedQueryParams}`;
+            });
+
+            query.search(queryString);
+        });
+    }
+
     if (pageName.includes('admin/trails')) {
         adminTrailMgmt();
+    }
+
+    if (pageName.includes('admin/wildfires')) {
+        adminWildfireMgmt();
     }
 
     if (pageName.includes('admin/organizations')) {
@@ -1934,7 +2205,11 @@ window.addEventListener('click', async (e) => {
             if (match2 != null) target.dataset.url = url.replace('order=DESC', 'order=ASC');
         }
 
-        new QueryWildfires().search(url);
+        if (pageName.includes('admin/trails')) {
+            new QueryTrails().search(url);
+        } else {
+            new QueryWildfires().search(url);
+        }
     }
 
     if (target.classList.contains('result')) {
@@ -1944,6 +2219,8 @@ window.addEventListener('click', async (e) => {
 
             document.querySelector('input[name=unit]').value = unit;
             document.querySelector('#q').value = name;
+        } else if (pageName.includes('admin/trails')) {
+
         } else {
             const lat = target.dataset.lat,
                 lon = target.dataset.lon,
@@ -1976,52 +2253,64 @@ window.addEventListener('click', async (e) => {
         document.querySelector('.search-results').innerHTML = '';
     }
 
-    // delete waypoints
-    if (target.id.startsWith('deletewaypoint')) {
-        const id = target.dataset.id;
+    // delete items from lists of waypoints, gpx, etc
+    if (target.classList.contains('trails-btn') && target.classList.contains('delete')) {
+        e.preventDefault();
+        const action = target.dataset.action;
 
-        if (confirm('Are you sure you want to delete this waypoint?')) {
-            target.parentNode.parentNode.parentNode.remove();
+        // delete waypoint
+        if (action == 'deletewaypoint') {
+            const id = target.dataset.id;
 
-            if (id) {
-                const resp = await api(`${host}${usersAPI}waypoint`, [['mode', 'delete'], ['id', id]]);
+            if (confirm('Are you sure you want to delete this waypoint?')) {
+                target.closest('.wrap').remove();
 
-                if (resp) alert('That waypoint was successfully removed and your changes were saved.');
+                if (id) {
+                    const resp = await api(`${host}${usersAPI}waypoint`, [['mode', 'delete'], ['id', id]]);
+
+                    if (resp) alert('That waypoint was successfully removed and your changes were saved.');
+                }
             }
+
+            return;
         }
-    }
 
-    // delete gpx
-    if (target.id.startsWith('deletegpx')) {
-        const id = target.dataset.id,
-            d = target.dataset.delta,
-            tid = target.dataset.tid,
-            fn = target.dataset.filename;
+        // delete gpx
+        if (action == 'deletegpx') {
+            const id = target.dataset.id,
+                d = target.dataset.delta,
+                tid = target.dataset.tid,
+                fn = target.dataset.filename;
 
-        if (confirm('Are you sure you want to delete this GPX file?')) {
-            target.parentNode.parentNode.parentNode.remove();
+            if (confirm('Are you sure you want to delete this GPX file?')) {
+                target.closest('.wrap').remove();
 
-            if (id && tid) {
-                const resp = await api(`${host}${usersAPI}gpx`, [['mode', 'delete'], ['id', id], ['trail_id', tid], ['filename', fn], ['delta', d]]);
+                if (id && tid) {
+                    const resp = await api(`${host}${usersAPI}gpx`, [['mode', 'delete'], ['id', id], ['trail_id', tid], ['filename', fn], ['delta', d]]);
 
-                if (resp) alert('That GPX file was successfully removed and your changes were saved.');
+                    if (resp) alert('That GPX file was successfully removed and your changes were saved.');
+                }
             }
+
+            return;
         }
-    }
 
-    // delete multimedia
-    if (target.id.startsWith('deletemedia')) {
-        const id = target.dataset.id,
-            fn = target.dataset.filename;
+        // delete multimedia
+        if (action == 'deletemedia') {
+            const id = target.dataset.id,
+                fn = target.dataset.filename;
 
-        if (confirm('Are you sure you want to delete this multimedia?')) {
-            target.parentNode.remove();
+            if (confirm('Are you sure you want to delete this multimedia?')) {
+                target.closest('.wrapper').remove();
 
-            if (id && fn) {
-                const resp = await api(`${host}${usersAPI}media`, [['mode', 'delete'], ['id', id], ['filename', fn]]);
+                if (id && fn) {
+                    const resp = await api(`${host}${usersAPI}media`, [['mode', 'delete'], ['id', id], ['filename', fn]]);
 
-                if (resp) alert('That photo was successfully removed and your changes were saved.');
+                    if (resp) alert('That photo was successfully removed and your changes were saved.');
+                }
             }
+
+            return;
         }
     }
 

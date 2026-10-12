@@ -9,3 +9,8 @@
 /mapotrails.com/src/eslint.config.mjs
 /mapotrails.com/src/webpack.config.js
 /mapotrails.com/src/package-lock.json
+/apps/oreroads/src/node_modules/
+/apps/oreroads/dist/
+/apps/oreroads/src/eslint.config.mjs
+/apps/oreroads/src/webpack.config.js
+/apps/oreroads/src/package-lock.json

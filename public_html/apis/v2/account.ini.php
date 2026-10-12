@@ -1,4 +1,5 @@
 <?
+
 use UAParser\Parser;
 
 function deleteMapboxFeature($id)
@@ -49,14 +50,30 @@ function getUserID()
 
 $id = $_REQUEST['id'] ?? null;
 $mode = $_REQUEST['mode'] ?? null;
-$mapotrails = ['userUploads', 'waypoint', 'gpx', 'media', 'favtrails', 'download'];
+$mapotrails = ['mapotrails', 'userUploads', 'waypoint', 'gpx', 'media', 'favtrails', 'getTrails', 'download'];
 $mapboxToken = 'sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ';
 
 if (in_array($method, $mapotrails)) $con2 = mapoTrailsDB();
 
 // METHOD: mapotrails
 if ($method == 'mapotrails') {
-    if ($mode == 'meta') $response = getMapbox('clnnlg3w728a02nmv0ffz57jf');
+    if ($function == 'keywords') {
+        $terms = [];
+
+        $result = mysqli_query($con2, "SELECT keywords FROM trails");
+
+        while ($row = mysqli_fetch_assoc($result)) {
+            foreach (json_decode($row['keywords']) as $k) {
+                if ($k != '') $terms[] = $k;
+            }
+        }
+
+        $response = array_values(array_unique($terms));
+    }
+
+    if ($function == 'meta') {
+        $response = getMapbox('clnnlg3w728a02nmv0ffz57jf');
+    }
 }
 
 // METHOD: invoices
@@ -98,7 +115,7 @@ if ($method == 'userUploads') {
     while ($row = mysqli_fetch_assoc($sql)) {
         $response[] = $row;
     }
-} 
+}
 
 // METHOD: waypoint
 if ($method == 'waypoint') {
@@ -106,7 +123,7 @@ if ($method == 'waypoint') {
         executeQuery('s', [$id], "DELETE FROM waypoints WHERE id = ?");
         $response = 'success';
     }
-} 
+}
 
 // METHOD: gpx
 if ($method == 'gpx') {
@@ -128,7 +145,7 @@ if ($method == 'gpx') {
 }
 
 // METHOD: media
-if ($method == 'media') {    
+if ($method == 'media') {
     if ($mode == 'delete') {
         executeQuery('s', [$id], "DELETE FROM media WHERE id = ?");
 
@@ -145,7 +162,7 @@ if ($method == 'favFires') {
     $sql = "SELECT incidentId, state, name, date, geo, type, acres, t.wfid, time, status FROM track_fires AS t LEFT JOIN wildfires AS w ON w.wfid = t.wfid WHERE uid = ?";
 
     $result = executeQuery('i', [$uid], $sql);
-    foreach($result as $row) {
+    foreach ($result as $row) {
         $f[] = [
             'wfid' => intval($row['wfid']),
             'incidentId' => $row['incidentId'],
@@ -174,7 +191,7 @@ if ($method == 'favTrails') {
     } else {
         $result = executeQuery('i', [$uid], "SELECT t.id, f.tid, t.type, title, stats FROM track_trails AS f LEFT JOIN trails AS t ON t.id = f.tid LEFT JOIN stats AS s ON s.trail_id = f.tid WHERE uid = ? ORDER BY f.time DESC");
 
-        foreach($result as $row) {
+        foreach ($result as $row) {
             $trails[] = [
                 'id' => $row['id'],
                 'title' => $row['title'],
@@ -246,6 +263,60 @@ if ($method == 'getFires') {
         $row['name'] = incidentName($row['name'], $row['incidentID'], $row['type']);
         $row['url'] = wildfireURL($row['wfid'], $row['name'], $row['state']);
         $response['fires'][] = $row;
+    }
+
+    $response['count'] = intval($totalRows ?? 0);
+}
+
+// METHOD: getTrails
+if ($method == 'getTrails') {
+    $catFilter = $_REQUEST['category'] == 'All Activities' ? '' : strtolower($_REQUEST['category'] ?? '');
+
+    if (!isset($_REQUEST['type']) || strtolower($_REQUEST['type']) == 'all') {
+        $types = "'trail','snow'";
+    } else {
+        $types = '"' . $_REQUEST['type'] . '"';
+    }
+
+    $where = "type IN ($types)";
+    $where .= isset($_REQUEST['q']) && $_REQUEST['q'] != '' ? ' AND (title LIKE \'%' . $_REQUEST['q'] . '%\' OR keywords LIKE \'%' . $_REQUEST['q'] . '%\')' : '';
+
+    $rowsPerPage = 100;
+    $currentPage = $_REQUEST['results'] ?? 1;
+    $offset = ($currentPage - 1) * $rowsPerPage;
+
+    $query = "SELECT t.id, type, title, term, author, premium, public, created, updated
+    FROM trails t
+    LEFT JOIN categories c ON c.trail_id = t.id
+    WHERE $where
+    ORDER BY " . ($_REQUEST['sort'] ?: 'updated') . ' ' . ($_REQUEST['order'] ?: 'DESC');
+
+    $totalRows = mysqli_fetch_assoc(mysqli_query($con2, "SELECT COUNT(*) AS totalRows FROM trails WHERE $where"))['totalRows'];
+    $query .= " LIMIT $offset, $rowsPerPage";
+
+    $sql = mysqli_query($con2, $query);
+
+    while ($row = mysqli_fetch_assoc($sql)) {
+        if ($catFilter !== '') {
+            $terms = json_decode(strtolower($row['term'] ?? ''), true) ?? [];
+
+            // Skip if the requested type is not in the decoded JSON terms array
+            if (!in_array($catFilter, $terms, true)) {
+                continue;
+            }
+        }
+
+        $response['trails'][] = [
+            'id' => (int) $row['id'],
+            'type' => $row['type'],
+            'title' => $row['title'],
+            'author' => $row['author'],
+            'url' => guideUrl($row['title'], $row['type'], $row['id']),
+            'public' => (int) $row['public'],
+            'premium' => (int) $row['premium'],
+            'created' => (int) $row['created'],
+            'updated' => (int) $row['updated']
+        ];
     }
 
     $response['count'] = intval($totalRows ?? 0);
