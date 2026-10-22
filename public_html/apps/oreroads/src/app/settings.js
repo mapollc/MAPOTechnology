@@ -109,7 +109,7 @@ export class Settings {
 
             //const sync = Math.round(new Date().getTime() / 1000);
 
-            const response = await api(config.apiURL + 'oreroads', [
+            const response = await api(`${ENV.apiURL}oreroads`, [
                 ['token', this.getUser().token()],
                 ['settings', JSON.stringify(data)]
             ]);

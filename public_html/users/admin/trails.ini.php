@@ -23,6 +23,10 @@ function gpxToGeoJson($file)
 
     $count = count($point);
 
+    if ($count === 0) {
+        return null;
+    }
+
     $coords = [];
 
     for ($x = 0; $x < $count; $x++) {
@@ -39,7 +43,7 @@ function generateTrailGeoJSON($tid, $title, $type, $premium, $public, $term, $ke
 {
     global $con2;
 
-    $stats = mysqli_fetch_assoc(mysqli_query($con2, "SELECT stats FROM stats WHERE trail_id = $tid LIMIT 1"));
+    $stats = mysqli_fetch_assoc(mysqli_query($con2, "SELECT stats FROM gpx g LEFT JOIN stats s ON s.gis_id = g.id WHERE g.trail_id = $tid AND delta = 0 LIMIT 1"));
     $data = mysqli_query($con2, "SELECT id, filename, mode, caption, delta, display FROM gpx WHERE trail_id = $tid ORDER BY delta ASC");
 
     $feats = [];
@@ -49,7 +53,7 @@ function generateTrailGeoJSON($tid, $title, $type, $premium, $public, $term, $ke
 
         $coords = gpxToGeoJson($gpx['filename']);
 
-        if ($coords == null) continue;
+        if ($coords == null || empty($coords)) continue;
 
         /*if ($gpx['delta'] == 0) {
             $new = json_encode($collect['stats']);
@@ -155,7 +159,7 @@ function updateTileset(/*$trailID = null*/)
     ////if ($trailID) {
     ////$cmd = sprintf('php %s %d > %s 2>&1 &', escapeshellarg($scriptPath), $trailID, escapeshellarg($logPath));
     ////} else {
-    $cmd = sprintf('php %s > %s 2>&1 &', escapeshellarg($scriptPath), escapeshellarg($logPath));
+    $cmd = sprintf('php %s %s > %s 2>&1 &', escapeshellarg($scriptPath), '--tiles', escapeshellarg($logPath));
     ////}
 
     exec($cmd);
@@ -188,6 +192,11 @@ if ($function == 'create' || $function == 'edit') {
     return;
 }
 
+if ($function == 'map') {
+    include_once "{$documentRoot}admin/incs/map-trail.ini.php";
+    return;
+}
+
 if ($function == 'delete') {
     include_once "{$documentRoot}admin/incs/delete_trail.ini.php";
     return;
@@ -197,7 +206,7 @@ if ($function == 'delete') {
 if ($function == 'vector') {
     $update = updateTileset();
 
-    header("Location: ../trails?tiles=1");
+    if ($update) header("Location: ../trails?tiles=1");
     ////$uploadID = $update->id;
 
     ////if ($update->error == null) {
@@ -223,7 +232,7 @@ if ($_GET['deleted'] == 1) {
             <h1>Trails Management</h1>
 
             <div class="controls">
-                <form action="" id="searchTrails" method="get" style="align-items:flex-end">
+                <form action="" id="searchTrails" method="get">
                     <input type="text" class="input" style="display:inline-block;max-width:300px" name="q" placeholder="Search trails..." value="<?= ($_GET['q'] ? $_GET['q'] : '') ?>">
 
                     <select name="type" class="input" style="max-width:100px">
@@ -243,7 +252,8 @@ if ($_GET['deleted'] == 1) {
 
                     <a href="trails/create" class="btn btn-green">Create new trail</a>
                     <!--<a href="trails/systems" class="btn btn-yellow">Manage Trail Systems</a>-->
-                    <a href="trails/vector" class="btn btn-light-blue">Publish vector tiles</a>
+                    <a href="trails/vector?<?= time() ?>" class="btn btn-light-blue">Publish vector tiles</a>
+                    <span class="help">Last published <?= ago(filemtime('/home/mapo/public_html/mapotrails.com/data/maps/tiles')) ?></span>
 
                 </form>
             </div>

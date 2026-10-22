@@ -48,6 +48,251 @@ function getUserID()
     return $user['uid'] ?? null;
 }
 
+function convert($lat)
+{
+    $a = explode('/', $lat[0])[0];
+    $b = explode('/', $lat[1])[0];
+    $c = explode('/', $lat[2])[0];
+
+    return [$a, $b, $c];
+}
+
+function DMStoDD($deg, $min, $sec)
+{
+    return $deg + ((($min * 60) + (substr($sec, 0, -2) . '.' . substr($sec, -2))) / 3600);
+}
+
+function gps($lat, $lon)
+{
+    $a = convert($lat);
+    $b = convert($lon);
+
+    return [DMStoDD($a[0], $a[1], $a[2]), DMStoDD($b[0], $b[1], $b[2]) * -1];
+}
+
+function uploadTrailPhotos($trailID)
+{
+    global $_FILES;
+    global $con2;
+
+    $listOfPhotos = [];
+
+    // add new multimedia
+    $multimedia = $_FILES['multimedia'] ?? null;
+
+    if (!empty($multimedia['name']) && count($multimedia['name']) > 0) {
+        // Start new media deltas right after the highest reordered delta, 
+        // or fallback to counting database rows if no media items were posted.
+        $existingRes = mysqli_query($con2, "SELECT COUNT(*) as cnt FROM media WHERE trail_id = $trailID");
+        $existingRow = mysqli_fetch_assoc($existingRes);
+        $delta = (int)($existingRow['cnt'] ?? 0);
+
+        $target_dir = '/home/mapo/public_html/mapotrails.com/data/photos/';
+
+        for ($i = 0; $i < count($multimedia['name']); $i++) {
+            // Skip empty upload fields.
+            if (empty($multimedia['name'][$i])) {
+                continue;
+            }
+
+            // Skip files that PHP reported as having an upload error.
+            if ($multimedia['error'][$i] !== UPLOAD_ERR_OK) {
+                $wf = true;
+                continue;
+            }
+
+            /*
+         * Validate the actual image rather than trusting the filename extension.
+         * getimagesize() also gives us the dimensions and MIME type we need later.
+         */
+            $exif = @getimagesize($multimedia['tmp_name'][$i]);
+
+            if ($exif === false) {
+                $wf = true;
+                continue;
+            }
+
+            $mime = $exif['mime'];
+
+            if (!in_array($mime, ['image/jpeg', 'image/png', 'image/gif'], true)) {
+                $wf = true;
+                continue;
+            }
+
+            // Get the original extension from the uploaded filename.
+            $extn = strtolower(pathinfo($multimedia['name'][$i], PATHINFO_EXTENSION));
+
+            if ($extn === 'jpeg') $extn = 'jpg';
+
+            // Generate a safe filename instead of relying on the user's uploaded filename. This also eliminates filename collisions.
+            $basename = pathinfo($multimedia['name'][$i], PATHINFO_FILENAME)
+                . '_' . bin2hex(random_bytes(4))
+                . '.' . $extn;
+
+            $target_file = "{$target_dir}{$basename}";
+
+            // Move the original image into the photos directory.
+            if (!move_uploaded_file($multimedia['tmp_name'][$i], $target_file)) {
+                $wf = true;
+                continue;
+            }
+
+            // Read EXIF data about the photo.
+            $exifData = '';
+
+            $exif = @exif_read_data($target_file, 'IFD0');
+
+            if ($exif !== false) {
+                $size = $exif['FileSize'] ?? filesize($target_file);
+                $ewidth = $exif['COMPUTED']['Width'] ?? null;
+                $eheight = $exif['COMPUTED']['Height'] ?? null;
+
+                $date = null;
+
+                if (!empty($exif['DateTimeOriginal'])) {
+                    $date = strtotime($exif['DateTimeOriginal']);
+                } elseif (!empty($exif['FileDateTime'])) {
+                    $date = $exif['FileDateTime'];
+                }
+
+                if ($size && $ewidth && $eheight) {
+                    $data = [
+                        'filesize' => $size,
+                        'width'    => $ewidth,
+                        'height'   => $eheight,
+                        'time'     => $date
+                    ];
+
+                    if (!empty($exif['GPSLatitude']) && !empty($exif['GPSLongitude'])) {
+                        $data['coordinates'] = gps(
+                            $exif['GPSLatitude'],
+                            $exif['GPSLongitude']
+                        );
+                    }
+
+                    $exifData = json_encode(
+                        $data,
+                        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                    );
+                }
+            }
+
+            /*
+         * Get the actual image dimensions.
+         * $exif is already the getimagesize() result from above,
+         * but read it again from the moved file so all processing
+         * happens against the final file.
+         */
+            $exif = @getimagesize($target_file);
+
+            // Remove the original if it somehow isn't a valid image.
+            if ($exif === false) {
+                unlink($target_file);
+                $wf = true;
+                continue;
+            }
+
+            $width = $exif[0];
+            $height = $exif[1];
+
+            $type = match ($exif['mime']) {
+                'image/jpeg' => 'jpeg',
+                'image/png'  => 'png',
+                'image/gif'  => 'gif',
+                default      => ''
+            };
+
+            if (!$type || !$width || !$height) {
+                unlink($target_file);
+                $wf = true;
+                continue;
+            }
+
+            // Calculate resized dimensions while preserving aspect ratio.
+            $newwidth = 480;
+            $newheight = round($height / ($width / $newwidth));
+
+            $newwidth2 = 350;
+            $newheight2 = round($height / ($width / $newwidth2));
+
+            // Create the resized images.
+            $thumb = imagecreatetruecolor($newwidth, $newheight);
+            $thumb2 = imagecreatetruecolor($newwidth2, $newheight2);
+
+            // Preserve transparency for PNG and GIF images.
+            if ($type === 'png' || $type === 'gif') {
+                imagealphablending($thumb, false);
+                imagesavealpha($thumb, true);
+
+                imagealphablending($thumb2, false);
+                imagesavealpha($thumb2, true);
+
+                $transparent = imagecolorallocatealpha($thumb, 0, 0, 0, 127);
+                $transparent2 = imagecolorallocatealpha($thumb2, 0, 0, 0, 127);
+
+                imagefill($thumb, 0, 0, $transparent);
+                imagefill($thumb2, 0, 0, $transparent2);
+            }
+
+            // Create the source image.
+            $source = match ($type) {
+                'jpeg' => @imagecreatefromjpeg($target_file),
+                'png'  => @imagecreatefrompng($target_file),
+                'gif'  => @imagecreatefromgif($target_file),
+                default => false
+            };
+
+            if ($source === false) {
+                unlink($target_file);
+
+                $wf = true;
+                continue;
+            }
+
+            // Resize the image to both required sizes.
+            imagecopyresampled($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+            imagecopyresampled($thumb2, $source, 0, 0, 0, 0, $newwidth2, $newheight2, $width, $height);
+
+            // Save the large and thumbnail versions.
+            if ($type === 'jpeg') {
+                imagejpeg($thumb, "{$target_dir}large/$basename", 100);
+                imagejpeg($thumb2, "{$target_dir}thumbnail/$basename", 100);
+            } elseif ($type === 'png') {
+                imagepng($thumb, "{$target_dir}large/$basename");
+                imagepng($thumb2, "{$target_dir}thumbnail/$basename");
+            } elseif ($type === 'gif') {
+                imagegif($thumb, "{$target_dir}large/$basename");
+                imagegif($thumb2, "{$target_dir}thumbnail/$basename");
+            }
+
+            /*
+         * Add the media record to the existing SQL query string.
+         *
+         * Escape values because this is still using the existing
+         * multi-query process rather than changing the database workflow.
+         */
+            $trailID_sql = mysqli_real_escape_string($con2, $trailID);
+            $basename_sql = mysqli_real_escape_string($con2, $basename);
+            $exifData_sql = mysqli_real_escape_string($con2, $exifData);
+
+            mysqli_query($con2, "INSERT INTO media (trail_id, file, type, title, data, delta) VALUES ('$trailID_sql', '$basename_sql', 'photo', '', '$exifData_sql', '$delta')");
+            $mid = mysqli_insert_id($con2);
+
+            $listOfPhotos[] = [
+                'id' => $mid,
+                'file' => $basename,
+                'delta' => $delta,
+                'exif' => json_decode($exifData)
+            ];
+
+            // Increment only after successfully processing the image.
+            $delta++;
+        }
+    }
+
+    return $listOfPhotos;
+}
+
 $id = $_REQUEST['id'] ?? null;
 $mode = $_REQUEST['mode'] ?? null;
 $mapotrails = ['mapotrails', 'userUploads', 'waypoint', 'gpx', 'media', 'favtrails', 'getTrails', 'download'];
@@ -73,6 +318,64 @@ if ($method == 'mapotrails') {
 
     if ($function == 'meta') {
         $response = getMapbox('clnnlg3w728a02nmv0ffz57jf');
+    }
+
+    // METHOD: waypoint
+    if ($function == 'waypoint') {
+        if ($mode == 'delete') {
+            executeQuery('s', [$id], "DELETE FROM waypoints WHERE id = ?", true);
+            $response = 'success';
+        }
+    }
+
+    // METHOD: gpx
+    if ($function == 'gpx') {
+        if ($mode == 'delete') {
+            executeQuery('s', [$id], "DELETE FROM gpx WHERE id = ?", true);
+
+            if ($_REQUEST['delta'] == 0) {
+                executeQuery('s', [$_REQUEST['trail_id']], "DELETE FROM `stats` WHERE trail_id = ?", true);
+            }
+
+            $folder = '/home/mapo/public_html/mapotrails.com/data/gpx';
+
+            if (file_exists("$folder/{$_REQUEST['filename']}")) {
+                unlink("$folder/{$_REQUEST['filename']}");
+            }
+
+            deleteMapboxFeature($id);
+
+            $response = 'success';
+        }
+    }
+
+    // METHOD: media
+    if ($function == 'media') {
+        if ($mode == 'upload') {
+            $response = uploadTrailPhotos($_REQUEST['trail_id']);
+        }
+
+        if ($mode == 'delete') {
+            executeQuery('s', [$id], "DELETE FROM media WHERE id = ?", true);
+
+            $folder = '/home/mapo/public_html/mapotrails.com/data/photos';
+
+            unlink("$folder/{$_REQUEST['filename']}");
+            unlink("$folder/large/{$_REQUEST['filename']}");
+            unlink("$folder/thumbnail/{$_REQUEST['filename']}");
+
+            $response = 'success';
+        }
+    }
+
+    // METHOD: stats
+    if ($function == 'stats') {
+        $stats = null;
+        $data = executeQuery('s', [$id], "SELECT stats FROM stats WHERE gis_id = ?", true);
+
+        if (!empty($data)) $stats = json_decode($data['stats']);
+
+        $response = ['stats' => $stats];
     }
 }
 
@@ -114,45 +417,6 @@ if ($method == 'userUploads') {
 
     while ($row = mysqli_fetch_assoc($sql)) {
         $response[] = $row;
-    }
-}
-
-// METHOD: waypoint
-if ($method == 'waypoint') {
-    if ($mode == 'delete') {
-        executeQuery('s', [$id], "DELETE FROM waypoints WHERE id = ?");
-        $response = 'success';
-    }
-}
-
-// METHOD: gpx
-if ($method == 'gpx') {
-    if ($mode == 'delete') {
-        executeQuery('s', [$id], "DELETE FROM gpx WHERE id = ?");
-
-        if ($_REQUEST['delta'] == 0) {
-            executeQuery('s', [$_REQUEST['trail_id']], "DELETE FROM `stats` WHERE trail_id = ?");
-        }
-
-        if (file_exists('/home/mapo/public_html/mapotrails.com/data/gpx/' . $_REQUEST['filename'])) {
-            unlink('/home/mapo/public_html/mapotrails.com/data/gpx/' . $_REQUEST['filename']);
-        }
-
-        deleteMapboxFeature($id);
-
-        $response = 'success';
-    }
-}
-
-// METHOD: media
-if ($method == 'media') {
-    if ($mode == 'delete') {
-        executeQuery('s', [$id], "DELETE FROM media WHERE id = ?");
-
-        unlink('/home/mapo/public_html/mapotrails.com/data/photos/' . $_REQUEST['filename']);
-        unlink('/home/mapo/public_html/mapotrails.com/data/photos/large/' . $_REQUEST['filename']);
-        unlink('/home/mapo/public_html/mapotrails.com/data/photos/thumbnail/' . $_REQUEST['filename']);
-        $response = 'success';
     }
 }
 

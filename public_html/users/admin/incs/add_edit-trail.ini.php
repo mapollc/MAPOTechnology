@@ -94,7 +94,8 @@ if ($function == 'edit') {
         "SELECT t.id, type, created, updated, author, title, route, keywords, season, contributors, term, public, premium
         FROM trails t
         LEFT JOIN categories c ON c.trail_id = t.id
-        WHERE t.id = ?",
+        WHERE t.id = ?
+        LIMIT 1",
         true
     );
 
@@ -118,6 +119,7 @@ if ($function == 'edit') {
     }
 
     $route = $row['route'];
+    $season = $row['season'] && $row['season'] != '' && $row['season'] != '[]' ? json_decode($row['season']) : null;
 
     // if the user has created content
     if ($_GET['justadded'] == 1) {
@@ -132,7 +134,7 @@ if ($function == 'edit') {
 
     <div class="row">
         <div class="col">
-            <fieldset class="card">
+            <div class="card">
                 <h1><?= $function == 'create' ? 'Add New' : 'Edit' ?> Trail<?= $function == 'edit' ? ": {$row['title']}" : '' ?></h1>
                 <? if ($function == 'edit') { ?>
                     <span class="help" style="margin:-1em 0 1em 0"><?= $row['updated'] > $row['created'] ? 'Updated: ' . date('D, M j, Y g:i A', $row['updated']) . ' &middot; ' : '' ?>Created: <?= date('D, M j, Y g:i A', $row['created']) ?></span>
@@ -188,14 +190,15 @@ if ($function == 'edit') {
                 <textarea name="route" id="route" class="input" style="line-height:1.3;max-width:1200px;height:300px" placeholder="Description of the trail..." data-wysiwyg><?= $route ?></textarea>
 
                 <label>Season</label>
-                <!--<input type="text" name="season" class="input" placeholder="Season" value="<?= $row['season'] ?>">-->
+                <!--<input type="text" name="season" class="input" placeholder="Season" value="<? //= $row['season'] 
+                                                                                                ?>">-->
 
                 <div class="month-selector">
-                    <input type="checkbox" id="allmos" <?= count(json_decode($row['season'])) === 12 ? ' checked' : '' ?>>
+                    <input type="checkbox" id="allmos" <?= $season && count($season) === 12 ? ' checked' : '' ?>>
                     <label for="allmos">All Year</label>
 
                     <? foreach ($months as $value => $month) { ?>
-                        <input type="checkbox" id="month-<?= $value ?>" name="months[]" title="<?= $longMonths[$value - 1] ?>" value="<?= $value ?>" <?= in_array($value, json_decode($row['season'])) ? ' checked' : '' ?>>
+                        <input type="checkbox" id="month-<?= $value ?>" name="months[]" title="<?= $longMonths[$value - 1] ?>" value="<?= $value ?>" <?= $season && in_array($value, $season) ? ' checked' : '' ?>>
                         <label for="month-<?= $value ?>" title="<?= $longMonths[$value - 1] ?>"><?= $month ?></label>
                     <? } ?>
                 </div>
@@ -208,7 +211,7 @@ if ($function == 'edit') {
                     <input type="text" name="keywords" class="input" autocomplete="off" placeholder="Keywords (separated by commas)" value="<?= implode(', ', $kw) ?>">
                     <div id="kw-results" class="search-results"></div>
                 </div>
-            </fieldset>
+            </div>
 
             <fieldset class="card">
                 <h2>GPX Files</h2>
@@ -254,7 +257,11 @@ if ($function == 'edit') {
                                         </div>
                                     </div>
 
-                                    <div class="column">
+                                    <div class="column actions">
+                                        <button class="trails-btn"
+                                            data-action="getstats"
+                                            data-id="<?= $gpx['id'] ?>"><i class="far fa-chart-scatter"></i></button>
+
                                         <button class="trails-btn delete"
                                             title="Delete this GPX file"
                                             data-action="deletegpx"
@@ -268,51 +275,66 @@ if ($function == 'edit') {
                     <? }
                     } ?>
                 </ul>
-                <a class="btn btn-sm btn-orange" style="display:block;margin:10px 0 25px 0" href="#" id="addgpx" onclick="return false">Add GPX File</a>
+                <div class="btn-group" style="margin:0!important">
+                    <a class="btn btn-sm btn-orange" href="#" id="addgpx" onclick="return false">Add GPX File</a>
+                    <a class="btn btn-sm btn-gray" href="#" onclick="window.open('map?id=<?= $_GET['id'] ?>');return false">View on Map</a>
+                </div>
             </fieldset>
 
             <fieldset class="card">
                 <h2>Multimedia</h2>
                 <label style="margin-top:10px">Upload new multimedia</label>
-                <input type="file" name="multimedia[]" class="input" multiple>
 
-                <? if ($function == 'edit' && $noOfMedia > 0) {
-                    echo '<div class="sortable multimedia">';
+                <div id="progress-container">
+                    <div id="progress-text">Uploading... 0%</div>
+                    <div class="wrapper">
+                        <div id="progress-bar"></div>
+                    </div>
+                </div>
 
-                    while ($ph = mysqli_fetch_assoc($media)) {
-                        $data = json_decode($ph['data'], true);
-                        $isPhoto = $ph['type'] === 'photo';
-                ?>
-                        <div class="wrapper">
-                            <? if ($isPhoto) { ?>
-                                <a target="blank" href="https://cdn.mapotrails.com/photos/<?= $ph['file'] ?>">
-                                    <img src="https://cdn.mapotrails.com/photos/thumbnail/<?= $ph['file'] ?>" style="display:block;max-width:100%">
-                                </a>
-                            <? } else { ?>
-                                <iframe style="width:100%;height:177.5px" src="https://www.youtube.com/embed/UGpei_reX_4?si=Dr6WpLW1GgtmvFzy&amp;controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-                            <? }
+                <input type="file" id="newMedia" data-trail-id="<?= $trailID ?>" name="multimedia[]" class="input" multiple>
 
-                            if ($isPhoto) { ?>
-                                <span class="meta">
-                                    File Size: <?= $data['filesize'] ? round($data['filesize'] * 0.000001, 1) . ' MB' : '~' ?><br>
-                                    Dimensions: <?= $data['width'] ? number_format($data['width']) . '/' . number_format($data['height']) . ' px' : 'Unknown' ?><br>
-                                    Geolocated: <?= $data['coordinates'] ? '<b style="font-weight:500;color:green">Yes</b>' : 'No' ?>
-                                </span>
-                            <? } ?>
+                <? if ($function == 'edit' && $noOfMedia > 0) { ?>
+                    <ul class="sortable multimedia">
 
-                            <input type="hidden" name="media[id][]" value="<?= $ph['id'] ?>">
-                            <input type="text" name="media[caption][]" class="input" style="margin-top:0.5rem;font-size:14px" placeholder="<?= $isPhoto ? 'Photo' : 'Video' ?> caption..." value="<?= $ph['title'] ?>">
-                            <button class="trails-btn delete"
-                                style="margin:0.5rem auto 0 auto"
-                                title="Delete this multimedia"
-                                data-action="deletemedia"
-                                data-filename="<?= $ph['file'] ?>"
-                                data-id="<?= $ph['id'] ?>">Delete</button>
-                        </div>
-                <? }
-                    echo '</div>';
-                }
-                ?>
+                        <? while ($ph = mysqli_fetch_assoc($media)) {
+                            $data = json_decode($ph['data'], true);
+                            $isPhoto = $ph['type'] === 'photo';
+                        ?>
+                            <li draggable="true">
+                                <input type="hidden" name="media[delta][]" value="<?= $ph['delta'] ?>">
+                                <input type="hidden" name="media[id][]" value="<?= $ph['id'] ?>">
+
+                                <div class="wrap" data-delta="<?= $ph['delta'] ?>">
+                                    <i class="fas fa-grip-horizontal reorder" aria-hidden="true"></i>
+                                    <? if ($isPhoto) { ?>
+                                        <a target="blank" href="https://cdn.mapotrails.com/photos/<?= $ph['file'] ?>">
+                                            <img src="https://cdn.mapotrails.com/photos/thumbnail/<?= $ph['file'] ?>" style="display:block;max-width:100%">
+                                        </a>
+                                    <? } else { ?>
+                                        <iframe style="width:100%;height:177.5px" src="https://www.youtube.com/embed/UGpei_reX_4?si=Dr6WpLW1GgtmvFzy&amp;controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                                    <? }
+
+                                    if ($isPhoto) { ?>
+                                        <span class="meta">
+                                            File Size: <?= $data['filesize'] ? round($data['filesize'] * 0.000001, 1) . ' MB' : '~' ?><br>
+                                            Dimensions: <?= $data['width'] ? number_format($data['width']) . '/' . number_format($data['height']) . ' px' : 'Unknown' ?><br>
+                                            Geolocated: <?= $data['coordinates'] ? '<b style="font-weight:500;color:green">Yes</b>' : 'No' ?>
+                                        </span>
+                                    <? } ?>
+
+                                    <input type="text" name="media[caption][]" class="input" style="margin-top:0.5rem;font-size:14px" placeholder="<?= $isPhoto ? 'Photo' : 'Video' ?> caption..." value="<?= $ph['title'] ?>">
+                                    <button class="trails-btn delete"
+                                        style="margin:0.5rem auto 0 auto"
+                                        title="Delete this multimedia"
+                                        data-action="deletemedia"
+                                        data-filename="<?= $ph['file'] ?>"
+                                        data-id="<?= $ph['id'] ?>">Delete</button>
+                                </div>
+                            </li>
+                        <? } ?>
+                    </ul>
+                <? } ?>
             </fieldset>
 
             <fieldset class="card">

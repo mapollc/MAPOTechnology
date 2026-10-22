@@ -34,9 +34,10 @@ function generateTiles()
 
     $tileName = 'trails';
     $geojsonDirectory = '/home/mapo/public_html/mapotrails.com/data/geojson';
-    $baseURL = '/home/mapo/public_html/mapotrails.com/data/maps/tiles';
+    ////$baseURL = '/home/mapo/public_html/mapotrails.com/data/maps/tiles';
+    $baseURL = '/home/mapo/public_html/cron/tiles';
 
-    $minTileZoom = 9;
+    $minTileZoom = 8;
     $maxTileZoom = 18;
     $useCompression = true;
 

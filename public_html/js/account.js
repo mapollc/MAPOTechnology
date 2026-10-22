@@ -2,6 +2,7 @@ const host = `https://${window.location.host}/`,
     pageName = window.location.pathname.replace('/account/', ''),
     apiURL = 'https://api.mapotechnology.com/v1/',
     mapofireAPI = 'https://mapofire.com/api/v1/',
+    mapotrailsCDN = 'https://cdn.mapotrails.com/',
     usersAPI = 'account/secure/apis/',
     apiKey = 'c196d0958608ad2b7d4af2be078ecc54';
 
@@ -89,7 +90,8 @@ let calc,
     wildfires = [],
     keywordResults,
     centerMarker,
-    WILDFIRE_NEARBY_DIST = 50;
+    WILDFIRE_NEARBY_DIST = 50,
+    maplibregl = null;
 
 async function api(uri, fields = null, v2 = false, forAuth = false) {
     if (!navigator.onLine) {
@@ -666,6 +668,128 @@ class Calculate {
     }
 }
 
+class Extent {
+    constructor() {
+        this._bbox = [Infinity, Infinity, -Infinity, -Infinity];
+        this._valid = false;
+    }
+
+    include([lng, lat]) {
+        this._valid = true;
+        this._bbox[0] = Math.min(this._bbox[0], lng);
+        this._bbox[1] = Math.min(this._bbox[1], lat);
+        this._bbox[2] = Math.max(this._bbox[2], lng);
+        this._bbox[3] = Math.max(this._bbox[3], lat);
+        return this;
+    }
+
+    bbox() {
+        return this._valid ? this._bbox : null;
+    }
+
+    polygon() {
+        if (!this._valid) return null;
+
+        const [minX, minY, maxX, maxY] = this._bbox;
+
+        return {
+            type: "Polygon",
+            coordinates: [[
+                [minX, minY],
+                [maxX, minY],
+                [maxX, maxY],
+                [minX, maxY],
+                [minX, minY]
+            ]]
+        };
+    }
+}
+
+function geojsonCoords(gj) {
+    const coords = [];
+
+    function flatten(obj) {
+        if (!obj) return;
+
+        switch (obj.type) {
+            case "FeatureCollection":
+                obj.features.forEach(flatten);
+                break;
+
+            case "Feature":
+                flatten(obj.geometry);
+                break;
+
+            case "GeometryCollection":
+                obj.geometries.forEach(flatten);
+                break;
+
+            default:
+                if (Array.isArray(obj.coordinates)) {
+                    const stack = [obj.coordinates];
+
+                    while (stack.length) {
+                        const item = stack.pop();
+
+                        if (typeof item[0] === "number") {
+                            coords.push(item);
+                        } else {
+                            stack.push(...item);
+                        }
+                    }
+                }
+        }
+    }
+
+    flatten(gj);
+
+    return coords;
+}
+
+function traverse(obj, fn) {
+    if (!obj || typeof obj !== "object") return;
+
+    fn(obj);
+
+    Object.values(obj).forEach(v => traverse(v, fn));
+}
+
+function geojsonExtent(gj) {
+    const ext = new Extent();
+
+    geojsonCoords(gj).forEach(coord => ext.include(coord));
+
+    return ext.bbox();
+}
+
+geojsonExtent.polygon = function (gj) {
+    const ext = new Extent();
+
+    geojsonCoords(gj).forEach(coord => ext.include(coord));
+
+    return ext.polygon();
+};
+
+geojsonExtent.bboxify = function (obj) {
+    const geojsonTypes = new Set([
+        "FeatureCollection",
+        "Feature",
+        "GeometryCollection",
+        "Point",
+        "MultiPoint",
+        "LineString",
+        "MultiLineString",
+        "Polygon",
+        "MultiPolygon"
+    ]);
+
+    traverse(obj, value => {
+        if (value?.type && geojsonTypes.has(value.type)) {
+            value.bbox = geojsonExtent(value);
+        }
+    });
+};
+
 async function getCrowdsource() {
     const container = document.querySelector('#crowdsourced');
     if (!container) return;
@@ -826,7 +950,7 @@ async function downloadUserData() {
 
 function downloadFile(name, url) {
     const link = document.createElement('a');
-    link.href = `https://cdn.mapotrails.com/userGIS/${url}`;
+    link.href = `${mapotrailsCDN}userGIS/${url}`;
     link.download = name;
     link.style.display = 'none';
     document.body.appendChild(link);
@@ -1122,7 +1246,7 @@ function addGPX() {
                     </div>
                 </div>
             </div>
-            <div class="column">
+            <div class="column actions">
                 <button class="trails-btn delete" title="Delete this GPX file" data-action="deletegpx" data-tid="" data-delta="${n}" data-filename="" data-id="">Delete</button>
             </div>
         </div>
@@ -1372,31 +1496,55 @@ async function doSearch(q) {
 }
 
 function initListOrdering(list) {
-    if (!list) return;
+    if (!list) {
+        return;
+    }
+
+    let dragging = null;
 
     list.addEventListener('dragstart', e => {
-        if (e.target.tagName === 'LI') e.target.classList.add('dragging');
+        dragging = e.target.closest('li');
+        if (dragging) dragging.classList.add('dragging');
     });
 
     list.addEventListener('dragend', e => {
-        if (e.target.tagName === 'LI') {
-            e.target.classList.remove('dragging');
+        if (dragging) {
+            dragging.classList.remove('dragging');
+            dragging = null;
             updateDeltas(list);
         }
     });
 
     list.addEventListener('dragover', e => {
         e.preventDefault();
-        const dragging = list?.querySelector('.dragging');
+
         if (!dragging) return;
 
-        const siblings = [...list?.querySelectorAll('li:not(.dragging)')];
-        const nextSibling = siblings.find(sibling => {
-            const box = sibling.getBoundingClientRect();
-            return e.clientY < box.top + box.height / 2;
-        });
+        const siblings = [...list.querySelectorAll('li:not(.dragging)')];
 
-        list.insertBefore(dragging, nextSibling);
+        // Find the closest element using 2D distance, which handles multi-row wrapping perfectly
+        const closest = siblings.reduce((best, sibling) => {
+            const box = sibling.getBoundingClientRect();
+            const offset = Math.hypot(
+                e.clientX - (box.left + box.width / 2),
+                e.clientY - (box.top + box.height / 2)
+            );
+
+            return offset < best.offset ? { offset, element: sibling } : best;
+        }, {
+            offset: Number.POSITIVE_INFINITY
+        }).element;
+
+        if (closest) {
+            const box = closest.getBoundingClientRect();
+
+            // Check if mouse is past the horizontal or vertical center of the closest item
+            const isAfter = (e.clientX > box.left + box.width / 2) || (e.clientY > box.top + box.height);
+
+            list.insertBefore(dragging, isAfter ? closest.nextSibling : closest);
+        } else {
+            list.appendChild(dragging);
+        }
     });
 }
 
@@ -1415,7 +1563,247 @@ function updateDeltas(list) {
     });
 }
 
+function updateDisplay(photos) {
+    const list = document.querySelector('ul.multimedia');
+
+    photos.forEach(({ id, delta, file, exif }) => {
+        const li = document.createElement('li');
+        li.draggable = true;
+
+        const fileSizeMB = exif?.filesize ? `${(exif.filesize * 0.000001).toFixed(1)} MB` : '~';
+        const dimensions = exif?.width ? `${exif.width.toLocaleString('en-US')} / ${exif.height.toLocaleString('en-US')} px` : 'Unknown';
+        const geolocated = exif?.coordinates ? '<b style="font-weight:500;color:green">Yes</b>' : 'No';
+
+        li.innerHTML = `<input type="hidden" name="media[delta][]" value="${delta}">
+            <input type="hidden" name="media[id][]" value="${id}">
+            
+            <div class="wrap" data-delta="${delta}">
+                <i class="fas fa-grip-horizontal reorder"></i>
+                
+                <a target="blank" href="${mapotrailsCDN}photos/${file}">
+                    <img src="${mapotrailsCDN}photos/thumbnail/${file}" style="display:block;max-width:100%">
+                </a>
+                
+                <span class="meta">
+                    File Size: ${fileSizeMB}<br>
+                    Dimensions: ${dimensions}<br>
+                    Geolocated: ${geolocated}
+                </span>
+                
+                <input type="text" name="media[caption][]" class="input" style="margin-top:0.5rem;font-size:14px" placeholder="Photo caption..." value="">
+                
+                <button class="trails-btn delete"
+                    style="margin:0.5rem auto 0 auto"
+                    title="Delete this multimedia"
+                    data-action="deletemedia"
+                    data-filename="${file}"
+                    data-id="${id}">Delete</button>
+            </div>`;
+
+        list.appendChild(li);
+    });
+}
+
+async function uploadTrailPhotos(e) {
+    const target = e.target;
+    const files = target.files;
+
+    if (!files.length) return;
+
+    const formData = new FormData();
+    formData.append('mode', 'upload');
+    formData.append('trail_id', Number(target.dataset.trailId));
+
+    for (const file of files) {
+        formData.append('multimedia[]', file);
+    }
+
+    const progressBar = document.querySelector('#progress-bar');
+    const progressContainer = document.querySelector('#progress-container');
+    const progressText = document.querySelector('#progress-text');
+
+    progressContainer.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressText.textContent = 'Uploading... 0%';
+    target.disabled = true;
+
+    try {
+        const resp = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${apiURL.replace('v1', 'v2')}account/mapotrails/media?key=${apiKey}`, true);
+
+            xhr.upload.addEventListener('progress', (event) => {
+                if (event.lengthComputable) {
+                    const percent = Math.round((event.loaded / event.total) * 100);
+                    progressBar.style.width = `${percent}%`;
+                    progressText.textContent = `Uploading... ${percent}%`;
+                }
+            });
+
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // Upload is complete, now server is finalizing / parsing
+                    progressBar.style.width = '100%';
+                    progressText.textContent = 'Processing...';
+
+                    try {
+                        resolve(JSON.parse(xhr.responseText));
+                    } catch (error) {
+                        reject(new Error('Invalid JSON response from server'));
+                    }
+                } else {
+                    reject(new Error(`Server responded with status ${xhr.status}`));
+                }
+            };
+
+            xhr.onerror = () => reject(new Error('Network error during upload'));
+            xhr.send(formData);
+        });
+
+        if (resp?.response?.length) {
+            updateDisplay(resp.response);
+        } else {
+            progressText.textContent = 'Upload failed.';
+
+            alert('An error occurred while uploading the files.');
+        }
+    } catch (err) {
+        console.error('Upload error:', err);
+        progressText.textContent = 'Upload failed.';
+
+        alert('An error occurred while uploading the files.');
+    } finally {
+        progressContainer.style.display = 'none';
+        progressBar.style.width = '0%';
+        target.disabled = false;
+        target.value = '';
+
+        setTimeout(() => {
+            progressContainer.style.display = 'none';
+            progressBar.style.width = '0%';
+        }, 1500);
+    }
+}
+
+async function createMap(center, zoom, hash = false, pitch = 0, bearing = 0) {
+    if (!document.querySelector('link[data-maplibre-css]')) {
+        const link = document.createElement('link');
+        link.href = 'https://cdn.jsdelivr.net/npm/maplibre-gl@6.11.2/dist/maplibre-gl.min.css';
+        link.rel = 'stylesheet';
+        link.dataset.maplibreCss = 'true';
+        document.head.appendChild(link);
+    }
+
+    maplibregl = await import('https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.mjs');
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        zoom,
+        center,
+        style: `${apiURL}maps/style/terrain?key=${apiKey}`,
+        projection: 'mercator',
+        hash,
+        maxPitch: 85,
+        pitch,
+        bearing,
+        attributionControl: false
+    });
+
+    await new Promise((resolve, reject) => {
+        map.once('load', () => {
+            map.getCanvas().style.cursor = 'default';
+
+            map.addControl(new maplibregl.NavigationControl({
+                showCompass: true,
+                showZoom: true,
+                visualizePitch: true
+            }), 'top-right');
+
+            map.addControl(new maplibregl.GeolocateControl({
+                positionOptions: {
+                    enableHighAccuracy: true
+                },
+                fitBoundsOptions: {
+                    maxZoom: 10.16
+                },
+                trackUserLocation: true,
+                showUserHeading: true
+            }), 'top-right');
+
+            resolve();
+        });
+
+        map.once('error', e => reject(e.error ?? e));
+    });
+
+    return map;
+}
+
+async function mapTrailData(mapContainer) {
+    const trailID = mapContainer.dataset.trailId;
+    const url = `https://cdn.mapotrails.com/geojson/${trailID}.geojson`;
+
+    const map = await createMap([-118.1, 45.32], 6.5);
+
+    mapContainer.classList.remove('placeholder');
+
+    const geojson = await api(url);
+
+    if (!map.getSource('trails')) {
+        map.addSource('trails', {
+            type: 'geojson',
+            data: geojson
+        });
+    }
+
+    if (!map.getLayer('trails')) {
+        map.addLayer({
+            id: 'trails',
+            type: 'line',
+            source: 'trails',
+            paint: {
+                'line-color': '#312E81',
+                'line-width': 3
+            }
+        });
+
+        map.on('mouseenter', 'trails', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.on('mouseleave', 'trails', () => {
+            map.getCanvas().style.cursor = 'auto';
+        });
+    }
+
+    const bounds = new maplibregl.LngLatBounds();
+
+    function extendCoordinates(coords) {
+        if (typeof coords[0] === 'number') {
+            bounds.extend(coords);
+        } else {
+            coords.forEach(extendCoordinates);
+        }
+    }
+
+    geojson.features.forEach(f => {
+        if (f.geometry?.coordinates) extendCoordinates(f.geometry.coordinates);
+    });
+
+    if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, {
+            padding: 50,
+            maxZoom: 15
+        });
+    }
+}
+
 async function adminTrailMgmt() {
+    if (pageName.search('/map') >= 0) {
+        mapTrailData(document.querySelector('#map'));
+        return;
+    }
+
     let allKeywords = null;
 
     /*
@@ -1448,6 +1836,7 @@ async function adminTrailMgmt() {
     // add listeners
     document.querySelector('#addwaypoint')?.addEventListener('click', () => addWaypoint());
     document.querySelector('#addgpx')?.addEventListener('click', () => addGPX());
+    document.querySelector('#newMedia')?.addEventListener('change', e => uploadTrailPhotos(e));
 
     trailTitle?.addEventListener('keyup', (e) => {
         if (e.ctrlKey || e.altKey || e.metaKey) return;
@@ -1456,7 +1845,7 @@ async function adminTrailMgmt() {
     });
 
     // Handle master "all year" checkbox toggle
-    seasonAllYear.addEventListener('change', e => {
+    seasonAllYear?.addEventListener('change', e => {
         const isChecked = e.target.checked;
         monthCheckboxes.forEach(c => c.checked = isChecked);
     });
@@ -1471,6 +1860,7 @@ async function adminTrailMgmt() {
     // add list ordering to GPX files and waypoints
     initListOrdering(document.querySelector('ul#files'));
     initListOrdering(document.querySelector('ul#waypoints'));
+    initListOrdering(document.querySelector('ul.multimedia'));
 
     // get a list of all keywords so we can pre-select and not have to guess
     if (pageName.includes('create') || pageName.includes('edit')) {
@@ -2007,39 +2397,13 @@ async function startup() {
             document.querySelector('#coordsHelp').innerHTML = `<b>Example:</b> ${f}`;
         };
 
-        map = new maplibregl.Map({
-            container: 'map',
-            zoom: settings.zoom,
-            center: ctr,
-            style: `${apiURL}maps/style/terrain?key=${apiKey}`,
-            projection: 'mercator',
-            hash: false,
-            maxPitch: 85,
-            pitch: settings.pitch ?? 0,
-            bearing: settings.bearing ?? 0,
-            attributionControl: false
-        });
-
-        map.once('load', () => {
-            map.getCanvas().style.cursor = 'default';
-
-            map.addControl(new maplibregl.NavigationControl({
-                showCompass: true,
-                showZoom: true,
-                visualizePitch: true
-            }), 'top-right');
-
-            map.addControl(new maplibregl.GeolocateControl({
-                positionOptions: {
-                    enableHighAccuracy: true
-                },
-                fitBoundsOptions: {
-                    maxZoom: 10.16
-                },
-                trackUserLocation: true,
-                showUserHeading: true
-            }), 'top-right');
-        });
+        const map = await createMap(
+            ctr,
+            settings.zoom,
+            false,
+            settings.pitch ?? 0,
+            settings.bearing ?? 0
+        );
 
         map.on('style.load', () => {
             if (centerMarker != null) return;
@@ -2114,7 +2478,7 @@ async function startup() {
         });
     }
 
-    if (pageName.includes('admin/trails')) {
+    if (pageName === 'admin/trails/create' || pageName === 'admin/trails/edit') {
         adminTrailMgmt();
     }
 
@@ -2149,6 +2513,9 @@ async function startup() {
     }
 }
 
+/*
+ *  RUN THIS CODE ON START UP
+ */
 startup();
 
 window.addEventListener('keyup', (e) => {
@@ -2254,63 +2621,93 @@ window.addEventListener('click', async (e) => {
     }
 
     // delete items from lists of waypoints, gpx, etc
-    if (target.classList.contains('trails-btn') && target.classList.contains('delete')) {
+    const trailsBtn = target.closest('button');
+
+    if (trailsBtn?.classList.contains('trails-btn')) {
         e.preventDefault();
-        const action = target.dataset.action;
 
-        // delete waypoint
-        if (action == 'deletewaypoint') {
-            const id = target.dataset.id;
+        const action = trailsBtn.dataset.action;
 
-            if (confirm('Are you sure you want to delete this waypoint?')) {
-                target.closest('.wrap').remove();
-
-                if (id) {
-                    const resp = await api(`${host}${usersAPI}waypoint`, [['mode', 'delete'], ['id', id]]);
-
-                    if (resp) alert('That waypoint was successfully removed and your changes were saved.');
-                }
-            }
-
+        // get trail stats by ID
+        if (action == 'getstats') {
+            window.open(`${apiURL.replace('v1', 'v2')}account/mapotrails/stats?key=${apiKey}&id=${trailsBtn.dataset.id}&format=1`);
             return;
         }
 
-        // delete gpx
-        if (action == 'deletegpx') {
-            const id = target.dataset.id,
-                d = target.dataset.delta,
-                tid = target.dataset.tid,
-                fn = target.dataset.filename;
+        // if delete class is attached
+        if (trailsBtn.classList.contains('delete')) {
+            const id = trailsBtn.dataset.id;
 
-            if (confirm('Are you sure you want to delete this GPX file?')) {
-                target.closest('.wrap').remove();
+            // delete waypoint
+            if (action == 'deletewaypoint') {
+                if (id) {
+                    if (confirm('Are you sure you want to delete this waypoint?')) {
+                        await api(`${apiURL}account/mapotrails/waypoint`, [
+                            ['mode', 'delete'],
+                            ['id', id]
+                        ], true);
+
+                        ////if (resp) alert('That waypoint was successfully removed and your changes were saved.');
+                        trailsBtn.closest('li').remove();
+                    }
+                } else {
+                    trailsBtn.closest('li').remove();
+                }
+
+                return;
+            }
+
+            // delete gpx
+            if (action == 'deletegpx') {
+                const d = trailsBtn.dataset.delta,
+                    tid = trailsBtn.dataset.tid,
+                    fn = trailsBtn.dataset.filename;
 
                 if (id && tid) {
-                    const resp = await api(`${host}${usersAPI}gpx`, [['mode', 'delete'], ['id', id], ['trail_id', tid], ['filename', fn], ['delta', d]]);
+                    if (confirm('Are you sure you want to delete this GPX file?')) {
+                        await api(`${apiURL}account/mapotrails/gpx`, [
+                            ['mode', 'delete'],
+                            ['id', id],
+                            ['trail_id', tid],
+                            ['filename', fn],
+                            ['delta', d]
+                        ], true);
 
-                    if (resp) alert('That GPX file was successfully removed and your changes were saved.');
+                        ////if (resp) alert('That GPX file was successfully removed and your changes were saved.');
+                        trailsBtn.closest('li').remove();
+                    }
+                } else {
+                    trailsBtn.closest('li').remove();
                 }
+
+                return;
             }
 
-            return;
-        }
+            // delete multimedia
+            if (action == 'deletemedia') {
+                const fn = trailsBtn.dataset.filename;
 
-        // delete multimedia
-        if (action == 'deletemedia') {
-            const id = target.dataset.id,
-                fn = target.dataset.filename;
+                if (confirm('Are you sure you want to delete this multimedia?')) {
+                    const wrapper = trailsBtn.closest('.wrap');
 
-            if (confirm('Are you sure you want to delete this multimedia?')) {
-                target.closest('.wrapper').remove();
+                    wrapper.style.opacity = 0.2;
 
-                if (id && fn) {
-                    const resp = await api(`${host}${usersAPI}media`, [['mode', 'delete'], ['id', id], ['filename', fn]]);
+                    if (id && fn) {
+                        const resp = await api(`${apiURL}account/mapotrails/media`, [
+                            ['mode', 'delete'],
+                            ['id', id],
+                            ['filename', fn]
+                        ], true);
 
-                    if (resp) alert('That photo was successfully removed and your changes were saved.');
+                        if (resp) {
+                            wrapper.closest('li').remove();
+                            ////alert('That photo was successfully removed and your changes were saved.');
+                        }
+                    }
                 }
-            }
 
-            return;
+                return;
+            }
         }
     }
 

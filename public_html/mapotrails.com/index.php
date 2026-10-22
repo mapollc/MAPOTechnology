@@ -20,6 +20,20 @@ $appPath = "{$root}dist/app-$version.php";
 // get build date
 $buildDate = date('Y-m-d\TH:i:sP', filemtime("$root/dist/$version/js/app.js"));
 
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+preg_match('/(\/(trail|snow))\/$/', $uri, $match1);
+preg_match('/(\/(trail|snow))\/([0-9]+)$/', $uri, $match2);
+
+if (!empty($match2)) {
+    header("Location: /trails/$match2[3]", true, 301);
+    exit();
+}
+
+if (!empty($match1)) {
+    header("Location: $match1[1]", true, 301);
+    exit();
+}
+
 //ga4 ID
 $ga_id = 'G-4KN1GPWFWM';
 

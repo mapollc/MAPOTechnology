@@ -1,4 +1,4 @@
-import { ENV, config } from '../app/config.js';
+import { config, tileURL } from '../app/config.js';
 import { global } from '../app/state.js';
 
 import { mapMouseOver } from '../utils/helpers.js';
@@ -176,7 +176,8 @@ export class Perimeters {
                 global.map.addSource('perimeters', {
                     type: 'vector',
                     tiles: [
-                        `${ENV.host}data/maps/tiles/perimeters/{z}/{x}/{y}.pbf`
+                        //`${ENV.host}data/maps/tiles/perimeters/{z}/{x}/{y}.pbf`
+                        tileURL('perimeters')
                     ],
                     minzoom: 5,
                     maxzoom: 14

@@ -2,7 +2,7 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-    $token = 'sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ';
+/*$token = 'sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ';
 
     $ch = curl_init();
 
@@ -23,7 +23,7 @@ error_reporting(E_ALL);
 
     return json_decode($output);
 
-    /*
+
 include_once '/home/mapo/public_html/apis/functions.inc.php';
 
 function calculateDistance($pointA, $pointB)
@@ -41,7 +41,7 @@ function calculateDistance($pointA, $pointB)
     return $dist * 60 * 1.1515 * 5280;
 }
 
-function trailColor($m)
+/*function trailColor($m)
 {
     $colors = ['cb2626', '40d740', 'ff973a', 'ebeb2e', 'f977dd', '6daee3', '9873f0', 'ff8298', '698d65', '009688', '3949ab', '880e4f'];
 
@@ -79,12 +79,134 @@ function sendToMapbox($id, $json = null, $send = true)
     return $output;
 }
 
+function parseGPX($gisID, $trailID, $delta, $file)
+{
+    $filePath = $file;
+    if (!str_starts_with($filePath, '/')) {
+        $filePath = "/home/mapo/public_html/mapotrails.com/data/gpx/" . basename($file);
+    }
+
+    if (!file_exists($filePath)) {
+        return ''; // Or handle missing file error
+    }
+
+    // Suppress XML parsing errors/warnings from malformed namespaces (like undefined tp1)
+    libxml_use_internal_errors(true);
+
+    $xml = simplexml_load_file($filePath, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+    // Clear the error buffer
+    libxml_clear_errors();
+
+    if ($xml === false) {
+        return '';
+    }
+
+    // Collect all track points safely
+    $point = $xml->xpath('//*[local-name()="trkpt"]');
+
+    if (!$point) return '';
+
+    $count = count($point);
+    if ($count === 0) return '';
+
+    $lat = [];
+    $lon = [];
+    $elevations = [];
+    $slopes = [];
+
+    $start = [
+        (float) $point[0]['lat'],
+        (float) $point[0]['lon']
+    ];
+    $end = [
+        (float) $point[$count - 1]['lat'],
+        (float) $point[$count - 1]['lon']
+    ];
+
+    $dist = $gain = $loss = 0;
+    $prevElev = (float)$point[0]->ele * 3.281;
+
+    for ($x = 0; $x < $count; $x++) {
+        $elev = (float) $point[$x]->ele * 3.281;
+
+        $elevations[] = $elev;
+        $lat[] = (float) $point[$x]['lat'];
+        $lon[] = (float) $point[$x]['lon'];
+
+        if ($x > 0) {
+            $j = $x - 1;
+            $distance = calculateDistance($point[$x], $point[$j]);
+
+            if (!is_nan($distance)) {
+                $dist += $distance;
+            }
+
+            // Calculate the elevation gain/loss
+            if ($elev >= $prevElev) {
+                $gain += $elev - $prevElev;
+            } else if ($elev < $prevElev) {
+                $loss += $elev - $prevElev;
+            }
+
+            // Calculate slope only when the segment has a measurable horizontal distance
+            if ($distance > 0) {
+                $slope = round((($elev - $prevElev) / $distance) * 100, 1);
+
+                if (is_finite($slope)) {
+                    $slopes[] = $slope;
+                }
+            }
+        }
+
+        $prevElev = $elev;
+    }
+
+    $stats = [
+        'geo' => [
+            'start' => $start,
+            'end' => $end
+        ],
+        'bounds' => [
+            'sw' => [$lon ? min($lon) : 0, $lat ? min($lat) : 0],
+            'ne' => [$lon ? max($lon) : 0, $lat ? max($lat) : 0]
+        ],
+        'elevation' => [
+            'min' => $elevations ? min($elevations) : 0,
+            'max' => $elevations ? max($elevations) : 0
+        ],
+        'altitude' => [
+            'gain' => $gain ?? 0,
+            'loss' => $loss ?? 0
+        ],
+        'slope' => [
+            'min' => $slopes ? min($slopes) : null,
+            'avg' => $slopes ? round(array_sum(array_map('abs', $slopes)) / count($slopes), 1) : null,
+            'max' => $slopes ? max($slopes) : null
+        ],
+        'distance' => round($dist / 5280, 3)
+    ];
+
+    return $stats;
+}
+
 $con2 = mysqli_connect('localhost', 'mapo_main', 'smQeP]-xjj+Uw$s_', 'mapo_trails');
 
-$result = mysqli_query($con2, "SELECT t.id AS trail_id, g.id, t.title, t.type, g.delta, term, keywords, filename, mode, caption, stats, premium, public, display
-FROM gpx g LEFT JOIN categories c ON c.trail_id = g.trail_id LEFT JOIN trails t ON t.id = g.trail_id LEFT JOIN stats s ON s.trail_id = g.trail_id WHERE g.trail_id > 159 AND g.delta = 0 ORDER BY g.trail_id ASC");
+$result = mysqli_query($con2, "SELECT * FROM gpx ORDER BY trail_id ASC, delta ASC");
 
 while ($row = mysqli_fetch_assoc($result)) {
+    $time = time();
+    $stats = parseGPX($row['id'], $row['trail_id'], $row['delta'], $row['filename']);
+
+    if (empty($stats) || count($stats) == 0) continue;
+
+    $sstats = mysqli_real_escape_string($con2, json_encode($stats));
+
+    mysqli_query($con2, "INSERT INTO stats (trail_id, gis_id, stats, calculated)
+    VALUES({$row['trail_id']}, {$row['id']}, '$sstats', $time) ON DUPLICATE KEY UPDATE stats = '$sstats', calculated = $time;");
+}
+
+/*while ($row = mysqli_fetch_assoc($result)) {
     $file = "/home/mapo/public_html/mapotrails.com/data/gpx/{$row['filename']}";
 
     if ($row['filename'] != '' && file_exists($file)) {

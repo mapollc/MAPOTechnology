@@ -2,8 +2,11 @@
 $domain = str_replace(['www.', 'apps.'], '', $_SERVER['HTTP_HOST']);
 
 ini_set('display_errors', 0);
-error_reporting(E_ERROR | E_PARSE);
+ini_set('opcache.enable', 0);
+ini_set('opcache.enable_cli', 0);
 ini_set('session.cookie_domain', ".$domain");
+error_reporting(E_ERROR | E_PARSE);
+
 session_start();
 
 require '/home/mapo/public_html/config.inc.php';
@@ -63,37 +66,81 @@ function nextURL()
     return $next;
 }
 
-function getUserFromAPI($apiKey, $token)
+function getUserFromAPI($apiKey, $code)
 {
-    $url = 'https://api.mapotechnology.com/v1/user/get?key=' . urlencode($apiKey)/* . '&token=' . urlencode($token)*/;
-
-    $ch = curl_init($url);
+    $ch = curl_init("https://api.mapotechnology.com/v2/user/exchange_sso");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5);         // 5 second timeout
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);  // 3 second connection timeout
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-    curl_setopt($ch, CURLOPT_FAILONERROR, true);  // return false on HTTP errors
-    curl_setopt($ch, CURLOPT_COOKIE, 'token=' . urlencode($token) . '; Path=/; Secure; HttpOnly; SameSite=None');
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+        'key' => $apiKey,
+        'code' => $code
+    ]));
 
-    $response = curl_exec($ch);
-    ////$error = curl_error($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $response = json_decode(curl_exec($ch), true);
 
-    if ($response === false || $httpCode >= 400) {
-        return null;
-    }
-
-    $json = json_decode($response, true);
-    return $json['user'] ?? null;
+    return $response ?? null;
 }
 
 $redirectToFail = function ($failCode = 3, $extra = '') use ($failURL) {
     header("Location: $failURL?fail=$failCode$extra");
+    //echo "Location: $failURL?fail=$failCode$extra";
     exit();
 };
 
+$response = getUserFromAPI($apiKey, $_GET['code']);
+
+if (isset($response['response']) && $response['response'] === 'valid') {
+    $user = $response['user'] ?? null;
+
+    if ($user === null) {
+        $redirectToFail(3, $vars);
+    } else {
+        // set session & cookie variables
+        $_SESSION['uid'] = $user['uid'];
+        $_SESSION['first_name'] = $user['first_name'];
+        $_SESSION['last_name'] = $user['last_name'];
+        $_SESSION['name'] = $user['first_name'] . ' ' . $user['last_name'];
+        $_SESSION['role'] = $user['role'];
+        $_SESSION['token'] = $response['token'];
+        $_SESSION['expires'] = $user['expires'];
+        $_SESSION['subscriptions'] = json_encode($user['subscriptions'] ?? []);
+
+        setcookie('token', $response['token'], [
+            'expires' => $user['expires'],
+            'path' => '/',
+            'domain' => ".$domain",
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'None'
+        ]);
+
+        if (!isset($_COOKIE['guid']) || $_COOKIE['guid'] !== $user['guid']) {
+            setcookie('guid', $user['guid'], [
+                'expires' => time() + 31557600, // 60 * 60 * 24 * 365.25
+                'path' => '/',
+                'domain' => ".$domain",
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+        }
+            
+        $next = nextURL();
+
+        //echo $next;
+        header("Location: $next");
+        exit();
+    }
+} else {
+    $failCode = $response['code'] > 10 ? 4 : 3;
+    if ($failCode === 4) $vars .= '&err=' . $response['msg'];
+
+    $redirectToFail($failCode, $vars);
+    exit();
+}
+
 // check if token even exists in the URL
-if (!$token) {
+/*if (!$token) {
     $redirectToFail(3, $vars);
 }
 
@@ -119,7 +166,7 @@ if (!$user) {
     $_SESSION = [];
     session_regenerate_id(true);
 
-    $qs = preg_replace('/([&?])token=[^&]*/', '', $_SERVER['QUERY_STRING']);
+    $qs = preg_replace('/([&?])token=[^&]*//*', '', $_SERVER['QUERY_STRING']);
     $redirectToFail(3, $qs ? "&$qs" : '');
 } else {
     // set session & cookie variables
@@ -157,4 +204,4 @@ if (!$user) {
     //echo $next;
     header("Location: $next");
     exit();
-}
+}*/

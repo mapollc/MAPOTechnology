@@ -10,11 +10,14 @@ export class Data {
             minPoints: 3,
             radius: 40
         };
+
         this.DB_NAME = 'OreRoadsCache';
         this.DB_LIST_OF_STORE_NAMES = ['prod', 'dev'];
         this.STORE_NAME = 'dev';
+
         this.DB_VERSION = 2;
-        this.DEBUG = false;
+        this.DEBUG = true;
+        this.USE_CACHE = false;
     }
 
     openDB() {
@@ -67,11 +70,11 @@ export class Data {
             let json;
 
             // Use cache if valid
-            if (cached && meta && (now - meta < ttl)) {
+            if (this.USE_CACHE && cached && meta && (now - meta < ttl)) {
                 json = cached;
             } else {
                 // Fetch new data
-                const url = endpoint.includes('https') || endpoint.startsWith('//') ? endpoint : ENV.apiURL + endpoint;
+                const url = endpoint.includes('https') || endpoint.startsWith('//') ? endpoint : `${ENV.apiURL}${endpoint}`;
                 json = await helpers.api(url);
 
                 if (json) {
@@ -98,6 +101,29 @@ export class Data {
         return new Promise(res => (tx.oncomplete = res));
     }
 
+    async loadImages() {
+        const incImgs = ['', '_crash', '_closure', '_vehicle', '_ramp_gate', '_obstruction'];
+        const images = [
+            { cam: 'camera' },
+            { cluster_cam: 'camera_cluster' },
+            { construction: 'roadwork' },
+            { dms: 'dms' },
+            { plow: 'snow_plow' }
+        ];
+
+        incImgs.map(n => `incident${n}`).forEach(n => images.push({ [n]: n }));
+
+        return await Promise.all(
+            images.flatMap(image =>
+                Object.entries(image).map(async ([key, value]) => {
+                    if (!map.hasImage(key)) {
+                        const image = await map.loadImage(`${ENV.host}${config.imgPath}${value}${value.startsWith('incident') ? '' : '_icon'}.png`);
+                        map.addImage(key, image.data);
+                    }
+                })
+            ));
+    }
+
     init() {
         this.getHighways();
     }
@@ -107,9 +133,7 @@ export class Data {
         const url = `https://apps.mapotechnology.com/oreroads/v1.6/mileposts.geojson`;
         const json = await this.getCachedData('mileposts', url, 7889400);
 
-        if (json) {
-            new RoadNetwork().mileposts(json);
-        }
+        if (json) new RoadNetwork().mileposts(json);
 
         /*let data;
         const json = helpers.storage('road_network');
@@ -129,6 +153,8 @@ export class Data {
     }
 
     async doLayers() {
+        await this.loadImages();
+
         await this.getRoads();
         this.loadAllData();
         this.getWWAs();
@@ -153,7 +179,7 @@ export class Data {
     }
 
     async getRoads() {
-        const fc = 'https://api.mapbox.com/datasets/v1/mapollc/clofxe8el0lxy2arnbd8ltiz4/features?access_token=' + config.mapboxToken;
+        const fc = `https://api.mapbox.com/datasets/v1/mapollc/clofxe8el0lxy2arnbd8ltiz4/features?access_token=${config.mapboxToken}`;
         const json = await this.getCachedData('road_network', fc, 43830);
 
         if (json) {
@@ -178,7 +204,7 @@ export class Data {
 
                 global.map.getSource('roads').setData(global.roads);
 
-                console.info(data.rw.length + ' road & weather sections reporting');
+                console.info(`${data.rw.length} road & weather sections reporting`);
             }
         };
 
@@ -233,14 +259,50 @@ export class Data {
     }
 
     async getWWAs() {
-        const json = await helpers.api(ENV.apiURL + 'wwas/oreroads');
+        const json = await helpers.api(`${ENV.apiURL}wwas/oreroads`);
 
         if (json && json.wwas != null && json.wwas.length > 0) {
             global.nwsAlerts = json.wwas;
         }
     }
 
+    polishLayer(id) {
+        global.map.on('mouseenter', id, () => {
+            global.map.getCanvas().style.cursor = 'pointer';
+        });
+
+        global.map.on('mouseleave', id, () => {
+            global.map.getCanvas().style.cursor = 'auto';
+        });
+
+        // reorder the layers on the map so they display correctly
+        ['traffic',
+            'roads_path',
+            'roads_text',
+            'roads_point',
+            'roads_point_text',
+            'incidents_line_bg',
+            'incidents_line',
+            'incidents_point',
+            'roadWork_point',
+            'incidents_text',
+            'dms',
+            'plows',
+            'rwis',
+            'rwis_count',
+            'rwis_text',
+            'webcams_cluster',
+            'webcams_count',
+            'webcams'].forEach(id => {
+                if (global.map.getLayer(id)) {
+                    global.map.moveLayer(id);
+                }
+            });
+    }
+
     displayRoads(json) {
+        if (!json.features?.length) return;
+
         const defColor = '#bdbdbd',
             roadColor = ["case",
                 ["all", ["has", "road"], ["==", ["typeof", ["get", "road"]], "object"]],
@@ -256,141 +318,129 @@ export class Data {
                 defColor
             ];
 
-        if (json) {
-            // loop through features to add names to an array
-            json.features.forEach((f) => {
-                global.roadsArray.push(f);
-                global.roadsIDArray.push(f.properties.id);
+        // loop through features to add names to an array
+        json.features.forEach(f => {
+            global.roadsArray.push(f);
+            global.roadsIDArray.push(f.properties.id);
+        });
+
+        if (!global.map.getSource('roads')) {
+            global.map.addSource('roads', {
+                type: 'geojson',
+                data: json
+            });
+        }
+
+        if (!global.map.getLayer('roads_path')) {
+            global.map.addLayer({
+                id: 'roads_path',
+                type: 'line',
+                source: 'roads',
+                paint: {
+                    'line-color': roadColor,
+                    'line-width': [
+                        "step",
+                        ["zoom"],
+                        6,
+                        17,
+                        10,
+                        18.5,
+                        15
+                    ]
+                },
+                filter: ['==', '$type', 'LineString'],
+                layout: {
+                    visibility: this.defaultLayer('roads')
+                }
             });
 
-            if (!global.map.getSource('roads')) {
-                global.map.addSource('roads', {
-                    type: 'geojson',
-                    data: json
-                });
-            }
+            this.polishLayer('roads_path');
 
-            if (!global.map.getLayer('roads_path')) {
-                global.map.addLayer({
-                    id: 'roads_path',
-                    type: 'line',
-                    source: 'roads',
-                    paint: {
-                        'line-color': roadColor,
-                        'line-width': [
-                            "step",
-                            ["zoom"],
-                            6,
-                            17,
-                            10,
-                            18.5,
-                            15
-                        ]
+            global.map.addLayer({
+                id: 'roads_point',
+                type: 'circle',
+                source: 'roads',
+                paint: {
+                    'circle-color': roadColor,
+                    'circle-radius': [
+                        "interpolate",
+                        ["exponential", 1],
+                        ["zoom"],
+                        7,
+                        8,
+                        13,
+                        15
+                    ]
+                },
+                filter: ['==', '$type', 'Point'],
+                layout: {
+                    visibility: this.defaultLayer('roads')
+                }
+            });
+
+            this.polishLayer('roads_point');
+
+            global.map.addLayer({
+                id: 'roads_text',
+                type: 'symbol',
+                source: 'roads',
+                minzoom: 13,
+                paint: {
+                    'text-color': '#fff',
+                    'text-opacity': {
+                        stops: [[13, 0], [14, 1]]
                     },
-                    filter: ['==', '$type', 'LineString'],
-                    layout: {
-                        visibility: this.defaultLayer('roads')
-                    }
-                });
+                    'text-halo-color': '#333',
+                    'text-halo-width': 1,
+                    'text-halo-blur': 2
+                },
+                filter: ['!=', '$type', 'Point'],
+                layout: {
+                    'symbol-placement': 'line',
+                    'symbol-spacing': 400,
+                    'text-font': ['DIN Pro Medium'],
+                    'text-field': ['get', 'name'],
+                    'text-justify': 'center',
+                    'text-size': 14,
+                    'text-allow-overlap': false,
+                    visibility: this.defaultLayer('roads')
+                }
+            });
 
-                global.map.on('mouseenter', 'roads_path', () => {
-                    global.map.getCanvas().style.cursor = 'pointer';
-                });
-
-                global.map.on('mouseleave', 'roads_path', () => {
-                    global.map.getCanvas().style.cursor = 'auto';
-                });
-
-                global.map.addLayer({
-                    id: 'roads_point',
-                    type: 'circle',
-                    source: 'roads',
-                    paint: {
-                        'circle-color': roadColor,
-                        'circle-radius': [
-                            "interpolate",
-                            ["exponential", 1],
-                            ["zoom"],
-                            7,
-                            8,
-                            13,
-                            15
-                        ]
-                    },
-                    filter: ['==', '$type', 'Point'],
-                    layout: {
-                        visibility: this.defaultLayer('roads')
-                    }
-                });
-
-                global.map.on('mouseenter', 'roads_point', () => {
-                    global.map.getCanvas().style.cursor = 'pointer';
-                });
-
-                global.map.on('mouseleave', 'roads_point', () => {
-                    global.map.getCanvas().style.cursor = 'auto';
-                });
-
-                global.map.addLayer({
-                    id: 'roads_text',
-                    type: 'symbol',
-                    source: 'roads',
-                    minzoom: 13,
-                    paint: {
-                        'text-color': '#fff',
-                        'text-opacity': {
-                            stops: [[13, 0], [14, 1]]
-                        },
-                        'text-halo-color': '#333',
-                        'text-halo-width': 1,
-                        'text-halo-blur': 2
-                    },
-                    filter: ['!=', '$type', 'Point'],
-                    layout: {
-                        'symbol-placement': 'line',
-                        'symbol-spacing': 400,
-                        'text-font': ['DIN Pro Medium'],
-                        'text-field': ['get', 'name'],
-                        'text-justify': 'center',
-                        'text-size': 14,
-                        'text-allow-overlap': false,
-                        visibility: this.defaultLayer('roads')
-                    }
-                });
-
-                global.map.addLayer({
-                    id: 'roads_point_text',
-                    type: 'symbol',
-                    source: 'roads',
-                    minzoom: 12,
-                    paint: {
-                        'text-color': '#666',
-                        'text-halo-color': '#fff',
-                        'text-halo-width': 1,
-                        'text-halo-blur': 2
-                    },
-                    filter: ['==', '$type', 'Point'],
-                    layout: {
-                        'symbol-placement': 'point',
-                        'symbol-spacing': 400,
-                        'text-font': ['DIN Pro Medium'],
-                        'text-field': ['get', 'name'],
-                        'text-justify': 'center',
-                        'text-size': 14,
-                        'text-max-width': 4,
-                        'text-offset': ['literal', [0, 2.25]],
-                        'text-allow-overlap': true,
-                        visibility: this.defaultLayer('roads')
-                    }
-                });
-            }
+            global.map.addLayer({
+                id: 'roads_point_text',
+                type: 'symbol',
+                source: 'roads',
+                minzoom: 12,
+                paint: {
+                    'text-color': '#666',
+                    'text-halo-color': '#fff',
+                    'text-halo-width': 1,
+                    'text-halo-blur': 2
+                },
+                filter: ['==', '$type', 'Point'],
+                layout: {
+                    'symbol-placement': 'point',
+                    'symbol-spacing': 400,
+                    'text-font': ['DIN Pro Medium'],
+                    'text-field': ['get', 'name'],
+                    'text-justify': 'center',
+                    'text-size': 14,
+                    'text-max-width': 4,
+                    'text-offset': ['literal', [0, 2.25]],
+                    'text-allow-overlap': true,
+                    visibility: this.defaultLayer('roads')
+                }
+            });
         }
     }
 
     displayWebcams(json) {
+        if (!json.features?.length) return;
+
         const groupedFeatures = new Map();
 
-        json?.features?.forEach(feature => {
+        json.features.forEach(feature => {
             const key = JSON.stringify(feature.geometry.coordinates);
 
             if (!groupedFeatures.has(key)) {
@@ -408,119 +458,89 @@ export class Data {
         json = JSON.parse(`{"type":"FeatureCollection","features":${JSON.stringify(Array.from(groupedFeatures.values()))}}`);
         global.globalData.webcams = json.features;
 
-        const addCams = () => {
-            if (!global.map.getSource('webcams')) {
-                global.map.addSource('webcams', {
-                    type: 'geojson',
-                    data: json,
-                    cluster: true,
-                    clusterMaxZoom: this.cluster.maxZoom,
-                    clusterMinPoints: this.cluster.minPoints,
-                    clusterRadius: this.cluster.radius
-                });
-            }
+        if (!global.map.getSource('webcams')) {
+            global.map.addSource('webcams', {
+                type: 'geojson',
+                data: json,
+                cluster: true,
+                clusterMaxZoom: this.cluster.maxZoom,
+                clusterMinPoints: this.cluster.minPoints,
+                clusterRadius: this.cluster.radius
+            });
+        }
 
-            if (!global.map.getLayer('webcams')) {
-                global.map.addLayer({
-                    id: 'webcams',
-                    type: 'symbol',
-                    source: 'webcams',
-                    filter: ['!', ['has', 'point_count']],
-                    paint: {},
-                    layout: {
-                        'icon-image': 'cam',
-                        'icon-size': 0.5,
-                        'icon-allow-overlap': true,
-                        'symbol-placement': 'point',
-                        visibility: this.defaultLayer('webcams')
-                    }
-                });
+        if (!global.map.getLayer('webcams')) {
+            global.map.addLayer({
+                id: 'webcams',
+                type: 'symbol',
+                source: 'webcams',
+                filter: ['!', ['has', 'point_count']],
+                paint: {},
+                layout: {
+                    'icon-image': 'cam',
+                    'icon-size': 0.5,
+                    'icon-allow-overlap': true,
+                    'symbol-placement': 'point',
+                    visibility: this.defaultLayer('webcams')
+                }
+            });
 
-                global.map.on('mouseenter', 'webcams', () => {
-                    global.map.getCanvas().style.cursor = 'pointer';
-                });
+            this.polishLayer('webcams');
+        }
 
-                global.map.on('mouseleave', 'webcams', () => {
-                    global.map.getCanvas().style.cursor = 'auto';
-                });
-            }
+        if (!global.map.getLayer('webcams_cluster')) {
+            global.map.addLayer({
+                id: 'webcams_cluster',
+                type: 'circle',
+                source: 'webcams',
+                filter: ['has', 'point_count'],
+                paint: {
+                    'circle-color': '#944f9f',
+                    'circle-radius': 12,
+                    'circle-stroke-color': '#0a0a0a',
+                    'circle-stroke-width': 5,
+                    'circle-stroke-opacity': 0.1
+                },
+                layout: {
+                    visibility: this.defaultLayer('webcams')
+                }
+            });
 
-            if (!global.map.getLayer('webcams_cluster')) {
-                global.map.addLayer({
-                    id: 'webcams_cluster',
-                    type: 'circle',
-                    source: 'webcams',
-                    filter: ['has', 'point_count'],
-                    paint: {
-                        'circle-color': '#944f9f',
-                        'circle-radius': 12,
-                        'circle-stroke-color': '#0a0a0a',
-                        'circle-stroke-width': 5,
-                        'circle-stroke-opacity': 0.1
-                    },
-                    layout: {
-                        visibility: this.defaultLayer('webcams')
-                    }
-                });
+            this.polishLayer('webcams_cluster');
+        }
 
-                global.map.on('mouseenter', 'webcams_cluster', () => {
-                    global.map.getCanvas().style.cursor = 'pointer';
-                });
+        if (!global.map.getLayer('webcams_count')) {
+            global.map.addLayer({
+                id: 'webcams_count',
+                type: 'symbol',
+                source: 'webcams',
+                filter: ['has', 'point_count'],
+                paint: {
+                    'text-color': '#fff'
+                },
+                layout: {
+                    'text-field': ['get', 'point_count_abbreviated'],
+                    'text-font': ['DIN Pro Medium'],
+                    'text-anchor': 'center',
+                    'text-justify': 'center',
+                    /*'text-offset': [1.2, 0],*/
+                    'text-allow-overlap': true,
+                    'text-size': 14,
+                    visibility: this.defaultLayer('webcams')
+                }
+            });
 
-                global.map.on('mouseleave', 'webcams_cluster', () => {
-                    global.map.getCanvas().style.cursor = 'auto';
-                });
-            }
+            this.polishLayer('webcams_count');
+        }
 
-            if (!global.map.getLayer('webcams_count')) {
-                global.map.addLayer({
-                    id: 'webcams_count',
-                    type: 'symbol',
-                    source: 'webcams',
-                    filter: ['has', 'point_count'],
-                    paint: {
-                        'text-color': '#fff'
-                    },
-                    layout: {
-                        'text-field': ['get', 'point_count_abbreviated'],
-                        'text-font': ['DIN Pro Medium'],
-                        'text-anchor': 'center',
-                        'text-justify': 'center',
-                        /*'text-offset': [1.2, 0],*/
-                        'text-allow-overlap': true,
-                        'text-size': 14,
-                        visibility: this.defaultLayer('webcams')
-                    }
-                });
-
-                global.map.on('mouseenter', 'webcams_count', () => {
-                    global.map.getCanvas().style.cursor = 'pointer';
-                });
-
-                global.map.on('mouseleave', 'webcams_count', () => {
-                    global.map.getCanvas().style.cursor = 'auto';
-                });
-            }
-
-            console.info(json.features.length + ' webcams located');
-        };
-
-        Promise.all([
-            this.loadImage('cam', `${ENV.host}${config.imgPath}camera_icon.png`),
-            this.loadImage('cluster_cam', `${ENV.host}${config.imgPath}camera_cluster_icon.png`)
-        ]).then(() => {
-            console.log('yes');
-            addCams();
-        }).catch(err => {
-            console.error('Image load error:', err);
-        });
+        console.info(`${json.features.length} webcams located`);
     }
 
     displayRWIS(json) {
-        /* add webcams to an array */
-        json.features.forEach((stn) => {
-            global.globalData.rwis.push(stn);
-        });
+        if (!json.features?.length) return;
+
+        // add webcams to an array
+        global.globalData.rwis.push(...json.features);
 
         if (!global.map.getSource('rwis')) {
             global.map.addSource('rwis', {
@@ -561,15 +581,8 @@ export class Data {
                 }
             });
 
-            global.map.on('mouseenter', 'rwis', () => {
-                global.map.getCanvas().style.cursor = 'pointer';
-            });
-
-            global.map.on('mouseleave', 'rwis', () => {
-                global.map.getCanvas().style.cursor = 'auto';
-            });
+            this.polishLayer('rwis');
         }
-
 
         if (!global.map.getLayer('rwis_text')) {
             global.map.addLayer({
@@ -623,13 +636,7 @@ export class Data {
                 }
             });
 
-            global.map.on('mouseenter', 'rwis_text', () => {
-                global.map.getCanvas().style.cursor = 'pointer';
-            });
-
-            global.map.on('mouseleave', 'rwis_text', () => {
-                global.map.getCanvas().style.cursor = 'auto';
-            });
+            this.polishLayer('rwis_text');
         }
 
         if (!global.map.getLayer('rwis_count')) {
@@ -653,359 +660,248 @@ export class Data {
                 }
             });
 
-            global.map.on('mouseenter', 'rwis_count', () => {
-                global.map.getCanvas().style.cursor = 'pointer';
-            });
-
-            global.map.on('mouseleave', 'rwis_count', () => {
-                global.map.getCanvas().style.cursor = 'auto';
-            });
+            this.polishLayer('rwis_count');
         }
 
-        console.info(json.features.length + ' RWIS stations reporting');
-    }
-
-    loadImage(name, url) {
-        return new Promise((resolve, reject) => {
-            if (global.map.hasImage(name)) {
-                resolve();
-                return;
-            }
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3-second timeout
-
-            fetch(url, { signal: controller.signal })
-                .then(response => {
-                    clearTimeout(timeoutId);
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    return response.blob();
-                })
-                .then(blob => {
-                    const img = new Image();
-                    img.src = URL.createObjectURL(blob);
-                    img.onload = () => {
-                        URL.revokeObjectURL(img.src);
-                        if (!global.map.hasImage(name)) {
-                            global.map.addImage(name, img);
-                        }
-                        resolve();
-                    };
-                    img.onerror = (err) => reject(new Error(`Failed to decode image: ${url}`));
-                })
-                .catch(err => {
-                    clearTimeout(timeoutId);
-                    reject(err);
-                });
-        });
+        console.info(`${json.features.length} RWIS stations reporting`);
     }
 
     displayIncidents(json) {
-        const incImgs = ['', '_crash', '_closure', '_vehicle', '_ramp_gate', '_obstruction'];
+        if (!json?.features.length) return;
 
-        const finish = () => {
-            /* if the incident is a linestring, we need to add icons for the start and end milepost */
-            json.features.forEach((feature) => {
-                global.globalData.incidents.push(feature);
+        global.globalData.incidents.push(...json.features);
 
-                if (feature.geometry.type != 'Point') {
-                    const start = {
-                        type: 'Feature',
-                        geometry: {
-                            type: 'Point',
-                            coordinates: feature.geometry.coordinates[0]
-                        },
-                        properties: feature.properties
-                    }, end = {
-                        type: 'Feature',
-                        geometry: {
-                            type: 'Point',
-                            coordinates: feature.geometry.coordinates[feature.geometry.coordinates.length - 1]
-                        },
-                        properties: feature.properties
-                    };
+        // if the incident is a linestring, we need to add icons for the start and end milepost
+        json.features.forEach(feature => {
+            if (feature.geometry.type != 'Point') {
+                const start = {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: feature.geometry.coordinates[0]
+                    },
+                    properties: feature.properties
+                }, end = {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: feature.geometry.coordinates[feature.geometry.coordinates.length - 1]
+                    },
+                    properties: feature.properties
+                };
 
-                    json.features.push(start);
-                    json.features.push(end);
+                json.features.push(start);
+                json.features.push(end);
+            }
+        });
+
+        if (!global.map.getSource('incidents')) {
+            global.map.addSource('incidents', {
+                type: 'geojson',
+                data: json
+            });
+        }
+
+        if (!global.map.getLayer('incidents_point')) {
+            global.map.addLayer({
+                id: 'incidents_point',
+                type: 'symbol',
+                source: 'incidents',
+                filter: ['==', '$type', 'Point'],
+                paint: {
+                    'icon-halo-color': '#333',
+                    'icon-halo-width': 5,
+                    'icon-halo-blur': 1
+                },
+                layout: {
+                    'icon-image': [
+                        'case',
+                        ['==', ['get', 'type'], 'Crash'], 'incident_crash',
+                        ['==', ['get', 'type'], 'Closure'], 'incident_closure',
+                        ['==', ['get', 'type'], 'Disabled Vehicle - Hazard'], 'incident_vehicle',
+                        ['==', ['get', 'type'], 'Ramp Gate Activation'], 'incident_ramp_gate',
+                        ['==', ['get', 'category'], 'Obstruction'], 'incident_obstruction',
+                        'incident'
+                    ],
+                    'icon-size': 0.45,
+                    'icon-allow-overlap': true,
+                    'symbol-placement': 'point',
+                    visibility: this.defaultLayer('incidents')
                 }
             });
 
-            if (!global.map.getSource('incidents')) {
-                global.map.addSource('incidents', {
-                    type: 'geojson',
-                    data: json
-                });
-            }
+            this.polishLayer('incidents_point');
+        }
 
-            if (!global.map.getLayer('incidents_point')) {
-                global.map.addLayer({
-                    id: 'incidents_point',
-                    type: 'symbol',
-                    source: 'incidents',
-                    filter: ['==', '$type', 'Point'],
-                    paint: {
-                        'icon-halo-color': '#333',
-                        'icon-halo-width': 5,
-                        'icon-halo-blur': 1
+        if (!global.map.getLayer('incidents_line_bg')) {
+            global.map.addLayer({
+                id: 'incidents_line_bg',
+                type: 'line',
+                source: 'incidents',
+                filter: ['!=', '$type', 'Point'],
+                paint: {
+                    'line-width': 5,
+                    'line-color': '#555'
+                },
+                layout: {
+                    visibility: this.defaultLayer('incidents')
+                }
+            }, 'incidents_point');
+
+            this.polishLayer('incidents_line_bg');
+        }
+
+        if (!global.map.getLayer('incidents_line')) {
+            global.map.addLayer({
+                id: 'incidents_line',
+                type: 'line',
+                source: 'incidents',
+                filter: ['!=', '$type', 'Point'],
+                paint: {
+                    'line-width': 5,
+                    'line-color': '#ff4a4a',
+                    'line-dasharray': [3, 3]
+                },
+                layout: {
+                    visibility: this.defaultLayer('incidents')
+                }
+            }, 'incidents_point');
+
+            this.polishLayer('incidents_line');
+        }
+
+        if (!global.map.getLayer('incidents_text')) {
+            global.map.addLayer({
+                id: 'incidents_text',
+                type: 'symbol',
+                source: 'incidents',
+                minzoom: 8.5,
+                paint: {
+                    'text-color': '#333',
+                    'text-opacity': {
+                        stops: [[8.4, 0], [8.5, 1]]
                     },
-                    layout: {
-                        'icon-image': [
-                            'case',
-                            ['==', ['get', 'type'], 'Crash'], 'incident_crash',
-                            ['==', ['get', 'type'], 'Closure'], 'incident_closure',
-                            ['==', ['get', 'type'], 'Disabled Vehicle - Hazard'], 'incident_vehicle',
-                            ['==', ['get', 'type'], 'Ramp Gate Activation'], 'incident_ramp_gate',
-                            ['==', ['get', 'category'], 'Obstruction'], 'incident_obstruction',
-                            'incident'
-                        ],
-                        'icon-size': 0.45,
-                        'icon-allow-overlap': true,
-                        'symbol-placement': 'point',
-                        visibility: this.defaultLayer('incidents')
-                    }
-                });
+                    'text-halo-color': '#fff',
+                    'text-halo-width': 1,
+                    'text-halo-blur': 1
+                },
+                filter: ['==', '$type', 'Point'],
+                layout: {
+                    'symbol-placement': 'point',
+                    'text-font': ['DIN Pro Medium'],
+                    'text-field': ['get', 'type'],
+                    'text-max-width': 8,
+                    'text-justify': 'center',
+                    'text-anchor': 'top',
+                    'text-offset': ['literal', [0, 1.05]],
+                    'text-size': 11,
+                    'text-allow-overlap': false,
+                    visibility: this.defaultLayer('incidents')
+                }
+            });
+        }
 
-                global.map.on('mouseenter', 'incidents_point', () => {
-                    global.map.getCanvas().style.cursor = 'pointer';
-                });
-
-                global.map.on('mouseleave', 'incidents_point', () => {
-                    global.map.getCanvas().style.cursor = 'auto';
-                });
-            }
-
-            if (!global.map.getLayer('incidents_line_bg')) {
-                global.map.addLayer({
-                    id: 'incidents_line_bg',
-                    type: 'line',
-                    source: 'incidents',
-                    filter: ['!=', '$type', 'Point'],
-                    paint: {
-                        'line-width': 5,
-                        'line-color': '#555'
-                    },
-                    layout: {
-                        visibility: this.defaultLayer('incidents')
-                    }
-                }, 'incidents_point');
-
-                global.map.on('mouseenter', 'incidents_line_bg', () => {
-                    global.map.getCanvas().style.cursor = 'pointer';
-                });
-
-                global.map.on('mouseleave', 'incidents_line_bg', () => {
-                    global.map.getCanvas().style.cursor = 'auto';
-                });
-            }
-
-            if (!global.map.getLayer('incidents_line')) {
-                global.map.addLayer({
-                    id: 'incidents_line',
-                    type: 'line',
-                    source: 'incidents',
-                    filter: ['!=', '$type', 'Point'],
-                    paint: {
-                        'line-width': 5,
-                        'line-color': '#ff4a4a',
-                        'line-dasharray': [3, 3]
-                    },
-                    layout: {
-                        visibility: this.defaultLayer('incidents')
-                    }
-                }, 'incidents_point');
-
-                global.map.on('mouseenter', 'incidents_line', () => {
-                    global.map.getCanvas().style.cursor = 'pointer';
-                });
-
-                global.map.on('mouseleave', 'incidents_line', () => {
-                    global.map.getCanvas().style.cursor = 'auto';
-                });
-            }
-
-            if (!global.map.getLayer('incidents_text')) {
-                global.map.addLayer({
-                    id: 'incidents_text',
-                    type: 'symbol',
-                    source: 'incidents',
-                    minzoom: 8.5,
-                    paint: {
-                        'text-color': '#333',
-                        'text-opacity': {
-                            stops: [[8.4, 0], [8.5, 1]]
-                        },
-                        'text-halo-color': '#fff',
-                        'text-halo-width': 1,
-                        'text-halo-blur': 1
-                    },
-                    filter: ['==', '$type', 'Point'],
-                    layout: {
-                        'symbol-placement': 'point',
-                        'text-font': ['DIN Pro Medium'],
-                        'text-field': ['get', 'type'],
-                        'text-max-width': 8,
-                        'text-justify': 'center',
-                        'text-anchor': 'top',
-                        'text-offset': ['literal', [0, 1.05]],
-                        'text-size': 11,
-                        'text-allow-overlap': false,
-                        visibility: this.defaultLayer('incidents')
-                    }
-                });
-            }
-
-            console.info(json.features.length + ' incidents reported by ODOT TOCs');
-        };
-
-        Promise.all(
-            incImgs.map(n => this.loadImage(`incident${n}`, `${ENV.host}${config.imgPath}incident${n}.png`))
-        ).then(() => {
-            finish();
-        }).catch(err => {
-            console.error('Error loading incident images:', err);
-        });
+        console.info(`${json.features.length} incidents reported by ODOT TOCs`);
     }
 
     displayConstruction(json) {
-        const finish = () => {
-            global.globalData.roadWork = json;
+        if (!json?.features.length) return;
 
-            if (!global.map.getSource('roadWork')) {
-                global.map.addSource('roadWork', {
-                    type: 'geojson',
-                    data: json
-                });
-            }
+        global.globalData.roadWork = json;
 
-            if (!global.map.getLayer('roadWork_point')) {
-                global.map.addLayer({
-                    id: 'roadWork_point',
-                    type: 'symbol',
-                    source: 'roadWork',
-                    paint: {},
-                    filter: ['==', '$type', 'Point'],
-                    layout: {
-                        'icon-image': 'construction',
-                        'icon-size': 0.65,
-                        'icon-allow-overlap': false,
-                        'symbol-placement': 'point',
-                        visibility: this.defaultLayer('construction')
-                    }
-                });
+        if (!global.map.getSource('roadWork')) {
+            global.map.addSource('roadWork', {
+                type: 'geojson',
+                data: json
+            });
+        }
 
-                global.map.on('mouseenter', 'roadWork_point', () => {
-                    global.map.getCanvas().style.cursor = 'pointer';
-                });
+        if (!global.map.getLayer('roadWork_point')) {
+            global.map.addLayer({
+                id: 'roadWork_point',
+                type: 'symbol',
+                source: 'roadWork',
+                paint: {},
+                filter: ['==', '$type', 'Point'],
+                layout: {
+                    'icon-image': 'construction',
+                    'icon-size': 0.65,
+                    'icon-allow-overlap': false,
+                    'symbol-placement': 'point',
+                    visibility: this.defaultLayer('construction')
+                }
+            });
 
-                global.map.on('mouseleave', 'roadWork_point', () => {
-                    global.map.getCanvas().style.cursor = 'auto';
-                });
-            }
+            this.polishLayer('roadWork_point');
+        }
 
-            console.info(json.features.length + ' road work & maintenance events reported by ODOT TOCs');
-        };
-
-        Promise.all([
-            this.loadImage('construction', `${ENV.host}${config.imgPath}roadwork_icon.png`)
-        ]).then(() => {
-            finish();
-        }).catch(err => {
-            console.error('Error loading image:', err);
-        });
+        console.info(`${json.features.length} road work & maintenance events reported by ODOT TOCs`);
     }
 
     displayDMS(json) {
-        const finish = () => {
-            global.globalData.varMsgSigns = json;
+        if (!json?.features.length) return;
 
-            if (!global.map.getSource('dms')) {
-                global.map.addSource('dms', {
-                    type: 'geojson',
-                    data: json
-                });
-            }
+        global.globalData.varMsgSigns = json;
 
-            if (!global.map.getLayer('dms')) {
-                global.map.addLayer({
-                    id: 'dms',
-                    type: 'symbol',
-                    source: 'dms',
-                    paint: {},
-                    layout: {
-                        'icon-image': 'dms',
-                        'icon-size': 0.65,
-                        'icon-allow-overlap': false,
-                        'symbol-placement': 'point',
-                        visibility: this.defaultLayer('vms')
-                    }
-                });
+        if (!global.map.getSource('dms')) {
+            global.map.addSource('dms', {
+                type: 'geojson',
+                data: json
+            });
+        }
 
-                global.map.on('mouseenter', 'dms', () => {
-                    global.map.getCanvas().style.cursor = 'pointer';
-                });
+        if (!global.map.getLayer('dms')) {
+            global.map.addLayer({
+                id: 'dms',
+                type: 'symbol',
+                source: 'dms',
+                paint: {},
+                layout: {
+                    'icon-image': 'dms',
+                    'icon-size': 0.65,
+                    'icon-allow-overlap': false,
+                    'symbol-placement': 'point',
+                    visibility: this.defaultLayer('vms')
+                }
+            });
 
-                global.map.on('mouseleave', 'dms', () => {
-                    global.map.getCanvas().style.cursor = 'auto';
-                });
-            }
+            this.polishLayer('dms');
+        }
 
-            console.info(json.features.length + ' active variable message signs');
-        };
-
-        Promise.all([
-            this.loadImage('dms', `${ENV.host}${config.imgPath}dms_icon.png`)
-        ]).then(() => {
-            finish();
-        }).catch(err => {
-            console.error('Error loading image:', err);
-        });
+        console.info(`${json.features.length} active variable message signs`);
     }
 
     displayPlows(json) {
-        const finish = () => {
-            global.globalData.snowPlows = json;
+        if (!json.features?.length) return;
 
-            if (!global.map.getSource('plows')) {
-                global.map.addSource('plows', {
-                    type: 'geojson',
-                    data: json
-                });
-            }
+        global.globalData.snowPlows = json;
 
-            if (!global.map.getLayer('plows')) {
-                global.map.addLayer({
-                    id: 'plows',
-                    type: 'symbol',
-                    source: 'plows',
-                    paint: {},
-                    layout: {
-                        'icon-image': 'plow',
-                        'icon-size': 0.2,
-                        'icon-allow-overlap': true,
-                        'symbol-placement': 'point',
-                        visibility: this.defaultLayer('plows')
-                    }
-                });
+        if (!global.map.getSource('plows')) {
+            global.map.addSource('plows', {
+                type: 'geojson',
+                data: json
+            });
+        }
 
-                global.map.on('mouseenter', 'plows', () => {
-                    global.map.getCanvas().style.cursor = 'pointer';
-                });
+        if (!global.map.getLayer('plows')) {
+            global.map.addLayer({
+                id: 'plows',
+                type: 'symbol',
+                source: 'plows',
+                paint: {},
+                layout: {
+                    'icon-image': 'plow',
+                    'icon-size': 0.2,
+                    'icon-allow-overlap': true,
+                    'symbol-placement': 'point',
+                    visibility: this.defaultLayer('plows')
+                }
+            });
 
-                global.map.on('mouseleave', 'plows', () => {
-                    global.map.getCanvas().style.cursor = 'auto';
-                });
-            }
+            this.polishLayer('plows');
+        }
 
-            console.info(json.features.length + ' recently seen snow plows');
-        };
-
-        Promise.all([
-            this.loadImage('plow', `${ENV.host}${config.imgPath}snow_plow_icon.png`)
-        ]).then(() => {
-            finish();
-        }).catch(err => {
-            console.error('Error loading image:', err);
-        });
+        console.info(`${json.features.length} recently seen snow plows`);
     }
 
     getTraffic() {

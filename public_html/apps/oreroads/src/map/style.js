@@ -83,7 +83,7 @@ export class Style {
 
         if (config.settings.user != null) {
             const userMenu = `<ul id="userMenu"><li class="head"><span>Hi, ${config.settings.getUser().getName().first()}</span></li>
-                <li onclick="settings.syncFavorites(true)"><a href="#" onclick="return false">Sync Favorites</a></li>
+                <li id="userSync"><a href="#" onclick="return false">Sync Favorites</a></li>
                 <li><a href="${ENV.host}account/settings">Account</a></li>
                 <li><a href="${ENV.host}logout?next='${encodeURIComponent(this.winLoc.href + '?loggedOut=1')}">Logout</a></li>
                 <li><a href="#" onclick="createDialog('Disclaimer', disclaimer, false, 'Ok');get('.dialog').classList.add('disclaimer');return false">Disclaimer</a></li>

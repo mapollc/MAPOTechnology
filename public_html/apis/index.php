@@ -1,4 +1,10 @@
 <?
+$api = $_REQUEST['api'];
+$method = $_REQUEST['method'];
+$function = $_REQUEST['function'];
+$format = $_REQUEST['format'];
+$version = isset($_GET['version']) ? (int) $_GET['version'] : 1;
+
 $host = parse_url('http://' . ($_SERVER['HTTP_HOST'] ?? ''), PHP_URL_HOST);
 
 if (!filter_var($host, FILTER_VALIDATE_IP) && $host !== 'localhost') {
@@ -36,22 +42,53 @@ $allowedTokens = [
 ];
 
 $allowedDomain = $allowedTokens[$apiKey] ?? [];
-$allowOrigin = array_filter($allowedDomain, fn($domain) => stripos($normalizedOrigin, $domain) !== false) ? $apiOrigin : '';
+//$allowOrigin = array_filter($allowedDomain, fn($domain) => stripos($normalizedOrigin, $domain) !== false) ? $apiOrigin : '';
 
-header('Content-type: ' . ($_SERVER['REQUEST_URI'] == '/' ? 'text/html' : 'application/json'));
-header("Cache-Control: public, max-age=600");
-header('Pragma: cache');
-header("Expires: " . gmdate('D, d M Y H:i:s', time() + 600) . ' GMT');
-header("Last-Modified: " . gmdate('D, d M Y H:i:s') . ' GMT');
+$allowOrigin = '';
+
+if (isset($allowedTokens[$apiKey])) {
+    // Exact match check prevents substring/spoofing exploits
+    if (in_array($normalizedOrigin, $allowedTokens[$apiKey], true)) {
+        $allowOrigin = $apiOrigin;
+    }
+}
 
 if ($allowOrigin) {
     header('Access-Control-Allow-Credentials: true');
     header("Access-Control-Allow-Origin: $allowOrigin");
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
+    header('Vary: Origin');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
-    exit();
+    exit;
+}
+
+$isVectorTile = ($api === 'maps' && $method === 'tiles');
+
+$contentType = match (true) {
+    $_SERVER['REQUEST_URI'] === '/' => 'text/html',
+    $isVectorTile                   => 'application/vnd.mapbox-vector-tile',
+    default                         => 'application/json'
+};
+
+header("Content-type: $contentType");
+if ($isVectorTile) header('Accept-Ranges: bytes');
+
+header_remove('Cache-Control');
+header_remove('Pragma');
+header_remove('Expires');
+
+if (in_array($api, ['user', 'account'], true)) {
+    header('Cache-Control: private, no-store, no-cache, must-revalidate');
+    header('Pragma: no-cache');
+} else {
+    $expires = gmdate('D, d M Y H:i:s', time() + 600) . ' GMT';
+    header('Cache-Control: public, max-age=600');
+    header('Pragma: cache');
+    header("Expires: $expires");
 }
 
 function writeToLog($key, $version, $api, $method, $function, $isCached)
@@ -92,161 +129,160 @@ function root()
 include_once '/home/mapo/public_html/config.inc.php';
 require_once '/home/mapo/public_html/apis/functions.inc.php';
 
-$api = $_REQUEST['api'];
-$method = $_REQUEST['method'];
-$function = $_REQUEST['function'];
-$format = $_REQUEST['format'];
-$version = isset($_GET['version']) ? (int) $_GET['version'] : 1;
 $allowBrowser = true;
 $needSess = ['profile', 'account', 'user', 'user-content', 'session', 'track'];
 $needCon2 = ['favorite', 'trails', 'upload'];
 $isCached = false;
 $isCachedType = null;
+$returnJson = null;
 
 if ($_SERVER['REQUEST_URI'] == '/') {
     echo '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:150%;font-family:sans-serif;text-align:center"><h1>MAPO LLC</h1>' .
         '<h2>API Server</h2><iframe frameborder="0" style="width:191px;height:30px" src="https://status.mapotechnology.com/badge?theme=light"></iframe></div>';
-} else {
-    if (!isset($_GET['version'])) {
-        $returnJson = ['error' => ['response' => 'error', 'code' => 404, 'msg' => 'An API version has not been specified.']];
-    } else {
-        if (empty($allowedDomain)) {
-            $failed = 1;
-            $returnJson = ['error' => ['response' => 'error', 'code' => 400, 'msg' => 'The token you specified is not valid']];
-        } else {
-            if ($_SERVER['HTTP_REFERER'] == '' && $allowBrowser === false) {
-                $failed = 1;
-                $returnJson = ['reponse' => 'error', 'code' => 403, 'msg' => 'You cannot access this data via browser window'];
-            } else {
-                if (in_array($api, $needCon2)) {
-                    $con2 = mapoTrailsDB();
 
-                    if (mysqli_connect_errno()) {
-                        echo 'Failed to connect to MySQL: ' . mysqli_connect_error();
-                    }
-                }
-
-                $apiMap = [
-                    'account' => 'account',
-                    'avalanche' => 'avalanche',
-                    'billing' => 'billing',
-                    'createChart' => 'chart',
-                    'crowdsource' => 'crowdsource',
-                    'climo' => 'fireclimo',
-                    'dispatch' => 'dispatch',
-                    'elevation' => 'elevation',
-                    'evacuations' => 'evacuations',
-                    'events' => 'topfires',
-                    'favorite' => 'favorite',
-                    'fire-weather' => 'fire-wx',
-                    'forecast' => 'forecast',
-                    'fwf' => 'fwf',
-                    'geocode' => 'geocode',
-                    'getWWA' => 'getWWA',
-                    'incidentPhoto' => 'incidentPhoto',
-                    'jurisdiction' => 'jurisdiction',
-                    'lightning' => 'lightning',
-                    'logFire' => 'logFire',
-                    'manageApp' => 'app',
-                    'maps' => 'maps',
-                    'message' => 'message',
-                    'model' => 'model',
-                    'nbm' => 'nbm',
-                    'newReport' => 'newReport',
-                    'nws' => 'nws',
-                    'odot' => 'odot',
-                    'oreroads' => 'oreroads',
-                    'outlooks' => 'outlooks',
-                    'profile' => 'profile',
-                    'payment' => 'payment',
-                    'raws' => 'raws',
-                    'recaptcha' => 'recaptcha',
-                    'report' => 'state-report',
-                    'risk' => 'risk',
-                    'roads' => 'roads',
-                    'rth' => 'rth',
-                    'rundown' => 'rundown',
-                    'search' => 'search',
-                    'session' => 'session',
-                    'snowfall' => 'wpc',
-                    'subscriptions' => 'subscriptions',
-                    'spc' => 'spc',
-                    'tfrs' => 'tfrs',
-                    'trails' => 'trails',
-                    'trackFires' => 'track',
-                    'user' => 'user',
-                    'usfs' => 'usfs',
-                    'upload' => 'upload',
-                    'userContent' => 'user-content',
-                    'versioning' => 'version',
-                    'weather' => 'weather',
-                    'webcams' => 'webcams',
-                    'wildfires' => 'wildfires',
-                    'winter' => 'winter',
-                    'wwas' => 'wwas'
-                ];
-
-                $file = $apiMap[$api] ?? null;
-                $failed = 0;
-                $path = '/home/mapo/public_html' . ($mapotrails == 1 ? '/mapotrails.com' : ($mapofire == 1 ? '/mapofire.com' : '')) . '/apis/' . ($mapotrails != 1 && $mapofire != 1 ? 'v' . $_GET['version'] . '/' : '') . $file . '.ini.php';
-
-                if ($file == null || !file_exists($path)) {
-                    $returnJson = ['response' => 'error', 'code' => 404, 'msg' => 'The API resource you\'re looking for doesn\'t exist.'];
-                } else {
-                    if (in_array($file, $needSess)) {
-                        session_start();
-                    }
-
-                    include_once $path;
-                }
-            }
-        }
-    }
-
-    writeToLog($apiKey, $version, $api, $method, $function, $isCached);
-
-    $elapsed = microtime(true) - $startAPITime;
-    $now = time();
-    $arr = [
-        'apiVersion' => $version,
-        'origin' => $allowOrigin,
-        'time' => gmdate('Y-m-d\TH:i:sP', $updateForCacheTime ? $updateForCacheTime : time()),
-        'response' => ($elapsed > 1 ? round($elapsed, 3) . 's' : round($elapsed, 4) . 'ms')
-    ];
-    $thereq = $api . ($method ? "/$method" : '') . ($function ? "/$function" : '');
-
-    ////mysqli_query($con, "INSERT INTO apiUsage (request,token,origin,time,response,cache,elapsed) VALUES('$thereq','$_REQUEST[key]','$output_array[1]','$now','$failed','$cac','$elapsed')");
-
-    // close all mysql connections
-    mysqli_close($con);
-    if ($con2) mysqli_close($con2);
-
-    // close memcache connection at the end, if started in the first place
-    if ($memcache) {
-        $memcache->quit();
-    }
-
-    // if API response is cached, add that parameter to the metadata
-    if (!$noMetadata) {
-        if ($returnJson instanceof stdClass) {
-            $returnJson->metadata = $arr;
-            if ($isCached) {
-                $tmp = [];
-                $tmp = $returnJson->metadata;
-                $arr = ['cache' => true];
-                if ($isCachedType != null) $arr['cacheType'] = $isCachedType;
-                $returnJson->metadata = array_merge($arr, $tmp);
-            }
-        } else {
-            $returnJson['metadata'] = $arr;
-            if ($isCached) $returnJson['metadata']['cache'] = true;
-            if ($isCachedType != null) $returnJson['metadata']['cacheType'] = $isCachedType;
-        }
-    }
-
-    if ($returnJson) {
-        echo json_encode($returnJson, $format ? JSON_PRETTY_PRINT : 0);
-    }
-
-    exit();
+    return;
 }
+
+if (!isset($_GET['version'])) {
+    $returnJson = ['error' => ['response' => 'error', 'code' => 404, 'msg' => 'An API version has not been specified.']];
+    return;
+} else {
+    if (empty($allowedDomain)) {
+        $failed = 1;
+        $returnJson = ['error' => ['response' => 'error', 'code' => 400, 'msg' => 'The token you specified is not valid']];
+        return;
+    }
+
+    if ($_SERVER['HTTP_REFERER'] == '' && $allowBrowser === false) {
+        $failed = 1;
+        $returnJson = ['reponse' => 'error', 'code' => 403, 'msg' => 'You cannot access this data via browser window'];
+        return;
+    }
+
+    if (in_array($api, $needCon2)) {
+        $con2 = mapoTrailsDB();
+
+        if (mysqli_connect_errno()) echo 'Failed to connect to MySQL: ' . mysqli_connect_error();
+    }
+
+    $apiMap = [
+        'account' => 'account',
+        'avalanche' => 'avalanche',
+        'billing' => 'billing',
+        'createChart' => 'chart',
+        'crowdsource' => 'crowdsource',
+        'climo' => 'fireclimo',
+        'dispatch' => 'dispatch',
+        'elevation' => 'elevation',
+        'evacuations' => 'evacuations',
+        'events' => 'topfires',
+        'favorite' => 'favorite',
+        'fire-weather' => 'fire-wx',
+        'forecast' => 'forecast',
+        'fwf' => 'fwf',
+        'geocode' => 'geocode',
+        'getWWA' => 'getWWA',
+        'incidentPhoto' => 'incidentPhoto',
+        'jurisdiction' => 'jurisdiction',
+        'lightning' => 'lightning',
+        'logFire' => 'logFire',
+        'manageApp' => 'app',
+        'maps' => 'maps',
+        'message' => 'message',
+        'model' => 'model',
+        'nbm' => 'nbm',
+        'newReport' => 'newReport',
+        'nws' => 'nws',
+        'odot' => 'odot',
+        'oreroads' => 'oreroads',
+        'outlooks' => 'outlooks',
+        'profile' => 'profile',
+        'payment' => 'payment',
+        'raws' => 'raws',
+        'recaptcha' => 'recaptcha',
+        'report' => 'state-report',
+        'risk' => 'risk',
+        'roads' => 'roads',
+        'rth' => 'rth',
+        'rundown' => 'rundown',
+        'search' => 'search',
+        'session' => 'session',
+        'snowfall' => 'wpc',
+        'subscriptions' => 'subscriptions',
+        'spc' => 'spc',
+        'tfrs' => 'tfrs',
+        'trails' => 'trails',
+        'trackFires' => 'track',
+        'user' => 'user',
+        'usfs' => 'usfs',
+        'upload' => 'upload',
+        'userContent' => 'user-content',
+        'versioning' => 'version',
+        'weather' => 'weather',
+        'webcams' => 'webcams',
+        'wildfires' => 'wildfires',
+        'winter' => 'winter',
+        'wwas' => 'wwas'
+    ];
+
+    $file = $apiMap[$api] ?? null;
+    $failed = 0;
+    $path = '/home/mapo/public_html' . ($mapotrails == 1 ? '/mapotrails.com' : ($mapofire == 1 ? '/mapofire.com' : '')) . '/apis/' . ($mapotrails != 1 && $mapofire != 1 ? 'v' . $_GET['version'] . '/' : '') . $file . '.ini.php';
+
+    if ($file == null || !file_exists($path)) {
+        $returnJson = ['response' => 'error', 'code' => 404, 'msg' => 'The API resource you\'re looking for doesn\'t exist.'];
+    } else {
+        if (in_array($file, $needSess)) {
+            session_start();
+        }
+
+        include_once $path;
+    }
+}
+
+writeToLog($apiKey, $version, $api, $method, $function, $isCached);
+
+$elapsed = microtime(true) - $startAPITime;
+$now = time();
+$arr = [
+    'apiVersion' => $version,
+    'origin' => $allowOrigin,
+    'time' => gmdate('Y-m-d\TH:i:sP', $updateForCacheTime ? $updateForCacheTime : time()),
+    'response' => ($elapsed > 1 ? round($elapsed, 3) . 's' : round($elapsed, 4) . 'ms')
+];
+$thereq = $api . ($method ? "/$method" : '') . ($function ? "/$function" : '');
+
+////mysqli_query($con, "INSERT INTO apiUsage (request,token,origin,time,response,cache,elapsed) VALUES('$thereq','$_REQUEST[key]','$output_array[1]','$now','$failed','$cac','$elapsed')");
+
+// close all mysql connections
+mysqli_close($con);
+if ($con2) mysqli_close($con2);
+
+// close memcache connection at the end, if started in the first place
+if ($memcache) {
+    $memcache->quit();
+}
+
+// if API response is cached, add that parameter to the metadata
+if (!$noMetadata) {
+    if ($returnJson instanceof stdClass) {
+        $returnJson->metadata = $arr;
+        if ($isCached) {
+            $tmp = [];
+            $tmp = $returnJson->metadata;
+            $arr = ['cache' => true];
+            if ($isCachedType != null) $arr['cacheType'] = $isCachedType;
+            $returnJson->metadata = array_merge($arr, $tmp);
+        }
+    } else {
+        $returnJson['metadata'] = $arr;
+        if ($isCached) $returnJson['metadata']['cache'] = true;
+        if ($isCachedType != null) $returnJson['metadata']['cacheType'] = $isCachedType;
+    }
+}
+
+if ($returnJson) {
+    echo json_encode($returnJson, $format ? JSON_PRETTY_PRINT : 0);
+}
+
+exit();

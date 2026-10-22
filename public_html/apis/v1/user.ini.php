@@ -319,6 +319,46 @@ class SSO
         }
     }
 
+    public function exchangeSSO()
+    {
+        $code = $this->fields['code'] ?? '';
+
+        if (!$code) {
+            return ['response' => 'error', 'code' => 11, 'msg' => 'No SSO authorization code provided.'];
+        }
+
+        $cacheKey = "sso_code:$code";
+        $token = $this->memcache->get($cacheKey);
+
+        if (!$token) {
+            return ['response' => 'error', 'code' => 22, 'msg' => 'The SSO code is invalid or has expired.'];
+        }
+
+        // BURN CODE IMMEDIATELY (prevent replay attacks)
+        $this->memcache->delete($cacheKey);
+
+        // Validate the underlying token
+        $validToken = $this->validateToken($token);
+
+        if ($validToken['response'] !== 'valid') {
+            return $validToken;
+        }
+
+        $row = executeQuery('s', [$token], $this->sql(', token, expires, guid', "LEFT JOIN sessions AS s ON s.uid = u.uid WHERE s.token = ?"));
+
+        if (isset($row['error']) || !$row) {
+            return ['response' => 'error', 'code' => 33, 'msg' => 'Unable to retrieve user session details.'];
+        }
+
+        $userData = $this->getUser($row, null, $this->getSubscriptions($row['uid'], $row['email']));
+
+        return [
+            'response' => 'valid',
+            'token' => $token,
+            'user' => $userData ?? null
+        ];
+    }
+
     public function loginWithGoogle()
     {
         $error = false;
@@ -408,26 +448,29 @@ class SSO
 
     public function returnURL($next)
     {
-        global $method;
+        ////global $method;
 
         $validSources = ['mapofire', 'wildfiremap', 'fireweatheravalanche', 'mapotrails', 'apps'];
         $services = ['www.mapofire.com', 'www.wildfiremap.org', 'www.fireweatheravalanche.org', 'www.mapotrails.com', 'apps.mapotechnology.com'];
 
         if (isset($this->fields['price_id'])) {
             //return $this->domain . 'checkout?price_id=' . $this->fields['price_id'] . ($this->fields['trial'] ? '&trial=1' : '') . '&customer_email=' . $this->fields['email'] . ($method == 'register' ? '&first_name=' . $this->fields['first_name'] . '&last_name=' . $this->fields['last_name'] . '&next=' . urlencode('secure/login?subscribed=1&pid=' . $this->fields['price_id']) : '');
-            return 'https://www.mapotechnology.com/purchase/' . $this->fields['product_key'] . '/complete?newUser=1&price=' . $this->fields['price_id'] . ($this->fields['trial'] ? '&trial=1' : '') . '&customer_email=' . $this->fields['email'];
+            return "{$this->domain}purchase/{$this->fields['product_key']}/complete?newUser=1&price={$this->fields['price_id']}" . ($this->fields['trial'] ? '&trial=1' : '') . "&customer_email={$this->fields['email']}";
         } else {
             if ($this->source != null && $this->source != 'mapotechnology') {
                 $key = array_search($this->source, $validSources);
-                /*$sso_code = md5($this->token);
-                executeQuery('ss', [$sso_code, $this->token, (time() + 45)], "INSERT INTO sso_exchange (sso_code,token,expires) VALUES(?,?,?)");*/
 
-                return 'https://' . $services[$key] . '/authenticate?token=' . $this->token .
-                    ($this->source != null ? '&service=' . $this->source : '') .
-                    ($this->prod != null ? '&prod=' . $this->prod : '') .
+                // Generate a secure single-use auth code and store the JWT in Memcached for 45 seconds
+                $ssoCode = bin2hex(random_bytes(32));
+                $this->memcache->set("sso_code:$ssoCode", $this->token, 45);
+
+                //return "https://{$services[$key]}/authenticate?token={$this->token}" .
+                return "https://{$services[$key]}/authenticate?code={$ssoCode}" .
+                    ($this->source != null ? "&service={$this->source}" : '') .
+                    ($this->prod != null ? "&prod={$this->prod}" : '') .
                     ($next ? '&next=' . urlencode($next) : '');
             } else {
-                return str_replace('//', '/', $next ? $next : '../account/home');
+                return str_replace('//', '/', $next ?: '../account/home');
             }
         }
     }
@@ -1309,6 +1352,9 @@ if (empty($method)) {
         } # update user settings
         else if ($method == 'update') {
             $returnJson = $sso->update();
+        } # exchange short-lived sso code for jwt server-to-server
+        else if ($method == 'exchange_sso') {
+            $returnJson = $sso->exchangeSSO();
         }
     }
 }

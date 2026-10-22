@@ -1,9 +1,8 @@
 <?
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
 set_time_limit(900);
 ini_set('memory_limit', '1024M');
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+////error_reporting(E_ALL);
 
 $scriptStart = microtime(true);
 $lastSeen = time();
@@ -84,7 +83,8 @@ function saveEvacuation($geo, $arr)
 
 $tileName = 'evacuations';
 $geojsonFile = "/home/mapo/tmp/$tileName/current.geojson";
-$baseURL = '/home/mapo/public_html/mapofire.com/data/maps/tiles';
+$baseURL = '/home/mapo/public_html/cron/tiles';
+////$baseURL = '/home/mapo/public_html/mapofire.com/data/maps/tiles';
 
 $minTileZoom = 5;
 $maxTileZoom = 14;

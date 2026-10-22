@@ -419,57 +419,60 @@ select {
     z-index: 9990;
     overflow-x: hidden;
     overflow-y: auto;
-}
 
-#modal.full {
-    height: calc(100% - calc(var(--spacing) * 2));
-    max-height: unset;
-    overflow-y: hidden;
-}
+    &.full {
+        height: calc(100% - calc(var(--spacing) * 2));
+        max-height: unset;
+        overflow-y: hidden;
+    }
 
-#modal h1 {
-    display: inline-flex;
-    align-items: center;
-    width: calc(100% - 16px - var(--half-spacing));
-    font-size: 24px;
-    margin: 0 0 var(--half-spacing) 0;
-}
+    h1 {
+        display: inline-flex;
+        align-items: flex-start;
+        gap: var(--half-spacing);
+        width: calc(100% - 16.5px - var(--spacing));
+        font-size: 24px;
+        margin: 0 0 var(--half-spacing) 0;
+        line-height: 1.2;
+    }
 
-#modal h2 {
-    display: inline-flex;
-    margin: 0 0 var(--half-spacing) 0;
-    width: 100%;
-    align-items: center;
-    justify-content: space-between;
-    font-weight: 400;
-    font-size: 20px;
-    color: #404040;
-}
+    h2 {
+        display: inline-flex;
+        margin: 0 0 var(--half-spacing) 0;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 400;
+        font-size: 20px;
+        color: #404040;
 
-#modal h2.inc {
-    justify-content: flex-start;
-}
+        &.inc {
+            justify-content: flex-start;
+        }
+    }
 
-#modal h4.fav {
-    display: inline-flex;
-    justify-content: space-between;
-    width: 100%;
-    margin: var(--spacing) 0;
-}
+    h4.fav {
+        display: inline-flex;
+        justify-content: space-between;
+        width: 100%;
+        margin: var(--spacing) 0;
+    }
 
-#modal h5 {
-    font-size: 22px;
-    margin: 0;
-    color: #333;
-}
+    h5 {
+        font-size: 22px;
+        margin: 0;
+        color: #333;
+        line-height: 1;
+    }
 
-#modal .wrapper {
-    height: 100%;
-    max-height: calc(100% - 25px - var(--spacing));
-}
+    .wrapper {
+        height: 100%;
+        max-height: calc(100% - 25px - var(--spacing));
+    }
 
-#modal small {
-    font-style: italic;
+    small {
+        font-style: italic;
+    }
 }
 
 #modal small,
@@ -483,7 +486,7 @@ span.bottom {
 
 .favorite,
 .unfavorite {
-    padding: 3px var(--half-spacing);
+    padding: 3px;
     font-size: 18px;
     color: var(--orange);
     user-select: none;
@@ -610,13 +613,19 @@ span.bottom {
     height: auto;
     padding: .75em;
     background-color: #1a1a1a;
-    color: rgb(255 255 59);
-    font-family: Roboto;
+    color: #ffff3b;
+    font-family: monospace;
     font-size: 22px;
     text-align: center;
     font-weight: 600;
     letter-spacing: 1px;
     border-radius: 5px;
+
+    .separate {
+        display: block;
+        margin: 12px 0;
+        border-top: 3px dashed rgb(255 255 59 / 75%);
+    }
 }
 
 .wwa-headline {
@@ -1257,7 +1266,8 @@ a.maplibregl-ctrl-logo {
         bottom: calc(20px + .5em);
     }
 
-    #modal, #menu {
+    #modal,
+    #menu {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
@@ -1276,6 +1286,7 @@ a.maplibregl-ctrl-logo {
 }
 
 @media (max-width: 500px) {
+
     .maplibregl-ctrl-top-left,
     .maplibregl-ctrl-bottom-left {
         left: var(--spacing);

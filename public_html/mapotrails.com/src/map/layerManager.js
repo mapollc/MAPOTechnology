@@ -83,7 +83,9 @@ export class Layers {
             global.map.addSource('trailData', {
                 type: 'vector',
                 tiles: !config.useMapbox
-                    ? [`${ENV.host}data/maps/tiles/trails/{z}/{x}/{y}.pbf`]
+                    ? [`${ENV.apiURL}maps/tiles/trails?key=${config.apiKey()}&z={z}&x={x}&y={y}`/*,
+                        `${ENV.host}data/maps/tiles/trails/{z}/{x}/{y}.pbf`
+                        */]
                     : ['https://api.mapbox.com/v4/mapollc.clnnlg3w728a02nmv0ffz57jf-6mcgs/{z}/{x}/{y}.vector.pbf?access_token=sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ']
             });
         }

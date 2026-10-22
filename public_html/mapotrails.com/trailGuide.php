@@ -170,9 +170,12 @@ $season = formatMonthsToSeason($trail['season']);
 
 <main>
     <div class="container">
+        <?= (int) $trail['public'] === 0 && $_SESSION['role'] == 'ADMIN' ? '<div class="watermark"><i style="margin-right:0.5rem" class="fas fa-circle-info"></i>trail guide is not public</div>' : '' ?>
+
         <div class="trail-header">
             <h1><?= $trail['title'] ?></h1>
             <div class="subtitle">
+                <?= (int) $trail['premium'] === 1 ? '<i class="fas fa-star" style="color:var(--yellow)"></i> PREMIUM GUIDE' : '' ?>
                 <i class="fas fa-<?= subtitleIcon($terms) ?>"></i>
                 <?= implode(' &middot; ', json_decode($terms)) ?>
                 <?= $trail['season'] ? "<i class=\"fas fa-calendar-days\"></i> $season" : '' ?>
@@ -188,7 +191,7 @@ $season = formatMonthsToSeason($trail['season']);
             <div style="margin:4rem auto;font-size:22px;font-weight:300;line-height:2">
                 <i class="far fa-lock" style="font-size:20px;color:gold;padding-right:5px"></i>
                 This is a premium trail guide. Please <a href="https://auth.mapotechnology.com/login?fail=1&service=mapotrails&next=<?= urlencode("https://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}") ?>">login</a>
-                to access this content
+                to access this content.
             </div>
         <? return;
         }
@@ -197,12 +200,12 @@ $season = formatMonthsToSeason($trail['season']);
             <div style="margin:4rem auto;font-size:22px;font-weight:300;line-height:2">
                 <i class="far fa-lock" style="font-size:20px;color:gold;padding-right:5px"></i>
                 This trail is unavailable to the public. Please <a href="https://auth.mapotechnology.com/login?fail=1&service=mapotrails&next=<?= urlencode("https://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}") ?>">login</a>
-                to access this content
+                to access this content.
             </div>
         <? return;
         }
-
         ?>
+
         <div class="photos">
             <div class="photo placeholder" data-layout="1"></div>
             <div class="photo placeholder" data-layout="2"></div>
@@ -285,6 +288,8 @@ $season = formatMonthsToSeason($trail['season']);
                 </div>
             </li>
         </ul>
+
+        <h2>Trail Photos</h2>
 
         <div id="guide-photos"></div>
     </div>

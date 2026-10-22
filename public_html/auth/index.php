@@ -5,16 +5,27 @@ error_reporting(E_PARSE | E_ERROR);
 require_once 'config.inc.php';
 
 // verify if the user is already logged in and then redirect them
-if (isset($_SESSION['uid']) && $method != 'invitation') {
-    $exp = executeQuery('s', [$_SESSION['token']], "SELECT expires FROM sessions WHERE token = ?")['expires'];
+if (!empty($_SESSION['uid']) && $method !== 'invitation') {
+    $sessionRow = executeQuery('s', [$_SESSION['token'] ?? ''], "SELECT expires FROM sessions WHERE token = ?");
+    $dbExpires = $sessionRow['expires'] ?? 0;
 
-    if ($_SESSION['expires'] < time() || $exp <= time()) {
-        $goto = '//mapotechnology.com/logout?expired=1' . ($_SERVER['QUERY_STRING'] ? '&' . preg_replace('/(%26|%3F)loggedOut%3D1/m', '', $_SERVER['QUERY_STRING']) : '');
+    if (($_SESSION['expires'] ?? 0) < time() || $dbExpires <= time()) {
+        $queryString = preg_replace('/(%26|%3F)loggedOut%3D1/m', '', $_SERVER['QUERY_STRING'] ?? '');
+        $goto = '//mapotechnology.com/logout?expired=1' . ($queryString ? '&' . $queryString : '');
     } else {
-        if ($service) {
-            $goto = "$sourceURL/authenticate?" . ($service ? "service=$service&" : '') . "token=$_SESSION[token]" . ($nextURL ? '&next=' . urlencode($nextURL) : '');
+        if (!empty($service)) {
+            $memcache = new Memcached('auth_pool');
+
+            if (!count($memcache->getServerList())) {
+                $memcache->addServer('127.0.0.1', 11211);
+            }
+
+            $ssoCode = bin2hex(random_bytes(32));
+            $memcache->set("sso_code:$ssoCode", $_SESSION['token'], 45);
+
+            $goto = "$sourceURL/authenticate?devel=1&service=$service&code=$ssoCode" . (!empty($nextURL) ? '&next=' . urlencode($nextURL) : '');
         } else {
-            $goto = $nextURL ?: '//mapotechnology.com/account/home?existing=1';
+            $goto = !empty($nextURL) ? $nextURL : '//mapotechnology.com/account/home?existing=1';
         }
     }
 

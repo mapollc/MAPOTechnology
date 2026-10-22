@@ -1358,6 +1358,35 @@ textarea:user-invalid:focus {
     }
 }
 
+#progress-container {
+    display: none;
+    width: 100%;
+    max-width: 400px;
+    margin-top: 0.5rem;
+
+    #progress-text {
+        font-size: 13px;
+        margin-bottom: 4px;
+        color: #555;
+        font-weight: 500;
+    }
+
+    .wrapper {
+        width: 100%;
+        background: #eee;
+        height: 6px;
+        border-radius: 4px;
+        overflow: hidden;
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--green);
+            transition: width 0.1s ease;
+        }
+    }
+}
+
 .trails-btn {
     display: block;
     margin: 0;
@@ -1367,20 +1396,26 @@ textarea:user-invalid:focus {
     font-size: 13px;
     font-family: 'Roboto';
     line-height: 1;
+    background-color: #b3cadd;
+    color: #303030;
     border: 0;
     border-radius: 4px;
     transition: all .2s ease-in-out;
     user-select: none;
     cursor: pointer;
-}
 
-.trails-btn.delete {
-    color: #fff;
-    background-color: rgb(237 37 78 / 80%);
-}
+    &:hover {
+        background-color: rgb(179 202 221 / 80%);
+    }
 
-.trails-btn.delete:hover {
-    background-color: rgb(237 37 78 / 100%);
+    &.delete {
+        color: #fff;
+        background-color: rgb(237 37 78 / 80%);
+
+        &:hover {
+            background-color: rgb(237 37 78 / 100%);
+        }
+    }
 }
 
 #files,
@@ -1412,11 +1447,6 @@ textarea:user-invalid:focus {
             border-radius: 5px;
             padding: 0.75rem 1rem;
 
-            .reorder {
-                cursor: grab;
-                user-select: none;
-            }
-
             .file {
                 display: flex;
                 flex-direction: column;
@@ -1430,21 +1460,41 @@ textarea:user-invalid:focus {
             display: flex;
             flex: 1 1 auto;
             flex-direction: column;
+
+            &.actions {
+                flex-direction: row;
+                flex: 0 0 auto;
+                gap: 1rem;
+            }
         }
     }
 }
 
+.reorder {
+    cursor: grab;
+    user-select: none;
+}
+
 .multimedia {
     display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
     gap: 15px 20px;
     margin-top: 1em;
     background-color: #f3f3f3;
     padding: 1em;
+    list-style: none;
+    margin-inline-start: 0;
 
-    .wrapper {
+    li {
         flex: 1 1 auto;
-        max-width: 327px;
+        max-width: 318px;
+
+        .reorder {
+            margin: 0 auto 4px auto;
+            display: block;
+            width: 14.5px;
+        }
 
         .meta {
             display: block;

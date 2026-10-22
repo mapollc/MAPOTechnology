@@ -52,29 +52,40 @@ function doUpload($i, $trailID, $mode, $caption, $delta, $display)
     $caption_sql = mysqli_real_escape_string($con2, $caption);
 
     mysqli_query($con2, "INSERT INTO gpx (trail_id,filename,mode,caption,delta,display)
-    VALUES($trailID, '$basename_sql', '$mode_sql', '$caption_sql', $delta, $display)");
+        VALUES($trailID, '$basename_sql', '$mode_sql', '$caption_sql', $delta, $display)");
+
     $gisID = mysqli_insert_id($con2);
 
     return parseGPX(
         $gisID,
         $trailID,
-        $mode,
-        $caption,
         $delta,
-        $display,
-        $target_file,
-        false
+        $basename
     );
 }
 
-function parseGPX($gisID, $trailID, $mode, $caption, $delta, $display, $file, $update)
+function parseGPX($gisID, $trailID, $delta, $file)
 {
     global $con2;
 
     $sqlQueries = '';
 
+    $filePath = $file;
+
+    if (!str_starts_with($filePath, '/')) {
+        $filePath = "/home/mapo/public_html/mapotrails.com/data/gpx/" . basename($file);
+    }
+
+    if (!file_exists($filePath)) return '';
+
+    // Suppress XML parsing errors/warnings from malformed namespaces (like undefined tp1)
+    libxml_use_internal_errors(true);
+
     // Load the GPX file
-    $xml = simplexml_load_file($file, 'SimpleXMLElement', LIBXML_NOCDATA);
+    $xml = simplexml_load_file($filePath, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+    // Clear the error buffer
+    libxml_clear_errors();
 
     if ($xml === false) return '';
 
@@ -164,12 +175,13 @@ function parseGPX($gisID, $trailID, $mode, $caption, $delta, $display, $file, $u
     ];
 
     // save the initial trail stats
-    if ($delta == 0) {
-        $time = time();
-        $sstats = mysqli_real_escape_string($con2, json_encode($stats));
+    ////if ($delta == 0) {
+    $time = time();
+    $sstats = mysqli_real_escape_string($con2, json_encode($stats));
 
-        $sqlQueries .= "INSERT INTO stats (trail_id,stats,calculated) VALUES($trailID,'$sstats',$time) ON DUPLICATE KEY UPDATE stats = '$sstats', calculated = $time;";
-    }
+    $sqlQueries .= "INSERT INTO stats (trail_id, gis_id, stats, calculated)
+        VALUES($trailID, $gisID, '$sstats', $time) ON DUPLICATE KEY UPDATE stats = '$sstats', calculated = $time;";
+    ////}
 
     return $sqlQueries;
 }

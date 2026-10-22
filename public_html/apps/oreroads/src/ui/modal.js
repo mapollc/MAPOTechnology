@@ -27,37 +27,49 @@ export class Modal {
     }
 
     vms() {
-        let messages,
-            thetype = typeof this.json.messages;
-
-        if (thetype != 'string') {
-            this.json.messages = JSON.parse(JSON.stringify(this.json.messages));
-            messages = this.json.messages;
-        } else {
-            messages = this.json.messages ? JSON.parse(this.json.messages) : null;
-        }
+        const messages = typeof this.json.messages === 'string'
+            ? (this.json.messages ? JSON.parse(this.json.messages) : null)
+            : JSON.parse(JSON.stringify(this.json.messages));
 
         let msg = `${messages[0][0]}<br>${messages[0][1]}<br>${messages[0][2]}`;
 
         if (messages[1]) {
-            msg += `<br><span style="font-weight:100">------------------------------------------------------</span><br>
-                ${messages[1][0]}<br>${messages[1][1]}<br>${messages[1][2]}`;
+            msg += `<span class="separate"></span>${messages[1][0]}<br>${messages[1][1]}<br>${messages[1][2]}`;
         }
 
         this.actions().create(this.json.name);
-        this.actions().setContent(`<div class="vmsMsg">${msg}</div>${this.json.attached ? `<small>This message is in relation to incident #${this.json.attached}.</small>` : ''}`);
+        this.actions().setContent(`
+            <div class="vmsMsg">${msg}</div>
+            ${this.json.attached ? `<small>This message is in relation to incident #${this.json.attached}.</small>` : ''}
+        `);
 
         this.updateURI('dms', this.json.id, this.json.name);
     }
 
     processRoadReports(data) {
-        let rows = `<div class="line"><div class="de">Temperature</div><span>${data.temp}&deg;F</span></div>
-            <div class="line"><div class="de">Road Conditions</div><span${data.road.id == 3 ? ' class="bi"' : ''}>${data.road.condition}</span></div>
-            <div class="line"><div class="de">Weather</div><span>${data.weather}</span></div>
-            <div class="line"><div class="de">New Snow</div><span>${data.snow.new == null ? 'N/A' : (data.snow.new == 'Trace' ? 'Trace' : `${data.snow.new}&nbsp;in`)}</span></div>
-            <div class="line"><div class="de">Roadside Snow</div><span>${data.snow.roadside == null ? 'N/A' : (data.snow.roadside == 'Trace' ? 'Trace' : `${data.snow.roadside}&nbsp;in`)}</span></div>
-            ${data.notes ? `<div class="line m"><div class="de">Comments</div><span>${data.notes}</span></div>` : ''}
-            ${data.restrict.cmv.restrict ? `<div class="line m"><div class="de">Commerical Vehicle Restrictions</div><span>${data.restrict.cmv.restrict}</span></div>` : ''}
+        let rows = `<div class="line">
+                <div class="de">Temperature</div><span>${data.temp}&deg;F</span>
+            </div>
+            <div class="line">
+                <div class="de">Road Conditions</div><span${data.road.id == 3 ? ' class="bi"' : ''}>${data.road.condition}</span>
+            </div>
+            <div class="line">
+                <div class="de">Weather</div><span>${data.weather}</span>
+            </div>
+            <div class="line">
+                <div class="de">New Snow</div><span>${data.snow.new == null ? 'N/A' : (data.snow.new == 'Trace' ? 'Trace' : `${data.snow.new}&nbsp;in`)}</span>
+            </div>
+            <div class="line">
+                <div class="de">Roadside Snow</div><span>${data.snow.roadside == null ? 'N/A' : (data.snow.roadside == 'Trace' ? 'Trace' : `${data.snow.roadside}&nbsp;in`)}</span>
+                </div>
+            ${data.notes ? `<div class="line m">
+                <div class="de">Comments</div>
+                <span>${data.notes}</span>
+            </div>` : ''}
+            ${data.restrict.cmv.restrict ? `<div class="line m">
+                <div class="de">Commerical Vehicle Restrictions</div>
+                <span>${data.restrict.cmv.restrict}</span>
+            </div>` : ''}
             ${data.restrict.chains.cond != 0 ? `<div class="sz"><h3>Snow Zone</h3><p>${data.restrict.chains.desc}</p></div>` : ''}
             <small>This data is reported by ODOT maintenance crews five times per day and at other times when conditions change significantly.</small>`;
 
@@ -81,11 +93,9 @@ export class Modal {
         }
 
         if (this.json.length > 1) {
-            let ops = '';
-
-            this.json.forEach((w, n) => {
-                ops += '<option ' + (w.name == data.name ? 'selected ' : '') + 'value="' + n + '">' + w.name + '</option>';
-            });
+            const ops = this.json
+                .map((w, n) => `<option ${w.name == data.name ? 'selected ' : ''}value="${n}">${w.name}</option>`)
+                .join('');
 
             global.modal.querySelector('.updated').insertAdjacentHTML('beforebegin', `<select id="changeRW" style="width:100%">${ops}</select>`);
         }
@@ -100,29 +110,32 @@ export class Modal {
             wc = 'N/A',
             wi = '',
             vis = 'N/A',
-            cameras = '';
+            cameras = null;
 
         const geo = helpers.fetchRWIS(station.id);
 
         // process nearby webcams
         if (cams.length > 0) {
-            cams.forEach(c => {
-                const thecam = c.properties.cameras;
-
-                for (let i = 0; i < thecam.length; i++) {
-                    cameras += '<a href="#" class="rwisCam" data-id="' + thecam[i].id + '" onclick="return false">' + thecam[i].name + '</a>';
-                }
-            });
+            cameras = cams.flatMap(c =>
+                c.properties.cameras.map(cam =>
+                    `<a href="#" class="rwisCam" style="line-height:1.2" data-id="${cam.id}" onclick="return false">${cam.name}</a>`)
+            ).join('');
         }
 
+        // pavement temp
         if (surface.pavement != null) pvt = surface.pavement[0].toFixed(1) + '&deg;F';
+
+        // wind direction
         if (weather.wind != null) wi = `<svg xmlns="http://www.w3.org/2000/svg" title="${weather.wind.dir}" style="transform:rotate(${weather.wind.rawdir}deg)" width="24" height="24" viewBox="0 0 24 24"><path fill="var(--dark-orange)" d="M12,2L4.5,20.29l0.71,0.71L12,18l6.79,3 0.71,-0.71z"/></svg>`;
+
+        // calculate real feel
         if (weather.temp <= 50 && (weather.wind && (weather.wind.speed >= 3 || weather.wind.gust >= 3))) {
             wc = calculate.windChill(weather.temp, (weather.wind.speed >= 3 ? weather.wind.speed : weather.wind.gust)) + '&deg;F';
         } else {
             wc = Math.round(weather.temp) + '&deg;F';
         }
 
+        // visibility
         if (weather.visibility != null) vis = weather.visibility.toFixed(2) + ' miles';
 
         content = `<div class="card">
@@ -131,8 +144,14 @@ export class Modal {
                 <span class="cl">temperature</span>
             </div>
             <div style="display:inline-flex;flex-direction:column;justify-content:center;gap:1em;flex:1 1 50%">
-                <div style="text-align:center"><h5${surface.pavement != null && surface.pavement[0] < 32 ? ' style="color:#D33737"' : ''}>${pvt}</h5><span class="cl">pavement temp</span></div>
-                <div style="text-align:center"><h5>${wc}</h5><span class="cl">feels like</span></div>
+                <div style="text-align:center">
+                    <h5${surface.pavement != null && surface.pavement[0] < 32 ? ' style="color:#D33737"' : ''}>${pvt}</h5>
+                    <span class="cl">pavement temp</span>
+                </div>
+                <div style="text-align:center">
+                    <h5>${wc}</h5>
+                    <span class="cl">feels like</span>
+                </div>
             </div>
         </div>`;
 
@@ -156,7 +175,7 @@ export class Modal {
                 <div class="card vert">
                     <h5>${Math.round(weather.wind.speed) + ' mph'}</h5>
                     <span class="cl">wind speed</span>
-                    <h5>${Math.round(weather.wind.gust) + ' mph'}</h5>
+                    <h5 style="margin-top:0.5rem">${Math.round(weather.wind.gust) + ' mph'}</h5>
                     <span class="cl">wind gust</span>
                 </div>
                 <div class="card vert" style="justify-content:center">
@@ -177,13 +196,15 @@ export class Modal {
                 <span class="cl">visibility</span>
             </div>
         </div>
-        ${cameras != '' ? `<div class="card vert"><span class="cl" style="margin:0 0 0.5em 0">nearby cameras</span>${cameras}</div>` : ''}
+
+        ${cameras !== null ? `<div class="card vert"><span class="cl" style="margin:0 0 0.5em 0">nearby cameras</span>${cameras}</div>` : ''}
+        
         <div style="margin-top:1em;text-align:center">
             <span class="updated">Last report ${helpers.timeAgo(updated)}</span>
-            <a href="#" class="btn" id="getwxf" data-stn="${station.id}" data-lat="${geo[1]}" data-lon="${geo[0]}" onclick="return false" style="margin-top:1em">
+            <button class="btn" id="getwxf" data-stn="${station.id}" data-lat="${geo.geometry.coordinates[1]}" data-lon="${geo.geometry.coordinates[0]}" style="margin-top:1em">
                 <i class="far fa-snowflake"></i>Get weather forecast
-            </a>
-        <small>This data is automatically reported from a network of Road Weather Information Systems (RWIS).</small>
+            </button>
+            <small>This data is automatically reported from a network of Road Weather Information Systems (RWIS).</small>
         </div>`;
 
         return content;
@@ -251,9 +272,13 @@ export class Modal {
                 <p class="relLoc">${helpers.nearestCity(coords[1], coords[0])}</p>
             </div>
         </div>
-        ${showUpd ? `<span class="updated">Updated ${helpers.timeAgo(data.updated)} &middot; Reported ${helpers.timeAgo(data.created)}</span>` : ''}
+        
+        ${showUpd ? `<span class="updated">Updated ${helpers.timeAgo(data.updated)} by ODOT &middot; Reported ${helpers.timeAgo(data.created)}</span>` : ''}
+        
         <p class="incDesc">${data.desc}</p>
+        
         ${comments && !comments.link ? `<p style="color:var(--blue-gray)">${comments.desc}</p>` : ''}
+        
         <div class="rows">
             ${filesObj || (comments && comments.link) ? `<div class="line m"><div class="de">Links</div>${files}</div>` : ''}
             <div class="line m">
@@ -265,7 +290,7 @@ export class Modal {
                 <span>${lanes == null ? 'None' : affected}</span>
             </div>
         </div>
-        <button class="btn dark" style="display:block;margin-top:1em" data-find="incident" data-id="${data.id}">Zoom in</button>
+        <button class="btn dark" style="display:block;margin-top:1em" id="zoomToInc" data-id="${data.id}">Zoom in</button>
         <span class="bottom">Incident #${data.id} &middot; ${dataLoc.name} (#${dataLoc.id})</span>`;
     }
 
@@ -289,9 +314,9 @@ export class Modal {
 
         const { icon, color } = helpers.incidentStyle(data.type);
 
-        this.actions().create(`<i class="fa-solid fa-${icon}" style="color:${color};margin-right:0.75em"></i>${data.type}`);
+        this.actions().create(`<i class="fa-solid fa-${icon}" style="color:${color}"></i>${data.type}`);
         this.actions().setContent(this.processIncidents(data, dataLoc, lanes, comments, filesObj));
-        this.actions().updated(`Updated ${helpers.timeAgo(data.updated)} &middot; Reported ${helpers.timeAgo(data.created)}`);
+        this.actions().updated(`Updated ${helpers.timeAgo(data.updated)} by ODOT &middot; Reported ${helpers.timeAgo(data.created)}`);
 
         global.modal.querySelector('.updated').parentNode.insertBefore(global.modal.querySelector('.boxes'), global.modal.querySelector('.updated'));
 
@@ -330,7 +355,7 @@ export class Modal {
     }
 
     async wxAlert(id) {
-        const { wwa } = await helpers.api(config.apiURL + 'getWWA', [['id', id]]);
+        const { wwa } = await helpers.api(`${ENV.apiURL}getWWA`, [['id', id]]);
 
         const content = `<span class="updated">Issued ${wwa.issued} &middot; Expires ${wwa.expires}</span>
             <div class="wwa-area">

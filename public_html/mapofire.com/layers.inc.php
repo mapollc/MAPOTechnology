@@ -358,8 +358,8 @@ $lay = array(
             'perms' => false,
             'perms2' => ['PREMIUM', 'PRO'],
             'default' => false,
-            'app' => false,
-            'testing' => true
+            'app' => true/*false,
+            'testing' => true*/
         ],
         [
             'id' => 'viSmoke',
@@ -367,8 +367,8 @@ $lay = array(
             'perms' => true,
             'perms2' => ['PRO'],
             'default' => false,
-            'app' => false,
-            'testing' => true
+            'app' => true/*false,
+            'testing' => true*/
         ]
     ],
     'state' => [
@@ -495,9 +495,9 @@ $layers = [
 
 if (isset($_REQUEST['json'])) {
     $ts = gmdate("D, d M Y H:i:s", time() + 60 * 60 * 24 * 14) . ' GMT';
-    header('Expires: ' . $ts);
-    header('Pragma: cache');
-    header('Cache-control: max-age=' . $ts);
+    header("Expires: $ts");
+    header("Pragma: cache");
+    header("Cache-control: max-age=$ts");
     header('Content-type: application/json');
 
     echo json_encode($layers);

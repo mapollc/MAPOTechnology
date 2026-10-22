@@ -1,4 +1,4 @@
-import { ENV, config } from '../app/config.js';
+import { ENV, config, tileURL } from '../app/config.js';
 import { global } from '../app/state.js';
 
 import { api, timeAgo, mapMouseOver, createDataForm } from '../utils/helpers.js';
@@ -60,7 +60,7 @@ export class Evacuations {
             global.map.addSource('evac', {
                 type: 'vector',
                 tiles: [
-                    `${ENV.host}data/maps/tiles/evacuations/{z}/{x}/{y}.pbf`
+                    tileURL('evacuations')
                 ],
                 minzoom: 5,
                 maxzoom: 14

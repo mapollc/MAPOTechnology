@@ -29,6 +29,8 @@ export const ENV = {
 
 export const getPlatform = () => ENV.PLATFORM_MAP[ENV.host] || 'mapofire';
 
+export const tileURL = (tileName) => `${ENV.apiURL}maps/tiles/${tileName}?key=${config.apiKey()}&z={z}&x={x}&y={y}`;
+
 export const config = {
     settings: null,
     productName: 'Map of Fire',

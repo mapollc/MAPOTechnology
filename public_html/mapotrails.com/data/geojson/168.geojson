@@ -1,0 +1,59 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "id": 56,
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+                "trail_id": 168,
+                "id": 56,
+                "title": "High Ground Traverse",
+                "type": "trail",
+                "color": "#ff973a",
+                "url": "guide\/trail\/168\/high-ground-traverse",
+                "delta": "0",
+                "term": [
+                    "Mountain Bike"
+                ],
+                "keywords": null,
+                "mode": "Single Track",
+                "caption": "High Ground Traverse",
+                "stats": {
+                    "geo": {
+                        "start": [
+                            null,
+                            null
+                        ],
+                        "end": [
+                            null,
+                            null
+                        ]
+                    },
+                    "bounds": {
+                        "sw": [
+                            0,
+                            0
+                        ],
+                        "ne": [
+                            0,
+                            0
+                        ]
+                    },
+                    "elevation": {
+                        "min": 0,
+                        "max": 0
+                    },
+                    "altitude": {
+                        "gain": 0,
+                        "loss": 0
+                    },
+                    "distance": 0
+                },
+                "premium": "0",
+                "public": "1",
+                "display": "1"
+            }
+        }
+    ]
+}

@@ -103,21 +103,32 @@ if ($method == 'guide') {
     $data = executeQuery(
         'i',
         [$_REQUEST['id']],
-        "SELECT stats FROM stats WHERE trail_id = ?",
+        "SELECT stats
+        FROM gpx g
+        LEFT JOIN stats s ON s.gis_id = g.id
+        WHERE g.trail_id = ?
+        ORDER BY delta ASC
+        LIMIT 1",
         true
     );
 
     $photos = executeQuery(
         'i',
         [$_REQUEST['id']],
-        "SELECT id, file, title FROM media WHERE trail_id = ? ORDER BY delta ASC",
+        "SELECT id, file, title
+        FROM media
+        WHERE trail_id = ?
+        ORDER BY delta ASC",
         true
     );
 
     $waypoints = executeQuery(
         'i',
         [$_REQUEST['id']],
-        "SELECT id, name, lat, lon, elev, note, icon FROM waypoints WHERE (lat != 0 AND lon != 0) AND trail_id = ? ORDER BY delta ASC",
+        "SELECT id, name, lat, lon, elev, note, icon
+        FROM waypoints
+        WHERE (lat != 0 AND lon != 0) AND trail_id = ?
+        ORDER BY delta ASC",
         true
     );
 
@@ -198,8 +209,8 @@ if ($method == 'chart') {
 
     $query = executeQuery(
         'i',
-        [$_REQUEST['id']],
-        "SELECT filename FROM gpx g WHERE id = ?",
+        [$_REQUEST['trail_id']],
+        "SELECT filename FROM gpx g WHERE trail_id = ? ORDER BY delta ASC LIMIT 1",
         true
     );
 

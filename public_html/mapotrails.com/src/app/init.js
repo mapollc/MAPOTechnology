@@ -314,7 +314,7 @@ async function preload() {
     }
 
     if (window.isAuthUser) {
-        const getAcct = await helper.api(`${ENV.host}api/v1/user/get/mapotrails`, null, false, true);
+        const getAcct = await helper.api(`${ENV.apiURL}user/get/mapotrails`, null, false, true);
 
         if (getAcct?.response) {
             const loginURL = `${ENV.domain.replace('//', '//auth.')}login?service=${getPlatform()}&next=${encodeURIComponent(window.location.href)}`;

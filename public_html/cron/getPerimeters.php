@@ -22,7 +22,8 @@ $scriptStart = microtime(true);
 $arcgisUrl = 'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0/query';
 $tileName = 'perimeters';
 $geojsonFile = "/home/mapo/tmp/$tileName/current.geojson";
-$baseURL = '/home/mapo/public_html/mapofire.com/data/maps/tiles';
+////$baseURL = '/home/mapo/public_html/mapofire.com/data/maps/tiles';
+$baseURL = '/home/mapo/public_html/cron/tiles';
 
 $minTileZoom = 5;
 $maxTileZoom = 14;

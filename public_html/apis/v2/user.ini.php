@@ -73,10 +73,22 @@ class SSO
 
     private function getGUID()
     {
-        $data = random_bytes(16);
-        $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // version 4
-        $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // variant
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+        if (function_exists('com_create_guid')) {
+            return com_create_guid();
+        } else {
+            mt_srand((float)microtime() * 10000);
+            $charid = strtoupper(md5(uniqid(rand(), true)));
+            $hyphen = chr(45);
+            $uuid = chr(123)
+                . substr($charid, 0, 8) . $hyphen
+                . substr($charid, 8, 4) . $hyphen
+                . substr($charid, 12, 4) . $hyphen
+                . substr($charid, 16, 4) . $hyphen
+                . substr($charid, 20, 12)
+                . chr(125);
+
+            return str_replace(['{', '}'], ['', ''], $uuid);
+        }
     }
 
     private function createToken($payload, $expires = null)
@@ -228,9 +240,9 @@ class SSO
             $emailAttempts = $this->memcache->get($emailKey) ?: 0;
             $ipAttempts    = $this->memcache->get($ipKey) ?: 0;
 
-            /*if ($emailAttempts >= 3) {
+            if ($emailAttempts >= 3) {
                 sleep(min($emailAttempts - 2, 3));
-            }*/
+            }
 
             if ($emailAttempts >= $this->maxEmailAttempts || $ipAttempts >= $this->maxIPAttempts) {
                 return true;
@@ -264,13 +276,13 @@ class SSO
                 $respMsg = '';
                 $row = executeQuery('s', [$email], $this->sql(", confirmed{$config['extra']}", "{$config['join']} LEFT JOIN confirmation AS c ON c.email = u.email AND c.valid = 1 WHERE u.email = ? ORDER BY c.cid DESC LIMIT 1"));
 
-                if (isset($row['error']) || !$row) {
+                if (isset($row['error'])) {
                     $error = true;
                     $code = 2;
                     $respMsg = 'The email and/or password you entered is incorrect.';
                 } else {
                     // if user account has not been confirmed yet
-                    if ((int) $row['confirmed'] === 0) {
+                    if ($row['confirmed'] == 0) {
                         $error = true;
                         $code = 3;
                         $respMsg = 'This account has not been confirmed yet. Please check your email.';
@@ -305,6 +317,46 @@ class SSO
         if ($error) {
             return ['response' => 'error', 'code' => $code, 'msg' => $respMsg];
         }
+    }
+
+    public function exchangeSSO()
+    {
+        $code = $this->fields['code'] ?? '';
+
+        if (!$code) {
+            return ['response' => 'error', 'code' => 11, 'msg' => 'No SSO authorization code provided.'];
+        }
+
+        $cacheKey = "sso_code:$code";
+        $token = $this->memcache->get($cacheKey);
+
+        if (!$token) {
+            return ['response' => 'error', 'code' => 22, 'msg' => 'The SSO code is invalid or has expired.'];
+        }
+
+        // BURN CODE IMMEDIATELY (prevent replay attacks)
+        $this->memcache->delete($cacheKey);
+
+        // Validate the underlying token
+        $validToken = $this->validateToken($token);
+
+        if ($validToken['response'] !== 'valid') {
+            return $validToken;
+        }
+
+        $row = executeQuery('s', [$token], $this->sql(', token, expires, guid', "LEFT JOIN sessions AS s ON s.uid = u.uid WHERE s.token = ?"));
+
+        if (isset($row['error']) || !$row) {
+            return ['response' => 'error', 'code' => 33, 'msg' => 'Unable to retrieve user session details.'];
+        }
+
+        $userData = $this->getUser($row, null, $this->getSubscriptions($row['uid'], $row['email']));
+
+        return [
+            'response' => 'valid',
+            'token' => $token,
+            'user' => $userData ?? null
+        ];
     }
 
     public function loginWithGoogle()
@@ -385,11 +437,9 @@ class SSO
                     return $this->login($row);
                 }
             } catch (Exception $e) {
-                error_log("Google login failure: {$e->getMessage()}");
-
                 $error = true;
                 $code = 5;
-                $msg = 'We were unable to verify your Google sign-in. Please try again.';
+                $msg = $e->getMessage();
             }
         }
 
@@ -405,19 +455,22 @@ class SSO
 
         if (isset($this->fields['price_id'])) {
             //return $this->domain . 'checkout?price_id=' . $this->fields['price_id'] . ($this->fields['trial'] ? '&trial=1' : '') . '&customer_email=' . $this->fields['email'] . ($method == 'register' ? '&first_name=' . $this->fields['first_name'] . '&last_name=' . $this->fields['last_name'] . '&next=' . urlencode('secure/login?subscribed=1&pid=' . $this->fields['price_id']) : '');
-            return 'https://www.mapotechnology.com/purchase/' . $this->fields['product_key'] . '/complete?newUser=1&price=' . $this->fields['price_id'] . ($this->fields['trial'] ? '&trial=1' : '') . '&customer_email=' . $this->fields['email'];
+            return "{$this->domain}purchase/{$this->fields['product_key']}/complete?newUser=1&price={$this->fields['price_id']}" . ($this->fields['trial'] ? '&trial=1' : '') . "&customer_email={$this->fields['email']}";
         } else {
             if ($this->source != null && $this->source != 'mapotechnology') {
                 $key = array_search($this->source, $validSources);
-                /*$sso_code = md5($this->token);
-                executeQuery('ss', [$sso_code, $this->token, (time() + 45)], "INSERT INTO sso_exchange (sso_code,token,expires) VALUES(?,?,?)");*/
 
-                return 'https://' . $services[$key] . '/authenticate?token=' . $this->token .
-                    ($this->source != null ? '&service=' . $this->source : '') .
-                    ($this->prod != null ? '&prod=' . $this->prod : '') .
+                // Generate a secure single-use auth code and store the JWT in Memcached for 45 seconds
+                $ssoCode = bin2hex(random_bytes(32));
+                $this->memcache->set("sso_code:$ssoCode", $this->token, 45);
+
+                //return "https://{$services[$key]}/authenticate?token={$this->token}" .
+                return "https://{$services[$key]}/authenticate?devel=1&code={$ssoCode}" .
+                    ($this->source != null ? "&service={$this->source}" : '') .
+                    ($this->prod != null ? "&prod={$this->prod}" : '') .
                     ($next ? '&next=' . urlencode($next) : '');
             } else {
-                return str_replace('//', '/', $next ? $next : '../account/home');
+                return str_replace('//', '/', $next ?: '../account/home');
             }
         }
     }
@@ -452,7 +505,7 @@ class SSO
                     return [$sub];
                 } else {
                     $allSubs = [];
-
+                    
                     foreach ($sub as $s) {
                         $plan->setPlan(null, $s['plan']);
                         $s['name'] = $plan->getName();
@@ -771,10 +824,9 @@ class SSO
             if (isset($row['error'])) {
                 return ['response' => 'error', 'code' => 500, 'msg' => "Database error: $row[message]"];
             } else {
-                /*if (!$row) {
-                    /*return ['response' => 'error', 'code' => 2, 'msg' => 'You must provide an email address.'];
-                } else {*/
-                if ($row) {
+                if (!$row) {
+                    return ['response' => 'error', 'code' => 2, 'msg' => 'You must provide an email address.'];
+                } else {
                     $expires = time() + 600;
                     $token = $this->createToken(['uid' => $row['uid'], 'unique' => 'resetPassword-' . time()], $expires);
 
@@ -925,12 +977,12 @@ class SSO
                     if ($create['response'] == 'error') {
                         return $create;
                     } else {
-                        executeQuery('is', [$create['uid'], $guid],  "UPDATE group_users SET uid = ? WHERE guid = ?");
+                        mysqli_query($this->con, "UPDATE group_users SET uid = $create[uid] WHERE guid = $guid");
                     }
                 }
             }
 
-            executeQuery('s', [$guid],  "UPDATE group_users SET expires = 0, status = 1 WHERE guid = ?");
+            mysqli_query($this->con, "UPDATE group_users SET expires = 0, status = 1 WHERE guid = $guid");
             return ['response' => 'success', 'email' => $email, 'existingUser' => $existingUser];
         }
     }
@@ -1132,7 +1184,7 @@ class SSO
                     $msgs[] = 'You must enter your last name.';
                 }
 
-                if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (!$email) {
                     $error = true;
                     $msgs[] = 'You must provide your email address.';
                 }
@@ -1300,6 +1352,9 @@ if (empty($method)) {
         } # update user settings
         else if ($method == 'update') {
             $returnJson = $sso->update();
+        } # exchange short-lived sso code for jwt server-to-server
+        else if ($method == 'exchange_sso') {
+            $returnJson = $sso->exchangeSSO();
         }
     }
 }

@@ -200,28 +200,33 @@ async function api(uri, fields = null, v2 = false, forAuth = false) {
     return result;
 }
 
-function addStartsEnds(coords) {
+function addStartsEnds(geometry) {
     const SRC = 'trailStartsEnds';
+    const coords = geometry.coordinates;
+    let points = [];
+
+    if (geometry.type === 'MultiLineString') {
+        for (let i = 0; i < coords.length; i++) {
+            points.push(coords[i][0]);
+            points.push(coords[i][coords[i].length - 1]);
+        }
+    } else {
+        points = [coords[0], coords[coords.length - 1]];
+    }
+
+    const features = points.map((coordinates, id) => ({
+        id,
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates },
+        properties: null
+    }));
 
     if (!map.getSource(SRC)) {
         map.addSource(SRC, {
             type: 'geojson',
             data: {
-                'type': 'FeatureCollection',
-                'features': [
-                    {
-                        id: 1,
-                        type: 'Feature',
-                        geometry: { type: 'Point', coordinates: coords[0] },
-                        properties: { id: 1 }
-                    },
-                    {
-                        id: 2,
-                        type: 'Feature',
-                        geometry: { type: 'Point', coordinates: coords[coords.length - 1] },
-                        properties: { id: 2 }
-                    }
-                ]
+                type: 'FeatureCollection',
+                features
             }
         });
     }
@@ -233,15 +238,30 @@ function addStartsEnds(coords) {
             source: SRC,
             paint: {
                 'circle-color': [
-                    'match',
-                    ['to-number', ['get', 'id']],
-                    2,
-                    '#ed4f00',
-                    '#72d529'
+                    "case",
+                    ["==", ["%", ['id'], 2], 0],
+                    "#72d529", // even
+                    "#ed4f00" // odd
                 ],
                 'circle-stroke-color': '#fff',
-                'circle-stroke-width': 2,
-                'circle-radius': 10
+                'circle-stroke-width': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    9,
+                    1,
+                    12,
+                    2
+                ],
+                'circle-radius': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    9,
+                    6,
+                    12,
+                    10
+                ]
             }
         });
     }
@@ -334,19 +354,31 @@ async function getContent(resp) {
                 img.title = p.title;
             }
 
-            img.addEventListener('load', () => holder.classList.remove('placeholder'));
+            const caption = document.createElement('span');
+            caption.className = 'caption';
+            caption.textContent = p.title;
+            caption.addEventListener('click', () => window.open(url.replace('/large', '')));
+
+            img.addEventListener('load', () => {
+                holder.classList.remove('placeholder');
+                holder.querySelector('.caption').style.opacity = 1;
+            });
             img.addEventListener('error', () => {
                 replaceImg(img, url, p.title);
             });
             img.addEventListener('click', () => window.open(url.replace('/large', '')));
 
             holder.appendChild(img);
+            holder.appendChild(caption);
         });
 
     // all photos
     const wrapper = document.querySelector('#guide-photos');
 
     resp.guide?.photos.forEach(p => {
+        const div = document.createElement('div');
+        div.classList.add('item');
+
         const img = document.createElement('img');
         img.src = `${cdn}photos/thumbnail/${p.file}`;
         img.loading = 'lazy';
@@ -354,10 +386,22 @@ async function getContent(resp) {
 
         if (p.title) {
             img.title = p.title;
-            img.title = p.title;
+        }
+        
+        div.append(img);
+
+        if (p.title) {        
+            const caption = document.createElement('span');
+            caption.className = 'caption';
+            caption.textContent = p.title;
+            caption.addEventListener('click', e => {
+                if (window.innerWidth > 600) caption.classList.toggle('expanded');
+            });
+
+            div.appendChild(caption);
         }
 
-        wrapper.appendChild(img);
+        wrapper.appendChild(div);
     });
 
     /*
@@ -367,6 +411,7 @@ async function getContent(resp) {
     const wp = resp.guide?.waypoints;
 
     if (!wp || wp?.length === 0) {
+        list.style.display = 'block';
         list.innerHTML = '<p style="font-size:18px">This trail guide doesn\'t have any waypoints.</p>';
         return;
     }
@@ -382,7 +427,7 @@ async function getContent(resp) {
     }).join('');
 }
 
-async function createChart(id, gis_id) {
+async function createChart(id) {
     const chartArea = document.querySelector('#chart');
 
     const { default: Chart } = await import(
@@ -438,135 +483,135 @@ async function createChart(id, gis_id) {
         return getGradeColor(grade, alpha);
     };
 
-    api(`${apiURL}trails/chart`, [['id', gis_id], ['trail_id', id]], true)
-        .then(resp => {
-            if (!resp?.chart) {
-                chartArea.remove();
-                return;
-            }
+    // get charting data from the API
+    const chartData = await api(`${apiURL}trails/chart`, [['trail_id', id]], true);
 
-            const useFeet = resp.chart[resp.chart.length - 1][0] < 1;
+    if (!chartData?.chart) {
+        chartArea.remove();
+        return;
+    }
 
-            const data = resp.chart.map(item => ({
-                x: item[0] * (useFeet ? 5280 : 1),
-                y: item[1]
-            }));
+    const useFeet = chartData.chart[chartData.chart.length - 1][0] < 1;
 
-            const values = resp.chart.map(item => item[1]);
+    const data = chartData.chart.map(item => ({
+        x: item[0] * (useFeet ? 5280 : 1),
+        y: item[1]
+    }));
 
-            chartArea.innerHTML = '<canvas style="width:100%;height:100%"></canvas>';
-            const ctx = chartArea.querySelector('canvas').getContext('2d');
-            chartArea.classList.remove('placeholder');
+    const values = chartData.chart.map(item => item[1]);
 
-            const minScale = Math.floor((Math.min.apply(null, values) - 1000) / 500) * 500;
-            const maxScale = Math.ceil((Math.max.apply(null, values) + 1000) / 500) * 500;
+    chartArea.innerHTML = '<canvas style="width:100%;height:100%"></canvas>';
+    const ctx = chartArea.querySelector('canvas').getContext('2d');
+    chartArea.classList.remove('placeholder');
 
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets: [
-                        {
-                            data,
-                            tension: 0.2,
-                            borderColor: '#72d529',
-                            segment: {
-                                borderColor: ctx => getSegment(ctx, useFeet),
-                                backgroundColor: ctx => getSegment(ctx, useFeet, 0.25),
-                            },
-                            pointBorderWidth: 0,
-                            fill: 'start',
-                            borderWidth: 6,
-                            pointRadius: 0
-                        }
-                    ]
+    const minScale = Math.floor((Math.min.apply(null, values) - 1000) / 500) * 500;
+    const maxScale = Math.ceil((Math.max.apply(null, values) + 1000) / 500) * 500;
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [
+                {
+                    data,
+                    tension: 0.2,
+                    borderColor: '#72d529',
+                    segment: {
+                        borderColor: ctx => getSegment(ctx, useFeet),
+                        backgroundColor: ctx => getSegment(ctx, useFeet, 0.25),
+                    },
+                    pointBorderWidth: 0,
+                    fill: 'start',
+                    borderWidth: 6,
+                    pointRadius: 0
+                }
+            ]
+        },
+        options: {
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            responsive: true,
+            maintainAspectRatio: false,
+            onResize: (chart, size) => {
+                chart.options.scales.x.title.display = size.width > 475;
+                chart.options.scales.y.title.display = size.width > 600;
+            },
+            layout: {
+                padding: 16
+            },
+            plugins: {
+                legend: {
+                    display: false
                 },
-                options: {
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    onResize: (chart, size) => {
-                        chart.options.scales.x.title.display = size.width > 475;
-                        chart.options.scales.y.title.display = size.width > 600;
-                    },
-                    layout: {
-                        padding: 16
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: false
-                        },
-                        subtitle: {
-                            display: false,
-                        },
-                        tooltip: {
-                            callbacks: {
-                                title: context => `Distance: ${context[0].parsed.x.toFixed(2)} mi`,
-                                label: context => {
-                                    const index = context.dataIndex;
-                                    const data = context.dataset.data;
+                title: {
+                    display: false
+                },
+                subtitle: {
+                    display: false,
+                },
+                tooltip: {
+                    callbacks: {
+                        title: context => `Distance: ${context[0].parsed.x.toFixed(2)} mi`,
+                        label: context => {
+                            const index = context.dataIndex;
+                            const data = context.dataset.data;
 
-                                    // Use previous point for grade if at the end of the dataset
-                                    const p0 = data[index - 1] || data[index];
-                                    const p1 = data[index + 1] || data[index];
+                            // Use previous point for grade if at the end of the dataset
+                            const p0 = data[index - 1] || data[index];
+                            const p1 = data[index + 1] || data[index];
 
-                                    const run = (p1.x - p0.x) * (useFeet ? 1 : 5280); // Miles to feet
-                                    const rise = p1.y - p0.y;
+                            const run = (p1.x - p0.x) * (useFeet ? 1 : 5280); // Miles to feet
+                            const rise = p1.y - p0.y;
 
-                                    const grade = run > 0 ? (rise / run) * 100 : 0;
+                            const grade = run > 0 ? (rise / run) * 100 : 0;
 
-                                    // Returning an array creates separate lines in the tooltip
-                                    return [
-                                        `Elevation: ${Math.round(context.parsed.y).toLocaleString()} ft`,
-                                        `Grade: ${grade.toFixed(1)}%`
-                                    ];
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            min: 0,
-                            max: Math.max(...data.map(point => point[0])),
-                            type: 'linear',
-                            grid: {
-                                color: '#ddd'
-                            },
-                            title: {
-                                display: window.innerWidth > 475,
-                                text: `Distance (${useFeet ? 'ft' : 'mi'}.)`,
-                                color: '#666'
-                            },
-                            ticks: {
-                                color: '#888'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            min: (minScale < 0 ? 0 : minScale),
-                            max: maxScale,
-                            grid: {
-                                color: '#ddd'
-                            },
-                            title: {
-                                display: window.innerWidth > 600,
-                                text: 'Elevation (ft.)',
-                                color: '#666'
-                            },
-                            ticks: {
-                                color: '#888',
-                                callback: val => val.toLocaleString()
-                            }
+                            // Returning an array creates separate lines in the tooltip
+                            return [
+                                `Elevation: ${Math.round(context.parsed.y).toLocaleString()} ft`,
+                                `Grade: ${grade.toFixed(1)}%`
+                            ];
                         }
                     }
                 }
-            });
-        });
+            },
+            scales: {
+                x: {
+                    min: 0,
+                    max: Math.max(...data.map(point => point[0])),
+                    type: 'linear',
+                    grid: {
+                        color: '#ddd'
+                    },
+                    title: {
+                        display: window.innerWidth > 475,
+                        text: `Distance (${useFeet ? 'ft' : 'mi'}.)`,
+                        color: '#666'
+                    },
+                    ticks: {
+                        color: '#888'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    min: (minScale < 0 ? 0 : minScale),
+                    max: maxScale,
+                    grid: {
+                        color: '#ddd'
+                    },
+                    title: {
+                        display: window.innerWidth > 600,
+                        text: 'Elevation (ft.)',
+                        color: '#666'
+                    },
+                    ticks: {
+                        color: '#888',
+                        callback: val => val.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
 }
 
 async function trailGuide(TRAIL_ID, guide) {
@@ -580,7 +625,8 @@ async function trailGuide(TRAIL_ID, guide) {
 
     map = new maplibregl.Map({
         container: 'map',
-        zoom: 9,
+        minZoom: 8,
+        zoom: 8,
         center: [coords[1], coords[0]],
         style: tiles['outdoors'],
         projection: 'mercator',
@@ -611,6 +657,7 @@ async function trailGuide(TRAIL_ID, guide) {
     map.on('style.load', async () => {
         await loadMapIcons();
 
+        createChart(TRAIL_ID);
         addTrack(TRAIL_ID);
         displayWaypoints(guide?.waypoints);
     });
@@ -622,6 +669,8 @@ function addTrack(TRAIL_ID) {
     if (!map.getSource('track')) {
         map.addSource('track', {
             type: 'vector',
+            minzoom: 8,
+            maxzoom: 18,
             tiles: [`${host}data/maps/tiles/trails/{z}/{x}/{y}.pbf`]
         });
     }
@@ -663,8 +712,8 @@ function addTrack(TRAIL_ID) {
             // Stop listening immediately so panning/zooming doesn't re-trigger fitBounds
             map.off('sourcedata', onSourceData);
 
-            createChart(TRAIL_ID, primaryFeature.properties.id);
-            addStartsEnds(primaryFeature.geometry.coordinates);
+            ////createChart(TRAIL_ID, primaryFeature.properties.id);
+            addStartsEnds(primaryFeature.geometry);
 
             map.fitBounds(geojsonExtent(primaryFeature.geometry), {
                 padding: 50

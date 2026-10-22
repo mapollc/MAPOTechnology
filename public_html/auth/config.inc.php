@@ -39,15 +39,18 @@ if (isset($_GET['guid']) && !empty($_GET['guid'])) {
 
 if ($_GET['fail'] == 3) {
     $_SESSION = [];
-    session_destroy();
+    if (session_id()) {
+        session_destroy();
+    }
     session_regenerate_id(true);
+
     setcookie('token', '', [
         'expires' => time() - 60 * 60 * 24 * 7,
         'path' => '/', 
         'domain' => '.mapotechnology.com',
         'secure' => true,
         'httponly' => true,
-        'samesite' => 'Lax'
+        'samesite' => 'None'
     ]);
 }
 
