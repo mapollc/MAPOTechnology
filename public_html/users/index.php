@@ -11,8 +11,8 @@ header('Expires: ' . gmdate('D, d M Y H:i:s', strtotime('-1 hour')) . ' GMT');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
-$baseURL = 'https://www.mapotechnology.com/';
-$linkURL = 'https://www.mapotechnology.com/account/';
+$baseURL = 'https://mapotechnology.com/';
+$linkURL = 'https://mapotechnology.com/account/';
 $productName = 'Map of Fire';
 $companyName = 'MAPO LLC';
 $queryParams = preg_replace('/(?:sort=[^&]*|order=[^&]*)(&?)/i', '$1', explode('?', $_SERVER['REQUEST_URI'])[1]);
@@ -27,6 +27,11 @@ $function = $_GET['function'] ?: false;
 $path = $page . ($method ? "/$method" : '');
 $baseRoot = '/home/mapo/public_html/';
 $documentRoot = "{$baseRoot}users/";
+
+if ($method == 'receipt') {
+    include_once 'receipt.php';
+    exit();
+}
 
 require_once 'helpers.inc.php';
 

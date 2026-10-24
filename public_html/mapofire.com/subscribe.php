@@ -5,6 +5,7 @@ session_start();
 $stripeLive = false;
 
 require_once '/home/mapo/stripe/init.php';
+require_once '/home/mapo/vendor/autoload.php';
 
 $plan = [
     [
@@ -52,9 +53,9 @@ if (isset($_POST) && isset($_POST['price'])) {
             $email = $user['email'];
         }
 
-        header('Location: https://www.mapofire.com/purchase/complete?price=' . $_POST['price'] . ($_POST['trial'] ? '&trial=1' : '') . ($email != null ? '&customer_email=' . $email : ''));
+        header("Location: https://www.mapofire.com/purchase/complete?price={$_POST['price']}" . ($_POST['trial'] ? '&trial=1' : '') . ($email != null ? "&customer_email=$email" : ''));
     } else {
-        $url = 'https://auth.mapotechnology.com/register?service=mapofire&subscribe=1&price_id=' . $_POST['price'] . ($_POST['trial'] ? '&trial=1' : '');
+        $url = "https://auth.mapotechnology.com/register?service=mapofire&subscribe=1&price_id={$_POST['price']}" . ($_POST['trial'] ? '&trial=1' : '');
         #echo $url;
         header("Location: $url");
     }
@@ -65,7 +66,7 @@ if ($_GET['status'] == 'complete') {
     $priceId = preg_match('/^price_[a-zA-Z0-9]+$/', $_GET['price']) ? $_GET['price'] : null;
     $trialRequested = isset($_REQUEST['trial']) && $_REQUEST['trial'] == 1;
 
-    \Stripe\Stripe::setApiKey($stripeSecretKey);
+    $stripe = new \Stripe\StripeClient($stripeSecretKey);
 
     $fields = [
         'billing_address_collection' => 'auto',
@@ -126,10 +127,10 @@ if ($_GET['status'] == 'complete') {
     }
 
     try {
-        $checkout_session = \Stripe\Checkout\Session::create($fields);
+        $checkout_session = $stripe->checkout->sessions->create($fields);
 
         header("HTTP/1.1 303 See Other");
-        header("Location: " . $checkout_session->url);
+        header("Location: $checkout_session->url");
     } catch (Exception $e) {
         print_r($e);
     }

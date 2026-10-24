@@ -45,7 +45,7 @@ function getUserID()
     $token = $_COOKIE['token'] ?? $_REQUEST['token'] ?? null;
 
     $user = executeQuery('s', [$token], "SELECT uid FROM sessions WHERE token = ? LIMIT 1");
-    return $user['uid'] ?? null;
+    return $user['uid'] ?? $_SESSION['uid'] ?? null;
 }
 
 function convert($lat)
@@ -293,12 +293,20 @@ function uploadTrailPhotos($trailID)
     return $listOfPhotos;
 }
 
+if ($_REQUEST['devel'] == 1) $stripeLive = false;
+
+if (in_array($method, ['receipt', 'invoices'])) {
+    require_once '/home/mapo/stripe/init.php';
+    require_once '/home/mapo/vendor/autoload.php';
+    $stripe = new \Stripe\StripeClient($stripeSecretKey);
+}
+
 $id = $_REQUEST['id'] ?? null;
 $mode = $_REQUEST['mode'] ?? null;
-$mapotrails = ['mapotrails', 'userUploads', 'waypoint', 'gpx', 'media', 'favtrails', 'getTrails', 'download'];
+$mapotrails = ['mapotrails', 'useruploads', 'waypoint', 'gpx', 'media', 'gettrails', 'download'];
 $mapboxToken = 'sk.eyJ1IjoibWFwb2xsYyIsImEiOiJjbHMyOGkxeW8wMThpMmxxajk2dmtuOWRrIn0.6JVcAORAMRoPBrgf0q_ymQ';
 
-if (in_array($method, $mapotrails)) $con2 = mapoTrailsDB();
+if (in_array(strtolower($method), $mapotrails) || ($method == 'favorites' && $function == 'trails')) $con2 = mapoTrailsDB();
 
 // METHOD: mapotrails
 if ($method == 'mapotrails') {
@@ -381,79 +389,236 @@ if ($method == 'mapotrails') {
 
 // METHOD: invoices
 if ($method == 'invoices') {
-    $query = executeQuery('s', [$_SESSION['email']], "SELECT cid FROM billing WHERE email = ? ORDER BY status ASC, created DESC LIMIT 1");
-
-    if (count($query) == 0) {
+    if (!$_REQUEST['cid']) {
         $response = 'error';
-    } else {
-        include_once '/home/mapo/stripe/init.php';
-        $stripe = new \Stripe\StripeClient($stripeSecretKey);
-
-        try {
-            $invoices = $stripe->invoices->all([
-                'customer' => $query['cid'],
-                'limit' => 25
-            ]);
-
-            $response = $invoices;
-        } catch (Exception $e) {
-            $response = null;
-        }
+        return;
     }
+
+    try {
+        $invoices = $stripe->invoices->all([
+            'customer' => $_REQUEST['cid'],
+            'limit' => 25
+        ]);
+
+        $response = $invoices;
+    } catch (Exception $e) {
+        $response = null;
+    }
+    //}
 }
 
 // METHOD: receipt
 if ($method == 'receipt') {
-    include_once '/home/mapo/stripe/init.php';
-    \Stripe\Stripe::setApiKey($stripeSecretKey);
+    if (!isset($_REQUEST['id'])) {
+        $response = 'error';
+        return;
+    }
 
-    $response = \Stripe\Charge::retrieve($_REQUEST['charge'], []);
+    $cardDetails = null;
+    $receiptNumber = null;
+    $paymentDate = null;
+    $dueDate = null;
+    $items = [];
+    $totalDiscountAmount = 0;
+    $appliedBalance = 0;
+
+    $invoiceId = preg_replace('/[^a-zA-Z0-9_]/', '', $_GET['id']);
+
+    try {
+        $invoice = $stripe->invoices->retrieve($invoiceId, [
+            'expand' => ['lines', 'charge']
+        ]);
+
+        $customer = $stripe->customers->retrieve($invoice->customer);
+
+        if ($invoice->charge) {
+            $receiptNumber = $invoice->charge->receipt_number;
+            $paymentDate = $invoice->charge->created ? date('F j, Y', $invoice->charge->created) : null;
+        } else if ($invoice->payment_intent) {
+            $paymentIntent = $stripe->paymentIntents->retrieve($invoice->payment_intent);
+            $chargeId = $paymentIntent->latest_charge;
+
+            if ($chargeId) {
+                $charge = $stripe->charges->retrieve($chargeId);
+                $receiptNumber = $charge->receipt_number;
+                $paymentDate = $charge->created ? date('F j, Y', $charge->created) : null;
+            }
+        }
+
+        $dueDate = $invoice->due_date ? date('F j, Y', $invoice->due_date) : null;
+
+        if (!$paymentDate && isset($invoice->status_transitions->paid_at)) {
+            $paymentDate = date('F j, Y', $invoice->status_transitions->paid_at);
+        }
+
+        if ($invoice->charge && isset($invoice->charge->payment_method_details)) {
+            $pm = $invoice->charge->payment_method_details;
+            //print_r($pm);
+
+            $cardDetails = [
+                'type' => $pm->type,
+                'brand' => $pm->card->brand ?? $pm->us_bank_account->bank_name ?? null,
+                'acct' => $pm->card->last4 ?? $pm->us_bank_account->last4 ?? null
+            ];
+        }
+
+        foreach ($invoice->lines->data as $line) {
+            $descParts = explode('×', $line->description);
+            $rawDesc = $descParts[1] ?? $line->description;
+            $cleanDesc = trim(preg_replace('/\s*\(.*?\)/', '', $rawDesc));
+            $cleanDesc = preg_replace('/(\safter\s[0-9]{2,}\s([A-Za-z]+\s([0-9]{4})))/', '', $cleanDesc);
+
+            $lineDiscount = 0;
+            if (!empty($line->discount_amounts)) {
+                foreach ($line->discount_amounts as $dAmount) {
+                    $lineDiscount += $dAmount->amount;
+                }
+            }
+
+            $items[] = [
+                'description' => $cleanDesc,
+                'period' => $line->period ?? null,
+                'amount' => $line->amount / 100,
+                'quantity' => $line->quantity ?? 1,
+                'discount_amount' => $lineDiscount / 100
+            ];
+        }
+
+        if (!empty($invoice->total_discount_amounts)) {
+            foreach ($invoice->total_discount_amounts as $disc) {
+                $totalDiscountAmount += $disc->amount;
+            }
+        }
+
+        $discountInfo = null;
+        if ($invoice->discount && isset($invoice->discount->coupon)) {
+            $coupon = $invoice->discount->coupon;
+
+            if (!empty($coupon->percent_off)) {
+                $discountInfo = [
+                    'type' => 'percent',
+                    'value' => $coupon->percent_off, // e.g., 10 (representing 10%)
+                    'amount' => $totalDiscountAmount / 100 // actual currency saved
+                ];
+            } elseif (!empty($coupon->amount_off)) {
+                $discountInfo = [
+                    'type' => 'amount',
+                    'value' => $coupon->amount_off / 100, // actual fixed amount currency value
+                    'amount' => $totalDiscountAmount / 100
+                ];
+            }
+
+            $discountInfo['code'] = $invoice->discount->coupon->id;
+        }
+
+        if ($invoice->status === 'paid' && isset($invoice->starting_balance)) {
+            $netDifference = $invoice->total - $invoice->amount_paid;
+            $appliedBalance = ($invoice->total < 0 ? $invoice->total : $netDifference) / 100;
+        }
+
+        $response = [
+            'receipt' => [
+                'invoice_number' => $invoice->number,
+                'receipt_number' => $receiptNumber ?? null,
+                'date' => date('F j, Y', $invoice->created),
+                'payment_date' => $paymentDate,
+                'due_date' => $dueDate,
+                'status' => $invoice->status,
+                'costs' => [
+                    'subtotal' => $invoice->subtotal / 100,
+                    'discount' => $discountInfo,
+                    'total' => $invoice->total / 100,
+                    'applied_balance' => $appliedBalance * -1
+                ],
+                'currency' => strtoupper($invoice->currency),
+                'customer' => [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'email' => $customer->email,
+                    'address' => $customer->address ?? null
+                ],
+                'payment' => $cardDetails,
+                'items' => $items,
+                'hosted_invoice_url' => $invoice->hosted_invoice_url ?? null/*,
+            'pdf_url' => $invoice->invoice_pdf*/
+            ]
+        ];
+    } catch (Exception $e) {
+        $response = ['response' => 'error', 'code' => $e->getCode(), 'msg' => $e->getMessage()];
+    }
+
+    return;
 }
 
 // METHOD: userUploads
 if ($method == 'userUploads') {
     $uid = getUserID();
-    $sql = executeQuery('i', [$uid], "SELECT u.* FROM userMapUploads AS u WHERE uid = ? ORDER BY u.modified DESC");
-
-    while ($row = mysqli_fetch_assoc($sql)) {
-        $response[] = $row;
-    }
-}
-
-// METHOD: favFires
-if ($method == 'favFires') {
-    $uid = getUserID();
-    $sql = "SELECT incidentId, state, name, date, geo, type, acres, t.wfid, time, status FROM track_fires AS t LEFT JOIN wildfires AS w ON w.wfid = t.wfid WHERE uid = ?";
-
-    $result = executeQuery('i', [$uid], $sql);
-    foreach ($result as $row) {
-        $f[] = [
-            'wfid' => intval($row['wfid']),
-            'incidentId' => $row['incidentId'],
-            'state' => $row['state'],
-            'date' => $row['date'],
-            'name' => $row['name'],
-            'type' => $row['type'],
-            'acres' => /*$uid == 1 ? $row['acres'] - 1000 : */ $row['acres'],
-            'geo' => $row['geo'],
-            'status' => unserialize($row['status']),
-            'url' => wildfireURL($row['wfid'], $row['name'], $row['state'])
-        ];
+    $sql = executeQuery(
+        'i',
+        [$uid],
+        "SELECT * FROM userMapUploads WHERE uid = ? ORDER BY modified DESC",
+        true
+    );
+    
+    $list = [];
+    foreach ($sql as $file) {
+        $list[] = $file;
     }
 
-    $response = ['fires' => $f];
+    $response = empty($list) ? null : $list;
 }
 
-// METHOD: favTrails
-if ($method == 'favTrails') {
-    $uid = getUserID();
+// METHOD: favorites
+if ($method == 'favorites') {
+    // FUNCTION: favFires
+    if ($function == 'fires') {
+        $uid = getUserID();
+        $sql = "SELECT incidentId, state, name, date, geo, type, acres, t.wfid, time, status FROM track_fires AS t LEFT JOIN wildfires AS w ON w.wfid = t.wfid WHERE uid = ?";
 
-    if ($_REQUEST['method'] == 'remove') {
-        executeQuery('ii', [$_REQUEST['tid'], $uid], "DELETE FROM track_trails WHERE tid = ? AND uid = ?");
+        $listOfFires = [];
+        $result = executeQuery('i', [$uid], $sql);
+        foreach ($result as $row) {
+            $listOfFires[] = [
+                'wfid' => intval($row['wfid']),
+                'incidentId' => $row['incidentId'],
+                'state' => $row['state'],
+                'date' => $row['date'],
+                'name' => $row['name'],
+                'type' => $row['type'],
+                'acres' => /*$uid == 1 ? $row['acres'] - 1000 : */ $row['acres'],
+                'geo' => $row['geo'],
+                'status' => unserialize($row['status']),
+                'url' => wildfireURL($row['wfid'], $row['name'], $row['state'])
+            ];
+        }
 
-        $response = ['success' => 1];
-    } else {
-        $result = executeQuery('i', [$uid], "SELECT t.id, f.tid, t.type, title, stats FROM track_trails AS f LEFT JOIN trails AS t ON t.id = f.tid LEFT JOIN stats AS s ON s.trail_id = f.tid WHERE uid = ? ORDER BY f.time DESC");
+        $response = ['fires' => $listOfFires];
+    }
+
+    // FUNCTION: favTrails
+    if ($function == 'trails') {
+        $uid = getUserID();
+
+        if ($mode == 'remove') {
+            executeQuery('ii', [$_REQUEST['tid'], $uid], "DELETE FROM track_trails WHERE tid = ? AND uid = ?");
+
+            $response = ['success' => 1];
+            return;
+        }
+
+        $trails = [];
+        $result = executeQuery(
+            'i',
+            [$uid],
+            "SELECT t.id, f.tid, t.type, title, stats
+            FROM track_trails f
+            LEFT JOIN trails t ON t.id = f.tid
+            LEFT JOIN gpx g ON g.trail_id = f.tid
+            LEFT JOIN stats s ON s.trail_id = f.tid AND s.gis_id = g.id
+            WHERE uid = ? AND g.delta = 0
+            ORDER BY f.time DESC",
+            true
+        );
 
         foreach ($result as $row) {
             $trails[] = [
@@ -535,15 +700,16 @@ if ($method == 'getFires') {
 // METHOD: getTrails
 if ($method == 'getTrails') {
     $catFilter = $_REQUEST['category'] == 'All Activities' ? '' : strtolower($_REQUEST['category'] ?? '');
+    $types = '"' . $_REQUEST['type'] . '"';
 
     if (!isset($_REQUEST['type']) || strtolower($_REQUEST['type']) == 'all') {
         $types = "'trail','snow'";
-    } else {
-        $types = '"' . $_REQUEST['type'] . '"';
     }
 
     $where = "type IN ($types)";
     $where .= isset($_REQUEST['q']) && $_REQUEST['q'] != '' ? ' AND (title LIKE \'%' . $_REQUEST['q'] . '%\' OR keywords LIKE \'%' . $_REQUEST['q'] . '%\')' : '';
+    $where .= isset($_REQUEST['public']) && $_REQUEST['public'] !== 'all' ? " AND public = {$_REQUEST['public']}" : '';
+    $where .= isset($_REQUEST['premium']) && $_REQUEST['premium'] !== 'all' ? " AND premium = {$_REQUEST['premium']}" : '';
 
     $rowsPerPage = 100;
     $currentPage = $_REQUEST['results'] ?? 1;

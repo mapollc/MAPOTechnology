@@ -389,7 +389,7 @@ class QueryTrails {
         const good = 'background-color:#f8d7da;color:#721c24';
         const bad = 'background-color:#d4edda;color:#155724';
 
-        return `<td>${trail.id}</td>
+        return `<!--<td>${trail.id}</td>-->
             <td>${trail.type.ucfirst()}</td>
             <td>${trail.title}</td>
             <td>${trail.author}</td>
@@ -402,8 +402,8 @@ class QueryTrails {
             <td><span class="sub-badge" style="${Number(trail.premium) == 1 ? good : bad}">${Number(trail.premium) == 1 ? 'Yes' : 'No'}</span></td>
             <td><span class="sub-badge" style="${Number(trail.public) == 1 ? bad : good}">${Number(trail.public) == 1 ? 'Yes' : 'No'}</span></td>
             <td>
-                <a target="blank" href="//mapotrails.com/${trail.url}">view</a>
-                ${this.listOfTrails.dataset.edit == '1' ? `&nbsp;&middot;&nbsp;<a href="${url}">edit</a>` : ''}
+                <a target="_blank" class="view" title="View guide on the map" href="//mapotrails.com/${trail.url}"><i class="fas fa-eye"></i></a>
+                ${this.listOfTrails.dataset.edit == '1' ? `<a class="edit" href="${url}" title="Edit trail guide"><i class="fas fa-pen"></i></a>` : ''}
             </td>`;
     }
 }
@@ -574,8 +574,8 @@ class QueryWildfires {
             <td>${fire.display == '1' ? 'Yes' : 'No'}</td>
             <td>${fire.owner}</td>
             <td>${timeAgo(fire.updated)}</td>
-            <td>${this.listOfFires.dataset.edit == '1' ? `<a style="font-weight:400!important" href="${url}">edit</a>
-            &nbsp;|&nbsp;<a style="font-weight:400!important" target="_blank" href="//mapofire.com/${fire.url}">view</a>${dupURL}` : ''}</td>`;
+            <td>${this.listOfFires.dataset.edit == '1' ? `<a class="view" target="_blank" title="Show on map" href="//mapofire.com/${fire.url}"><i class="fas fa-eye"></i></a>
+            <a class="edit" title="Edit & view incident details" href="${url}"><i class="fas fa-pen"></i></a>${dupURL}` : ''}</td>`;
     }
 
     isDuplicateFire(currentFire, lastFire, acresThreshold = 10.0, idLastDigits = 3, staleHours = 12) {
@@ -922,7 +922,7 @@ function getMyLoc(target) {
 
 async function downloadUserData() {
     try {
-        const userData = await api(`${host}${usersAPI}download`);
+        const userData = await api(`${apiURL}account/download`, null, true);
 
         if (!userData) {
             alert('There was an error getting your data for download.');
@@ -1004,7 +1004,7 @@ function displayFavFires(resp) {
 
 async function getFavoriteTrails() {
     const favTrails = document.querySelector('#favtrails');
-    const resp = await api(`${host}${usersAPI}favtrails`, null, false, true);
+    const resp = await api(`${apiURL}account/favorites/trails`, null, true, true);
 
     if (!resp.response || resp.response.length === 0) {
         favTrails.innerHTML = '<div class="message info">You currently don\'t have any favorite trails.</div>';
@@ -1034,7 +1034,7 @@ async function getFavoriteTrails() {
 
 async function getUploads() {
     const ups = document.querySelector('#uploads');
-    const resp = await api(`${host}${usersAPI}userUploads`, null, false, true);
+    const resp = await api(`${apiURL}account/userUploads`, null, true, true);
 
     if (!resp.response || resp.response.length === 0) {
         ups.innerHTML = '<div class="message info">You haven\'t uploaded any content to Map of Trails.</div>';
@@ -1141,7 +1141,7 @@ async function unfavorite(tid) {
     const total = favtrails.querySelectorAll('.row').length;
 
     try {
-        const resp = await api(`${host}${usersAPI}favtrails`, [['method', 'remove'], ['tid', tid]]);
+        const resp = await api(`${apiURL}account/favorites/trails`, [['mode', 'remove'], ['tid', tid]], true, true);
 
         if (resp.response.success == 1) {
             closeDialog();
@@ -1260,12 +1260,12 @@ function postResume(url, params = null) {
     form.method = 'POST';
     form.action = url;
 
-    if (params != null) {
-        params.forEach((param) => {
+    if (params) {
+        params.forEach(([name, value]) => {
             const input = document.createElement('input');
             input.type = 'hidden';
-            input.name = param[0];
-            input.value = param[1];
+            input.name = name;
+            input.value = value;
             form.appendChild(input);
         });
     }
@@ -1274,96 +1274,124 @@ function postResume(url, params = null) {
     form.submit();
 }
 
+function isBillingDevel() {
+    return new URLSearchParams(window.location.search).has('devel');
+}
+
+function onError(msg) {
+    document.querySelector('#billingCard').insertAdjacentHTML(
+        'afterbegin',
+        `<div class="message error" style="text-align:center;margin-bottom:1rem">${msg}</div>`
+    );
+    showSpinner(false);
+}
+
+function showSpinner(show) {
+    const cancels = document.querySelector('#cancels');
+    if (!cancels) return;
+
+    cancels.querySelector('#processing').style.display = show ? 'inline-flex' : 'none';
+    cancels.querySelectorAll('a.btn').forEach(b => b.style.display = show ? 'none' : 'inline-flex');
+}
+
 async function cancelSub(fields, cancelNow, isApp, msg) {
-    const popup = document.querySelector('.popup'),
-        shadow = document.querySelector('#shadow');
+    const popup = document.querySelector('.popup');
+    const shadow = document.querySelector('#shadow');
 
-    if (popup) {
-        popup.remove();
-        shadow.style.display = 'none';
-    }
+    if (popup) popup.remove();
+    if (shadow) shadow.style.display = 'none';
 
-    document.querySelector('#cancels').innerHTML = '<div class="spinner" style="width:20px;height:20px"></div><span>Processing...</span>';
+    if (isBillingDevel()) fields.push(['devel', 1]);
 
+    showSpinner(true);
+
+    // send request to the API
     const data = await api(`${apiURL}payment/subscriptions/cancel`, fields, true);
 
     if (data.response == 'success') {
         if (isApp) {
             window.location.href = `https://mapofire.com/confirmation?cancel=1&when=${cancelNow ? 'immediate' : 'later'}`;
         } else {
-            postResume(`https://${window.location.host}${window.location.pathname}`, [['cancel', 1], ['when', (cancelNow ? 'immediate' : 'later')]]);
+            const url = `https://${window.location.host}${window.location.pathname}`;
+            postResume(`${url}${isBillingDevel() ? '?devel=1' : ''}`, [['cancel', 1], ['when', (cancelNow ? 'immediate' : 'later')]]);
         }
+    } else {
+        onError(data.msg);
     }
 }
 
 function billing() {
-    const cancel = document.querySelector('#cancel'),
-        modify = document.querySelector('#modify'),
-        shadow = document.querySelector('#shadow'),
-        rs = document.querySelector('#resume'),
-        cancels = document.querySelector('#cancels'),
-        popup = document.querySelector('.popup'),
-        hash = window.location.hash,
-        forcedUpgrade = hash.match(/upgrade=true/) != null;
+    const cancel = document.querySelector('#cancel');
+    const modify = document.querySelector('#modify');
+    const shadow = document.querySelector('#shadow');
+    const resume = document.querySelector('#resume');
+    const hash = window.location.hash;
+    const forcedUpgrade = hash.match(/upgrade=true/) != null;
 
-    // get invoices for the customer
+    // Load customer invoices on initialization
     getInvoices();
 
     if (modify) {
         modify.addEventListener('click', (t) => {
-            const method = t.target.dataset.method,
-                sid = t.target.dataset.sid,
-                npid = t.target.dataset.newPlan,
-                newName = t.target.dataset.name,
-                isApp = t.target.dataset.app == '1' ? true : false,
-                popup = document.createElement('div'),
-                amt = '$' + (t.target.dataset.amount / 100).toFixed(2),
-                extra = method == 'upgrade' ? 'Your default payment method will be charged ' + amt + '.' : 'We will apply a credit for any unused time on your current plan toward your next invoice.';
+            const method = t.target.dataset.method;
+            const sid = t.target.dataset.sid;
+            const npid = t.target.dataset.newPlan;
+            const newName = t.target.dataset.name;
+            const isApp = t.target.dataset.app == '1';
+            const popup = document.createElement('div');
+            const amt = '$' + (t.target.dataset.amount / 100).toFixed(2);
+
+            const extra = method == 'upgrade'
+                ? `Your default payment method will be charged ${amt}.`
+                : 'Downgrading will update your plan immediately and apply a prorated credit to your next invoice. Are you sure you want to switch?';
 
             popup.classList.add('popup');
-            popup.innerHTML = `<i id="close-popup" class="far fa-xmark"></i>
+            popup.innerHTML = `
+                <i id="close-popup" class="far fa-xmark"></i>
                 <h2>${method.ucfirst()} subscription</h2>
                 <p>Are you sure you want to ${method} your subscription to <b>${newName}</b>? ${extra}</p>
                 <div class="options">
-                <a href="#" id="modify-now" class="btn btn-${method == 'downgrade' ? 'red' : 'green'}" onclick="return false">Yes, ${method}</a>
-                <a href="#" id="nvm" class="btn btn-gray" onclick="return false">Cancel</a>`;
+                    <a href="#" id="modify-now" class="btn btn-${method == 'downgrade' ? 'red' : 'green'}" onclick="return false">Yes, ${method}</a>
+                    <a href="#" id="nvm" class="btn btn-gray" onclick="return false">Cancel</a>
+                </div>`;
 
             document.body.appendChild(popup);
-            shadow.style.display = 'block';
+            if (shadow) shadow.style.display = 'block';
 
-            document.querySelector('#close-popup').addEventListener('click', () => {
-                popup.remove();
-                shadow.style.display = 'none';
-            });
+            document.querySelectorAll('#billingCard .message').forEach(i => i.remove());
 
-            document.querySelector('#nvm').addEventListener('click', () => {
+            const closePopup = () => {
                 popup.remove();
-                shadow.style.display = 'none';
-            });
+                if (shadow) shadow.style.display = 'none';
+            };
+
+            document.querySelector('#close-popup').addEventListener('click', closePopup);
+            document.querySelector('#nvm').addEventListener('click', closePopup);
 
             document.querySelector('#modify-now').addEventListener('click', async () => {
-                const shadow = document.querySelector('#shadow');
+                closePopup();
+                showSpinner(true);
 
-                if (popup) {
-                    popup.remove();
-                    shadow.style.display = 'none';
+                const fields = [['sid', sid], ['newPriceID', npid]];
+                if (isBillingDevel()) {
+                    fields.push(['devel', 1]);
                 }
 
-                cancels.innerHTML = '<div class="spinner" style="width:20px;height:20px"></div><span>Processing...</span>';
-
-                const data = await api(`${apiURL}payment/subscriptions/modify`, [['sid', sid], ['newPriceID', npid]], true);
+                // send the request to the API
+                const data = await api(`${apiURL}payment/subscriptions/modify`, fields, true);
 
                 if (data.response == 'success') {
                     if (isApp) {
                         window.location.href = `https://mapofire.com/confirmation?modify=1&method=${method}`;
                     } else {
-                        const post = [];
-                        post.push([method, 'true']);
-
+                        const post = [[method, 'true']];
                         if (forcedUpgrade) post.push(['forced', 'true']);
 
-                        postResume(`https://${window.location.host}${window.location.pathname}`, post);
+                        const url = `https://${window.location.host}${window.location.pathname}`;
+                        postResume(`${url}${isBillingDevel() ? String('?devel=1&' + new Date().getTime()) : ''}`, post);
                     }
+                } else {
+                    onError(data.msg);
                 }
             });
         });
@@ -1373,62 +1401,64 @@ function billing() {
 
     if (cancel) {
         cancel.addEventListener('click', (t) => {
-            const popup = document.createElement('div'),
-                isApp = t.target.dataset.app == '1' ? true : false,
-                name = t.target.dataset.name,
-                sid = t.target.dataset.sid;
+            const popup = document.createElement('div');
+            const isApp = t.target.dataset.app == '1';
+            const name = t.target.dataset.name;
+            const sid = t.target.dataset.sid;
 
-            popup.classList.add('popup');
-            popup.innerHTML = `<i id="close-popup" class="far fa-xmark"></i>
-                <h2>Cancel subscription</h2>
-                <p>You can cancel your <b>${name}</b> subscription immediately, or keep it active until the end of your billing period. Your subscription will not renew automatically.</p>
-                <div class="options">
-                <a href="#" id="cancel-now" class="btn btn-gray" onclick="return false">Cancel now</a>
-                <a href="#" id="cancel-later" class="btn btn-red" onclick="return false">Cancel later</a>`;
-
-            document.body.appendChild(popup);
-            shadow.style.display = 'block';
-
-            document.querySelector('#close-popup').addEventListener('click', (e) => {
-                e.target.parentElement.remove();
-                shadow.style.display = 'none';
-            });
-
-            const cancelClick = (sid, when) => {
+            const cancelClick = (subId, when) => {
                 cancelSub(
-                    [['sid', sid], ['timing', when]],
-                    when == 'now' ? true : false,
+                    [['sid', subId], ['timing', when ? 'now' : 'later']],
+                    when,
                     isApp,
-                    when == 'now' ? 'Your subscription has been canceled. You no longer have access to premium features.' : 'Your subscription will be canceled at the end of your billing period.'
+                    when ? 'Your subscription has been canceled. You no longer have access to premium features.'
+                        : 'Your subscription will be canceled at the end of your billing period.'
                 );
             };
 
-            document.querySelector('#cancel-now').addEventListener('click', () => {
-                cancelClick(sid, 'now', 'Your subscription has been canceled. You no longer have access to premium features.');
+            popup.classList.add('popup');
+            popup.innerHTML = `
+                <i id="close-popup" class="far fa-xmark"></i>
+                <h2>Cancel subscription</h2>
+                <p>You can cancel your <b>${name}</b> subscription immediately, or keep it active until the end of your billing period. Your subscription will not renew automatically.</p>
+                <div class="options">
+                    <a href="#" id="cancel-now" class="btn btn-gray" onclick="return false">Cancel now</a>
+                    <a href="#" id="cancel-later" class="btn btn-red" onclick="return false">Cancel later</a>
+                </div>`;
+
+            document.body.appendChild(popup);
+            if (shadow) shadow.style.display = 'block';
+
+            document.querySelectorAll('#billingCard .message').forEach(i => i.remove());
+
+            document.querySelector('#close-popup').addEventListener('click', (e) => {
+                e.target.closest('.popup').remove();
+                if (shadow) shadow.style.display = 'none';
             });
 
-            document.querySelector('#cancel-later').addEventListener('click', () => {
-                cancelClick(sid, 'later');
-            });
+            document.querySelector('#cancel-now').addEventListener('click', () => cancelClick(sid, true));
+            document.querySelector('#cancel-later').addEventListener('click', () => cancelClick(sid, false));
         });
     }
 
-    if (rs) {
-        rs.addEventListener('click', async (e) => {
-            const isApp = e.target.dataset.app == '1' ? true : false;
-            e.target.parentElement.innerHTML = '<div class="spinner" style="width:20px;height:20px"></div><span>Processing...</span>';
-            e.target.classList.add('disabled');
+    if (resume) {
+        resume.addEventListener('click', async (e) => {
+            const isApp = e.target.dataset.app == '1';
+            showSpinner(true);
 
-            const data = await api(`${apiURL}payment/subscriptions/resume`, [
-                ['sid', e.target.dataset.sid]
-            ], true);
+            const fields = [['sid', e.target.dataset.sid]];
+            if (isBillingDevel()) fields.push(['devel', 1]);
+
+            const data = await api(`${apiURL}payment/subscriptions/resume`, fields, true);
 
             if (data.response == 'success') {
                 if (isApp) {
                     window.location.href = 'https://mapofire.com/confirmation?resume=1';
                 } else {
-                    postResume(`https://${window.location.host}${window.location.pathname}`, [['resume', 1]]);
+                    postResume(`https://${window.location.host}${window.location.pathname}${isBillingDevel() ? '?devel=1' : ''}`, [['resume', 1]]);
                 }
+            } else {
+                onError(data.msg);
             }
         });
     }
@@ -1436,15 +1466,18 @@ function billing() {
 
 async function getInvoices() {
     const invoiceDiv = document.querySelector('#invoices');
-    let fields;
-
     if (!invoiceDiv) return;
 
+    const customerID = invoiceDiv.dataset?.cid;
+    if (!customerID) return;
+
+    const fields = [['cid', customerID]];
+
     if (window.location.search.match(/devel=1/) != null) {
-        fields = [['devel', 1]];
+        fields.push(['devel', 1]);
     }
 
-    const inv = await api(`${host}${usersAPI}invoices`, fields);
+    const inv = await api(`${apiURL}account/invoices`, fields, true);
 
     if (inv.response == null || inv.response.data.length == 0) {
         invoiceDiv.innerHTML = '<p>There are no invoices or receipts for your account.</p>';
@@ -1460,10 +1493,11 @@ async function getInvoices() {
                 links = [];
 
             if (invoice.status == 'paid') amt = invoice.amount_paid;
-            if (invoice.hosted_invoice_url) links.push(`<a target="blank" href="${invoice.hosted_invoice_url}">View</a>`);
+            links.push(`<a href="https://mapotechnology.com/account/billing/receipt?id=${invoice.id}${isBillingDevel() ? '&devel=1' : ''}" target="_blank">View</a>`);
+            //if (invoice.hosted_invoice_url) links.push(`<a target="blank" href="${invoice.hosted_invoice_url}">View</a>`);
             if (invoice.invoice_pdf) links.push(` &nbsp;&middot;&nbsp; <a href="${invoice.invoice_pdf}">Download</a>`);
 
-            table.push(`<tr>
+            table.push(`<tr data-invoice-id="${invoice.id}">
                 <td>${invoice.number ? invoice.number : (invoice.status == 'Draft' ? invoice.status : 'N/A')}</td>
                 <td>${new Date(invoice.created * 1000).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
                 <td>$${(amt / 100).toFixed(2)}</td>
@@ -1742,6 +1776,7 @@ async function createMap(center, zoom, hash = false, pitch = 0, bearing = 0) {
 async function mapTrailData(mapContainer) {
     const trailID = mapContainer.dataset.trailId;
     const url = `https://cdn.mapotrails.com/geojson/${trailID}.geojson`;
+    console.log(url);
 
     const map = await createMap([-118.1, 45.32], 6.5);
 
@@ -1799,11 +1834,6 @@ async function mapTrailData(mapContainer) {
 }
 
 async function adminTrailMgmt() {
-    if (pageName.search('/map') >= 0) {
-        mapTrailData(document.querySelector('#map'));
-        return;
-    }
-
     let allKeywords = null;
 
     /*
@@ -2170,7 +2200,7 @@ function adminWildfireMgmt() {
 
         q.addEventListener('keyup', async (e) => {
             let results = [];
-            const resp = await api(`${host}${usersAPI}jurisdictions`, [['q', e.target.value]]);
+            const resp = await api(`${apiURL}account/jurisdictions`, [['q', e.target.value]], true);
 
             resp.response.results.forEach(s => {
                 const dis = `${s.unit}: ${s.agency + (s.area ? ` / ${s.area}` : '')}`;
@@ -2290,7 +2320,7 @@ async function startup() {
         await getFires();
 
         // get favorite fires once the entire list is retrieved
-        await api(`${host}${usersAPI}favFires`, null, false, true)
+        await api(`${apiURL}account/favorites/fires`, null, true, true)
             .then(response => displayFavFires(response));
 
         // get everything else
@@ -2482,6 +2512,10 @@ async function startup() {
         adminTrailMgmt();
     }
 
+    if (pageName === 'admin/trails/map') {
+        mapTrailData(document.querySelector('#map'));
+    }
+
     if (pageName.includes('admin/wildfires')) {
         adminWildfireMgmt();
     }
@@ -2530,10 +2564,10 @@ window.addEventListener('keyup', (e) => {
 });
 
 window.addEventListener('click', async (e) => {
-    const target = e.target,
-        searchResults = document.querySelector('.search-results'),
-        sidebar = document.querySelector('.sidebar'),
-        menuIcon = target.closest('#menuIcon');
+    const target = e.target;
+    const searchResults = document.querySelector('.search-results');
+    const sidebar = document.querySelector('.sidebar');
+    const menuIcon = target.closest('#menuIcon');
 
     if (document.querySelector('#dialog') != null && target.id == 'close') {
         closeDialog();
@@ -2718,7 +2752,7 @@ window.addEventListener('click', async (e) => {
         if (id) {
             target.parentElement.parentElement.remove();
 
-            await api(`${host}${usersAPI}wildfires`, [['mode', 'hide'], ['id', id]]);
+            await api(`${apiURL}account/wildfires`, [['mode', 'hide'], ['id', id]], true);
         }
     }
 

@@ -9,9 +9,9 @@ class ManageSubs
     public $selected;
     public $isInDevel;
 
-    public function __construct()
+    public function __construct($devel = false)
     {
-        $this->isInDevel = false;
+        $this->isInDevel = $devel;
         $this->name = null;
         $this->selected = null;
         $this->plan = [
@@ -78,9 +78,11 @@ class ManageSubs
 
     public function isPlan($id)
     {
+        $ids = [];
+
         foreach ($this->plan as $plans) {
             foreach ($plans['price_id'] as $pid) {
-                $ids[] = $pid['id'];
+                $ids[] = $pid[$this->isInDevel ? 'id2' : 'id'];
             }
         }
 

@@ -66,6 +66,7 @@ function getName($fields)
 
 if (isset($_GET['checkout_id'])) {
     require_once '/home/mapo/stripe/init.php';
+    require_once '/home/mapo/vendor/autoload.php';
     $stripe = new \Stripe\StripeClient($stripeSecretKey);
 
     try {

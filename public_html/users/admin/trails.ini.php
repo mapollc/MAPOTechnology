@@ -241,11 +241,23 @@ if ($_GET['deleted'] == 1) {
                         <option <?= $_GET['type'] == 'trail' ? 'selected ' : '' ?>value="snow">Snow</option>
                     </select>
 
-                    <select name="category" class="input" style="max-width:175px">
+                    <select name="category" class="input" style="max-width:140px">
                         <option>All Activities</option>
                         <? foreach ($activities as $a) {
                             echo "<option " . ($a === $_GET['category'] ? 'selected ' : '') . "value=\"$a\">$a</option>";
                         } ?>
+                    </select>
+
+                    <select name="public" class="input" style="max-width:124px">
+                        <option <?= !isset($_GET['public']) ? 'selected ' : '' ?>value="all">All Visibilities</option>
+                        <option <?= $_GET['public'] == '1' ? 'selected ' : '' ?>value="1">Public</option>
+                        <option <?= $_GET['public'] == '0' ? 'selected ' : '' ?>value="0">Not Public</option>
+                    </select>
+
+                    <select name="premium" class="input" style="max-width:124px">
+                        <option <?= !isset($_GET['premium']) ? 'selected ' : '' ?>value="all">All Tiers</option>
+                        <option <?= $_GET['premium'] == '1' ? 'selected ' : '' ?>value="1">Premium</option>
+                        <option <?= $_GET['premium'] == '0' ? 'selected ' : '' ?>value="0">Not Premium</option>
                     </select>
 
                     <input type="submit" class="btn btn-blue" value="Search">
@@ -264,7 +276,7 @@ if ($_GET['deleted'] == 1) {
                 <table class="table" id="listOfTrails" data-edit="<?= $edit->all() ?? $edit->own() ?? 0 ?>">
                     <thead class="sortable">
                         <tr>
-                            <th class="sortTable" data-url="sort=id&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">ID</th>
+                            <!--<th class="sortTable" data-url="sort=id&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">ID</th>-->
                             <th class="sortTable" data-url="sort=type&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Type</th>
                             <th style="width:300px" class="sortTable" data-url="sort=title&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Title</th>
                             <th class="sortTable" data-url="sort=author&order=<?= (!isset($_GET['order']) || $_GET['order'] != 'ASC' ? 'ASC' : 'DESC') . ($queryParams ? "&$queryParams" : '') ?>">Author</th>

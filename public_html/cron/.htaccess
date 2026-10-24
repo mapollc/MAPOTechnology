@@ -3,6 +3,9 @@ RewriteBase /
 Options -Indexes
 Options +FollowSymlinks
 
+SetEnv STRIPE_WEBHOOK_SECRET_PROD "whsec_MILZXITx9MjNBmpUj0JlbK1amIwjWjtI"
+SetEnv STRIPE_WEBHOOK_SECRET_DEV "whsec_rdOOYrT1OTXEaPgTvl7EZbjaUtOCwSUb"
+
 RewriteCond %{REQUEST_URI} ^/cache/gis/.*\.txt$ [NC]
 RewriteRule ^ - [L]
 DirectoryIndex index.php index.html

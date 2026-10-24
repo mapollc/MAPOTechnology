@@ -64,6 +64,7 @@ if ($function == 'create') {
 
 // add or update categories
 $sqlQueries .= "INSERT INTO categories (trail_id,term) VALUES('$trailID','$term') ON DUPLICATE KEY UPDATE term = '$term';";
+$waypoint = $_POST['waypoint'] ?? [];
 
 if (!empty($waypoint['id'])) {
     $count = count($waypoint['id']);

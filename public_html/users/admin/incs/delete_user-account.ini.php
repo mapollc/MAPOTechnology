@@ -4,6 +4,7 @@ $anySubs = mysqli_num_rows(mysqli_query($con, "SELECT id FROM billing WHERE emai
 
 if (isset($_POST['verify_delete']) && $_POST['verify_delete'] == 1) {
     require_once '/home/mapo/stripe/init.php';
+    require_once '/home/mapo/vendor/autoload.php';
 
     // if user has any subscriptions, cancel them
     if ($anySubs > 0) {

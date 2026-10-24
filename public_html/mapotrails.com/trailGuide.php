@@ -132,7 +132,9 @@ $trail = executeQuery(
     FROM trails t
     LEFT JOIN media m ON m.trail_id = t.id
     LEFT JOIN categories c ON c.trail_id = t.id
-    WHERE t.id = ? AND m.delta = 0",
+    WHERE t.id = ?
+    ORDER BY m.delta ASC
+    LIMIT 1",
     true
 );
 

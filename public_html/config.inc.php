@@ -1,6 +1,6 @@
 <?
 require_once '/home/mapo/apiKey.ini.php';
-require '/home/mapo/public_html/vendor/autoload.php';
+require '/home/mapo/vendor/autoload.php';
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;

@@ -12,12 +12,14 @@ if ($_GET['devel'] == 1 || $_REQUEST['price_id'] == 'price_1PgsdhIpCdpJm6cTHdP3v
 
 include_once './subs.inc.php';
 require_once '/home/mapo/stripe/init.php';
+require_once '/home/mapo/vendor/autoload.php';
 
-\Stripe\Stripe::setApiKey($stripeSecretKey);
+$stripe = new \Stripe\StripeClient($stripeSecretKey);
 
 $domain = 'https://www.mapotechnology.com';
 $priceID = $_REQUEST['price_id'];
 $donate = false;
+$returnUrl = '';
 
 // get a list of all subscriptions currently offered
 foreach ($mapoSubscriptions as $e) {
@@ -34,14 +36,10 @@ if ($mapoSubscriptions['donate'][($stripeLive ? 'live' : 'test')] == $priceID ||
         if ($_SESSION['uid'] && $_SESSION['expires'] > time() && !isset($_GET['next'])) {
             $returnUrl = 'account/billing?subscribe={CHECKOUT_SESSION_ID}';
         } else {
-            if (isset($_GET['next'])) {
-                $nextURL = $_GET['next'];
-            } else {
-                $nextURL = 'secure/register';
-            }
+            $nextURL = $_GET['next'] ?? 'secure/register';
             $nextURL .= str_contains($nextURL, '?') ? '&' : '?';
-            
-            $returnUrl = $nextURL.'checkout_id={CHECKOUT_SESSION_ID}';
+
+            $returnUrl = "{$nextURL}checkout_id={CHECKOUT_SESSION_ID}";
         }
         /*if ($_SESSION['uid'] && $_SESSION['expires'] > time()) {
             if ($_REQUEST['force_login'] == 1) {
@@ -70,21 +68,20 @@ if ($_GET['return']) {
     }
 }
 
-
-if ($priceID) {        
-    $fields = array(
+if ($priceID) {
+    $fields = [
         'billing_address_collection' => 'auto',
         'allow_promotion_codes' => (!$donate ? true : false),
-        'line_items' => array(
+        'line_items' => [
             [
                 'price' => $priceID,
                 'quantity' => 1,
             ]
-        ),
+        ],
         'mode' => (!$donate ? 'subscription' : 'payment'),
-        'success_url' => ($_GET['host'] ? (strpos($_GET['host'], 'http') !== false ? '' : 'https://') . $_GET['host'] : "$domain") . "/$returnUrl",
-        'cancel_url' => ($_GET['host'] ? (strpos($_GET['host'], 'http') !== false ? '' : 'https://') . $_GET['host'] : $domain) . ($cancelUrl ? "$cancelUrl" : ''),
-    );
+        'success_url' => ($_GET['host'] ? (strpos($_GET['host'], 'http') !== false ? '' : 'https://') . $_GET['host'] : $domain) . "/$returnUrl",
+        'cancel_url' => ($_GET['host'] ? (strpos($_GET['host'], 'http') !== false ? '' : 'https://') . $_GET['host'] : $domain) . ($cancelUrl ?: ''),
+    ];
 
     if ($_REQUEST['trial']) {
         $fields['subscription_data'] = array(
@@ -121,7 +118,7 @@ if ($priceID) {
     } else {
         if (!$_REQUEST['customer_email']) {
             include_once 'config.inc.php';
-            
+
             $row = mysqli_fetch_assoc(mysqli_query($con, "SELECT cid FROM billing AS b LEFT JOIN users AS u ON b.email = u.email WHERE u.uid = $_SESSION[uid] LIMIT 1"));
 
             if ($row) {
@@ -141,11 +138,11 @@ if ($priceID) {
     #print_r($fields);
     #exit();
     try {
-        $checkout_session = \Stripe\Checkout\Session::create($fields);
+        $checkout_session = $stripe->checkout->sessions->create($fields);
 
         #print_r($checkout_session);
         header("HTTP/1.1 303 See Other");
-        header("Location: " . $checkout_session->url);
+        header("Location: $checkout_session->url");
     } catch (Error $e) {
         print_r($e);
     }

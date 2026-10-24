@@ -59,7 +59,7 @@ function getWaypointElev($lat, $lon)
 
     return $json
         ? round(json_decode($json)->value * 3.28084, 1)
-        : null;
+        : 0;
 }
 
 // on form submit
@@ -315,11 +315,17 @@ if ($function == 'edit') {
                                         <iframe style="width:100%;height:177.5px" src="https://www.youtube.com/embed/UGpei_reX_4?si=Dr6WpLW1GgtmvFzy&amp;controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
                                     <? }
 
-                                    if ($isPhoto) { ?>
+                                    if ($isPhoto) {
+                                        $pcoord = null;
+
+                                        if ($data['coordinates']) {
+                                            $pcoord = round($data['coordinates'][0], 4) . ', ' . round($data['coordinates'][1], 4);
+                                        }
+                                        ?>
                                         <span class="meta">
                                             File Size: <?= $data['filesize'] ? round($data['filesize'] * 0.000001, 1) . ' MB' : '~' ?><br>
-                                            Dimensions: <?= $data['width'] ? number_format($data['width']) . '/' . number_format($data['height']) . ' px' : 'Unknown' ?><br>
-                                            Geolocated: <?= $data['coordinates'] ? '<b style="font-weight:500;color:green">Yes</b>' : 'No' ?>
+                                            Dimensions: <?= $data['width'] ? number_format($data['width']) . ' x ' . number_format($data['height']) : 'Unknown' ?><br>
+                                            Geolocated: <?= $data['coordinates'] ? "<a target=\"_blank\" href=\"//mapotrails.com/#12.5/" . str_replace(', ', '/', $pcoord) . "\" style=\"font-weight:500;color:green\">$pcoord</a>" : 'No' ?>
                                         </span>
                                     <? } ?>
 

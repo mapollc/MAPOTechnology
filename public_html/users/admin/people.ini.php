@@ -158,8 +158,8 @@ if ($function == 'create' && !$permission->user()->add() || $function == 'edit' 
                                     <?= $row['role'] == 3 ? '<i class="fas fa-lock" title="Administrative User"></i>' : '' ?></td>
                                 <td><?= $row['last_active'] ? ago($row['last_active']) : '--' ?></td>
                                 <td><?= ago($row['created']) ?></td>
-                                <td><? if ($permission->user()->edit()) { ?><a title="Edit User" href="people/edit?uid=<?= $row['uid'] ?>"><i class="fas fa-pen"></i></a><? } ?>
-                                    <? if ($permission->user()->delete()) { ?><a title="Remove user" href="people/remove?uid=<?= $row['uid'] ?>" style="margin-left:1em"><i class="fas fa-trash-xmark"></i></a><? } ?></td>
+                                <td><? if ($permission->user()->edit()) { ?><a title="Edit User" class="edit" href="people/edit?uid=<?= $row['uid'] ?>"><i class="fas fa-pen"></i></a><? } ?>
+                                    <? if ($permission->user()->delete()) { ?><a title="Remove user" class="delete" href="people/remove?uid=<?= $row['uid'] ?>"><i class="fas fa-trash-xmark"></i></a><? } ?></td>
                             </tr>
                         <? } ?>
                     </tbody>

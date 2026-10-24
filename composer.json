@@ -1,0 +1,9 @@
+{
+    "name": "mapo/public_html",
+    "version": "1.0.0",
+    "require": {
+        "firebase/php-jwt": "^7.1.0",
+        "ua-parser/uap-php": "^3.10",
+        "stripe/stripe-php": "^22.0"
+    }
+}

@@ -3,7 +3,7 @@ include_once '../config.inc.php';
 require_once './secure.inc.php';
 include_once '/home/mapo/public_html/subs.inc.php';
 require_once 'permissions.inc.php';
-require_once "$baseRoot/vendor/autoload.php";
+require_once "/home/mapo/vendor/autoload.php";
 
 use UAParser\Parser;
 

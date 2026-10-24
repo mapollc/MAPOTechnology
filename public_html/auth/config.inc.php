@@ -37,7 +37,7 @@ if (isset($_GET['guid']) && !empty($_GET['guid'])) {
     setupGUID();
 }
 
-if ($_GET['fail'] == 3) {
+/*if ($_GET['fail'] == 3) {
     $_SESSION = [];
     if (session_id()) {
         session_destroy();
@@ -52,7 +52,7 @@ if ($_GET['fail'] == 3) {
         'httponly' => true,
         'samesite' => 'None'
     ]);
-}
+}*/
 
 $service = $_GET['src'] ?? $_GET['service'] ?? null;
 $fireMaps = ['mapofire', 'wildfiremap', 'fireweatheravalanche'];

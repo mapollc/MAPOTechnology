@@ -106,9 +106,78 @@ async function messageSubmit(form) {
     }
 }
 
-window.onresize = function () {
-    const nav = document.querySelector('ul.navbar_menu'),
-        mi = document.querySelector('.menu_icon i');
+if (document.querySelector('header').getAttribute('data-mt') != 1) {
+    if (window.scrollY > headerChange) {
+        document.querySelector('header').classList.add('dark');
+    } else {
+        document.querySelector('header').classList.remove('dark');
+    }
+}
+
+if (pageName == '/donate/success') {
+    gtag("event", "purchase", {
+        transaction_id: pid,
+        value: pamt,
+        tax: 0.00,
+        shipping: 0.00,
+        currency: "USD"
+    });
+}
+
+if (pageName == '/') {
+    document.querySelectorAll('.promo .btn').forEach(b => {
+        if (window.outerWidth > 495) {
+            b.classList.add('btn-xl')
+        } else {
+            b.classList.remove('btn-xl')
+        }
+    });
+}
+
+if (pageName == '/about/contact' || pageName == '/contact') {
+    const rc = document.createElement('script');
+    rc.src = 'https://www.google.com/recaptcha/api.js?render=6Ld5X1AkAAAAAF7AVZbd60fGTNqx-bYJ6s9wnlrC';
+    document.body.appendChild(rc);
+
+    document.querySelector('form#contact').addEventListener('submit', (e) => {
+        sendMessage(e);
+    });
+}
+
+window.addEventListener('click', (e) => {
+    const wwd = e.target.closest('#wwd');
+    const menuIcon = e.target.closest('.menu_icon');
+
+    if (menuIcon) {
+        const nav = document.querySelector('ul.navbar_menu');
+        const mi = menuIcon.querySelector('i');
+
+        if (menuIcon.dataset.open == '0') {
+            menuIcon.setAttribute('data-open', '1');
+            mi.classList.add('fa-times');
+            mi.classList.remove('fa-bars');
+            nav.style.display = 'flex';
+        } else {
+            menuIcon.setAttribute('data-open', '0');
+            mi.classList.remove('fa-times');
+            mi.classList.add('fa-bars');
+            nav.style.display = 'none';
+        }
+    }
+
+    if (wwd) {
+        e.preventDefault();
+
+        document.querySelector('#abt').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+});
+
+window.addEventListener('resize', () => {
+    const nav = document.querySelector('ul.navbar_menu');
+    const mi = document.querySelector('.menu_icon i');
 
     if (window.outerWidth >= 768) {
         nav.style.display = '';
@@ -124,9 +193,9 @@ window.onresize = function () {
             b.classList.remove('btn-xl')
         }
     });
-};
+});
 
-window.onscroll = function () {
+window.addEventListener('scroll', () => {
     if (pageName == '/') {
         var t = document.querySelector('section.stats').offsetTop,
             b = t + window.outerHeight,
@@ -151,73 +220,5 @@ window.onscroll = function () {
         } else {
             document.querySelector('header').classList.remove('dark');
         }
-    }
-};
-
-window.onload = function () {
-    if (document.querySelector('header').getAttribute('data-mt') != 1) {
-        if (window.scrollY > headerChange) {
-            document.querySelector('header').classList.add('dark');
-        } else {
-            document.querySelector('header').classList.remove('dark');
-        }
-    }
-
-    if (pageName == '/donate/success') {
-        gtag("event", "purchase", {
-            transaction_id: pid,
-            value: pamt,
-            tax: 0.00,
-            shipping: 0.00,
-            currency: "USD"
-        });
-    }
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    const wwd = document.querySelector('#wwd');
-
-    document.querySelector('.menu_icon')?.addEventListener('click', (e) => {
-        const nav = document.querySelector('ul.navbar_menu'),
-            mi = e.target.querySelector('i');
-
-        if (this.dataset.open == '0') {
-            this.setAttribute('data-open', '1');
-            mi.classList.add('fa-times');
-            mi.classList.remove('fa-bars');
-            nav.style.display = 'flex';
-        } else {
-            this.setAttribute('data-open', '0');
-            mi.classList.remove('fa-times');
-            mi.classList.add('fa-bars');
-            nav.style.display = 'none';
-        }
-    });
-
-    wwd?.addEventListener('click', (e) => {
-        e.preventDefault();
-
-        document.querySelector('#abt').scrollIntoView();
-        return false;
-    });
-
-    if (pageName == '/') {
-        document.querySelectorAll('.promo .btn').forEach(b => {
-            if (window.outerWidth > 495) {
-                b.classList.add('btn-xl')
-            } else {
-                b.classList.remove('btn-xl')
-            }
-        });
-    }
-
-    if (pageName == '/about/contact' || pageName == '/contact') {
-        const rc = document.createElement('script');
-        rc.src = 'https://www.google.com/recaptcha/api.js?render=6Ld5X1AkAAAAAF7AVZbd60fGTNqx-bYJ6s9wnlrC';
-        document.body.appendChild(rc);
-
-        document.querySelector('form#contact').addEventListener('submit', (e) => {
-            sendMessage(e);
-        });
     }
 });

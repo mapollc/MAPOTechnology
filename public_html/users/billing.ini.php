@@ -1,45 +1,159 @@
 <?
-if ($_REQUEST['devel'] == 1) $stripeLive = false;
+$isDevel = isset($_GET['devel']);
+if ($isDevel) $stripeLive = false;
 
 require_once '/home/mapo/stripe/init.php';
+require_once '/home/mapo/vendor/autoload.php';
 require_once '/home/mapo/public_html/subs.inc.php';
 
 $stripe = new \Stripe\StripeClient($stripeSecretKey);
 $portal = null;
+$portalError = $subFetchError = null;
+
+function cardIcon($c)
+{
+    $card = match ($c) {
+        'visa' => 'cc-visa',
+        'mastercard' => 'cc-mastercard',
+        'american_express' => 'cc-amex',
+        default => ''
+    };
+
+    return $card ? "<i class=\"fa-brands fa-$card\" style=\"font-size:20px;color:var(--blue);margin-right:0.33rem\"></i>" : '';
+}
 
 // get customer ID and any subscriptions from the DB
 $now = time();
+$portalUrl = '';
+$activeSubscriptionsData = [];
+
 $customerID = $_GET['cid'] ?: mysqli_fetch_assoc(mysqli_query($con, "SELECT cid FROM billing WHERE email = '$user[email]' ORDER BY status ASC, created DESC LIMIT 1"))['cid'];
 
 if ($customerID) {
     $params = null;
-    if (isset($_GET['ref'])) $params[] = 'ref=' . $_GET['ref'];
+    if (isset($_GET['ref'])) $params[] = "ref={$_GET['ref']}";
     if (isset($_GET['devel'])) $params[] = 'devel=1';
+    $returnUrl = $_GET['next'] ?: 'https://mapotechnology.com/account/billing' . ($params ? '?' . implode('&', $params) : '');
 
+    // create a session to stripe's portal to manage things on their end
     try {
-        $portal = $stripe->billingPortal->sessions->create([
+        $portalSession = $stripe->billingPortal->sessions->create([
             'customer' => $customerID,
-            'return_url' => $_GET['next'] ?: 'https://www.mapotechnology.com/account/billing' . ($params ? '?' . implode('&', $params) : ''),
+            'return_url' => $returnUrl
         ]);
+
+        $portalUrl = $portalSession->url;
     } catch (Exception $e) {
-        if (!str_contains($e->getMessage(), 'No such')) echo message(false, $e->getMessage());
+        if (!str_contains($e->getMessage(), 'No such')) {
+            $portalError = $e->getMessage();
+        }
+    }
+
+    // get list of subscriptions for this user
+    try {
+        $subsList = $stripe->subscriptions->all([
+            'customer' => $customerID,
+            'status' => 'all',
+            'limit' => 5
+        ]);
+
+        foreach ($subsList->data as $sub) {
+            if (!in_array($sub->status, ['active', 'trialing', 'past_due'])) {
+                continue;
+            }
+
+            $subId = $sub->id;
+
+            $subRowQuery = mysqli_query($con, "SELECT * FROM billing WHERE subscription = '$subId' LIMIT 1");
+            $row = mysqli_fetch_assoc($subRowQuery);
+            if (!$row) continue;
+
+            // Plan routing logic
+            $product = $plan->setPlan(null, $row['plan'], $isDevel);
+            $upgrade = false;
+            if (str_contains($plan->getPriceName(), 'ignite')) {
+                $upgrade = true;
+                $newName = $plan->allPlans()[2]['name'];
+                $newPlan = $plan->allPlans()[2]['price_id'][1][$isDevel ? 'id2' : 'id'];
+            } else {
+                $newName = $plan->allPlans()[1]['name'];
+                $newPlan = $plan->allPlans()[1]['price_id'][0][$isDevel ? 'id2' : 'id'];
+            }
+
+            // Stripe Upcoming Invoice Preview for Upgrades/Downgrades
+            $amountDue = 0;
+
+            try {
+                $invoicePreview = $stripe->invoices->createPreview([
+                    'customer' => $row['cid'],
+                    'subscription' => $subId,
+                    'subscription_details' => [
+                        'items' => [
+                            [
+                                'id' => $sub->items->data[0]->id,
+                                'price' => $newPlan
+                            ]
+                        ],
+                        'proration_behavior' => 'always_invoice'
+                    ]
+                ]);
+                $amountDue = $invoicePreview->total;
+            } catch (Exception $e) {
+                // Fallback if preview fails
+            }
+
+            $howPay = 'Unknown';
+            try {
+                if (!empty($sub->default_payment_method)) {
+                    $pm = $stripe->paymentMethods->retrieve($sub->default_payment_method, []);
+                    if (!empty($pm->card->brand)) {
+                        $howPay = cardIcon($pm->card->brand) . ucfirst($pm->card->brand) . " ending in {$pm->card->last4}";
+                    } elseif (!empty($pm->us_bank_account->bank_name)) {
+                        $howPay = 'Bank account (' . ucfirst($pm->us_bank_account->bank_name) . ") ending in {$pm->card->last4}";
+                    } else {
+                        $howPay = ucfirst($pm->type);
+                    }
+                }
+            } catch (Exception $e) {
+            }
+
+            $canceled = ($row['status'] == 'cancel' || $row['cancel_end_period'] == 1);
+            $status = $canceled ? 'canceled' : (!empty($row['trial']) ? 'trial' : 'active');
+
+            $activeSubscriptionsData[] = [
+                'id' => $subId,
+                'product_name' => $product->getName(),
+                'product_total_price' => $product->getTotalPrice(),
+                'status' => $status,
+                'start' => $row['start'],
+                'end' => $row['end'],
+                'current_period_end' => $sub->current_period_end,
+                'trial' => $row['trial'],
+                'canceled' => $canceled,
+                'how_pay' => $howPay,
+                'upgrade' => $upgrade,
+                'new_name' => $newName,
+                'new_plan' => $newPlan,
+                'amount_due' => $amountDue,
+                'is_app' => ($_GET['ref'] == 'com.mapollc.mapofire') ? ' data-app="1"' : ''
+            ];
+        }
+    } catch (Exception $e) {
+        if (!str_contains($e->getMessage(), 'No such')) {
+            $subFetchError = $e->getMessage();
+        }
     }
 }
 
 if ($_GET['method'] == 'portal') {
-    header("Location: $portal->url");
+    header("Location: $portalUrl");
     exit();
 }
 
-$sql = mysqli_query($con, "SELECT * FROM billing WHERE status != 'expired' AND email = '$user[email]' ORDER BY created DESC");
-$num = mysqli_num_rows($sql);
-
 if (isset($_REQUEST['cancel'])) {
-    if ($_REQUEST['when'] == 'immediate') {
-        $msg = 'Your subscription has been canceled. You no longer have access to premium features.';
-    } else {
-        $msg = 'Your subscription will be canceled at the end of your billing period.';
-    }
+    $msg = $_REQUEST['when'] == 'immediate'
+        ? 'Your subscription has been canceled. You no longer have access to premium features.'
+        : 'Your subscription will be canceled at the end of your billing period.';
 
     echo message(true, $msg, false, true);
 }
@@ -69,10 +183,14 @@ if (isset($_REQUEST['resume'])) {
 if (isset($_GET['checkout_id'])) {
     echo message(true, 'Thank you! Your ' . ($_GET['isTrial'] == 1 ? 'free 7-day trial' : 'subscription') . ' is now active. You now have access to premium tools & features.', false, true);
 }
+
+if ($portalError || $subFetchError) {
+    echo message(false, $portalError ?? $subFetchError);
+}
 ?>
 <div class="row">
     <div class="col w100">
-        <div class="card">
+        <div class="card" id="billingCard">
             <? if (isset($_SESSION['groups'])) {
                 $orgName = $_SESSION['groups']['org_name'];
                 echo message(null, "Your account is part of an commerical group account with <b>$orgName</b>.", true, true);
@@ -80,115 +198,89 @@ if (isset($_GET['checkout_id'])) {
 
             <h1 style="text-align:center">Subscriptions & Billing</h1>
 
-            <? if ($num == 0) { ?>
+            <? if (empty($activeSubscriptionsData)) { ?>
                 <p style="text-align:center">
-                    You're not currently subscribed. Unlock premium and professional features to get the most out of our service.
+                    You're not currently subscribed. Unlock premium and professional features to get the most out of our services.
                 </p>
                 <div class="btn-group" style="width:100%;justify-content:center">
-                    <a href="https://www.mapotechnology.com/purchase/mapofire?ref=account&customer_email=<?= $user['email'] ?><?= ($customerID ? "&cid=$customerID" : '') ?>" class="btn btn-green"><?= $customerID ? 'Get access to premium features' : 'Start Your Free Trial' ?></a>
+                    <a href="https://mapotechnology.com/purchase/mapofire?ref=account&customer_email=<?= $user['email'] ?><?= $customerID ? "&cid=$customerID" : '' ?>" class="btn btn-green"><?= $customerID ? 'Get access to premium features' : 'Start Your Free Trial' ?></a>
                     <? if ($portal) {
                         echo "<a class=\"btn btn-black\" href=\"$portal->url\">Manage Payment Methods</a>";
                     } ?>
                 </div>
-                <? } else {
-                while ($row = mysqli_fetch_assoc($sql)) {
-                    $upgrade = $downgrade = false;
-                    $product = $plan->setPlan(null, $row['plan'], $_GET['devel'] == 1 ? true : false);
+            <? return;
+            }
 
-                    if (str_contains($plan->getPriceName(), 'ignite')) {
-                        $upgrade = true;
-                        $newName = $plan->allPlans()[2]['name'];
-                        $newPlan = $plan->allPlans()[2]['price_id'][1][$_GET['devel'] == 1 ? 'id2' : 'id'];
+            $styles = [
+                'canceled' => 'background-color:#f8d7da;color:#721c24;',
+                'trial'    => 'background-color:#fceabb;color:#6b4f00;',
+                'active'   => 'background-color:#d4edda;color:#155724;'
+            ];
+
+            foreach ($activeSubscriptionsData as $sub) { ?>
+                <div class="sub">
+                    <h2 style="font-size:21px"><?= $sub['product_name'] ?></h2>
+
+                    <span class="sub-badge" style="<?= $styles[$sub['status']] ?>"><?= $sub['status'] ?></span>
+
+                    <p style="padding-top:1em">
+                        <b>Billing cycle:</b> <?= date('F j, Y', $sub['start']) . ' - ' . date('F j, Y', $sub['end']) ?>
+                    </p>
+
+                    <? if (!$sub['canceled']) { ?>
+                        <p id="next-pymt"><b>Next payment:</b> $<?= $sub['product_total_price'] ?> on <?= date('F j, Y', $sub['end']) ?></p>
+                    <? } ?>
+
+                    <p><b>Payment method:</b> <?= $sub['how_pay'] ?></p>
+
+                    <? if (!$sub['canceled']) {
+                        $text = $sub['trial'] == 1
+                            ? "Your free trial will end on " . date('F j, Y', $sub['end']) . ". After that, your default payment method will be charged automatically."
+                            : "Your subscription is active and will renew on " . date('F j, Y', $sub['current_period_end']) . ". Your default payment method will be charged automatically.";
+
+                        echo "<span id=\"trial-notice\" class=\"help\">$text</span>";
                     } else {
-                        $downgrade = true;
-                        $newName = $plan->allPlans()[1]['name'];
-                        $newPlan = $plan->allPlans()[1]['price_id'][0][$_GET['devel'] == 1 ? 'id2' : 'id'];
-                    }
+                        echo '<span id="can-notice" class="help">Your subscription has been canceled and it will remain active until ' . date('F j, Y', $sub['end']) . '.</span>';
+                    } ?>
 
-                    try {
-                        $sub = $stripe->subscriptions->retrieve($row['subscription'], []);
-                        $invoicePreview = $stripe->invoices->upcoming([
-                            'customer' => $row['cid'],
-                            'subscription' => $row['subscription'],
-                            'subscription_details' => [
-                                'items' => [
-                                    [
-                                        'id' => $sub->items->data[0]->id,
-                                        'price' => $newPlan
-                                    ]
-                                ],
-                                'proration_behavior' => 'always_invoice'
-                            ]
-                        ]);
-
-                        $canceled = $row['status'] == 'cancel' ? true : false;
-                        $cancelEndPeriod = $row['cancel_end_period'] == 1 ? true : false;
-                        $pm = $stripe->paymentMethods->retrieve($sub->default_payment_method, []);
-                        $amountDue = $invoicePreview->amount_due;
-
-                        if ($pm->card->brand) {
-                            $howPay = ucfirst($pm->card->brand) . ' ending in ' . $pm->card->last4;
-                        } else if ($pm->us_bank_account->bank_name) {
-                            $howPay = 'Bank account (' . ucfirst($pm->us_bank_account->bank_name) . ') ending in ' . $pm->card->last4;
-                        } else {
-                            $howPay = ucfirst($pm->type);
-                        }
-                ?>
-                        <div class="sub">
-                            <h2 style="font-size:21px"><?= $product->getName() ?></h2>
-
-                            <? if ($canceled) {
-                                echo '<span class="sub-badge" style="background-color:#f8d7da;color:#721c24;">canceled</span>';
-                            } else {
-                                if ($row['trial']) {
-                                    echo '<span class="sub-badge" style="background-color:#fceabb;color:#6b4f00;">trial</span>';
-                                } else {
-                                    echo '<span class="sub-badge" style="background-color:#d4edda;color:#155724;">active</span>';
-                                }
-                            } ?>
-
-                            <p style="padding-top:1em"><b>Billing cycle:</b> <?= date('M j, Y', $row['start']) . ' - ' . date('M j, Y', $row['end']) ?></p>
-                            <? if (!$canceled) {
-                                echo "<p id=\"next-pymt\"><b>Next payment:</b> \${$product->getTotalPrice()} on " . date('M j, Y', $row['end']) . "</p>";
-                            }
-                            echo "<p><b>Payment method:</b> $howPay</p>";
-
-                            if (!$canceled) {
-                                if ($row['trial'] == 1) {
-                                    $text = 'Your free trial will end on ' . date('F j, Y', $row['end']) . '. After that, your default payment method will be charged automatically.';
-                                } else {
-                                    $text = 'Your subscription is active and will renew on ' . date('F j, Y', $sub->current_period_end) . '. Your default payment method will be charged automatically.';
-                                } ?>
-                                <span id="trial-notice" class="help"><?= $text ?></span>
-
-                                <div class="btn-group" id="cancels">
-                                    <a class="btn btn-gray" href="#" id="modify" data-amount="<?= $amountDue ?>" <?= $_GET['ref'] == 'com.mapollc.mapofire' ? ' data-app="1"' : '' ?> data-sid="<?= $row['subscription'] ?>" data-name="<?= $newName ?>" data-new-plan="<?= $newPlan ?>" data-method="<?= $upgrade ? 'up' : 'down' ?>grade" onclick="return false"><?= $upgrade ? 'Up' : 'Down' ?>grade</a>
-                                    <a class="btn btn-red" href="#" id="cancel" <?= $_GET['ref'] == 'com.mapollc.mapofire' ? ' data-app="1"' : '' ?> data-sid="<?= $row['subscription'] ?>" data-name="<?= $product->getName() ?>" onclick="return false">Cancel subscription</a>
-                                </div>
-                            <? }
-                            if ($canceled) {
-                                echo '<span id="can-notice" class="help">Your subscription has been canceled and will remain active until ' . date('F j, Y', $row['end']) . '.</span>';
-                            } ?>
-
-                            <!--<div id="btns-can" class="btn-group" <?= $canceled ? ' style="display:none"' : '' ?>>
-                                <a href="#" id="cancel-now" data-sid="<?= $row['subscription'] ?>" class="btn btn-sm btn-red" onclick="return false">Cancel Now</a>
-                                <a href="#" id="cancel-later" data-sid="<?= $row['subscription'] ?>" class="btn btn-sm btn-red" onclick="return false">Cancel Later</a>
-                            </div>-->
-
-                            <? if ($canceled) { ?>
-                                <div id="btns-res" class="btn-group">
-                                    <a href="#" id="resume" class="btn btn-green" <?= $_GET['ref'] == 'com.mapollc.mapofire' ? ' data-app="1"' : '' ?>data-sid="<?= $row['subscription'] ?>" onclick="return false">Resume Subscription</a>
-                                </div>
-                            <? } ?>
-
-                            <div style="clear:both"></div>
-                            <a href="billing/portal?cid=<?= $customerID . (isset($_GET['ref']) ? '&ref=' . $_GET['ref'] : '') . (isset($_GET['devel']) ? '&devel=1' : '') ?>" style="font-size:14px">Manage Payment Methods</a>
+                    <div class="btn-group" id="cancels">
+                        <div id="processing" style="display:none;align-items:center;gap:1rem">
+                            <div class="spinner" style="width:20px;height:20px"></div><span>Processing...</span>
                         </div>
-            <? } catch (Exception $e) {
-                        //echo message(false, $e->getMessage());
-                    }
-                }
-            } ?>
+
+                        <? if (!$sub['canceled']) { ?>
+                            <a class="btn btn-gray"
+                                href="#"
+                                id="modify"
+                                data-amount="<?= $sub['amount_due'] ?>"
+                                <?= $sub['is_app'] ?>
+                                data-sid="<?= $sub['id'] ?>"
+                                data-name="<?= $sub['new_name'] ?>"
+                                data-new-plan="<?= $sub['new_plan'] ?>"
+                                data-method="<?= $sub['upgrade'] ? 'up' : 'down' ?>grade"
+                                onclick="return false"><?= $sub['upgrade'] ? 'Up' : 'Down' ?>grade</a>
+
+                            <a class="btn btn-red"
+                                href="#"
+                                id="cancel"
+                                <?= $sub['is_app'] ?>
+                                data-sid="<?= $sub['id'] ?>"
+                                data-name="<?= $sub['product_name'] ?>"
+                                onclick="return false">Cancel subscription</a>
+                        <? } else { ?>
+                            <a href="#"
+                                id="resume"
+                                class="btn btn-green"
+                                <?= $sub['is_app'] ?>
+                                data-sid="<?= $sub['id'] ?>"
+                                onclick="return false">Resume Subscription</a>
+                        <? } ?>
+                    </div>
+
+                    <div style="clear:both"></div>
+                    <a href="billing/portal?cid=<?= $customerID . (isset($_GET['ref']) ? "&ref={$_GET['ref']}" : '') . ($isDevel ? '&devel=1' : '') ?>" style="font-size:14px">Manage Payment Methods</a>
+                </div>
+            <? } ?>
         </div>
     </div>
 </div>
@@ -202,7 +294,7 @@ if (isset($_GET['checkout_id'])) {
             if (!$customerID) {
                 echo '<p style="text-align:center">There are no invoices or receipts for your account.</p>';
             } else {
-                echo '<div id="invoices" style="text-align:center"><div class="spinner"></div></div>';
+                echo '<div id="invoices" data-cid="' . $customerID . '" style="text-align:center"><div class="spinner"></div></div>';
                 /*try {
                     $invoices = $stripe->invoices->all([
                         'customer' => $customerID,

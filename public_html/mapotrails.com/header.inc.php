@@ -66,7 +66,7 @@ ob_start();
     <noscript>
         <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap">
     </noscript>
-    <link rel="stylesheet" href="//www.mapotrails.com/src/css/mapotrails.css" />
+    <link rel="stylesheet" href="//mapotrails.com/src/css/mapotrails.css" />
     <? if ($includeMaplibre) { ?>
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/maplibre-gl@6.11.2/dist/maplibre-gl.min.css">
     <? } ?>

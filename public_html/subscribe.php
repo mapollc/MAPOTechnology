@@ -17,6 +17,7 @@ if ($_GET['devel'] == 1) {
 }
 
 require_once '/home/mapo/stripe/init.php';
+require_once '/home/mapo/vendor/autoload.php';
 require_once '/home/mapo/public_html/subs.inc.php';
 require_once '/home/mapo/public_html/config.inc.php';
 
@@ -33,10 +34,11 @@ function checkPreviousTrials()
 // have the user login or create an account before they continue with subscriptions
 if (isset($_POST) && isset($_POST['price'])) {
     if ($_REQUEST['ref'] == 'com.mapollc.mapofire' && !isset($_REQUEST['authenticated'])) {
-        $goto = 'https://www.mapotechnology.com/purchase/' . $product . '/complete?price=' . $_POST['price'] . ($_POST['trial'] ? '&trial=1' : '') .
+        $goto = "https://www.mapotechnology.com/purchase/$product/complete?price={$_POST['price']}" .
+            ($_POST['trial'] ? '&trial=1' : '') .
             (isset($_REQUEST['customer_email']) ? '&customer_email=' . $_REQUEST['customer_email'] : '') .
-            ($_REQUEST['ref'] ? '&ref=' . $_REQUEST['ref'] : '') .
-            ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
+            ($_REQUEST['ref'] ? "&ref={$_REQUEST['ref']}" : '') .
+            ($_REQUEST['devel'] ? "&devel={$_REQUEST['devel']}" : '');
     } else {
         if ($_SESSION && $_SESSION['uid'] || $_SESSION['customer_email'] || $_REQUEST['customer_email']) {
             $email = $_SESSION['customer_email'] ? $_SESSION['customer_email'] : ($_REQUEST['customer_email'] ? $_REQUEST['customer_email'] : null);
@@ -53,16 +55,15 @@ if (isset($_POST) && isset($_POST['price'])) {
                 $custID = $getCust['cid'];
             }
 
-            $goto = 'https://www.mapotechnology.com/purchase/' . $product . '/complete?price=' . $_POST['price'] . ($_POST['trial'] ? '&trial=1' : '') .
-                ($email != null ? '&customer_email=' . $email : '') .
-                ($custID != null ? '&customer_id=' . $custID : '') .
-                ($_REQUEST['ref'] ? '&ref=' . $_REQUEST['ref'] : '') .
-                ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
+            $goto = "https://www.mapotechnology.com/purchase/$product/complete?price={$_POST['price']}" . ($_POST['trial'] ? '&trial=1' : '') .
+                ($email != null ? "&customer_email=$email" : '') .
+                ($custID != null ? "&customer_id=$custID" : '') .
+                ($_REQUEST['ref'] ? "&ref={$_REQUEST['ref']}" : '') .
+                ($_REQUEST['devel'] ? "&devel={$_REQUEST['devel']}" : '');
         } else {
-            $goto = 'https://auth.mapotechnology.com/register?service=mapofire&subscribe=1&product_key=' . $product .
-                '&price_id=' . $_POST['price'] .
+            $goto = "https://auth.mapotechnology.com/register?service=mapofire&subscribe=1&product_key=$product&price_id={$_POST['price']}" .
                 ($_POST['trial'] ? '&trial=1' : '') .
-                ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
+                ($_REQUEST['devel'] ? "&devel={$_REQUEST['devel']}" : '');
         }
     }
 
@@ -80,57 +81,61 @@ if ($_GET['status'] == 'complete') {
         if ($_GET['trial'] == 1 && checkPreviousTrials() > 0) {
             $trialExhausted = true;
         } else {
-            \Stripe\Stripe::setApiKey($stripeSecretKey);
+            $stripe = new \Stripe\StripeClient($stripeSecretKey);
 
             if (isset($_GET['ref']) && $_GET['ref'] == 'com.mapollc.mapofire') {
                 $returnURL = 'https://www.mapofire.com/confirmation?checkout_id={CHECKOUT_SESSION_ID}' .
                     (isset($_SESSION['customer_email']) ? '&newUser=1' : '') .
-                    ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
+                    ($_REQUEST['devel'] ? "&devel={$_REQUEST['devel']}" : '');
+
                 $cancelURL = 'https://www.mapofire.com/confirmation?failed=1' .
-                    ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
+                    ($_REQUEST['devel'] ? "&devel={$_REQUEST['devel']}" : '');
             } else {
                 $cancelURL = 'https://www.mapotechnology.com/purchase/' . $product . '/failed?reason=cancel' .
-                    (isset($_REQUEST['customer_id']) ? '&cid=' . $_REQUEST['customer_id'] : '') .
-                    (isset($_REQUEST['customer_email']) ? '&customer_email=' . $_REQUEST['customer_email'] : '') .
+                    (isset($_REQUEST['customer_id']) ? "&cid={$_REQUEST['customer_id']}" : '') .
+                    (isset($_REQUEST['customer_email']) ? "&customer_email={$_REQUEST['customer_email']}" : '') .
                     (isset($_REQUEST['newUser']) ? '&newUser=1' : '') .
-                    (isset($_REQUEST['ref']) ? '&ref=' . $_REQUEST['ref'] : '') .
-                    ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
+                    (isset($_REQUEST['ref']) ? "&ref={$_REQUEST['ref']}" : '') .
+                    ($_REQUEST['devel'] ? "&devel={$_REQUEST['devel']}" : '');
 
                 if ($_SESSION['uid']) {
                     $returnURL = 'https://www.mapotechnology.com/account/billing?checkout_id={CHECKOUT_SESSION_ID}' .
                         ($trialRequested ? '&isTrial=1' : '') .
-                        (isset($_REQUEST['ref']) ? '&ref=' . $_REQUEST['ref'] : '') .
-                        ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
+                        (isset($_REQUEST['ref']) ? "&ref={$_REQUEST['ref']}" : '') .
+                        ($_REQUEST['devel'] ? "&devel={$_REQUEST['devel']}" : '');
                 } else {
                     $returnURL = 'https://www.mapotechnology.com/purchase/' . $product . '/success?checkout_id={CHECKOUT_SESSION_ID}' .
                         ($trialRequested ? '&isTrial=1' : '') .
                         (isset($_SESSION['customer_email']) ? '&newUser=1' : '') .
-                        (isset($_REQUEST['ref']) ? '&ref=' . $_REQUEST['ref'] : '') .
-                        ($_REQUEST['devel'] ? '&devel=' . $_REQUEST['devel'] : '');
+                        (isset($_REQUEST['ref']) ? "&ref={$_REQUEST['ref']}" : '') .
+                        ($_REQUEST['devel'] ? "&devel={$_REQUEST['devel']}" : '');
                 }
             }
 
             $fields = [
                 'billing_address_collection' => 'auto',
-                'line_items' => array(
+                'line_items' => [
                     [
                         'price' => $priceId,
                         'quantity' => 1
                     ]
-                ),
+                ],
                 'mode' => 'subscription',
                 'success_url' => $returnURL,
                 'cancel_url' => $cancelURL,
             ];
 
             if ($priceId == $plan->setPlan('hotshot_annual')->getPriceID()) {
-                $coupon = \Stripe\Coupon::create([
+                $coupon = $stripe->coupons->create([
                     'percent_off' => 10,
                     'duration' => 'once'
                 ]);
 
-                $promo = \Stripe\PromotionCode::create([
-                    'coupon' => $coupon->id
+                $promo = $stripe->promotionCodes->create([
+                    'promotion' => [
+                        'type' => 'coupon',
+                        'coupon' => $coupon->id
+                    ]
                 ]);
 
                 $fields['discounts'] = [
@@ -188,20 +193,21 @@ if ($_GET['status'] == 'complete') {
             ////exit();
 
             try {
-                $checkout_session = \Stripe\Checkout\Session::create($fields);
+                $checkout_session = $stripe->checkout->sessions->create($fields);
 
                 header("HTTP/1.1 303 See Other");
-                header("Location: " . $checkout_session->url);
+                header("Location: $checkout_session->url");
             } catch (Exception $e) {
                 if (str_contains($e->getMessage(), 'No such customer')) {
                     try {
                         unset($fields['customer']);
                         $fields['customer_email'] = $_REQUEST['customer_email'];
-                        $checkout_session = \Stripe\Checkout\Session::create($fields);
+                        $checkout_session = $stripe->checkout->sessions->create($fields);
 
                         header("HTTP/1.1 303 See Other");
-                        header("Location: " . $checkout_session->url);
+                        header("Location: $checkout_session->url");
                     } catch (Exception $e) {
+                        // error: $e->getMessage();
                     }
                 }
             }
@@ -260,7 +266,10 @@ if ($trialExhausted) {
 
     if ($trialExhausted || !isset($_GET['status']) || $_GET['status'] == 'failed') {
         include_once 'premium.php';
-    } else if ($_GET['status'] == 'success') {
+        return;
+    }
+
+    if ($_GET['status'] == 'success') {
         $isTrial = false;
         $trialEnd = null;
         $stripe = new \Stripe\StripeClient($stripeSecretKey);
@@ -268,7 +277,8 @@ if ($trialExhausted) {
         <div style="display:flex;justify-content:center;margin:5em 1em">
             <div style="max-width:600px;text-align:center;background-color:#fff;padding:4em 2em;border-radius:12px;box-shadow:0 0 25px rgb(10 10 10 / 10%)">
 
-                <? try {
+                <?
+                try {
                     $session = $stripe->checkout->sessions->retrieve($_GET['checkout_id']);
 
                     try {
@@ -279,10 +289,10 @@ if ($trialExhausted) {
                             $trialEnd = $sub->trial_end;
                         }
                     } catch (Exception $e) {
-                        // TODO
+                        // error: $e->getMessage();
                     }
                 } catch (Exception $e) {
-                    // TODO
+                    // error: $e->getMessage();
                 }
 
                 // if the user just created an account, remind them to check their email to verify their email address
@@ -292,23 +302,31 @@ if ($trialExhausted) {
                 ?>
                 <h2 style="margin-bottom:1em">Your subscription is now active</h2>
 
-                <? if ($isTrial) { ?>
-                    <p style="line-height:1.3">Your free 7-day trial will end on <?= date('F j, Y', $trialEnd) ?>. Your payment method will be charged unless you cancel prior to the trial ending.</p>
-                <? } else { ?>
-                    <p style="line-height:1.3">You will be automatically billed every month until you cancel.</p>
-                <? } ?>
+                <p style="line-height:1.3">
+                    <? if ($isTrial) {
+                        echo 'Your free 7-day trial will end on ' . date('F j, Y', $trialEnd) . '. Your payment method will be charged unless you cancel prior to the trial ending.';
+                    } else {
+                        echo 'You will be automatically billed every month until you cancel.';
+                    } ?>
+                </p>
+
                 <a class="btn btn-orange" style="margin:2em 0 0 0" href="https://auth.mapotechnology.com/login?service=mapofire&next=<?= urlencode('https://mapofire.com?ref=new_subscriber') ?>">Login & Start Tracking Wildfires</a>
-                <? } else if ($_GET['status'] == 'complete') {
-                if ($trialExhausted) {
-                    echo 'You have already used your free 7-day trial for this product.';
-                }
-            } else if ($_GET['status'] == 'failed') {
-                if ($_GET['reason'] == 'cancel') { ?>
-                    <h2 style="margin-bottom:1em">You canceled before starting your subscription.</h2>
-                <? } else { ?>
-                    <h2 style="margin-bottom:1em">There was an error.</h2>
-                <? } ?>
-            <? } ?>
+
+            <?
+            return;
+        }
+
+        if ($_GET['status'] == 'complete') {
+            if ($trialExhausted) echo 'You have already used your free 7-day trial for this product.';
+            return;
+        }
+
+        if ($_GET['status'] == 'failed') { ?>
+                <h2 style="margin-bottom:1em">
+                    <?= $_GET['reason'] == 'cancel' ? 'You canceled before starting your subscription.' : 'There was an error.' ?>
+                </h2>
+            <? return;
+        } ?>
             </div>
         </div>
 

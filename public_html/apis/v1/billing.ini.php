@@ -1,14 +1,13 @@
 <?
-$resp = array('response' => 'error', 'code' => 1, 'msg' => 'An invalid method was provided');
-
 if ($method == 'verify') {
+    require_once '/home/mapo/stripe/init.php';
+    require_once '/home/mapo/vendor/autoload.php';
     include_once '/home/mapo/public_html/subs.inc.php';
-    include_once '/home/mapo/stripe/init.php';
 
-    \Stripe\Stripe::setApiKey($stripeSecretKey);
+    $stripe = new \Stripe\StripeClient($stripeSecretKey);
 
     try {
-        $session = \Stripe\Checkout\Session::retrieve($_REQUEST['checkout_id']);
+        $session = $stripe->checkout->sessions->retrieve($_REQUEST['checkout_id']);
 
         if ($session->status == 'complete') {
             $resp = array('verified' => true, 'cid' => $session->customer, 'expires' => $session->expires_at);
@@ -16,12 +15,15 @@ if ($method == 'verify') {
             $resp = array('verified' => false);
         }
     } catch (\Stripe\Exception\CardException $e) {
-        $resp = array('response' => 'error', 'code' => 2, 'msg' => $e->getError()->message);
+        $resp = ['response' => 'error', 'code' => 2, 'msg' => $e->getMessage()];
     } catch (\Stripe\Exception\InvalidRequestException $e) {
-        $resp = array('response' => 'error', 'code' => 3, 'msg' => $e->getError()->message);
+        $resp = ['response' => 'error', 'code' => 3, 'msg' => $e->getMessage()];
     } catch (Exception $e) {
-        $resp = array('response' => 'error', 'code' => 4, 'msg' => $e->getError()->message);
+        $resp = ['response' => 'error', 'code' => 4, 'msg' => $e->getMessage()];
     }
+
+    $returnJson = $resp;
+    return;
 }
 
-$returnJson = $resp;
+$returnJson = ['response' => 'error', 'code' => 1, 'msg' => 'An invalid method was provided'];

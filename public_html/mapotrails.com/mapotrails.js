@@ -387,10 +387,10 @@ async function getContent(resp) {
         if (p.title) {
             img.title = p.title;
         }
-        
+
         div.append(img);
 
-        if (p.title) {        
+        if (p.title) {
             const caption = document.createElement('span');
             caption.className = 'caption';
             caption.textContent = p.title;
@@ -896,10 +896,12 @@ export class TerrainControl {
     }
 }
 
-window.onload = async () => {
+async function startup() {
     if (page.startsWith('guide')) {
         const map = document.querySelector('#map');
-        const TRAIL_ID = Number(map.dataset?.tid) ?? null;
+        const TRAIL_ID = Number(map?.dataset?.tid) ?? null;
+
+        if (!TRAIL_ID) return;
 
         const resp = await api(`${apiURL}trails/guide`, [['id', TRAIL_ID]], true);
 
@@ -908,4 +910,6 @@ window.onload = async () => {
         getContent(resp);
         trailGuide(TRAIL_ID, resp?.guide);
     }
-};
+}
+
+startup();

@@ -17,7 +17,7 @@ if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowed
 header('Content-type: application/json');
 session_start();
 
-require_once '/home/mapo/public_html/vendor/autoload.php';
+require_once '/home/mapo/vendor/autoload.php';
 
 use UAParser\Parser;
 

@@ -2,6 +2,7 @@
 #$stripeLive = true;
 require_once 'user-permissions.inc.php';
 include_once '/home/mapo/stripe/init.php';
+require_once '/home/mapo/vendor/autoload.php';
 include_once '/home/mapo/public_html/subs.inc.php';
 
 $stripe = new \Stripe\StripeClient($stripeSecretKey);
